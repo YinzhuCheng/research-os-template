@@ -21,9 +21,9 @@
 
 ## Commit 4: 入口、初始化、对齐 skill
 
-- [ ] 创建 orchestrator/init/alignment skill。
-- [ ] 每个 skill 含 `SKILL.md`、`references/`、必要 `assets/`。
-- [ ] 创建安装脚本。
+- [x] 创建 orchestrator/init/alignment skill。
+- [x] 每个 skill 含 `SKILL.md`、`references/`、必要 `assets/`。
+- [x] 创建安装脚本。
 
 ## Commit 5: Harness 与审计脚本
 
