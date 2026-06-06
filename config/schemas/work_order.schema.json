@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WorkOrder",
+  "type": "object",
+  "required": ["work_order_id", "phase", "goal", "inputs", "allowed_paths", "forbidden_paths", "outputs", "acceptance_criteria", "requires_confirmation"],
+  "properties": {
+    "work_order_id": {"type": "string", "pattern": "^WO-[0-9]{4}$"},
+    "phase": {"type": "string"},
+    "goal": {"type": "string"},
+    "inputs": {"type": "array", "items": {"type": "string"}},
+    "allowed_paths": {"type": "array", "items": {"type": "string"}},
+    "forbidden_paths": {"type": "array", "items": {"type": "string"}},
+    "outputs": {"type": "array", "items": {"type": "string"}},
+    "budget": {"type": "object"},
+    "stop_conditions": {"type": "array", "items": {"type": "string"}},
+    "acceptance_criteria": {"type": "array", "items": {"type": "string"}},
+    "requires_confirmation": {"type": "boolean"},
+    "privacy_level": {"enum": ["public", "private", "mixed"]}
+  },
+  "additionalProperties": true
+}

@@ -15,9 +15,9 @@
 
 ## Commit 3: Schema 与模板
 
-- [ ] 实现 `research_project.yaml`。
-- [ ] 实现 work order、run manifest、claim-evidence、research brief 模板。
-- [ ] 写入样例对象。
+- [x] 实现 `research_project.yaml`。
+- [x] 实现 work order、run manifest、claim-evidence、research brief 模板。
+- [x] 写入样例对象。
 
 ## Commit 4: 入口、初始化、对齐 skill
 

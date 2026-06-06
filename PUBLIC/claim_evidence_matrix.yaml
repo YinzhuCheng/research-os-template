@@ -1,0 +1,11 @@
+claims:
+  - id: CLAIM-001
+    claim: "模板可以把研究对话、草稿或 demo 转换为可审计研究项目。"
+    status: draft
+    evidence:
+      - "PLAN/00_MASTER_PLAN.md"
+      - "PLAN/01_ARCHITECTURE.md"
+    counterevidence: []
+    paper_targets:
+      - "PUBLIC/paper/main.tex#introduction"
+    privacy_level: public

@@ -1,0 +1,33 @@
+work_order_id: WO-0001
+phase: schema
+goal: "实现研究对象 schema、模板和样例对象。"
+inputs:
+  - "PLAN/00_MASTER_PLAN.md"
+  - "PLAN/01_ARCHITECTURE.md"
+allowed_paths:
+  - "config/"
+  - "templates/"
+  - "PUBLIC/"
+  - "CONTROL/"
+  - "PROVENANCE/"
+  - "PLAN/"
+forbidden_paths:
+  - "PRIVATE/"
+outputs:
+  - "config/research_project.yaml"
+  - "config/schemas/"
+  - "templates/"
+  - "PUBLIC/claim_evidence_matrix.yaml"
+  - "PROVENANCE/run_manifest.jsonl"
+budget:
+  currency: CNY
+  max_model_cost: 0
+  max_runtime_minutes: 30
+stop_conditions:
+  - "需要读取 PRIVATE 原始材料。"
+  - "schema 与计划中的接口冲突。"
+acceptance_criteria:
+  - "所有核心对象都有稳定模板。"
+  - "claim-evidence 样例能追踪到计划文档。"
+requires_confirmation: false
+privacy_level: public

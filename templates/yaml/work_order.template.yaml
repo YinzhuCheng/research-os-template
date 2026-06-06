@@ -1,0 +1,25 @@
+work_order_id: WO-0001
+phase: initialization
+goal: "Describe the task in one sentence."
+inputs:
+  - "PUBLIC/research_brief.md"
+allowed_paths:
+  - "PUBLIC/"
+  - "CONTROL/"
+  - "PROVENANCE/"
+forbidden_paths:
+  - "PRIVATE/"
+outputs:
+  - "PUBLIC/example_output.md"
+budget:
+  currency: CNY
+  max_model_cost: 0
+  max_runtime_minutes: 10
+stop_conditions:
+  - "Sensitive information would be written to PUBLIC."
+  - "Required source material is missing."
+acceptance_criteria:
+  - "Output is traceable to the listed inputs."
+  - "No private files are read or exported."
+requires_confirmation: false
+privacy_level: public

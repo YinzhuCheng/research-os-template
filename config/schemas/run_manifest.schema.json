@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RunManifestEntry",
+  "type": "object",
+  "required": ["run_id", "timestamp", "work_order_id", "status", "inputs", "outputs", "privacy_level"],
+  "properties": {
+    "run_id": {"type": "string", "pattern": "^RUN-[0-9]{4}$"},
+    "timestamp": {"type": "string"},
+    "work_order_id": {"type": "string"},
+    "status": {"enum": ["planned", "running", "succeeded", "failed", "blocked", "skipped"]},
+    "command_or_tool": {"type": "string"},
+    "inputs": {"type": "array", "items": {"type": "string"}},
+    "outputs": {"type": "array", "items": {"type": "string"}},
+    "input_hashes": {"type": "object"},
+    "output_hashes": {"type": "object"},
+    "cost": {"type": "object"},
+    "errors": {"type": "array", "items": {"type": "string"}},
+    "privacy_level": {"enum": ["public", "private", "mixed"]}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,11 @@
+claims:
+  - id: CLAIM-001
+    claim: "State a falsifiable paper claim."
+    status: draft
+    evidence:
+      - "EXP-001"
+      - "RES-001"
+    counterevidence: []
+    paper_targets:
+      - "PUBLIC/paper/main.tex#introduction"
+    privacy_level: public

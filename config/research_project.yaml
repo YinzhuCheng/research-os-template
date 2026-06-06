@@ -1,0 +1,22 @@
+project_id: research-os-template
+title: "Untitled Codex Research Project"
+language_mode: zh-first
+intervention_level: low
+privacy_policy: public_private_split
+target_venue:
+  name: TBD
+  type: conference
+  submission_format: latex
+budget_limits:
+  currency: CNY
+  model_budget: 100
+  compute_budget: 0
+current_phase: initialization
+phase_gate_required: true
+public_export_enabled: false
+created_from:
+  source_type: template
+  source_paths: []
+owners:
+  decision_maker: TBD
+  codex_operator: Codex

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClaimEvidenceMatrix",
+  "type": "object",
+  "required": ["claims"],
+  "properties": {
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "claim", "status", "evidence", "paper_targets"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^CLAIM-[0-9]{3}$"},
+          "claim": {"type": "string"},
+          "status": {"enum": ["draft", "supported", "partially_supported", "unsupported", "retired"]},
+          "evidence": {"type": "array", "items": {"type": "string"}},
+          "counterevidence": {"type": "array", "items": {"type": "string"}},
+          "paper_targets": {"type": "array", "items": {"type": "string"}},
+          "privacy_level": {"enum": ["public", "private", "mixed"]}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

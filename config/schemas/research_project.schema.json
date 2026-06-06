@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ResearchProject",
+  "type": "object",
+  "required": ["project_id", "title", "language_mode", "intervention_level", "privacy_policy", "target_venue", "budget_limits", "current_phase"],
+  "properties": {
+    "project_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+    "title": {"type": "string", "minLength": 1},
+    "language_mode": {"enum": ["zh-first", "en-only"]},
+    "intervention_level": {"enum": ["low", "medium", "high"]},
+    "privacy_policy": {"enum": ["public_private_split"]},
+    "target_venue": {"type": "object"},
+    "budget_limits": {"type": "object"},
+    "current_phase": {"type": "string"},
+    "phase_gate_required": {"type": "boolean"},
+    "public_export_enabled": {"type": "boolean"}
+  },
+  "additionalProperties": true
+}

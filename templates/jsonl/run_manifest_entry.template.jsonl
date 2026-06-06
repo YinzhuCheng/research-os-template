@@ -1,0 +1,1 @@
+{"run_id":"RUN-0001","timestamp":"YYYY-MM-DDTHH:MM:SSZ","work_order_id":"WO-0001","status":"planned","command_or_tool":"codex","inputs":["PUBLIC/research_brief.md"],"outputs":["PUBLIC/example_output.md"],"input_hashes":{},"output_hashes":{},"cost":{"currency":"CNY","estimated":0},"errors":[],"privacy_level":"public"}
