@@ -12,7 +12,8 @@
     {"label": "Schema", "value": "已完成"},
     {"label": "核心 Skill", "value": "部分完成"},
     {"label": "审计脚本", "value": "已完成"},
-    {"label": "论文 Skill", "value": "已完成"}
+    {"label": "论文 Skill", "value": "已完成"},
+    {"label": "验证", "value": "静态通过"}
   ],
   "documents": [
     {"path": "README.md", "label": "公开区说明"},
@@ -26,6 +27,7 @@
   "next_decisions": [
     "确认目标研究的语言模式：zh-first 或 en-only。",
     "确认目标会议/期刊和投稿格式。",
-    "确认是否运行完整验证并生成最终审计说明。"
+    "后续如需正式投稿，先修复或固定 LaTeX 编译环境。",
+    "如需公开分享，使用 export_public.ps1 生成脱敏包。"
   ]
 }

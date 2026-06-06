@@ -26,3 +26,9 @@ LaTeX 源码静态检查：
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_latex_sources.ps1
 ```
+
+Skill 结构检查：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
+```

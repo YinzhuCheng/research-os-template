@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-Commit 7 已建立分析、论文写作、视觉表达、润色事实校验、review rebuttal skill，并加入 LaTeX 投稿骨架、矢量图样例、附录和 review/rebuttal 模板。
+Commit 8 已运行验证、补齐 skill 校验脚本、生成最终审计报告，并记录 LaTeX 编译超时风险。
 
 ## 已知缺口
 
@@ -13,8 +13,14 @@ Commit 7 已建立分析、论文写作、视觉表达、润色事实校验、re
 - 已实现基础审计脚本。
 - 已实现静态仪表盘。
 - 已实现 LaTeX 投稿包和图表模板。
-- 尚未运行验证。
+- 已运行验证。
+
+## 残余风险
+
+- LaTeX 完整编译在本机 MiKTeX 环境中超时，已保留 `build/latex/main.log`；源码静态检查已通过。
+- Dashboard 未做浏览器截图级 QA，因为本轮未暴露 Browser 控制工具。
+- Schema 校验为 smoke validation，后续可升级为完整 JSON Schema/YAML 校验。
 
 ## 下一步
 
-完成 Commit 8：运行验证、补缺口、更新最终审计说明。
+第一版已完成。后续优先修复 LaTeX 环境可复现性、补完整 JSON Schema 校验、补浏览器视觉 QA。

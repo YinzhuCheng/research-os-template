@@ -5,10 +5,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 $records = @()
+$outFull = if (Test-Path -LiteralPath $OutFile) { (Resolve-Path -LiteralPath $OutFile).Path } else { (Join-Path (Get-Location) $OutFile) }
 
 foreach ($path in $Paths) {
   if (!(Test-Path -LiteralPath $path)) { continue }
   Get-ChildItem -LiteralPath $path -Recurse -File | Sort-Object FullName | ForEach-Object {
+    if ($_.FullName -eq $outFull) { return }
     $hash = Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256
     $records += [pscustomobject]@{
       path = (Resolve-Path -LiteralPath $_.FullName -Relative)

@@ -46,8 +46,8 @@
 
 ## Commit 8: 验证与补缺
 
-- [ ] 运行全部脚本验证。
-- [ ] 运行 skill frontmatter 校验。
-- [ ] 运行隐私扫描测试。
-- [ ] 运行 dashboard 静态检查。
-- [ ] 更新最终审计说明。
+- [x] 运行全部脚本验证。
+- [x] 运行 skill frontmatter 校验。
+- [x] 运行隐私扫描测试。
+- [x] 运行 dashboard 静态检查。
+- [x] 更新最终审计说明。

@@ -1,0 +1,92 @@
+﻿[
+    {
+        "path":  ".\\PUBLIC\\claim_evidence_matrix.yaml",
+        "sha256":  "114a48cf7671dc4724f2138624300c68f57a1d63d9a5a0bba46bed7799dee7b1",
+        "bytes":  331
+    },
+    {
+        "path":  ".\\PUBLIC\\dashboard_data.json",
+        "sha256":  "ea5514bd4e45b8459199f3a5fd83b813b01f20066ead45065ab8855235b6c8da",
+        "bytes":  1379
+    },
+    {
+        "path":  ".\\PUBLIC\\index.html",
+        "sha256":  "6329f072e85792c74bd5084e3a6cf7d5372c4f3484885274067e3bff87940a3c",
+        "bytes":  14219
+    },
+    {
+        "path":  ".\\PUBLIC\\paper\\appendix.tex",
+        "sha256":  "612d52c1a606e304b59efd71db47d1bfe5d395f88b99dcefc8387b5e7bff7f99",
+        "bytes":  205
+    },
+    {
+        "path":  ".\\PUBLIC\\paper\\figures\\method_overview.tikz",
+        "sha256":  "de4d6309ee6de28e0f888a6bc0c6a2d8f4f05d8e1deb2cbf87c4430043df6550",
+        "bytes":  561
+    },
+    {
+        "path":  ".\\PUBLIC\\paper\\figures\\result_plot_example.tex",
+        "sha256":  "83f6a78626956831d2ae3008610657c309b728656b321f9ff1a3a770c5eb8576",
+        "bytes":  500
+    },
+    {
+        "path":  ".\\PUBLIC\\paper\\main.tex",
+        "sha256":  "95678aa820011892e1de7284981e1f72dac3bd79875907eacdc17d7c3ce21ccb",
+        "bytes":  1488
+    },
+    {
+        "path":  ".\\PUBLIC\\paper\\references.bib",
+        "sha256":  "6d94ea748d16177ccf59f2d086349b0f5cc129cf47cd43f6c54caadda1ffafd9",
+        "bytes":  151
+    },
+    {
+        "path":  ".\\PUBLIC\\paper\\submission_checklist.md",
+        "sha256":  "37dcbbdf481cd88e1e2bc57b328a55b7f219382bcc086a6f912d489289b55426",
+        "bytes":  341
+    },
+    {
+        "path":  ".\\PUBLIC\\README.md",
+        "sha256":  "db3aabdabe5fbec0d2af5455313413e3b33a31d5ea8fd6263cb4e57c359e3c69",
+        "bytes":  454
+    },
+    {
+        "path":  ".\\PUBLIC\\research_brief.md",
+        "sha256":  "7349868e58a4f46c1bccdc95b989f4af1d31cce54b7de6fa8d1b158023074795",
+        "bytes":  253
+    },
+    {
+        "path":  ".\\CONTROL\\phase_gate.yaml",
+        "sha256":  "de0740e0e28c635cd5b5d88b32f00e6b9538df4497f7c54de426efb995260daf",
+        "bytes":  343
+    },
+    {
+        "path":  ".\\CONTROL\\README.md",
+        "sha256":  "bedce9421779ffb6cc25ed23bcf356df751917c87b2602492aedde14c505eb84",
+        "bytes":  245
+    },
+    {
+        "path":  ".\\CONTROL\\work_order.yaml",
+        "sha256":  "931dc4d7f0891c2c559c2906e35778e9f87f1651edf071d8d961e2dc0fec4eb0",
+        "bytes":  808
+    },
+    {
+        "path":  ".\\PROVENANCE\\final_validation_report.md",
+        "sha256":  "ac247fea0498fb2c97aa2d716d1916c8016085931d9c00488e9ae7133b5d6910",
+        "bytes":  2266
+    },
+    {
+        "path":  ".\\PROVENANCE\\public_audit_summary.md",
+        "sha256":  "5ae4b5fa6c2974921951eb6fc6f5fdfc9e9f948c4be3c36f9870093b7a37f1c0",
+        "bytes":  385
+    },
+    {
+        "path":  ".\\PROVENANCE\\README.md",
+        "sha256":  "b0d9ac38b59672d48fb07cdef8a066d575c77351e3a149610cdd9f9977d89c64",
+        "bytes":  281
+    },
+    {
+        "path":  ".\\PROVENANCE\\run_manifest.jsonl",
+        "sha256":  "aea042d2e38ca1b631a00811a770788c97c3a5bbd0ba15783ea77d07e207e0a6",
+        "bytes":  1564
+    }
+]
