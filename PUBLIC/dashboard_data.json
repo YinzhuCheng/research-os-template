@@ -22,6 +22,7 @@
     {"path": "../docs/technical-report.html", "label": "技术路线 HTML"},
     {"path": "../docs/README.md", "label": "文档中心"},
     {"path": "../docs/doc_map.yaml", "label": "文档地图"},
+    {"path": "../docs/integrations/components.yaml", "label": "开源组件 Registry"},
     {"path": "../docs/PROJECT_SUMMARY.md", "label": "项目摘要"},
     {"path": "README.md", "label": "公开区说明"},
     {"path": "research_brief.md", "label": "研究简报"},

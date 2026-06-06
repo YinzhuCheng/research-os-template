@@ -18,3 +18,10 @@
 ## MCP 与实时信息
 
 MCP 用于连接文献库、内部文档、浏览器、云账单或项目管理系统。任何 MCP 服务器都应在说明中写清楚权限、速率限制、成本和数据边界。
+
+## Skill 发现
+
+- `skills/` 是模板内权威 skill 源。
+- `.agents/skills/` 是 Codex 仓库级发现镜像，供支持 Agent Skills 标准的客户端自动发现。
+- 更新 `skills/` 后运行 `scripts/sync_skill_mirror.ps1` 和 `scripts/check_skill_mirror.ps1`。
+- 从外部 skill 或插件借鉴内容前，先在 `docs/integrations/components.yaml` 记录来源、许可证和风险。

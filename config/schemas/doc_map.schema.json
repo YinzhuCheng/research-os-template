@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-template.local/schemas/doc_map.schema.json",
+  "title": "Research OS Document Map",
+  "type": "object",
+  "required": [
+    "doc_map_id",
+    "updated_at",
+    "language_mode",
+    "entrypoints",
+    "core_controls",
+    "audit",
+    "skills",
+    "integrations",
+    "validation"
+  ],
+  "properties": {
+    "doc_map_id": { "type": "string", "pattern": "^DOCMAP-[0-9]{4}$" },
+    "updated_at": { "type": "string" },
+    "language_mode": { "type": "string", "enum": ["zh-first", "en-only"] },
+    "entrypoints": { "type": "object" },
+    "core_controls": { "type": "object" },
+    "audit": { "type": "object" },
+    "skills": { "type": "object" },
+    "integrations": { "type": "object" },
+    "validation": { "type": "object" }
+  }
+}

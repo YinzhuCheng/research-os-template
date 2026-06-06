@@ -24,6 +24,10 @@ Require-File (Join-Path $Root "PUBLIC\claim_evidence_matrix.yaml")
 Require-File (Join-Path $Root "PROVENANCE\run_manifest.jsonl")
 Require-File (Join-Path $Root "PROVENANCE\resource_ledger.jsonl")
 Require-File (Join-Path $Root "PROVENANCE\live_evidence_snapshot.yaml")
+Require-File (Join-Path $Root "docs\doc_map.yaml")
+Require-File (Join-Path $Root "docs\integrations\components.yaml")
+Require-File (Join-Path $Root "templates\yaml\integration_component.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\harness_run.template.yaml")
 
 Get-ChildItem -LiteralPath $schemaDir -Filter "*.json" | ForEach-Object {
   Get-Content -Raw -LiteralPath $_.FullName | ConvertFrom-Json | Out-Null
@@ -38,6 +42,8 @@ Require-Text (Join-Path $Root "config\research_project.yaml") "feasibility_probe
 Require-Text (Join-Path $Root "CONTROL\work_order.yaml") "work_order_id:\s+WO-[0-9]{4}"
 Require-Text (Join-Path $Root "CONTROL\work_order.yaml") "resource_budget:\s*"
 Require-Text (Join-Path $Root "PUBLIC\claim_evidence_matrix.yaml") "CLAIM-[0-9]{3}"
+Require-Text (Join-Path $Root "docs\doc_map.yaml") "doc_map_id:\s+DOCMAP-[0-9]{4}"
+Require-Text (Join-Path $Root "docs\integrations\components.yaml") "registry_id:\s+INTEGRATIONS-[0-9]{4}"
 
 Get-Content -LiteralPath (Join-Path $Root "PROVENANCE\run_manifest.jsonl") | ForEach-Object {
   if ($_.Trim()) {

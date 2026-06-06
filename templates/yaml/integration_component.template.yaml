@@ -1,0 +1,25 @@
+id: example-component
+name: "Example Component"
+source_url: "https://example.com/repository"
+paper_url: "https://example.com/paper"
+license: "TBD"
+accessed_at: 2026-06-06
+adapter_status: planned
+research_os_phases:
+  - alignment
+install_reference: "Document the install command or official install page."
+credential_env_vars:
+  - "EXAMPLE_API_KEY_ENV_NAME"
+inputs:
+  - "Input artifact or configuration"
+outputs:
+  - "Output artifact"
+artifact_mapping:
+  manifest: "PROVENANCE/run_manifest.jsonl"
+  ledger: "PROVENANCE/resource_ledger.jsonl"
+risks:
+  sandbox: "Describe execution or filesystem risk."
+  cost: "Describe paid API, compute, or human resource risk."
+  privacy: "Describe sensitive data risk."
+  external_write: "Describe upload, submission, or writeback risk."
+  license: "Describe license and redistribution constraints."

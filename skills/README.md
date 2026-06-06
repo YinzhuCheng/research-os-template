@@ -10,6 +10,10 @@
 - `research-os-execution-harness`
 - `research-os-feasibility-probe`
 - `research-os-harness-audit`
+- `research-os-doc-site`
+- `research-os-integration-scout`
+- `research-os-experiment-manager`
+- `research-os-replay-eval-harness`
 - `research-os-resource-guard`
 - `research-os-live-evidence-refresh`
 - `research-os-evidence`
@@ -27,3 +31,10 @@
 ```
 
 默认复制到 `~/.codex/skills`，但模板内版本仍是权威来源。
+
+仓库级 Codex 自动发现镜像位于 `.agents/skills/`。更新 `skills/` 后运行：
+
+```powershell
+.\scripts\sync_skill_mirror.ps1
+.\scripts\check_skill_mirror.ps1
+```

@@ -16,6 +16,7 @@
 - 完整技术路线 HTML：[docs/technical-report.html](docs/technical-report.html)
 - 文档中心：[docs/README.md](docs/README.md)
 - 文档地图：[docs/doc_map.yaml](docs/doc_map.yaml)
+- 开源组件 registry：[docs/integrations/components.yaml](docs/integrations/components.yaml)
 - 计划：[PLAN/00_MASTER_PLAN.md](PLAN/00_MASTER_PLAN.md)
 - Codex 仓库规则：[AGENTS.md](AGENTS.md)
 - Codex harness 示例：[.codex/requirements.md](.codex/requirements.md)

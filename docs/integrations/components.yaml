@@ -1,0 +1,266 @@
+registry_id: INTEGRATIONS-0001
+updated_at: 2026-06-06
+default_policy: "metadata_and_adapter_templates_only"
+components:
+  - id: agent-laboratory
+    name: "Agent Laboratory"
+    source_url: "https://github.com/SamuelSchmidgall/AgentLaboratory"
+    paper_url: "https://arxiv.org/abs/2501.04227"
+    license: "MIT"
+    accessed_at: 2026-06-06
+    adapter_status: planned
+    research_os_phases:
+      - alignment
+      - evidence
+      - experimentation
+      - report
+    install_reference: "python -m venv venv_agent_lab; pip install -r requirements.txt"
+    credential_env_vars: []
+    inputs:
+      - "human-provided research idea"
+      - "task notes"
+      - "YAML experiment config"
+    outputs:
+      - "research report"
+      - "code repository"
+      - "state saves"
+    artifact_mapping:
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      public_summary: "PUBLIC/research_brief.md"
+      private_state: "PRIVATE/ when containing raw prompts or sensitive data"
+    risks:
+      sandbox: "May execute generated code; run only in approved sandbox."
+      cost: "LLM usage depends on selected backend and user configuration."
+      privacy: "Task notes may contain sensitive research details."
+      external_write: "AgentRxiv-style upload must remain disabled until explicitly approved."
+      license: "MIT is permissive; still preserve notices if code is reused."
+  - id: agentrxiv
+    name: "AgentRxiv"
+    source_url: "https://agentrxiv.github.io/"
+    paper_url: "https://arxiv.org/abs/2503.18102"
+    license: "project-specific"
+    accessed_at: 2026-06-06
+    adapter_status: reference_only
+    research_os_phases:
+      - evidence
+      - collaboration
+      - public_export
+    install_reference: "Use as design reference for cumulative agent research sharing."
+    credential_env_vars: []
+    inputs:
+      - "agent-generated reports"
+      - "shared preprint metadata"
+    outputs:
+      - "retrievable research records"
+      - "cross-lab context"
+    artifact_mapping:
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      public_summary: "PUBLIC/public_audit_summary.md"
+    risks:
+      sandbox: "External sharing is out of scope by default."
+      cost: "Unknown until implementation selected."
+      privacy: "Do not upload private or unreviewed research artifacts."
+      external_write: "Requires explicit human approval."
+      license: "Confirm terms before implementing any upload adapter."
+  - id: ai-scientist-v2
+    name: "The AI Scientist-v2"
+    source_url: "https://github.com/SakanaAI/AI-Scientist-v2"
+    paper_url: "https://arxiv.org/abs/2504.08066"
+    license: "AI Scientist Source Code License"
+    accessed_at: 2026-06-06
+    adapter_status: planned
+    research_os_phases:
+      - feasibility_probe
+      - experimentation
+      - analysis
+      - visual_communication
+      - paper_optional
+    install_reference: "Follow upstream conda and requirements instructions in a sandboxed Linux/GPU environment."
+    credential_env_vars:
+      - "OPENAI_API_KEY"
+      - "GEMINI_API_KEY"
+      - "S2_API_KEY"
+      - "AWS_ACCESS_KEY_ID"
+      - "AWS_SECRET_ACCESS_KEY"
+      - "AWS_REGION_NAME"
+    inputs:
+      - "topic description markdown"
+      - "generated idea JSON"
+      - "tree-search config"
+    outputs:
+      - "experiment logs"
+      - "tree visualization HTML"
+      - "paper draft PDF"
+    artifact_mapping:
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      ledger: "PROVENANCE/resource_ledger.jsonl"
+      public_summary: "PUBLIC/research_brief.md after privacy review"
+    risks:
+      sandbox: "Upstream warns it executes LLM-written code; Docker or equivalent sandbox required."
+      cost: "Runs can consume paid model APIs and GPU time."
+      privacy: "Generated manuscripts must disclose AI use according to upstream license terms."
+      external_write: "Disable submission and upload paths unless explicitly approved."
+      license: "Not a standard permissive license; review before reuse or redistribution."
+  - id: ai-co-scientist
+    name: "AI co-scientist"
+    source_url: "https://arxiv.org/abs/2502.18864"
+    paper_url: "https://arxiv.org/abs/2502.18864"
+    license: "paper-only"
+    accessed_at: 2026-06-06
+    adapter_status: reference_only
+    research_os_phases:
+      - alignment
+      - evidence
+      - hypothesis_generation
+    install_reference: "Use generate, debate, evolve as a design pattern; no upstream code adapter is registered."
+    credential_env_vars: []
+    inputs:
+      - "scientist-provided objectives"
+      - "evidence context"
+      - "guidance and constraints"
+    outputs:
+      - "ranked hypotheses"
+      - "research proposals"
+      - "experimental protocols"
+    artifact_mapping:
+      claim_evidence: "PUBLIC/claim_evidence_matrix.yaml"
+      decision_record: "templates/markdown/decision_record.template.md"
+    risks:
+      sandbox: "No direct execution adapter."
+      cost: "Depends on chosen local implementation."
+      privacy: "Biomedical or sensitive claims need domain review before publication."
+      external_write: "None by default."
+      license: "Use paper as reference; do not imply upstream system availability."
+  - id: deep-researcher-agent
+    name: "Deep Researcher Agent"
+    source_url: "https://github.com/Xiangyue-Zhang/auto-deep-researcher-24x7"
+    paper_url: "https://arxiv.org/abs/2604.05854"
+    license: "Apache-2.0"
+    accessed_at: 2026-06-06
+    adapter_status: planned
+    research_os_phases:
+      - experimentation
+      - resource_guard
+      - replay_eval
+    install_reference: "Follow upstream install.py and config.yaml flow in a sandboxed project workspace."
+    credential_env_vars:
+      - "OPENAI_API_KEY"
+      - "ANTHROPIC_API_KEY"
+      - "DEEPSEEK_API_KEY"
+      - "DASHSCOPE_API_KEY"
+      - "MOONSHOT_API_KEY"
+      - "ZHIPUAI_API_KEY"
+    inputs:
+      - "experiment config"
+      - "workspace code"
+      - "metric key"
+    outputs:
+      - "experiment ledger"
+      - "state files"
+      - "dead-end and insight journals"
+      - "terminal states"
+    artifact_mapping:
+      ledger: "PROVENANCE/resource_ledger.jsonl"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      private_journals: "PRIVATE/ if raw prompts or private results are present"
+    risks:
+      sandbox: "Long-running code execution requires cycle, time, and workspace bounds."
+      cost: "Low-cost monitoring pattern is useful, but model calls still require budget control."
+      privacy: "Experiment journals may contain sensitive unpublished ideas."
+      external_write: "Cluster or remote execution requires explicit confirmation."
+      license: "Apache-2.0 is permissive; preserve notices if code is reused."
+  - id: claw-ai-lab
+    name: "Claw AI Lab"
+    source_url: "https://github.com/Claw-AI-Lab/Claw-AI-Lab"
+    paper_url: "https://arxiv.org/abs/2605.22662"
+    license: "MIT"
+    accessed_at: 2026-06-06
+    adapter_status: planned
+    research_os_phases:
+      - dashboard
+      - experimentation
+      - artifact_inspection
+      - rollback_resume
+    install_reference: "Follow upstream backend/frontend install in an isolated environment."
+    credential_env_vars:
+      - "LLM_PROVIDER_KEY"
+    inputs:
+      - "single prompt project specification"
+      - "local codebase"
+      - "datasets and checkpoints"
+    outputs:
+      - "paper"
+      - "code"
+      - "figures"
+      - "experiment logs"
+      - "event stream"
+    artifact_mapping:
+      dashboard: "PUBLIC/index.html design reference"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      artifacts: "PUBLIC/ only after privacy scan"
+    risks:
+      sandbox: "Can write runnable code back to disk; allowed paths must be enforced."
+      cost: "Multi-agent parallel work can increase model and compute usage."
+      privacy: "Dashboard artifact inspector must not expose PRIVATE material."
+      external_write: "Disable community/beta sharing by default."
+      license: "MIT is permissive; preserve notices if code is reused."
+  - id: ag2
+    name: "AG2"
+    source_url: "https://github.com/ag2ai/ag2"
+    paper_url: "https://github.com/ag2ai/ag2"
+    license: "Apache-2.0"
+    accessed_at: 2026-06-06
+    adapter_status: optional
+    research_os_phases:
+      - orchestration
+      - human_in_loop
+      - multi_agent_discussion
+    install_reference: "pip install ag2[openai]"
+    credential_env_vars:
+      - "OPENAI_API_KEY"
+    inputs:
+      - "agent configuration"
+      - "tool definitions"
+      - "human proxy workflow"
+    outputs:
+      - "multi-agent transcript"
+      - "tool-use trace"
+    artifact_mapping:
+      transcript: "PROVENANCE/ or PRIVATE/ depending on sensitivity"
+      public_summary: "PUBLIC/research_brief.md after sanitization"
+    risks:
+      sandbox: "Code execution mode must be constrained."
+      cost: "Multi-agent conversation can multiply model calls."
+      privacy: "Transcripts may include private user instructions."
+      external_write: "Tool permissions require explicit configuration."
+      license: "Apache-2.0 is permissive; preserve notices if code is reused."
+  - id: openai-skills-catalog
+    name: "OpenAI skills catalog"
+    source_url: "https://github.com/openai/skills"
+    paper_url: "https://developers.openai.com/codex/skills"
+    license: "per-skill"
+    accessed_at: 2026-06-06
+    adapter_status: active_reference
+    research_os_phases:
+      - skill_authoring
+      - repo_scoped_skill_discovery
+      - plugin_packaging
+    install_reference: "$skill-installer install https://github.com/openai/skills/tree/main/skills/.experimental/create-plan"
+    credential_env_vars: []
+    inputs:
+      - "SKILL.md"
+      - "scripts"
+      - "references"
+      - "assets"
+    outputs:
+      - "reusable Codex workflow"
+      - "repo-scoped skill mirror"
+    artifact_mapping:
+      source_skills: "skills/"
+      repo_mirror: ".agents/skills/"
+    risks:
+      sandbox: "Skill scripts should be reviewed before execution."
+      cost: "Skill use may trigger downstream model or tool calls."
+      privacy: "Skills must not instruct agents to leak PRIVATE content."
+      external_write: "Plugin or skill install is a local/user action unless explicitly approved."
+      license: "Each skill may have its own license; check before copying."

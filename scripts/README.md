@@ -47,3 +47,13 @@ Skill 结构检查：
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
 ```
+
+Research OS v3 文档、集成和 skill 镜像检查：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\sync_skill_mirror.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_skill_mirror.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_integrations.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1
+```

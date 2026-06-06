@@ -11,10 +11,12 @@
 - 将 `CONTROL/work_order.yaml` 更新为 `WO-0002`，授权本轮写入 `docs/`、`.agents/`、`.codex/`、`skills/`、`scripts/`、`config/`、`PUBLIC/`、`PROVENANCE/`、`PLAN/`。
 - 刷新 `PUBLIC/claim_evidence_matrix.yaml` 和 `PROVENANCE/live_evidence_snapshot.yaml`，补充 Agent Laboratory、AI co-scientist、AI Scientist-v2、Agentic Science survey、Deep Researcher Agent、Claw AI Lab 和 OpenAI Codex 控制面的来源。
 - 新增文档中心、项目摘要、项目日志和资产来源记录。
+- 新增 `research-os-doc-site`、`research-os-integration-scout`、`research-os-experiment-manager`、`research-os-replay-eval-harness`。
+- 新增 `.agents/skills/` 仓库级 skill 镜像，并通过镜像一致性检查。
+- 新增 `docs/integrations/components.yaml`，记录 Agent Laboratory/AgentRxiv、AI Scientist-v2、AI co-scientist、Deep Researcher Agent、Claw AI Lab、AG2 和 OpenAI skills catalog 的适配边界。
+- 新增 doc map、harness run、integration component schema 和 HTML/link/integration/skill mirror 检查脚本。
 
 待完成：
 
-- 新增 HTML 上手文档和技术报告。
-- 新增 skill 镜像、开源组件 registry、adapter 模板、schema 和验证脚本。
 - 运行完整验证和浏览器 QA。
 - 创建 draft PR。
