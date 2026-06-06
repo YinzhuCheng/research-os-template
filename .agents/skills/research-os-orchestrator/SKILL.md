@@ -16,6 +16,7 @@ Use this as the entry skill. Keep orchestration short; load sub-skill references
    - intervention level: `low` by default, with stage gates;
    - privacy boundary: always `PUBLIC/` vs `PRIVATE/`.
 3. Route:
+   - material-first browser intake: use `research-os-copilot` for pending `CONTROL/copilot_inbox/` packets, `PUBLIC/copilot.html` interactions, exactly three targeted questions, and initialization reports;
    - research kernel: normalize any substantive research loop through `research-os-research-kernel` first, producing or updating `candidate`, `evaluator_contract`, `belief_state`, `search_trace`, `negative_result`, `next_action_policy`, and `human_judgment_gate`;
    - domain-specific research mode: inspect the active domain profile in `domain_profiles/` first, then route to one of:
      `research-os-math-discovery`, `research-os-applied-math-modeling`,

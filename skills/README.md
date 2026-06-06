@@ -1,10 +1,11 @@
-# skills 区
+# Skills
 
-此目录保存模板内版本化的 Codex skill 套件。
+`skills/` is the versioned source of Research OS repo skills. `.agents/skills/` is the repo-scoped Codex discovery mirror.
 
-已包含：
+Included skills:
 
 - `research-os-orchestrator`
+- `research-os-copilot`
 - `research-os-research-kernel`
 - `research-os-init`
 - `research-os-alignment`
@@ -30,26 +31,22 @@
 - `research-os-cs-research-artifact`
 - `research-os-statistical-inference`
 
-安装方式：
+Install or mirror:
 
 ```powershell
 .\scripts\install_skills.ps1
-```
-
-默认复制到 `~/.codex/skills`，但模板内版本仍是权威来源。
-
-仓库级 Codex 自动发现镜像位于 `.agents/skills/`。更新 `skills/` 后运行：
-
-```powershell
 .\scripts\sync_skill_mirror.ps1
 .\scripts\check_skill_mirror.ps1
 ```
 
-## v3.2 skill 治理
+## Main-route Governance
 
-主路由 skill 不能只是一个松散工具。进入 `research-os-orchestrator` 主链路前，必须满足：
+A main-route skill must not be a loose prompt or isolated tool. Before it enters `research-os-orchestrator`, it needs:
 
-- 在 `skills/README.md`、`docs/doc_map.yaml` 或技术报告中可发现。
-- 有 schema、template、validator 或明确 kernel exemption。
-- 能通过 `.agents/skills/` 镜像一致性检查。
-- 对研究对象必须说明如何进入 `research-os-research-kernel` 的 candidate、evaluator、belief、trace、negative result 和 human gate。
+- kernel binding or explicit kernel exemption;
+- schema or template support;
+- validator coverage;
+- documentation or `docs/doc_map.yaml` presence;
+- `.agents/skills/` mirror consistency.
+
+`research-os-copilot` is governed by the copilot schemas, templates, validators, browser page, plugin bridge, and research-kernel handoff.

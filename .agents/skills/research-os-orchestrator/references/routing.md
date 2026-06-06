@@ -13,6 +13,7 @@
 
 ## Stage Routing
 
+- `copilot_intake`: process material-first browser intake through `research-os-copilot`; do not use the retired fixed five-question intake.
 - `initialization`: create config, research brief, alignment dossier, first work order.
 - `research_kernel`: normalize substantive work into candidate, evaluator contract, evaluation result, belief state, search trace, negative result, next-action policy, and human judgment gate.
 - `literature`: build literature matrix and evidence map.
@@ -39,6 +40,23 @@ After a domain skill produces a plan or artifact, return to the general Research
 `research-os-evidence`, `research-os-feasibility-probe`, `research-os-resource-guard`, `research-os-execution-harness`, `research-os-analysis`, and `research-os-public-export`.
 
 Field routing never bypasses the work order, phase gate, allowed paths, forbidden paths, manifest, ledger, or privacy scan.
+
+## Browser Copilot Routing
+
+Use `research-os-copilot` when a researcher starts from `PUBLIC/copilot.html`, uploads material, pastes source links, or when `CONTROL/copilot_inbox/` contains a pending packet.
+
+The route is:
+
+`material_input -> save_intake -> pending_intake_analysis -> three targeted questions -> initialization report -> research-os-research-kernel -> domain profile -> execution harness`
+
+Rules:
+
+- The first screen is material-first; do not ask the old five fixed questions.
+- Generate exactly three targeted questions before initialization.
+- Every question must include `recommended_answer`, options, and a free-form Other path.
+- Raw uploads stay runtime-private; public state is sanitized.
+- Experiments require a researcher-provided budget before minimum validation runs.
+- Theory tracks should include definitions, candidate theorems, and proof or validation notes.
 
 ## Anti-Spaghetti Skill Rule
 

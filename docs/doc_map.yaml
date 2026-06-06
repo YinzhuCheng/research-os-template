@@ -2,31 +2,53 @@ doc_map_id: DOCMAP-0001
 updated_at: 2026-06-06
 language_mode: zh-first
 entrypoints:
+  copilot:
+    title: "Material-first Browser Copilot"
+    path: "PUBLIC/copilot.html"
+    audience: "Researchers starting from notes, drafts, chats, PDFs, zips, or demos"
   novice:
-    title: "快速上手"
+    title: "Quick Start"
     path: "docs/start-here.html"
-    audience: "一般研究者、第一次接触 Codex 的使用者"
+    audience: "General researchers and first-time Codex users"
   technical:
-    title: "技术路线"
+    title: "Technical Route"
     path: "docs/technical-report.html"
-    audience: "后续 agent、维护者、高级研究者"
+    audience: "Future agents, maintainers, and advanced researchers"
+  copilot_bridge:
+    title: "Codex Browser Copilot Bridge"
+    path: "docs/codex-browser-copilot.html"
+    audience: "Agents implementing or auditing browser-to-Codex state sync"
   domain_modes:
-    title: "五大领域模式"
+    title: "Five Domain Modes"
     path: "docs/domain-modes.html"
-    audience: "需要基础数学、应用数学、机器学习、计算机科学或统计学研究范式的研究者和 agent"
+    audience: "Researchers using domain-specific paradigms"
   research_kernel:
-    title: "研究内核"
+    title: "Research Kernel"
     path: "templates/research_kernel/research_cycle.template.yaml"
-    audience: "需要把候选、评价器、计算、失败结果和人工闸门统一建模的研究者和 agent"
+    audience: "Researchers and agents modeling candidates, evaluators, belief, trace, negative results, and human gates"
   dashboard:
-    title: "公开 dashboard"
+    title: "Public Dashboard"
     path: "PUBLIC/index.html"
-    audience: "项目参与者、审计者"
+    audience: "Project participants and auditors"
 core_controls:
   work_order: "CONTROL/work_order.yaml"
   phase_gate: "CONTROL/phase_gate.yaml"
   project_config: "config/research_project.yaml"
   repository_rules: "AGENTS.md"
+copilot:
+  cockpit: "PUBLIC/copilot.html"
+  sanitized_state: "PUBLIC/copilot_state.json"
+  plugin_marketplace: ".agents/plugins/marketplace.json"
+  plugin_root: ".agents/plugins/plugins/research-os-copilot/"
+  skill: "skills/research-os-copilot/SKILL.md"
+  bridge_doc: "docs/codex-browser-copilot.html"
+  intake_schema: "config/schemas/copilot_intake.schema.json"
+  questions_schema: "config/schemas/copilot_questions.schema.json"
+  initialization_report_schema: "config/schemas/copilot_initialization_report.schema.json"
+  intake_template: "templates/yaml/copilot_intake.template.yaml"
+  questions_template: "templates/yaml/copilot_questions.template.yaml"
+  initialization_report_template: "templates/yaml/copilot_initialization_report.template.yaml"
+  download_script: "scripts/download_reference_links.ps1"
 audit:
   run_manifest: "PROVENANCE/run_manifest.jsonl"
   resource_ledger: "PROVENANCE/resource_ledger.jsonl"
@@ -55,6 +77,8 @@ validation:
   skill: "scripts/validate_skills.ps1"
   harness: "scripts/check_harness.ps1"
   dashboard: "scripts/check_dashboard.ps1"
+  docs_links: "scripts/check_docs_links.ps1"
+  html_docs: "scripts/check_html_docs.ps1"
   domains: "scripts/check_domain_profiles.ps1"
   agent_capabilities: "scripts/check_agent_capabilities.ps1"
   domain_templates: "scripts/check_domain_templates.ps1"
@@ -62,4 +86,9 @@ validation:
   research_kernel: "scripts/check_research_kernel.ps1"
   domain_kernel_bindings: "scripts/check_domain_kernel_bindings.ps1"
   no_orphan_skills: "scripts/check_no_orphan_skills.ps1"
+  copilot_bridge: "scripts/check_copilot_bridge.ps1"
+  copilot_intake_schema: "scripts/check_copilot_intake_schema.ps1"
+  copilot_state: "scripts/check_copilot_state.ps1"
+  copilot_resource_rendering: "scripts/check_copilot_resource_rendering.ps1"
+  integrations: "scripts/check_integrations.ps1"
   privacy: "scripts/scan_privacy.ps1"

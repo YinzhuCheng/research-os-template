@@ -1,5 +1,5 @@
 param(
-  [string[]]$HtmlDocs = @("docs\start-here.html", "docs\domain-modes.html", "docs\technical-report.html", "PUBLIC\index.html")
+  [string[]]$HtmlDocs = @("docs\start-here.html", "docs\domain-modes.html", "docs\technical-report.html", "docs\codex-browser-copilot.html", "PUBLIC\index.html", "PUBLIC\copilot.html")
 )
 
 $ErrorActionPreference = "Stop"

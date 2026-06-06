@@ -31,6 +31,9 @@ Require-File (Join-Path $Root "templates\yaml\harness_run.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\domain_profile.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\agent_capability.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\research_kernel.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\copilot_intake.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\copilot_questions.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\copilot_initialization_report.template.yaml")
 Require-File (Join-Path $Root "templates\research_kernel\research_cycle.template.yaml")
 Require-File (Join-Path $Root "domain_profiles\README.md")
 Require-File (Join-Path $Root "domain_profiles\fundamental-mathematics\profile.yaml")
@@ -55,7 +58,12 @@ Require-Text (Join-Path $Root "PUBLIC\claim_evidence_matrix.yaml") "CLAIM-[0-9]{
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "doc_map_id:\s+DOCMAP-[0-9]{4}"
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "domain_profiles"
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "research_kernel"
+Require-Text (Join-Path $Root "docs\doc_map.yaml") "copilot"
 Require-Text (Join-Path $Root "docs\integrations\components.yaml") "registry_id:\s+INTEGRATIONS-[0-9]{4}"
+Require-Text (Join-Path $Root "config\schemas\copilot_intake.schema.json") "uploaded_files"
+Require-Text (Join-Path $Root "config\schemas\copilot_questions.schema.json") "recommended_answer"
+Require-Text (Join-Path $Root "config\schemas\copilot_questions.schema.json") "free_text_other"
+Require-Text (Join-Path $Root "config\schemas\copilot_initialization_report.schema.json") "minimum_validation"
 
 Get-Content -LiteralPath (Join-Path $Root "PROVENANCE\run_manifest.jsonl") | ForEach-Object {
   if ($_.Trim()) {

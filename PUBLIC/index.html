@@ -6,224 +6,68 @@
   <title>Codex Research OS Dashboard</title>
   <style>
     :root {
-      --bg: #f6f8fb;
+      --bg: #f5f7f8;
       --surface: #ffffff;
-      --surface-alt: #eef2f7;
-      --text: #1f2933;
+      --soft: #eef3f1;
+      --text: #18212b;
       --muted: #607080;
-      --border: #d6ddd8;
-      --blue: #2563eb;
-      --green: #117a65;
-      --amber: #a16207;
-      --red: #b42318;
+      --border: #cfd8d5;
+      --accent: #176b57;
+      --blue: #255f99;
+      --warn: #946200;
       --radius: 8px;
-      --space-1: 4px;
-      --space-2: 8px;
-      --space-3: 12px;
-      --space-4: 16px;
-      --space-5: 24px;
-      --space-6: 32px;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --s2: 8px;
+      --s3: 12px;
+      --s4: 16px;
+      --s5: 24px;
+      --s6: 32px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.55;
-    }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.56; }
     a { color: var(--blue); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .layout {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 280px 1fr;
-    }
-    aside {
-      border-right: 1px solid var(--border);
-      background: #f9fafb;
-      padding: var(--space-5);
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: auto;
-      min-width: 0;
-    }
-    main {
-      padding: var(--space-6);
-      max-width: 1180px;
-      width: 100%;
-      min-width: 0;
-    }
-    h1, h2, h3 { line-height: 1.2; letter-spacing: 0; }
-    h1 { font-size: 28px; margin: 0 0 var(--space-2); }
-    h2 { font-size: 18px; margin: 0 0 var(--space-4); }
-    h3 { font-size: 15px; margin: var(--space-4) 0 var(--space-2); }
+    button { font: inherit; cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 8px 11px; }
+    button:hover { border-color: var(--accent); }
+    .layout { min-height: 100vh; display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+    aside { position: sticky; top: 0; height: 100vh; overflow: auto; border-right: 1px solid var(--border); background: #fbfcfc; padding: var(--s5); }
+    main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: var(--s6) 0; }
+    h1, h2, h3 { line-height: 1.22; letter-spacing: 0; }
+    h1 { margin: 0 0 var(--s2); font-size: 30px; }
+    h2 { margin: 0 0 var(--s3); font-size: 20px; }
+    h3 { margin: var(--s4) 0 var(--s2); font-size: 16px; }
+    p { margin: 0 0 var(--s3); }
+    .brand { font-weight: 760; font-size: 18px; margin-bottom: var(--s2); }
     .muted { color: var(--muted); }
-    .brand {
-      font-weight: 700;
-      font-size: 18px;
-      margin-bottom: var(--space-1);
-    }
-    .nav-list {
-      display: grid;
-      gap: var(--space-2);
-      margin-top: var(--space-5);
-    }
-    .nav-list button {
-      width: 100%;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: var(--radius);
-      text-align: left;
-      cursor: pointer;
-      font: inherit;
-      overflow-wrap: anywhere;
-    }
-    .nav-list button:hover,
-    .nav-list button.active {
-      border-color: var(--blue);
-      background: #eef4ff;
-    }
-    .topbar {
-      display: flex;
-      align-items: start;
-      justify-content: space-between;
-      gap: var(--space-4);
-      margin-bottom: var(--space-5);
-    }
-    .status-grid {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(120px, 1fr));
-      gap: var(--space-3);
-      margin: var(--space-5) 0;
-    }
-    .metric {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-4);
-      min-height: 86px;
-      min-width: 0;
-    }
-    .metric span {
-      display: block;
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: var(--space-2);
-    }
-    .metric strong {
-      font-size: 16px;
-    }
-    .panel-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-      gap: var(--space-4);
-      align-items: start;
-    }
-    .panel-grid > * { min-width: 0; }
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-5);
-      margin-bottom: var(--space-4);
-      min-width: 0;
-    }
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-2);
-      margin-top: var(--space-3);
-    }
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 4px 10px;
-      background: var(--surface-alt);
-      color: var(--text);
-      font-size: 13px;
-    }
-    .pill.green { border-color: #9bd3c7; color: var(--green); background: #edf8f5; }
-    .pill.amber { border-color: #e8cf8f; color: var(--amber); background: #fff8e5; }
-    .pill.red { border-color: #f1b5b0; color: var(--red); background: #fff1f0; }
-    .reader pre {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      background: #17202a;
-      color: #f8fafc;
-      border-radius: var(--radius);
-      padding: var(--space-4);
-      overflow: auto;
-      max-width: 100%;
-    }
-    pre {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      overflow: auto;
-      max-width: 100%;
-    }
-    .reader table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: var(--space-4) 0;
-      font-size: 14px;
-    }
-    .reader th, .reader td {
-      border: 1px solid var(--border);
-      padding: 8px 10px;
-      vertical-align: top;
-    }
-    .reader th { background: var(--surface-alt); }
-    .reader code {
-      background: var(--surface-alt);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 1px 4px;
-      font-size: 0.92em;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-    .toolbar {
-      display: flex;
-      gap: var(--space-2);
-      flex-wrap: wrap;
-    }
-    .toolbar a,
-    .toolbar button {
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      border-radius: var(--radius);
-      padding: 8px 12px;
-      font: inherit;
-      cursor: pointer;
-    }
-    .empty {
-      border: 1px dashed var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-5);
-      color: var(--muted);
-      background: #fffdf8;
-    }
-    @media (max-width: 920px) {
+    .nav-list { display: grid; gap: var(--s2); margin-top: var(--s5); }
+    .nav-list button { text-align: left; width: 100%; overflow-wrap: anywhere; }
+    .nav-list button.active { border-color: var(--accent); background: var(--soft); }
+    .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); }
+    .toolbar { display: flex; gap: var(--s2); flex-wrap: wrap; }
+    .toolbar a, .toolbar button { display: inline-flex; align-items: center; min-height: 38px; }
+    .status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); margin-bottom: var(--s5); }
+    .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s4); min-height: 82px; }
+    .metric span { display: block; color: var(--muted); font-size: 13px; margin-bottom: var(--s2); }
+    .panel-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr); gap: var(--s4); align-items: start; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s5); margin-bottom: var(--s4); min-width: 0; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+    .pill { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; background: var(--soft); font-size: 13px; }
+    .pill.ok { color: #0f513f; border-color: #9bc7ba; background: #eef8f4; }
+    .pill.warn { color: var(--warn); border-color: #dec078; background: #fff8e6; }
+    .reader pre, pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #16212b; color: #f8fbfd; border-radius: var(--radius); padding: var(--s4); overflow: auto; }
+    .reader table { width: 100%; border-collapse: collapse; margin: var(--s4) 0; font-size: 14px; }
+    .reader th, .reader td { border: 1px solid var(--border); padding: 8px 10px; vertical-align: top; }
+    .reader th { background: var(--soft); }
+    .reader code { background: var(--soft); border: 1px solid var(--border); border-radius: 4px; padding: 1px 4px; }
+    .empty { border: 1px dashed var(--border); border-radius: var(--radius); padding: var(--s5); color: var(--muted); background: #fffdf7; }
+    @media (max-width: 960px) {
       .layout { grid-template-columns: 1fr; }
-      .layout, aside, main { min-width: 0; }
-      aside {
-        position: static;
-        height: auto;
-        border-right: 0;
-        border-bottom: 1px solid var(--border);
-      }
-      main { padding: var(--space-4); }
-      .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .panel-grid { grid-template-columns: minmax(0, 1fr); }
+      aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      main { padding: var(--s5) 0; }
       .topbar { display: block; }
-      .toolbar { margin-top: var(--space-3); }
+      .toolbar { margin-top: var(--s3); }
+      .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .panel-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -231,23 +75,24 @@
   <div class="layout">
     <aside>
       <div class="brand">Codex Research OS</div>
-      <div class="muted">可追踪、可审计的研究项目模板</div>
+      <p class="muted">PUBLIC/index.html dashboard for material-first human-in-loop research.</p>
       <div class="nav-list" id="nav"></div>
     </aside>
     <main>
       <div class="topbar">
         <div>
           <h1 id="projectTitle">Codex Research OS Template</h1>
-          <div class="muted">研究驾驶舱：研究类型、feasibility、resource guard、live evidence 与审计状态</div>
+          <p class="muted">Research cockpit, feasibility, resource guard, live evidence, research kernel, and governance links.</p>
           <div class="pill-row" id="projectPills"></div>
         </div>
         <div class="toolbar">
-          <button type="button" id="reloadBtn">刷新</button>
-          <a href="../docs/start-here.html">快速上手</a>
-          <a href="../docs/domain-modes.html">领域模式</a>
-          <a href="../templates/research_kernel/research_cycle.template.yaml">研究内核</a>
-          <a href="../docs/technical-report.html">技术路线</a>
-          <a href="../README.md">模板首页</a>
+          <button type="button" id="reloadBtn">Refresh</button>
+          <a href="copilot.html">Copilot</a>
+          <a href="../docs/start-here.html">Start Here</a>
+          <a href="../docs/domain-modes.html">Domain Modes</a>
+          <a href="../templates/research_kernel/research_cycle.template.yaml">Research Kernel</a>
+          <a href="../docs/technical-report.html">Technical Route</a>
+          <a href="../README.md">README</a>
         </div>
       </div>
 
@@ -256,22 +101,22 @@
       <section class="panel-grid">
         <div>
           <section class="panel">
-            <h2>当前文档</h2>
+            <h2>Current Document</h2>
             <div class="reader" id="reader">
-              <div class="empty">选择左侧文档查看内容。通过本地 HTTP 服务打开时可渲染 Markdown/YAML/JSON；file:// 模式可能受浏览器限制。</div>
+              <div class="empty">Choose a document on the left. For full fetch support, open this page through a local HTTP server instead of file://.</div>
             </div>
           </section>
         </div>
         <div>
           <section class="panel">
-            <h2>下一步决策</h2>
+            <h2>Next Decisions</h2>
             <ul id="decisionList"></ul>
           </section>
           <section class="panel">
-            <h2>审计提醒</h2>
-            <p class="muted">公开导出前运行：</p>
+            <h2>Audit Reminders</h2>
+            <p class="muted">Before public export:</p>
             <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</pre>
-            <p class="muted">真实资源调用前运行：</p>
+            <p class="muted">Before real resource use:</p>
             <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_resource_guard.ps1</pre>
           </section>
         </div>
@@ -283,51 +128,32 @@
     const fallbackData = {
       project: {
         title: "Codex Research OS Template",
-        phase: "research-os-v3.2",
+        phase: "research-os-v3.3",
         language_mode: "zh-first",
         intervention_level: "low",
         privacy_policy: "public_private_split",
-        research_type: "research-kernel-ready",
+        research_type: "material-first-copilot-ready",
         dissemination: "undecided"
       },
       status: [
-        {label: "研究类型", value: "待入口具体化"},
-        {label: "Domain Profiles", value: "五大领域已接入"},
-        {label: "Research Kernel", value: "已接入"},
-        {label: "Feasibility", value: "待定义"},
-        {label: "Resource Guard", value: "已启用"},
-        {label: "Live Evidence", value: "已建档"},
-        {label: "Harness", value: "v3.2 检查中"},
-        {label: "论文", value: "可选"}
+        {label: "Copilot", value: "material-first intake"},
+        {label: "Research Type", value: "decided from material"},
+        {label: "Questions", value: "exactly three targeted"},
+        {label: "feasibility", value: "budget-gated"},
+        {label: "resource guard", value: "enabled"},
+        {label: "live evidence", value: "required"}
       ],
       documents: [
-        {path: "../docs/start-here.html", label: "快速上手 HTML"},
-        {path: "../docs/domain-modes.html", label: "五大领域模式 HTML"},
-        {path: "../templates/research_kernel/research_cycle.template.yaml", label: "研究内核模板"},
-        {path: "../config/schemas/research_kernel.schema.json", label: "Research Kernel Schema"},
-        {path: "../docs/technical-report.html", label: "技术路线 HTML"},
-        {path: "../docs/README.md", label: "文档中心"},
-        {path: "../docs/doc_map.yaml", label: "文档地图"},
-        {path: "../docs/integrations/components.yaml", label: "开源组件 Registry"},
-        {path: "../docs/PROJECT_SUMMARY.md", label: "项目摘要"},
-        {path: "README.md", label: "公开区说明"},
-        {path: "research_brief.md", label: "研究简报"},
-        {path: "claim_evidence_matrix.yaml", label: "Claim-Evidence"},
-        {path: "../AGENTS.md", label: "AGENTS 规则"},
-        {path: "../PROVENANCE/resource_ledger.jsonl", label: "资源 Ledger"},
-        {path: "../PROVENANCE/live_evidence_snapshot.yaml", label: "Live Evidence"},
-        {path: "../PROVENANCE/public_audit_summary.md", label: "公开审计摘要"},
-        {path: "../CONTROL/phase_gate.yaml", label: "阶段闸门"},
-        {path: "../PLAN/05_IMPLEMENTATION_CHECKLIST.md", label: "实施清单"},
-        {path: "../PLAN/06_GAP_AUDIT.md", label: "缺口审计"}
+        {path: "copilot.html", label: "Material-first Copilot"},
+        {path: "../docs/codex-browser-copilot.html", label: "Copilot Bridge Technical Doc"},
+        {path: "../docs/start-here.html", label: "Start Here HTML"},
+        {path: "../docs/technical-report.html", label: "Technical Route HTML"},
+        {path: "../CONTROL/work_order.yaml", label: "Work Order"}
       ],
       next_decisions: [
-        "确认目标研究的语言模式：zh-first 或 en-only。",
-        "确认每个候选研究对象是否已进入 candidate/evaluator/belief/trace/human gate 内核循环。",
-        "确认研究类型、验证对象和最小可行性验证预算。",
-        "确认是否需要论文、报告、复现包或决策备忘。",
-        "确认真实资源调用是否允许以及预算上限。",
-        "如需接入开源自动研究组件，先登记 components.yaml 并完成许可证/风险检查。"
+        "Open PUBLIC/copilot.html and provide material-first intake.",
+        "Answer exactly three targeted questions after Codex analyzes material.",
+        "Provide budget before experimental validation."
       ]
     };
 
@@ -356,31 +182,16 @@
       let inList = false;
       let inCode = false;
       let code = [];
-      const closeList = () => {
-        if (inList) html += "</ul>";
-        inList = false;
-      };
+      const closeList = () => { if (inList) html += "</ul>"; inList = false; };
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         if (line.startsWith("```")) {
-          if (!inCode) {
-            closeList();
-            inCode = true;
-            code = [];
-          } else {
-            html += `<pre><code>${esc(code.join("\n"))}</code></pre>`;
-            inCode = false;
-          }
+          if (!inCode) { closeList(); inCode = true; code = []; }
+          else { html += `<pre><code>${esc(code.join("\n"))}</code></pre>`; inCode = false; }
           continue;
         }
-        if (inCode) {
-          code.push(line);
-          continue;
-        }
-        if (!line.trim()) {
-          closeList();
-          continue;
-        }
+        if (inCode) { code.push(line); continue; }
+        if (!line.trim()) { closeList(); continue; }
         const heading = line.match(/^(#{1,3})\s+(.+)$/);
         if (heading) {
           closeList();
@@ -388,25 +199,8 @@
           continue;
         }
         if (line.startsWith("- ")) {
-          if (!inList) {
-            html += "<ul>";
-            inList = true;
-          }
+          if (!inList) { html += "<ul>"; inList = true; }
           html += `<li>${renderInline(line.slice(2))}</li>`;
-          continue;
-        }
-        if (/^\|.+\|$/.test(line) && i + 1 < lines.length && /^\|[\s:|\-]+\|$/.test(lines[i + 1])) {
-          closeList();
-          const header = line.split("|").slice(1, -1).map(cell => `<th>${renderInline(cell.trim())}</th>`).join("");
-          html += `<table><thead><tr>${header}</tr></thead><tbody>`;
-          i += 2;
-          while (i < lines.length && /^\|.+\|$/.test(lines[i])) {
-            const row = lines[i].split("|").slice(1, -1).map(cell => `<td>${renderInline(cell.trim())}</td>`).join("");
-            html += `<tr>${row}</tr>`;
-            i++;
-          }
-          i--;
-          html += "</tbody></table>";
           continue;
         }
         closeList();
@@ -418,13 +212,8 @@
 
     function renderDocument(path, text) {
       const reader = document.getElementById("reader");
-      if (path.endsWith(".md")) {
-        reader.innerHTML = renderMarkdown(text);
-      } else if (path.endsWith(".json") || path.endsWith(".jsonl")) {
-        reader.innerHTML = `<pre><code>${esc(text)}</code></pre>`;
-      } else {
-        reader.innerHTML = `<pre><code>${esc(text)}</code></pre>`;
-      }
+      if (path.endsWith(".md")) reader.innerHTML = renderMarkdown(text);
+      else reader.innerHTML = `<pre><code>${esc(text)}</code></pre>`;
     }
 
     async function loadDoc(path) {
@@ -435,14 +224,9 @@
       try {
         const response = await fetch(path, {cache: "no-store"});
         if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-        const text = await response.text();
-        renderDocument(path, text);
+        renderDocument(path, await response.text());
       } catch (error) {
-        document.getElementById("reader").innerHTML = `
-          <div class="empty">
-            无法读取 <code>${esc(path)}</code>。如果当前是 file:// 打开，请在模板根目录运行本地 HTTP 服务后访问 <code>PUBLIC/index.html</code>。
-            <br><br>错误：${esc(error.message)}
-          </div>`;
+        document.getElementById("reader").innerHTML = `<div class="empty">Unable to read <code>${esc(path)}</code>. ${esc(error.message)}</div>`;
       }
     }
 
@@ -450,13 +234,13 @@
       const project = dashboardData.project;
       document.getElementById("projectTitle").textContent = project.title;
       document.getElementById("projectPills").innerHTML = [
-        ["阶段", project.phase, "green"],
-        ["语言", project.language_mode, ""],
-        ["介入", project.intervention_level, "amber"],
-        ["隐私", project.privacy_policy, "green"],
-        ["研究类型", project.research_type || "unspecified", ""],
-        ["传播", project.dissemination || "undecided", ""]
-      ].map(([label, value, tone]) => `<span class="pill ${tone}">${label}: ${value}</span>`).join("");
+        ["phase", project.phase, "ok"],
+        ["language", project.language_mode, ""],
+        ["intervention", project.intervention_level, "warn"],
+        ["privacy", project.privacy_policy, "ok"],
+        ["research_type", project.research_type || "unspecified", ""],
+        ["dissemination", project.dissemination || "undecided", ""]
+      ].map(([label, value, tone]) => `<span class="pill ${tone}">${label}: ${esc(value)}</span>`).join("");
 
       document.getElementById("statusGrid").innerHTML = dashboardData.status.map(item => `
         <div class="metric">
@@ -474,9 +258,7 @@
       document.querySelectorAll(".nav-list button").forEach(button => {
         button.addEventListener("click", () => loadDoc(button.dataset.path));
       });
-      if (!currentDoc && dashboardData.documents.length) {
-        loadDoc(dashboardData.documents[0].path);
-      }
+      if (!currentDoc && dashboardData.documents.length) loadDoc(dashboardData.documents[0].path);
     }
 
     async function loadDashboardData() {
@@ -493,7 +275,6 @@
       if (currentDoc) loadDoc(currentDoc);
       loadDashboardData();
     });
-
     loadDashboardData();
   </script>
 </body>

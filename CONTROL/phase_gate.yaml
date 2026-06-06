@@ -1,14 +1,14 @@
-current_phase: research-os-v3.2
+current_phase: research-os-v3.3
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "完成 v3.2 research kernel、领域绑定、计算清单和防杂货化校验后，审查 draft PR 并决定是否合并到 main。"
+next_required_decision: "Review the material-first Copilot bridge, install the repo-scoped plugin if desired, and decide whether to use a heartbeat automation for pending intake detection."
 confirmed_decisions:
-  - "使用分支加 draft PR 的发布策略。"
-  - "默认保持研究无关、human-in-loop 和可选自动实验链路。"
-  - "积极集成开源组件，但默认通过 registry、adapter 模板和许可证记录集成，不 vendoring 大段第三方源码。"
-  - "五大领域通过 domain_profiles、agent registry、templates 和领域 skill 深化；所有领域流程仍受 work order、phase gate、manifest、ledger 和 privacy scan 约束。"
-  - "v3.2 将 evaluator、candidate、negative result、belief/uncertainty、search trace 和 computation plan 作为统一研究内核对象，防止 skill 体系退化为杂货工具箱。"
+  - "Use a material-first intake: initial free text or upload, followed by three targeted questions."
+  - "Use plugin + MCP + browser cockpit as the preferred bridge shape."
+  - "Browser submissions enqueue work; Codex asks for confirmation before execution."
+  - "Raw uploaded material defaults to PRIVATE/intake at runtime and is not committed."
+  - "Reference downloads are convenience scripts for lawful open sources or landing pages, not paywall bypass."

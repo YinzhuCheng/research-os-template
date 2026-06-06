@@ -38,7 +38,7 @@ feasibility_probe:
 live_evidence:
   required_for_time_sensitive_claims: true
   last_refresh: null
-current_phase: initialization
+current_phase: copilot_intake
 phase_gate_required: true
 public_export_enabled: false
 created_from:

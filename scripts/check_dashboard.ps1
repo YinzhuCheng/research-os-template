@@ -15,6 +15,8 @@ $required = @(
   "renderMarkdown",
   "Codex Research OS",
   "PUBLIC/index.html",
+  "copilot.html",
+  "material-first",
   "feasibility",
   "resource",
   "live evidence"

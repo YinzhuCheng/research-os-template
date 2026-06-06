@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Research OS Copilot</title>
+  <style>
+    :root {
+      --bg: #f5f7f8;
+      --surface: #ffffff;
+      --surface-soft: #eef3f1;
+      --text: #18212b;
+      --muted: #5f6f7c;
+      --border: #cfd8d5;
+      --accent: #176b57;
+      --accent-strong: #0f513f;
+      --blue: #255f99;
+      --warn: #946200;
+      --danger: #a33a2b;
+      --radius: 8px;
+      --s1: 4px;
+      --s2: 8px;
+      --s3: 12px;
+      --s4: 16px;
+      --s5: 24px;
+      --s6: 32px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.56;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button, input, textarea, select { font: inherit; }
+    button {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    button.primary:hover { background: var(--accent-strong); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .layout {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+    }
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      border-right: 1px solid var(--border);
+      background: #fbfcfc;
+      padding: var(--s5);
+    }
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: var(--s6) 0;
+    }
+    h1, h2, h3 { line-height: 1.22; letter-spacing: 0; }
+    h1 { margin: 0 0 var(--s2); font-size: 30px; }
+    h2 { margin: 0 0 var(--s3); font-size: 20px; }
+    h3 { margin: 0 0 var(--s2); font-size: 16px; }
+    p { margin: 0 0 var(--s3); }
+    .brand { font-weight: 760; font-size: 18px; margin-bottom: var(--s2); }
+    .muted { color: var(--muted); }
+    .nav {
+      display: grid;
+      gap: var(--s2);
+      margin-top: var(--s5);
+    }
+    .nav a {
+      display: block;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 10px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--s4);
+      align-items: flex-start;
+      margin-bottom: var(--s5);
+    }
+    .toolbar { display: flex; gap: var(--s2); flex-wrap: wrap; }
+    .panel {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: var(--s5);
+      margin-bottom: var(--s4);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+      gap: var(--s4);
+      align-items: start;
+    }
+    .section-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s4);
+    }
+    label {
+      display: block;
+      font-weight: 650;
+      margin-bottom: var(--s2);
+    }
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      resize: vertical;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--s3);
+      background: #fff;
+      color: var(--text);
+    }
+    input[type="file"] {
+      width: 100%;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: var(--s4);
+      background: #fbfcfc;
+    }
+    .hint {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: var(--s2);
+    }
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s2);
+      margin-top: var(--s3);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: var(--surface-soft);
+      font-size: 13px;
+      min-height: 28px;
+    }
+    .pill.ok { color: var(--accent-strong); border-color: #9bc7ba; background: #eef8f4; }
+    .pill.warn { color: var(--warn); border-color: #dec078; background: #fff8e6; }
+    .pill.danger { color: var(--danger); border-color: #e4aaa1; background: #fff1ef; }
+    .drop {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fbfcfc;
+      padding: var(--s4);
+    }
+    .question {
+      border-top: 1px solid var(--border);
+      padding-top: var(--s4);
+      margin-top: var(--s4);
+    }
+    .options {
+      display: grid;
+      gap: var(--s2);
+      margin: var(--s3) 0;
+    }
+    .option {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--s2);
+      align-items: start;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--s3);
+      background: #fbfcfc;
+    }
+    .mini-list {
+      margin: var(--s2) 0 0;
+      padding-left: 18px;
+    }
+    .empty {
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: #fffdf7;
+      color: var(--muted);
+      padding: var(--s4);
+    }
+    .code {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      border-radius: var(--radius);
+      background: #16212b;
+      color: #f8fbfd;
+      padding: var(--s3);
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+    }
+    .resources {
+      display: grid;
+      gap: var(--s2);
+    }
+    .resource {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--s3);
+      background: #fbfcfc;
+    }
+    .resource strong { display: block; }
+    .split {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--s3);
+      align-items: center;
+    }
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      aside {
+        position: static;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+      main { padding: var(--s5) 0; }
+      .topbar { display: block; }
+      .toolbar { margin-top: var(--s3); }
+      .grid, .section-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">Research OS Copilot</div>
+      <p class="muted">Material-first browser cockpit. 上传材料优先；Codex 再问三个针对性问题。</p>
+      <nav class="nav" aria-label="Copilot navigation">
+        <a href="#intake">Material Intake</a>
+        <a href="#questions">Three Questions</a>
+        <a href="#overview">Overview</a>
+        <a href="#literature">Literature</a>
+        <a href="#theory">Theory</a>
+        <a href="#experiment">Experiment</a>
+        <a href="#resources">Repository Links</a>
+        <a href="index.html">Dashboard</a>
+        <a href="../docs/codex-browser-copilot.html">Bridge Doc</a>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div>
+          <h1>Material-first Research Copilot</h1>
+          <p class="muted">输入研究方向或上传已有材料。保存后，Codex 读取结构化队列并弹窗确认下一步。</p>
+          <div class="status" id="statePills"></div>
+        </div>
+        <div class="toolbar">
+          <button type="button" id="refreshBtn">Refresh</button>
+          <button type="button" id="copyPromptBtn">Copy Codex Prompt</button>
+          <a href="../scripts/download_reference_links.ps1">Download Script</a>
+        </div>
+      </div>
+
+      <div class="grid">
+        <section class="panel" id="intake">
+          <h2>1. Save Initial Material</h2>
+          <p class="muted">推荐上传研究计划、ChatGPT 对话导出、笔记、PDF、zip 或 demo。没有材料时，也可以只写研究方向。</p>
+          <form id="intakeForm">
+            <label for="freeText">研究方向 / 已有想法 / 链接</label>
+            <textarea id="freeText" name="free_text" placeholder="例如：我想研究某类数学猜想的反例搜索范式；或粘贴研究计划、ChatGPT 分享链接、GitHub demo 链接。"></textarea>
+            <div class="drop">
+              <label for="uploads">上传材料</label>
+              <input id="uploads" name="uploads" type="file" multiple>
+              <div class="hint">Raw files are runtime-private. The public state stores names, hashes, counts, and summaries only.</div>
+            </div>
+            <div class="toolbar" style="margin-top: 16px;">
+              <button type="submit" class="primary">Save Initial Material</button>
+              <button type="button" id="saveDraftBtn">Save Local Draft JSON</button>
+            </div>
+          </form>
+          <div id="submitResult" class="empty" style="margin-top: 16px;">No material saved in this browser session yet.</div>
+        </section>
+
+        <section class="panel" id="questions">
+          <h2>2. Three Targeted Questions</h2>
+          <p class="muted">Codex generates these after intake profiling. Every question keeps a recommended answer and an Other path.</p>
+          <div id="questionList" class="empty">Waiting for Codex to analyze the intake packet.</div>
+        </section>
+      </div>
+
+      <section class="section-grid">
+        <article class="panel" id="overview">
+          <h2>Overview</h2>
+          <div id="overviewBody"></div>
+        </article>
+        <article class="panel" id="literature">
+          <div class="split">
+            <h2>Literature</h2>
+            <button type="button" id="downloadRefsBtn">Download Open References</button>
+          </div>
+          <div id="literatureBody"></div>
+        </article>
+        <article class="panel" id="theory">
+          <h2>Theory</h2>
+          <div id="theoryBody"></div>
+        </article>
+        <article class="panel" id="experiment">
+          <h2>Experiment</h2>
+          <div id="experimentBody"></div>
+        </article>
+      </section>
+
+      <section class="panel" id="resources">
+        <h2>Repository Links</h2>
+        <div class="resources" id="resourceLinks"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Bridge Status</h2>
+        <p class="muted">If the local bridge is not running, this page still displays the sanitized state and can export a draft JSON packet. To enable uploads, run:</p>
+        <div class="code">python .agents/plugins/plugins/research-os-copilot/scripts/research_os_copilot_server.py --serve</div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const stateUrl = "copilot_state.json";
+    const apiStateUrl = "/api/state";
+    const apiIntakeUrl = "/api/intake";
+    const apiDownloadUrl = "/api/download-references";
+
+    let copilotState = null;
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch]));
+    }
+
+    function list(items) {
+      if (!items || !items.length) return '<div class="empty">No entries yet.</div>';
+      return `<ul class="mini-list">${items.map(item => `<li>${esc(item)}</li>`).join("")}</ul>`;
+    }
+
+    function setResult(message, tone = "") {
+      document.getElementById("submitResult").className = tone ? `empty ${tone}` : "empty";
+      document.getElementById("submitResult").innerHTML = message;
+    }
+
+    async function fetchJson(url) {
+      const response = await fetch(url, {cache: "no-store"});
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+      return response.json();
+    }
+
+    async function loadState() {
+      try {
+        copilotState = await fetchJson(apiStateUrl);
+      } catch (_) {
+        copilotState = await fetchJson(stateUrl);
+      }
+      renderState();
+    }
+
+    function renderState() {
+      const state = copilotState || {};
+      const pendingTone = state.pending_confirmation ? "warn" : "ok";
+      document.getElementById("statePills").innerHTML = [
+        `<span class="pill ok">state: ${esc(state.state || "material_input")}</span>`,
+        `<span class="pill">research_type: ${esc(state.research_type || "unclear")}</span>`,
+        `<span class="pill ${pendingTone}">pending_confirmation: ${esc(Boolean(state.pending_confirmation))}</span>`,
+        `<span class="pill">session: ${esc(state.active_session_id || "none")}</span>`
+      ].join("");
+
+      const overview = state.overview || {};
+      document.getElementById("overviewBody").innerHTML = `
+        <h3>Research Motivation</h3>
+        <p>${esc(overview.motivation || "Waiting for intake.")}</p>
+        <h3>Expected Goals</h3>
+        ${list(overview.expected_goals || [])}
+        <h3>Contribution Claims</h3>
+        ${list(overview.contribution_claims || [])}`;
+
+      const literature = state.literature || {};
+      const refs = literature.reference_links || [];
+      const works = literature.related_work_map || [];
+      document.getElementById("literatureBody").innerHTML = `
+        <h3>Related Work Map</h3>
+        ${works.length ? works.map(work => `
+          <div class="resource">
+            <strong>${esc(work.work || "Prior work")}</strong>
+            <div>Shortcoming: ${esc(work.shortcoming || "")}</div>
+            <div>Relation: ${esc(work.relationship_to_this_research || "")}</div>
+            ${work.link ? `<a href="${esc(work.link)}">${esc(work.link)}</a>` : ""}
+          </div>`).join("") : '<div class="empty">No related work map yet.</div>'}
+        <h3>References</h3>
+        ${refs.length ? refs.map(ref => `
+          <div class="resource">
+            <strong>${esc(ref.title || "Reference")}</strong>
+            <a href="${esc(ref.url)}">${esc(ref.url)}</a>
+            <div>${esc(ref.access_hint || "")}</div>
+            <span class="pill">${esc(ref.download_policy || "human_download_required")}</span>
+          </div>`).join("") : '<div class="empty">No reference links yet.</div>'}
+        <p class="hint">Script: <code>${esc(literature.download_script || "scripts/download_reference_links.ps1")}</code></p>`;
+
+      const theory = state.theory || {};
+      document.getElementById("theoryBody").innerHTML = theory.enabled ? `
+        <h3>Framework</h3>
+        <p>${esc(theory.framework || "")}</p>
+        <h3>Key Definitions</h3>
+        ${list(theory.key_definitions || [])}
+        <h3>Candidate Theorems</h3>
+        ${list(theory.candidate_theorems || [])}
+        <h3>Proof / Validation Notes</h3>
+        ${list(theory.proof_or_validation_notes || [])}` :
+        '<div class="empty">Theory track is disabled until the material requires it.</div>';
+
+      const experiment = state.experiment || {};
+      document.getElementById("experimentBody").innerHTML = experiment.enabled ? `
+        <p><span class="pill warn">budget_needed_from_researcher: ${esc(Boolean(experiment.budget_needed_from_researcher))}</span></p>
+        <h3>Experiment Plan</h3>
+        ${list(experiment.experiment_plan || [])}
+        <h3>Metrics</h3>
+        ${list(experiment.metrics || [])}
+        <h3>Stopping Rules</h3>
+        ${list(experiment.stopping_rules || [])}` :
+        '<div class="empty">Experiment track is disabled until the material requires it.</div>';
+
+      const questions = state.questions || [];
+      document.getElementById("questionList").innerHTML = questions.length ? questions.map((q, index) => `
+        <div class="question">
+          <h3>${esc(q.question_id || `Q-${index + 1}`)}. ${esc(q.question || "")}</h3>
+          <p class="muted">Why: ${esc(q.reason_for_asking || "")}</p>
+          <p><strong>Recommended:</strong> ${esc(q.recommended_answer || "")}</p>
+          <div class="options">
+            ${(q.options || []).map((option, optionIndex) => `
+              <label class="option">
+                <input type="radio" name="${esc(q.question_id || index)}" value="${esc(option.label)}" ${option.recommended ? "checked" : ""}>
+                <span><strong>${esc(option.label)}</strong><br><span class="muted">${esc(option.description || "")}</span></span>
+              </label>`).join("")}
+            <label class="option">
+              <input type="radio" name="${esc(q.question_id || index)}" value="Other">
+              <span><strong>Other</strong><br><span class="muted">Use natural language if the options do not fit.</span></span>
+            </label>
+          </div>
+          <textarea aria-label="Other answer for ${esc(q.question_id || index)}" placeholder="Other / free-form answer"></textarea>
+          <p class="hint">Plan impact: ${esc(q.plan_impact || "")}</p>
+        </div>`).join("") : '<div class="empty">Waiting for Codex to produce exactly three targeted questions.</div>';
+
+      const links = state.repository_links || [];
+      document.getElementById("resourceLinks").innerHTML = links.map(link => `
+        <div class="resource">
+          <strong><a href="${esc(link.path)}">${esc(link.label)}</a></strong>
+          <span class="muted">${esc(link.purpose)}</span>
+        </div>`).join("");
+    }
+
+    async function submitIntake(event) {
+      event.preventDefault();
+      const form = document.getElementById("intakeForm");
+      const data = new FormData(form);
+      setResult("Saving material to the local copilot bridge...");
+      try {
+        const response = await fetch(apiIntakeUrl, {method: "POST", body: data});
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const payload = await response.json();
+        setResult(`Saved intake packet <code>${esc(payload.packet.session_id)}</code>. Codex should confirm before analysis.`, "ok");
+        await loadState();
+      } catch (error) {
+        setResult(`Local bridge is not running. Use Save Local Draft JSON or start the server first.<br><br><code>${esc(error.message)}</code>`, "warn");
+      }
+    }
+
+    function saveLocalDraft() {
+      const text = document.getElementById("freeText").value;
+      const files = Array.from(document.getElementById("uploads").files || []).map(file => ({
+        original_name: file.name,
+        size_bytes: file.size,
+        mime_type: file.type || null,
+        storage_policy: "private_runtime_only"
+      }));
+      const draft = {
+        schema_version: "v1.0",
+        session_id: `INTAKE-local-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        free_text: text,
+        uploaded_files: files,
+        source_links: [],
+        privacy_default: "private",
+        material_hashes: [],
+        status: "draft"
+      };
+      const blob = new Blob([JSON.stringify(draft, null, 2)], {type: "application/json"});
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${draft.session_id}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      setResult("Local draft JSON exported. Uploads themselves are not embedded in this fallback file.", "ok");
+    }
+
+    async function downloadReferences() {
+      try {
+        const response = await fetch(apiDownloadUrl, {method: "POST"});
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const payload = await response.json();
+        setResult(`Reference download attempt complete. Report directory: <code>${esc(payload.download.output_dir)}</code>`, "ok");
+      } catch (error) {
+        setResult(`Download endpoint unavailable. Run the script manually:<br><div class="code">powershell -NoProfile -ExecutionPolicy Bypass -File ..\\scripts\\download_reference_links.ps1</div><br>${esc(error.message)}`, "warn");
+      }
+    }
+
+    async function copyCodexPrompt() {
+      const prompt = [
+        "Use $research-os-copilot.",
+        "Read CONTROL/work_order.yaml, CONTROL/phase_gate.yaml, config/research_project.yaml, and the latest CONTROL/copilot_inbox packet.",
+        "Confirm before analysis, then generate exactly three targeted questions or initialize from answered questions."
+      ].join("\\n");
+      await navigator.clipboard.writeText(prompt);
+      setResult("Codex prompt copied.", "ok");
+    }
+
+    document.getElementById("intakeForm").addEventListener("submit", submitIntake);
+    document.getElementById("saveDraftBtn").addEventListener("click", saveLocalDraft);
+    document.getElementById("refreshBtn").addEventListener("click", loadState);
+    document.getElementById("downloadRefsBtn").addEventListener("click", downloadReferences);
+    document.getElementById("copyPromptBtn").addEventListener("click", copyCodexPrompt);
+
+    loadState().catch(error => {
+      document.getElementById("statePills").innerHTML = `<span class="pill danger">state load failed: ${esc(error.message)}</span>`;
+    });
+  </script>
+</body>
+</html>
+{"run_id":"RUN-0013","timestamp":"2026-06-06T20:54:34.0078043+08:00","work_order_id":"WO-0004","status":"succeeded","command_or_tool":"research-os-v3.3-copilot-implementation-and-validation","inputs":["CONTROL\\work_order.yaml"],"outputs":["PUBLIC\\copilot.html"],"input_hashes":{"CONTROL\\work_order.yaml":"7402a5f4f6da50e72ef63e814095fa378a1fd0c533fa25ad8a52d37d619f7d13"},"output_hashes":{"PUBLIC\\copilot.html":"77a69832fa5a08c0c80eb3088785eecb26038d5d7c33e898beeee580afc2445d"},"cost":{"estimated":0,"currency":"CNY"},"errors":[],"privacy_level":"public"}

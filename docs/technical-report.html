@@ -3,191 +3,58 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Research OS v3 技术路线</title>
+  <title>Research OS Technical Report</title>
   <style>
     :root {
-      --bg: #f6f7f9;
+      --bg: #f6f7f8;
       --surface: #ffffff;
-      --surface-alt: #edf1f5;
+      --soft: #eef3f1;
       --text: #18212b;
-      --muted: #5d6875;
-      --border: #cfd7df;
-      --accent: #245d8f;
-      --accent-2: #176b57;
-      --warn: #8a5a00;
-      --danger: #a33a2b;
+      --muted: #607080;
+      --border: #cfd8d5;
+      --accent: #176b57;
+      --blue: #255f99;
       --radius: 8px;
-      --space-2: 8px;
-      --space-3: 12px;
-      --space-4: 16px;
-      --space-5: 24px;
-      --space-6: 32px;
-      --space-7: 48px;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --s2: 8px;
+      --s3: 12px;
+      --s4: 16px;
+      --s5: 24px;
+      --s6: 32px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.62;
-    }
-    a { color: var(--accent); text-decoration: none; }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.62; }
+    a { color: var(--blue); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .layout {
-      display: grid;
-      grid-template-columns: 270px minmax(0, 1fr);
-      min-height: 100vh;
-    }
-    aside {
-      background: #fbfcfd;
-      border-right: 1px solid var(--border);
-      padding: var(--space-5);
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: auto;
-    }
-    main {
-      width: min(1120px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: var(--space-7) 0;
-    }
-    .brand {
-      font-weight: 760;
-      font-size: 18px;
-      margin-bottom: var(--space-2);
-    }
+    .layout { min-height: 100vh; display: grid; grid-template-columns: 280px minmax(0, 1fr); }
+    aside { position: sticky; top: 0; height: 100vh; overflow: auto; border-right: 1px solid var(--border); background: #fbfcfc; padding: var(--s5); }
+    main { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: var(--s6) 0; }
+    h1, h2, h3 { line-height: 1.22; letter-spacing: 0; }
+    h1 { margin: 0 0 var(--s3); font-size: 32px; }
+    h2 { margin: 0 0 var(--s3); font-size: 22px; }
+    h3 { margin: 0 0 var(--s2); font-size: 16px; }
+    p { margin: 0 0 var(--s3); }
+    .brand { font-size: 18px; font-weight: 760; }
     .muted { color: var(--muted); }
-    nav {
-      display: grid;
-      gap: var(--space-2);
-      margin-top: var(--space-5);
-    }
-    nav a {
-      display: block;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 8px 10px;
-      color: var(--text);
-      font-size: 14px;
-    }
-    h1, h2, h3 {
-      letter-spacing: 0;
-      line-height: 1.22;
-    }
-    h1 {
-      font-size: 34px;
-      margin: 0 0 var(--space-4);
-    }
-    h2 {
-      font-size: 23px;
-      margin: 0 0 var(--space-4);
-    }
-    h3 {
-      font-size: 17px;
-      margin: 0 0 var(--space-2);
-    }
-    p { margin: 0 0 var(--space-4); }
-    .lead {
-      color: var(--muted);
-      max-width: 860px;
-      font-size: 17px;
-    }
-    .section {
-      padding: var(--space-6) 0;
-      border-top: 1px solid var(--border);
-    }
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-5);
-      margin-bottom: var(--space-4);
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--space-4);
-    }
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: var(--space-3);
-      margin-top: var(--space-5);
-    }
-    .metric {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-4);
-      min-height: 110px;
-    }
-    .metric span {
-      display: block;
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: var(--space-2);
-    }
-    code {
-      background: var(--surface-alt);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-size: 0.92em;
-    }
-    pre {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      background: #17202a;
-      color: #f8fbfd;
-      border-radius: var(--radius);
-      padding: var(--space-4);
-      overflow: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      display: table;
-      font-size: 14px;
-    }
-    th, td {
-      border-bottom: 1px solid var(--border);
-      padding: 10px 12px;
-      vertical-align: top;
-      text-align: left;
-    }
-    th { background: var(--surface-alt); }
-    tr:last-child td { border-bottom: 0; }
-    .flow {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-4);
-      overflow: auto;
-    }
-    .callout {
-      border-left: 4px solid var(--accent-2);
-      background: #f1f7f4;
-      padding: var(--space-4);
-      border-radius: 0 var(--radius) var(--radius) 0;
-    }
+    .lead { max-width: 880px; color: var(--muted); font-size: 17px; }
+    nav { display: grid; gap: var(--s2); margin-top: var(--s5); }
+    nav a { display: block; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 8px 10px; }
+    .section { border-top: 1px solid var(--border); padding: var(--s6) 0; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); }
+    .panel { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: var(--s5); margin-bottom: var(--s4); }
+    .flow { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s4); overflow: auto; }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); }
+    th, td { border: 1px solid var(--border); padding: 10px 12px; vertical-align: top; text-align: left; }
+    th { background: var(--soft); }
+    code { background: var(--soft); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #16212b; color: #f8fbfd; border-radius: var(--radius); padding: var(--s4); overflow: auto; }
+    .callout { border-left: 4px solid var(--accent); background: #eef8f4; border-radius: 0 var(--radius) var(--radius) 0; padding: var(--s4); }
     @media (max-width: 980px) {
       .layout { grid-template-columns: 1fr; }
-      aside {
-        position: static;
-        height: auto;
-        border-right: 0;
-        border-bottom: 1px solid var(--border);
-      }
-      main { padding: var(--space-5) 0; }
-      .grid, .metric-grid { grid-template-columns: 1fr; }
-      h1 { font-size: 29px; }
+      aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      .grid { grid-template-columns: 1fr; }
+      main { padding: var(--s5) 0; }
+      h1 { font-size: 28px; }
       table { display: block; overflow-x: auto; }
     }
   </style>
@@ -196,231 +63,141 @@
   <div class="layout">
     <aside>
       <div class="brand">Technical Route</div>
-      <p class="muted">给后续 agent 和维护者的仓库细节。</p>
-      <nav aria-label="技术报告导航">
-        <a href="#architecture">架构</a>
-        <a href="#kernel">研究内核</a>
-        <a href="#dataflow">数据流</a>
-        <a href="#domains">领域模式</a>
-        <a href="#skills">Skill 路由</a>
+      <p class="muted">For future agents and maintainers.</p>
+      <nav aria-label="Technical report navigation">
+        <a href="#architecture">Architecture</a>
+        <a href="#copilot">Copilot</a>
+        <a href="#kernel">Research Kernel</a>
+        <a href="#domains">Domain Modes</a>
         <a href="#harness">Harness</a>
-        <a href="#integrations">开源集成</a>
-        <a href="#validation">验证</a>
-        <a href="start-here.html">快速上手</a>
-        <a href="../README.md">仓库首页</a>
-        <a href="../CONTROL/phase_gate.yaml">阶段闸门</a>
+        <a href="#validation">Validation</a>
+        <a href="../PUBLIC/copilot.html">Copilot Page</a>
+        <a href="../PUBLIC/index.html">PUBLIC/index.html</a>
+        <a href="../README.md">README.md</a>
+        <a href="../CONTROL/work_order.yaml">work_order.yaml</a>
+        <a href="../CONTROL/phase_gate.yaml">phase_gate.yaml</a>
       </nav>
     </aside>
     <main>
       <header>
-        <h1>Research OS v3 完整技术路线</h1>
-        <p class="lead">本报告说明 Research OS 如何把人类研究目标、Codex skill、控制文件、证据链、资源账本和公开产物连接成一个通用的 human-in-loop auto researcher 仓库。</p>
-        <div class="metric-grid">
-          <div class="metric"><span>控制入口</span><strong><a href="../CONTROL/work_order.yaml">WO-0003</a></strong></div>
-          <div class="metric"><span>默认模式</span><strong>zh-first, low intervention</strong></div>
-          <div class="metric"><span>隐私边界</span><strong>PUBLIC / PRIVATE 分离</strong></div>
-          <div class="metric"><span>发布方式</span><strong>codex 分支 + draft PR</strong></div>
-        </div>
+        <h1>Research OS v3.3 Technical Report</h1>
+        <p class="lead">Research OS is a structured human-in-loop auto researcher. v3.3 adds a material-first browser cockpit while preserving the research kernel, domain profiles, work orders, phase gates, manifests, ledgers, and privacy boundaries.</p>
       </header>
 
       <section class="section" id="architecture">
-        <h2>系统架构</h2>
-        <div class="flow" role="img" aria-label="Research OS 架构图">
-          <svg viewBox="0 0 980 470" width="100%" height="100%" aria-hidden="true">
+        <h2>Architecture</h2>
+        <div class="flow" role="img" aria-label="Research OS v3.3 architecture">
+          <svg viewBox="0 0 1080 420" width="100%" height="100%" aria-hidden="true">
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#245d8f"></path>
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#176b57"></path>
               </marker>
             </defs>
-            <rect x="20" y="20" width="940" height="430" rx="8" fill="#f6f7f9" stroke="#cfd7df"></rect>
-            <g fill="#ffffff" stroke="#a8b6c2" stroke-width="2">
-              <rect x="60" y="70" width="180" height="90" rx="8"></rect>
-              <rect x="300" y="70" width="180" height="90" rx="8"></rect>
-              <rect x="540" y="70" width="180" height="90" rx="8"></rect>
-              <rect x="760" y="70" width="150" height="90" rx="8"></rect>
-              <rect x="60" y="265" width="180" height="90" rx="8"></rect>
-              <rect x="300" y="265" width="180" height="90" rx="8"></rect>
-              <rect x="540" y="265" width="180" height="90" rx="8"></rect>
-              <rect x="760" y="265" width="150" height="90" rx="8"></rect>
+            <rect x="20" y="20" width="1040" height="380" rx="8" fill="#f6f7f8" stroke="#cfd8d5"></rect>
+            <g fill="#ffffff" stroke="#9fb5ad" stroke-width="2">
+              <rect x="60" y="70" width="180" height="82" rx="8"></rect>
+              <rect x="300" y="70" width="180" height="82" rx="8"></rect>
+              <rect x="540" y="70" width="180" height="82" rx="8"></rect>
+              <rect x="780" y="70" width="180" height="82" rx="8"></rect>
+              <rect x="180" y="235" width="180" height="82" rx="8"></rect>
+              <rect x="450" y="235" width="180" height="82" rx="8"></rect>
+              <rect x="720" y="235" width="180" height="82" rx="8"></rect>
             </g>
-            <g fill="#18212b" font-size="20" font-weight="700">
-              <text x="150" y="103" text-anchor="middle">Human Input</text>
-              <text x="390" y="103" text-anchor="middle">CONTROL</text>
-              <text x="630" y="103" text-anchor="middle">Skills</text>
-              <text x="835" y="103" text-anchor="middle">Harness</text>
-              <text x="150" y="298" text-anchor="middle">Artifacts</text>
-              <text x="390" y="298" text-anchor="middle">PROVENANCE</text>
-              <text x="630" y="298" text-anchor="middle">PUBLIC</text>
-              <text x="835" y="298" text-anchor="middle">Adapters</text>
+            <g fill="#18212b" font-size="18" font-weight="700">
+              <text x="150" y="106" text-anchor="middle">Browser Copilot</text>
+              <text x="390" y="106" text-anchor="middle">CONTROL</text>
+              <text x="630" y="106" text-anchor="middle">Research Kernel</text>
+              <text x="870" y="106" text-anchor="middle">Domain Skills</text>
+              <text x="270" y="271" text-anchor="middle">Harness</text>
+              <text x="540" y="271" text-anchor="middle">PROVENANCE</text>
+              <text x="810" y="271" text-anchor="middle">PUBLIC</text>
             </g>
-            <g fill="#5d6875" font-size="14">
-              <text x="150" y="129" text-anchor="middle">目标、材料、预算</text>
-              <text x="390" y="129" text-anchor="middle">work order / gate</text>
-              <text x="630" y="129" text-anchor="middle">orchestrator + subskills</text>
-              <text x="835" y="129" text-anchor="middle">checks / hooks</text>
-              <text x="150" y="324" text-anchor="middle">模板、实验、报告</text>
-              <text x="390" y="324" text-anchor="middle">manifest / ledger</text>
-              <text x="630" y="324" text-anchor="middle">dashboard / brief</text>
-              <text x="835" y="324" text-anchor="middle">OSS component map</text>
+            <g fill="#607080" font-size="14">
+              <text x="150" y="130" text-anchor="middle">material-first intake</text>
+              <text x="390" y="130" text-anchor="middle">work order / gate</text>
+              <text x="630" y="130" text-anchor="middle">candidate / evaluator</text>
+              <text x="870" y="130" text-anchor="middle">field taste / artifacts</text>
+              <text x="270" y="295" text-anchor="middle">validation / privacy</text>
+              <text x="540" y="295" text-anchor="middle">manifest / ledger</text>
+              <text x="810" y="295" text-anchor="middle">dashboard / report</text>
             </g>
-            <g stroke="#245d8f" stroke-width="3" fill="none" marker-end="url(#arrow)">
-              <path d="M 242 115 H 288"></path>
-              <path d="M 482 115 H 528"></path>
-              <path d="M 722 115 H 748"></path>
-              <path d="M 835 162 C 835 215 150 210 150 255"></path>
-              <path d="M 242 310 H 288"></path>
-              <path d="M 482 310 H 528"></path>
-              <path d="M 722 310 H 748"></path>
+            <g stroke="#176b57" stroke-width="3" fill="none" marker-end="url(#arrow)">
+              <path d="M 240 111 H 290"></path>
+              <path d="M 480 111 H 530"></path>
+              <path d="M 720 111 H 770"></path>
+              <path d="M 870 154 C 870 205 270 195 270 225"></path>
+              <path d="M 360 276 H 440"></path>
+              <path d="M 630 276 H 710"></path>
             </g>
           </svg>
         </div>
       </section>
 
-      <section class="section" id="kernel">
-        <h2>研究内核与反馈计算层</h2>
-        <p>v3.2 将自动研究范式抽象成同一个程序：`generate -> evaluate -> update -> human gate`。领域 skill 不再直接散发产物，而是先把研究对象放入 <a href="../skills/research-os-research-kernel/SKILL.md">research-os-research-kernel</a>。</p>
+      <section class="section" id="copilot">
+        <h2>Material-first Copilot</h2>
+        <p>The first screen no longer asks five fixed questions. It accepts free text or uploaded material and recommends uploading drafts, chats, PDFs, zips, or demos. Codex routes the packet through <code>research-os-orchestrator</code>, then generates <strong>exactly three targeted questions</strong> before initialization.</p>
         <table>
-          <thead>
-            <tr><th>内核对象</th><th>作用</th><th>典型领域映射</th></tr>
-          </thead>
+          <thead><tr><th>Layer</th><th>Path</th><th>Responsibility</th></tr></thead>
           <tbody>
-            <tr><td>candidate</td><td>当前要研究的候选对象</td><td>猜想、模型、方法、算法、系统、estimand</td></tr>
-            <tr><td>evaluator_contract</td><td>列出评价指标、公式/过程、输入、阈值、资源和失败模式</td><td>反例搜索、稳定性、baseline、复杂度、诊断</td></tr>
-            <tr><td>evaluation_result</td><td>记录通过、失败、部分或不确定结果</td><td>proof gap、敏感性报告、leakage 发现、benchmark 结果</td></tr>
-            <tr><td>belief_state</td><td>维护假设、不确定性、证据和信心</td><td>例子库、假设账本、data card、识别备忘</td></tr>
-            <tr><td>search_trace / negative_result</td><td>保留失败分支和反例，避免静默丢弃</td><td>反例、无效模型、失败 ablation、诊断失败</td></tr>
-            <tr><td>next_action_policy / human_judgment_gate</td><td>决定继续、修订、停止、问人或公开</td><td>阶段闸门、公开主张、人类专家检查</td></tr>
+            <tr><td>Browser cockpit</td><td><a href="../PUBLIC/copilot.html">PUBLIC/copilot.html</a></td><td>Collect text and uploads, render structured startup state.</td></tr>
+            <tr><td>Public state</td><td><a href="../PUBLIC/copilot_state.json">PUBLIC/copilot_state.json</a></td><td>Sanitized status and report sections.</td></tr>
+            <tr><td>Bridge doc</td><td><a href="codex-browser-copilot.html">docs/codex-browser-copilot.html</a></td><td>State machine, tool boundary, validation rules.</td></tr>
+            <tr><td>Plugin</td><td><a href="../.agents/plugins/marketplace.json">.agents/plugins/marketplace.json</a></td><td>Repo-scoped installable unit for the local bridge.</td></tr>
+            <tr><td>Skill</td><td><a href="../skills/research-os-copilot/SKILL.md">research-os-copilot</a></td><td>Codex-side workflow policy and confirmation route.</td></tr>
           </tbody>
         </table>
-        <p>模板入口：<a href="../templates/research_kernel/research_cycle.template.yaml">research_cycle.template.yaml</a>；schema：<a href="../config/schemas/research_kernel.schema.json">research_kernel.schema.json</a>。</p>
       </section>
 
-      <section class="section" id="dataflow">
-        <h2>数据流和审计流</h2>
-        <div class="grid">
-          <article class="panel">
-            <h3>输入对象</h3>
-            <p>研究入口被拆成 `research_project`、`work_order`、`phase_gate`、`feasibility_probe`、`resource_budget` 和 claim-evidence。入口不足时只生成对齐问题，不补默认模型或数据集。</p>
-            <p><a href="../config/research_project.yaml">查看项目配置</a></p>
-          </article>
-          <article class="panel">
-            <h3>运行对象</h3>
-            <p>每次实质运行都写入 `run_manifest.jsonl`，真实或计划资源进入 `resource_ledger.jsonl`。失败状态也要记录，避免后续 agent 把 partial run 当成成功结果。</p>
-            <p><a href="../PROVENANCE/run_manifest.jsonl">查看 run manifest</a></p>
-          </article>
-          <article class="panel">
-            <h3>证据对象</h3>
-            <p>时效性信息进入 `live_evidence_snapshot.yaml`，面向公开产物的主张进入 `PUBLIC/claim_evidence_matrix.yaml`。无法联网时必须标注高 freshness risk。</p>
-            <p><a href="../PROVENANCE/live_evidence_snapshot.yaml">查看 live evidence</a></p>
-          </article>
-          <article class="panel">
-            <h3>公开对象</h3>
-            <p>`PUBLIC/` 只放可公开或已脱敏内容。公开导出前运行隐私扫描，私有原始材料和敏感审计留在 `PRIVATE/`。</p>
-            <p><a href="../PUBLIC/index.html">打开 dashboard</a></p>
-          </article>
-        </div>
+      <section class="section" id="kernel">
+        <h2>Research Kernel</h2>
+        <p>All substantive work must pass through <a href="../skills/research-os-research-kernel/SKILL.md">research-os-research-kernel</a>. This prevents the repository from becoming a toolbox of unrelated prompts.</p>
+        <pre>candidate
+-> evaluator_contract
+-> evaluation_result
+-> belief_state
+-> search_trace / negative_result
+-> next_action_policy
+-> human_judgment_gate</pre>
+        <p>Evaluator contracts must list metric or check, procedure, inputs, scale, acceptance threshold, resource estimate, failure mode, and replay note.</p>
       </section>
 
       <section class="section" id="domains">
-        <h2>领域模式层</h2>
-        <p>`domain_profiles/` 是领域接口。v3.2 要求每个 profile 声明 `kernel_bindings`，把领域产物映射到 research kernel，再由领域 skill 执行对应学科口味，避免把领域知识堆成不可检查的长提示词。</p>
-        <table>
-          <thead>
-            <tr><th>领域</th><th>Profile</th><th>Skill</th><th>核心质量闸门</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>基础数学</td><td><a href="../domain_profiles/fundamental-mathematics/profile.yaml">fundamental-mathematics</a></td><td><a href="../skills/research-os-math-discovery/SKILL.md">research-os-math-discovery</a></td><td>定义、例子、反例、lemma、proof-gap、human_checked</td></tr>
-            <tr><td>应用数学</td><td><a href="../domain_profiles/applied-mathematics/profile.yaml">applied-mathematics</a></td><td><a href="../skills/research-os-applied-math-modeling/SKILL.md">research-os-applied-math-modeling</a></td><td>假设、尺度、稳定性/误差、数值验证、敏感性</td></tr>
-            <tr><td>机器学习</td><td><a href="../domain_profiles/machine-learning/profile.yaml">machine-learning</a></td><td><a href="../skills/research-os-ml-research-protocol/SKILL.md">research-os-ml-research-protocol</a></td><td>任务、数据许可、baseline、ablation、leakage、replay</td></tr>
-            <tr><td>计算机科学</td><td><a href="../domain_profiles/computer-science/profile.yaml">computer-science</a></td><td><a href="../skills/research-os-cs-research-artifact/SKILL.md">research-os-cs-research-artifact</a></td><td>规约、正确性、复杂度/benchmark、artifact evaluation、威胁模型</td></tr>
-            <tr><td>统计学</td><td><a href="../domain_profiles/statistics/profile.yaml">statistics</a></td><td><a href="../skills/research-os-statistical-inference/SKILL.md">research-os-statistical-inference</a></td><td>estimand、识别、抽样/功效、诊断、不确定性、敏感性</td></tr>
-          </tbody>
-        </table>
-        <p><a href="domain-modes.html">打开领域模式说明页</a>，或查看 <a href="../config/schemas/domain_profile.schema.json">domain profile schema</a>、<a href="../config/schemas/agent_capability.schema.json">agent capability schema</a> 与 <a href="../config/schemas/research_kernel.schema.json">research kernel schema</a>。</p>
-      </section>
-
-      <section class="section" id="skills">
-        <h2>Skill 路由</h2>
-        <table>
-          <thead>
-            <tr><th>阶段</th><th>主 skill</th><th>职责</th><th>关键产物</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>入口</td><td><a href="../skills/research-os-orchestrator/SKILL.md">research-os-orchestrator</a></td><td>读取控制面并分派子流程</td><td>阶段路线、待决策项</td></tr>
-            <tr><td>内核</td><td><a href="../skills/research-os-research-kernel/SKILL.md">research-os-research-kernel</a></td><td>候选、评价器、计算清单、belief、trace、失败结果和人工闸门</td><td>research kernel cycle</td></tr>
-            <tr><td>领域</td><td><a href="domain-modes.html">domain profiles</a></td><td>选择基础数学、应用数学、机器学习、计算机科学或统计学 skill</td><td>profile、agents、templates、领域质量闸门</td></tr>
-            <tr><td>对齐</td><td><a href="../skills/research-os-alignment/SKILL.md">research-os-alignment</a></td><td>锁定目标、范围、隐私和资源边界</td><td>决策记录、phase gate</td></tr>
-            <tr><td>可行性</td><td><a href="../skills/research-os-feasibility-probe/SKILL.md">research-os-feasibility-probe</a></td><td>定义最小验证，不假设研究范式</td><td>probe yaml、停止条件</td></tr>
-            <tr><td>执行</td><td><a href="../skills/research-os-execution-harness/SKILL.md">research-os-execution-harness</a></td><td>检查路径、预算、manifest 和 ledger</td><td>运行记录、验证报告</td></tr>
-            <tr><td>证据</td><td><a href="../skills/research-os-live-evidence-refresh/SKILL.md">research-os-live-evidence-refresh</a></td><td>刷新文献、工具、价格、许可和规则</td><td>live evidence snapshot</td></tr>
-            <tr><td>集成</td><td><a href="../docs/integrations/components.yaml">integration registry</a></td><td>记录外部组件的安装、许可证、风险和产物映射</td><td>adapter 模板、组件清单</td></tr>
-          </tbody>
-        </table>
-        <div class="callout">
-          <strong>发现机制：</strong>`skills/` 是模板内权威源；`.agents/skills/` 是 Codex 仓库级发现镜像；用户级安装仍可通过 `scripts/install_skills.ps1` 完成。
+        <h2>Domain Modes</h2>
+        <div class="grid">
+          <div class="panel"><h3>Fundamental Mathematics</h3><p>Definitions, examples, conjectures, counterexample search, lemma decomposition, proof strategy, proof-gap review.</p></div>
+          <div class="panel"><h3>Applied Mathematics</h3><p>Model assumptions, scaling, stability, error, numerical validation, sensitivity, interpretation limits.</p></div>
+          <div class="panel"><h3>Machine Learning</h3><p>Task cards, data license, baselines, ablations, leakage audit, reproducibility, cost-performance.</p></div>
+          <div class="panel"><h3>Computer Science</h3><p>Problem specs, invariants, complexity, system design, benchmarks, artifact evaluation, threat models.</p></div>
+          <div class="panel"><h3>Statistics</h3><p>Estimands, identification, sampling and power, diagnostics, uncertainty, causal diagrams, sensitivity.</p></div>
         </div>
+        <p>See <a href="domain-modes.html">domain-modes.html</a> and <a href="../domain_profiles/README.md">domain_profiles/README.md</a>.</p>
       </section>
 
       <section class="section" id="harness">
-        <h2>Harness engineering</h2>
-        <div class="grid">
-          <article class="panel">
-            <h3>路径和权限</h3>
-            <p>`CONTROL/work_order.yaml` 定义 allowed paths 和 forbidden paths。默认禁止写入 `PRIVATE/`，真实外部资源和公开导出要人工确认。</p>
-          </article>
-          <article class="panel">
-            <h3>Codex 控制面</h3>
-            <p>`AGENTS.md` 写长期仓库规则；`.codex/config.toml.example` 和 hooks 示例说明 sandbox、approval、PreToolUse、PostToolUse 和 Stop 检查策略。</p>
-          </article>
-          <article class="panel">
-            <h3>资源守护</h3>
-            <p>`research-os-resource-guard` 和 `check_resource_guard.ps1` 管理预算、ledger、阈值和人工确认。云平台硬上限仍需在云侧设置。</p>
-          </article>
-          <article class="panel">
-            <h3>验证闭环</h3>
-            <p>新增检查覆盖 HTML 链接、skill 镜像、integration registry 和 harness run schema，防止文档和执行入口脱节。</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="section" id="integrations">
-        <h2>开源自动研究组件适配</h2>
-        <p>v3 采用积极集成策略，但默认不复制大段第三方源码。每个组件以 registry 记录来源、许可证、安装方式、需要的环境变量名、适合的 Research OS 阶段、产物映射和风险。</p>
-        <table>
-          <thead>
-            <tr><th>组件</th><th>适配价值</th><th>Research OS 中的位置</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Agent Laboratory / AgentRxiv</td><td>阶段化文献、实验、报告、人类反馈和跨实验室累积</td><td>orchestrator、alignment、evidence、report</td></tr>
-            <tr><td>AI Scientist-v2</td><td>实验经理、agentic tree search、写作和 reviewer feedback</td><td>experiment manager、visual QA、paper optional path</td></tr>
-            <tr><td>AI co-scientist</td><td>generate, debate, evolve 的假设生成和科学家指导</td><td>alignment、hypothesis registry</td></tr>
-            <tr><td>Deep Researcher Agent</td><td>长时间实验、零成本监控、constant-size memory、真实失败状态</td><td>resource guard、replay/eval harness</td></tr>
-            <tr><td>Claw AI Lab</td><td>互动 dashboard、artifact inspector、rollback/resume、code harness</td><td>dashboard、harness run、artifact workflow</td></tr>
-            <tr><td>AG2</td><td>multi-agent 和 human-in-the-loop workflow patterns</td><td>可选 agent orchestration adapter</td></tr>
-            <tr><td>OpenAI skills catalog</td><td>Codex skill 结构和安装方式参考</td><td>skill mirror、install docs</td></tr>
-          </tbody>
-        </table>
+        <h2>Harness Engineering</h2>
+        <div class="callout">The browser can enqueue material; it cannot authorize execution. Codex still follows work orders, phase gates, path boundaries, manifests, ledgers, privacy scan, and budget confirmation.</div>
+        <ul>
+          <li>Raw uploads are runtime-private and excluded from git.</li>
+          <li>Reference downloads use open-access or landing-page attempts only.</li>
+          <li>Experiments require a researcher-provided budget before minimum validation.</li>
+          <li>External writeback, public export, and submission require confirmation.</li>
+        </ul>
       </section>
 
       <section class="section" id="validation">
-        <h2>验证命令</h2>
+        <h2>Validation Commands</h2>
         <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_profiles.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_agent_capabilities.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_templates.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_router.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_kernel.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_kernel_bindings.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_no_orphan_skills.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1 -PythonPath "C:\path\to\python.exe"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_intake_schema.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_state.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_resource_rendering.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_bridge.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_skill_mirror.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_integrations.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</pre>
-        <p>浏览器 QA 覆盖 `docs/start-here.html`、`docs/technical-report.html` 和 `PUBLIC/index.html` 的桌面与移动视口。</p>
       </section>
     </main>
   </div>

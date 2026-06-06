@@ -3,398 +3,150 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Research OS 快速上手</title>
+  <title>Research OS Start Here</title>
   <style>
     :root {
-      --bg: #f7f8f6;
+      --bg: #f6f7f8;
       --surface: #ffffff;
-      --surface-alt: #eef3ef;
-      --text: #17211b;
-      --muted: #5d6b63;
-      --border: #ccd8cf;
+      --soft: #eef3f1;
+      --text: #18212b;
+      --muted: #607080;
+      --border: #cfd8d5;
       --accent: #176b57;
-      --accent-2: #245d8f;
-      --warn: #8a5a00;
-      --danger: #a33a2b;
+      --blue: #255f99;
       --radius: 8px;
-      --space-1: 4px;
-      --space-2: 8px;
-      --space-3: 12px;
-      --space-4: 16px;
-      --space-5: 24px;
-      --space-6: 32px;
-      --space-7: 48px;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --s2: 8px;
+      --s3: 12px;
+      --s4: 16px;
+      --s5: 24px;
+      --s6: 32px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.65;
-    }
-    a { color: var(--accent-2); text-decoration: none; }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.62; }
+    a { color: var(--blue); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .skip {
-      position: absolute;
-      left: 12px;
-      top: -40px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 8px 12px;
-      z-index: 10;
-    }
-    .skip:focus { top: 12px; }
-    header {
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
-    .bar, main {
-      width: min(1160px, calc(100% - 32px));
-      margin: 0 auto;
-    }
-    .bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-4);
-      padding: var(--space-4) 0;
-    }
-    .brand {
-      font-weight: 720;
-      font-size: 16px;
-      letter-spacing: 0;
-    }
-    nav {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-3);
-      font-size: 14px;
-    }
-    .hero {
-      padding: var(--space-7) 0 var(--space-6);
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: var(--space-6);
-      align-items: center;
-    }
-    .eyebrow {
-      color: var(--accent);
-      font-weight: 700;
-      margin: 0 0 var(--space-2);
-      font-size: 14px;
-    }
-    h1, h2, h3 {
-      line-height: 1.22;
-      letter-spacing: 0;
-    }
-    h1 {
-      font-size: 38px;
-      margin: 0 0 var(--space-4);
-      max-width: 780px;
-    }
-    h2 {
-      font-size: 24px;
-      margin: 0 0 var(--space-4);
-    }
-    h3 {
-      font-size: 17px;
-      margin: 0 0 var(--space-2);
-    }
-    p { margin: 0 0 var(--space-4); }
-    .lead {
-      color: var(--muted);
-      font-size: 18px;
-      max-width: 700px;
-    }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-3);
-      margin-top: var(--space-5);
-    }
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 42px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 9px 14px;
-      background: var(--surface);
-      color: var(--text);
-      font-weight: 650;
-    }
-    .button.primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #ffffff;
-    }
-    .diagram {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-4);
-      overflow: hidden;
-    }
-    .section {
-      padding: var(--space-6) 0;
-      border-top: 1px solid var(--border);
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-4);
-    }
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-5);
-      min-height: 176px;
-    }
-    .card small {
-      color: var(--muted);
-      display: block;
-      margin-bottom: var(--space-2);
-      font-weight: 650;
-    }
-    .two-col {
-      display: grid;
-      grid-template-columns: 0.9fr 1.1fr;
-      gap: var(--space-5);
-      align-items: start;
-    }
-    .list {
-      display: grid;
-      gap: var(--space-3);
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .list li {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: var(--space-4);
-    }
-    code {
-      background: var(--surface-alt);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-size: 0.92em;
-    }
-    pre {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      background: #16211b;
-      color: #f8fbf8;
-      border-radius: var(--radius);
-      padding: var(--space-4);
-      overflow: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      display: table;
-    }
-    th, td {
-      border-bottom: 1px solid var(--border);
-      padding: 10px 12px;
-      vertical-align: top;
-      text-align: left;
-    }
-    th { background: var(--surface-alt); }
-    tr:last-child td { border-bottom: 0; }
-    .note {
-      border-left: 4px solid var(--accent);
-      background: #f2f7f4;
-      padding: var(--space-4);
-      border-radius: 0 var(--radius) var(--radius) 0;
-    }
-    .footer {
-      color: var(--muted);
-      padding: var(--space-6) 0;
-    }
-    svg text { font-family: inherit; }
-    @media (max-width: 900px) {
-      .bar { align-items: flex-start; flex-direction: column; }
-      .hero, .two-col, .grid { grid-template-columns: 1fr; }
-      h1 { font-size: 30px; }
-      .lead { font-size: 16px; }
-      table { display: block; overflow-x: auto; }
+    .layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); min-height: 100vh; }
+    aside { position: sticky; top: 0; height: 100vh; overflow: auto; background: #fbfcfc; border-right: 1px solid var(--border); padding: var(--s5); }
+    main { width: min(1040px, calc(100% - 32px)); margin: 0 auto; padding: var(--s6) 0; }
+    h1, h2, h3 { line-height: 1.22; letter-spacing: 0; }
+    h1 { margin: 0 0 var(--s3); font-size: 32px; }
+    h2 { margin: 0 0 var(--s3); font-size: 22px; }
+    h3 { margin: 0 0 var(--s2); font-size: 16px; }
+    p { margin: 0 0 var(--s3); }
+    .brand { font-weight: 760; font-size: 18px; }
+    .muted { color: var(--muted); }
+    .lead { max-width: 820px; color: var(--muted); font-size: 17px; }
+    nav { display: grid; gap: var(--s2); margin-top: var(--s5); }
+    nav a { display: block; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); color: var(--text); padding: 8px 10px; }
+    .section { border-top: 1px solid var(--border); padding: var(--s6) 0; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); }
+    .panel { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: var(--s5); }
+    .flow { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: var(--s4); overflow: auto; }
+    code { background: var(--soft); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #16212b; color: #f8fbfd; border-radius: var(--radius); padding: var(--s4); overflow: auto; }
+    @media (max-width: 920px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      .grid { grid-template-columns: 1fr; }
+      main { padding: var(--s5) 0; }
+      h1 { font-size: 28px; }
     }
   </style>
 </head>
 <body>
-  <a class="skip" href="#main">跳到正文</a>
-  <header>
-    <div class="bar">
-      <div class="brand">Research OS v3</div>
-      <nav aria-label="文档导航">
-        <a href="../README.md">仓库首页</a>
-        <a href="domain-modes.html">领域模式</a>
-        <a href="../templates/research_kernel/research_cycle.template.yaml">研究内核</a>
-        <a href="technical-report.html">技术路线</a>
-        <a href="../PUBLIC/index.html">Dashboard</a>
-        <a href="../CONTROL/work_order.yaml">Work Order</a>
-        <a href="../CONTROL/phase_gate.yaml">Phase Gate</a>
+  <div class="layout">
+    <aside>
+      <div class="brand">Start Here</div>
+      <p class="muted">For researchers who want Codex to organize a project from existing material.</p>
+      <nav aria-label="Start here navigation">
+        <a href="#first">First Step</a>
+        <a href="#three">Three Questions</a>
+        <a href="#init">Initialization</a>
+        <a href="../PUBLIC/copilot.html">Copilot</a>
+        <a href="../PUBLIC/index.html">PUBLIC/index.html</a>
+        <a href="domain-modes.html">domain-modes.html</a>
+        <a href="technical-report.html">Technical Report</a>
+        <a href="../README.md">README.md</a>
+        <a href="../CONTROL/work_order.yaml">work_order.yaml</a>
+        <a href="../CONTROL/phase_gate.yaml">phase_gate.yaml</a>
       </nav>
-    </div>
-  </header>
-  <main id="main">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">Human-in-loop Auto Researcher</p>
-        <h1>把一个研究想法变成可执行、可追踪、可审计的研究仓库</h1>
-        <p class="lead">Research OS 不要求你先懂 Codex、LLM、机器学习或论文流程。你只需要给出研究目标、材料边界和资源约束，仓库会把后续工作拆成阶段闸门、skill、模板、证据链、资源账本和公开产物。</p>
-        <div class="actions">
-          <a class="button primary" href="#start">开始三步</a>
-          <a class="button" href="domain-modes.html">选择领域模式</a>
-          <a class="button" href="../templates/research_kernel/research_cycle.template.yaml">查看研究内核</a>
-          <a class="button" href="technical-report.html">查看技术路线</a>
-          <a class="button" href="../templates/README.md">浏览模板</a>
+    </aside>
+    <main>
+      <header>
+        <h1>Start Research OS From Material</h1>
+        <p class="lead">You do not need to answer a long setup questionnaire. Open the copilot page, describe the direction or upload material, then Codex asks only three targeted questions before initialization.</p>
+      </header>
+
+      <section class="section" id="first">
+        <h2>First Step</h2>
+        <div class="grid">
+          <article class="panel">
+            <h3>Open the cockpit</h3>
+            <p>Use <a href="../PUBLIC/copilot.html">PUBLIC/copilot.html</a> as the first screen.</p>
+          </article>
+          <article class="panel">
+            <h3>Add material</h3>
+            <p>Upload a research plan, notes, ChatGPT conversation export, PDF, zip, or demo. A short text direction is also enough.</p>
+          </article>
+          <article class="panel">
+            <h3>Let Codex profile it</h3>
+            <p>Codex classifies the project as theory, experiment, theory+experiment, engineering system, survey, or unclear.</p>
+          </article>
         </div>
-      </div>
-      <div class="diagram" role="img" aria-label="研究流程图：想法、对齐、可行性、执行、审计、公开产物">
-        <svg viewBox="0 0 720 420" width="100%" height="100%" aria-hidden="true">
-          <defs>
-            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#176b57"></path>
-            </marker>
-          </defs>
-          <rect x="18" y="18" width="684" height="384" rx="8" fill="#f7f8f6" stroke="#ccd8cf"></rect>
-          <g fill="#ffffff" stroke="#9fb0a5" stroke-width="2">
-            <rect x="56" y="72" width="140" height="72" rx="8"></rect>
-            <rect x="290" y="72" width="140" height="72" rx="8"></rect>
-            <rect x="524" y="72" width="140" height="72" rx="8"></rect>
-            <rect x="56" y="258" width="140" height="72" rx="8"></rect>
-            <rect x="290" y="258" width="140" height="72" rx="8"></rect>
-            <rect x="524" y="258" width="140" height="72" rx="8"></rect>
-          </g>
-          <g fill="#17211b" font-size="22" font-weight="700">
-            <text x="126" y="103" text-anchor="middle">研究想法</text>
-            <text x="360" y="103" text-anchor="middle">意图对齐</text>
-            <text x="594" y="103" text-anchor="middle">可行性探针</text>
-            <text x="126" y="289" text-anchor="middle">执行记录</text>
-            <text x="360" y="289" text-anchor="middle">证据审计</text>
-            <text x="594" y="289" text-anchor="middle">公开产物</text>
-          </g>
-          <g fill="#5d6b63" font-size="15">
-            <text x="126" y="126" text-anchor="middle">目标和约束</text>
-            <text x="360" y="126" text-anchor="middle">阶段闸门</text>
-            <text x="594" y="126" text-anchor="middle">预算和停止条件</text>
-            <text x="126" y="312" text-anchor="middle">manifest</text>
-            <text x="360" y="312" text-anchor="middle">claim-evidence</text>
-            <text x="594" y="312" text-anchor="middle">报告和 dashboard</text>
-          </g>
-          <path d="M 198 108 H 278" stroke="#176b57" stroke-width="3" marker-end="url(#arrow)"></path>
-          <path d="M 432 108 H 512" stroke="#176b57" stroke-width="3" marker-end="url(#arrow)"></path>
-          <path d="M 594 146 C 594 205 126 195 126 248" stroke="#176b57" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
-          <path d="M 198 294 H 278" stroke="#176b57" stroke-width="3" marker-end="url(#arrow)"></path>
-          <path d="M 432 294 H 512" stroke="#176b57" stroke-width="3" marker-end="url(#arrow)"></path>
-        </svg>
-      </div>
-    </section>
+      </section>
 
-    <section class="section">
-      <h2>研究内核：先列出计算</h2>
-      <p>v3.2 把所有领域流程统一成 `generate -> evaluate -> update -> human gate`。任何候选想法、模型、算法、实验方案或 estimand 都先进入 <a href="../skills/research-os-research-kernel/SKILL.md">research-os-research-kernel</a>，再调用领域 skill。</p>
-      <div class="grid">
-        <article class="card"><h3>Candidate</h3><p>当前要研究的对象：猜想、模型、方法、算法、系统、estimand、设计或协议。</p></article>
-        <article class="card"><h3>Evaluator</h3><p>必须列出 metric/check、formula/procedure、inputs、scale、threshold、resource、failure mode 和 replay。</p></article>
-        <article class="card"><h3>Trace</h3><p>失败、反例、不稳定、leakage、诊断失败和不确定结果必须进入 `negative_result` 或 `search_trace`。</p></article>
-      </div>
-    </section>
-
-    <section class="section" id="start">
-      <h2>三步开始</h2>
-      <div class="grid">
-        <article class="card">
-          <small>Step 1</small>
-          <h3>写下研究入口</h3>
-          <p>把研究问题、已有材料、隐私边界和你愿意投入的资源写进入口材料。还不确定的内容保持空白，不要让 agent 替你默认模型、数据集、样本量或预算。</p>
-          <a href="../templates/markdown/decision_record.template.md">查看决策记录模板</a>
-        </article>
-        <article class="card">
-          <small>Step 2</small>
-          <h3>确认控制面</h3>
-          <p>检查当前 work order、phase gate 和项目配置。真实资源、凭据、外部写回、公开导出和投稿默认都需要人工确认。</p>
-          <a href="../CONTROL/work_order.yaml">打开 work order</a>
-        </article>
-        <article class="card">
-          <small>Step 3</small>
-          <h3>运行最小可行性探针</h3>
-          <p>先做最小验证，再扩大实验或写作范围。每次实质运行都要记录 manifest 和资源 ledger。</p>
-          <a href="../templates/yaml/feasibility_probe.template.yaml">查看 feasibility 模板</a>
-        </article>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="two-col">
-        <div>
-          <h2>你需要回答什么</h2>
-          <p>Research OS 会尽量从仓库里发现事实，但研究意图和资源边界必须由人确认。</p>
+      <section class="section" id="three">
+        <h2>Only Three Targeted Questions</h2>
+        <div class="flow" role="img" aria-label="Material intake to three targeted questions">
+          <svg viewBox="0 0 900 260" width="100%" height="100%" aria-hidden="true">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#176b57"></path>
+              </marker>
+            </defs>
+            <g fill="#ffffff" stroke="#9fb5ad" stroke-width="2">
+              <rect x="40" y="80" width="180" height="84" rx="8"></rect>
+              <rect x="270" y="80" width="180" height="84" rx="8"></rect>
+              <rect x="500" y="80" width="180" height="84" rx="8"></rect>
+              <rect x="730" y="80" width="130" height="84" rx="8"></rect>
+            </g>
+            <g fill="#18212b" font-size="18" font-weight="700">
+              <text x="130" y="116" text-anchor="middle">Material</text>
+              <text x="360" y="116" text-anchor="middle">Profiling</text>
+              <text x="590" y="116" text-anchor="middle">3 Questions</text>
+              <text x="795" y="116" text-anchor="middle">Init</text>
+            </g>
+            <g fill="#607080" font-size="14">
+              <text x="130" y="140" text-anchor="middle">text, links, files</text>
+              <text x="360" y="140" text-anchor="middle">type and gaps</text>
+              <text x="590" y="140" text-anchor="middle">recommended + Other</text>
+              <text x="795" y="140" text-anchor="middle">startup pack</text>
+            </g>
+            <g stroke="#176b57" stroke-width="3" fill="none" marker-end="url(#arrow)">
+              <path d="M 220 122 H 260"></path>
+              <path d="M 450 122 H 490"></path>
+              <path d="M 680 122 H 720"></path>
+            </g>
+          </svg>
         </div>
-        <ul class="list">
-          <li><strong>研究目标：</strong>这次要得到研究简报、验证报告、复现包、决策备忘，还是论文草稿？</li>
-          <li><strong>材料边界：</strong>哪些材料可公开，哪些只能放在 `PRIVATE/`，哪些不能落盘？</li>
-          <li><strong>预算边界：</strong>允许多少时间、算力、云资源、API、人工或仪器机时？</li>
-          <li><strong>停止条件：</strong>什么情况下必须停下来问人，例如证据冲突、预算超限、许可证不清楚或实验失败？</li>
+        <p>Questions are generated from the material. Each has a recommended answer, options, and an Other/free-form answer path.</p>
+      </section>
+
+      <section class="section" id="init">
+        <h2>What Initialization Produces</h2>
+        <ul>
+          <li>Research motivation and expected goals.</li>
+          <li>Contribution claims.</li>
+          <li>Related research, shortcomings, and how this research relates to it.</li>
+          <li>Reference links and a lawful download script.</li>
+          <li>Theory framework and candidate theorems when the project is theory-heavy.</li>
+          <li>Experiment plan and minimum validation when the project has experiments.</li>
+          <li>Repository links to work order, phase gate, schemas, templates, manifest, and ledger.</li>
         </ul>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>需要领域口味时</h2>
-      <p>如果研究已经明显属于基础数学、应用数学、机器学习、计算机科学或统计学，可以先进入 <a href="domain-modes.html">领域模式</a>。领域模式不会替代控制面；它只是在 work order、phase gate、manifest、ledger 和隐私扫描之上，加载对应学科的产物模板、agent roles 和质量闸门。</p>
-      <div class="grid">
-        <article class="card"><h3>基础数学</h3><p>猜想、例子、反例、证明策略和 proof-gap review。</p></article>
-        <article class="card"><h3>机器学习</h3><p>任务卡、数据许可、baseline、ablation、leakage audit 和复现。</p></article>
-        <article class="card"><h3>统计学</h3><p>estimand、识别假设、诊断、不确定性和敏感性分析。</p></article>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>常用入口</h2>
-      <table>
-        <thead>
-          <tr><th>你想做什么</th><th>从哪里开始</th><th>产物</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>初始化一个新研究</td><td><a href="../skills/research-os-init/SKILL.md">research-os-init</a></td><td>项目配置、入口材料、source intake</td></tr>
-          <tr><td>把研究对象结构化</td><td><a href="../skills/research-os-research-kernel/SKILL.md">research-os-research-kernel</a></td><td>candidate、evaluator、belief、trace、human gate</td></tr>
-          <tr><td>确认研究方向和范围</td><td><a href="../skills/research-os-alignment/SKILL.md">research-os-alignment</a></td><td>待决策项、约束、阶段闸门</td></tr>
-          <tr><td>做最小验证</td><td><a href="../skills/research-os-feasibility-probe/SKILL.md">research-os-feasibility-probe</a></td><td>可行性探针、预算、停止条件</td></tr>
-          <tr><td>刷新外部证据</td><td><a href="../skills/research-os-live-evidence-refresh/SKILL.md">research-os-live-evidence-refresh</a></td><td>live evidence snapshot</td></tr>
-          <tr><td>公开分享结果</td><td><a href="../skills/research-os-public-export/SKILL.md">research-os-public-export</a></td><td>脱敏公开包、审计摘要</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section class="section">
-      <h2>最小命令</h2>
-      <p>Windows PowerShell 环境中可以先运行这些只读或校验命令。</p>
-      <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_kernel.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</pre>
-      <div class="note">
-        <strong>关键边界：</strong>不要把真实 API key、平台 token、cookie、authorization header、SSH 私钥或云账号密码写进仓库。需要凭据时，只记录环境变量名或 secret store 路径。
-      </div>
-    </section>
-
-    <section class="footer">
-      <p>继续阅读：<a href="domain-modes.html">五大领域模式</a>、<a href="../templates/research_kernel/research_cycle.template.yaml">研究内核模板</a>、<a href="technical-report.html">完整技术路线</a>、<a href="../PUBLIC/index.html">公开 dashboard</a>、<a href="doc_map.yaml">文档地图</a>。</p>
-    </section>
-  </main>
+        <pre>python .agents/plugins/plugins/research-os-copilot/scripts/research_os_copilot_server.py --serve</pre>
+      </section>
+    </main>
+  </div>
 </body>
 </html>

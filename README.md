@@ -1,55 +1,59 @@
 # Codex Research OS Template
 
-这是一个研究方向无关的 Codex 科研项目模板，用于把对话、研究计划草稿或实验 demo 转成可执行、可追溯、可审计的研究仓库。它不默认 LLM、机器学习、数据集、baseline、论文或投稿目标；这些内容只能在入口材料中出现，或由研究者在对齐阶段确认。
+This repository is a research-neutral Codex Research OS template. It turns research notes, draft plans, conversations, papers, zips, or demos into an auditable human-in-loop research workspace.
 
-## 默认行为
+It does not assume an LLM, machine learning task, dataset, baseline, paper, venue, or budget by default. Those decisions must come from researcher material or explicit human confirmation.
 
-- 内部计划、实验记录、分析和审计默认中文；入口可设 `language_mode: en-only`。
-- 论文是可选传播产物。只有明确设置论文、报告、投稿等 `dissemination` 目标后，才启用对应写作链路。
-- 预算由研究者定义为 `resource_budget`，可覆盖时间、算力、云资源、实验耗材、API、模型、人工、仪器机时等资源。
-- 默认低介入，但预算、真实资源调用、凭据使用、外部写入、公开导出和投稿必须人工确认。
-- `PUBLIC/` 可公开；`PRIVATE/` 默认不进 git；真实密钥、token、cookie、SSH 私钥和云账号密码不得落盘。
+## Main Entrypoints
 
-## 主要入口
+- [Material-first Copilot](PUBLIC/copilot.html): browser cockpit for initial material intake.
+- [Public Dashboard](PUBLIC/index.html): project navigation and document reader.
+- [Quick Start](docs/start-here.html): onboarding for general researchers and Codex beginners.
+- [Technical Report](docs/technical-report.html): repository route for future agents and maintainers.
+- [Copilot Bridge Doc](docs/codex-browser-copilot.html): browser-to-Codex bridge details.
+- [Domain Modes](docs/domain-modes.html): five domain-specific research paradigms.
+- [Research Kernel Template](templates/research_kernel/research_cycle.template.yaml): shared feedback computation loop.
+- [Document Map](docs/doc_map.yaml): structured navigation.
 
-- 快速上手 HTML：[docs/start-here.html](docs/start-here.html)
-- 五大领域模式 HTML：[docs/domain-modes.html](docs/domain-modes.html)
-- 完整技术路线 HTML：[docs/technical-report.html](docs/technical-report.html)
-- 研究内核模板：[templates/research_kernel/research_cycle.template.yaml](templates/research_kernel/research_cycle.template.yaml)
-- 文档中心：[docs/README.md](docs/README.md)
-- 文档地图：[docs/doc_map.yaml](docs/doc_map.yaml)
-- 开源组件 registry：[docs/integrations/components.yaml](docs/integrations/components.yaml)
-- 计划：[PLAN/00_MASTER_PLAN.md](PLAN/00_MASTER_PLAN.md)
-- Codex 仓库规则：[AGENTS.md](AGENTS.md)
-- Codex harness 示例：[.codex/requirements.md](.codex/requirements.md)
-- 静态 dashboard：[PUBLIC/index.html](PUBLIC/index.html)
-- 公开区：[PUBLIC/README.md](PUBLIC/README.md)
-- 私有区：[PRIVATE/README.md](PRIVATE/README.md)
-- 控制区：[CONTROL/README.md](CONTROL/README.md)
-- 来源与审计：[PROVENANCE/README.md](PROVENANCE/README.md)
-- Skill 套件：[skills/README.md](skills/README.md)
-- 领域 profiles：[domain_profiles/README.md](domain_profiles/README.md)
+## Research OS v3.3
 
-## Research OS v3
+v3.3 adds a material-first Codex Browser Copilot:
 
-v3 将模板定位为通用的 human-in-loop auto researcher 仓库。默认不假设研究方向、模型、provider、数据集、baseline、论文或预算；这些内容只来自研究者入口材料或明确决策记录。
+- The first screen asks for free text or uploaded material, not a fixed questionnaire.
+- Codex profiles the material and asks exactly three targeted questions.
+- Every question has a recommended answer, selectable options, and an Other/free-form path.
+- Initialization reports include motivation, goals, contribution claims, related work and gaps, reference links, conditional theory track, conditional experiment track, minimum validation, and repository links.
+- Browser submissions enqueue structured packets; Codex confirms before analysis or execution.
 
-新增重点：
+## Research Kernel
 
-- 面向普通研究者的 HTML 快速上手页。
-- 面向后续 agent 和维护者的 HTML 技术路线。
-- `.agents/skills/` 仓库级 skill 发现镜像。
-- 开源自动研究组件 registry 和 adapter 模板。
-- HTML 链接、skill 镜像、integration registry 和 harness run 检查。
+All substantive research loops pass through:
 
-## 使用原则
+`candidate -> evaluator_contract -> evaluation_result -> belief_state -> search_trace/negative_result -> next_action_policy -> human_judgment_gate`
 
-## Research OS v3.2
+Every evaluator must list the computation or check: metric, procedure, inputs, scale, threshold, resource estimate, failure mode, and replay note. This keeps skills from becoming a loose toolbox.
 
-v3.2 新增统一研究内核与反馈计算层：所有领域研究循环都先表达为 `candidate -> evaluator_contract -> evaluation_result -> belief_state -> search_trace/negative_result -> next_action_policy -> human_judgment_gate`。每个 evaluator 必须列出计算或检查，包括指标、过程、输入、尺度、阈值、资源估计、失败模式和复现记录。这样领域 skill 是结构化程序的一部分，而不是松散工具箱。
+## Privacy And Resources
 
-## Research OS v3.1
+- `PUBLIC/` contains public or sanitized material only.
+- `PRIVATE/` is ignored by git and holds raw private material at runtime.
+- Real API keys, tokens, cookies, SSH keys, authorization headers, and cloud credentials must never be written to the repository.
+- Paid resources, external writeback, public export, and submission require human confirmation.
+- Reference download scripts only attempt open-access URLs or landing pages and do not bypass paywalls.
 
-v3.1 新增五大领域深度研究范式层：基础数学、应用数学、机器学习、计算机科学和统计学。每个领域都有 `domain_profiles/` 中的 profile、agent registry、`templates/domain/` 中的产物模板，以及对应的领域 skill。数学领域默认不启用形式化证明，先强化猜想、例子、反例、证明策略和 proof-gap review。
+## Useful Commands
 
-先对齐研究者真实意图，再定义最小可行性验证；先登记资源预算和停止条件，再执行 work order；先刷新时效性证据，再依赖外部信息；公开导出前必须通过隐私扫描。
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_bridge.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_intake_schema.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_state.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1
+```
+
+To run the local browser bridge:
+
+```powershell
+python .agents/plugins/plugins/research-os-copilot/scripts/research_os_copilot_server.py --serve
+```

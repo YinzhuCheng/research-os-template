@@ -1,0 +1,28 @@
+{
+  "name": "research-os-copilot",
+  "version": "0.1.0",
+  "description": "Material-first browser copilot bridge for Codex Research OS.",
+  "author": {
+    "name": "Research OS Template"
+  },
+  "homepage": "https://github.com/YinzhuCheng/research-os-template",
+  "repository": "https://github.com/YinzhuCheng/research-os-template",
+  "license": "MIT",
+  "keywords": ["research", "codex", "copilot", "mcp", "human-in-loop"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Research OS Copilot",
+    "shortDescription": "Use a browser cockpit to start Research OS from material uploads.",
+    "longDescription": "Research OS Copilot provides a material-first browser cockpit, a local MCP bridge, and a confirmation queue so Codex can initialize and continue human-in-loop research projects from uploaded materials without exposing private data.",
+    "developerName": "Research OS Template",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Write", "Local"],
+    "defaultPrompt": [
+      "Open the Research OS Copilot cockpit.",
+      "Process the latest copilot intake packet.",
+      "Update the Research OS copilot state."
+    ],
+    "brandColor": "#176B57"
+  }
+}

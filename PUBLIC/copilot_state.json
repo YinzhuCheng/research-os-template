@@ -1,0 +1,83 @@
+{
+  "schema_version": "v1.0",
+  "updated_at": "2026-06-06T00:00:00+08:00",
+  "state": "material_input",
+  "active_session_id": null,
+  "research_type": "unclear",
+  "pending_confirmation": false,
+  "intake_summary": {
+    "free_text_present": false,
+    "uploaded_file_count": 0,
+    "source_link_count": 0,
+    "material_hashes": []
+  },
+  "overview": {
+    "motivation": "Waiting for researcher material.",
+    "expected_goals": [
+      "Collect material-first intake before asking targeted questions."
+    ],
+    "contribution_claims": []
+  },
+  "literature": {
+    "related_work_map": [],
+    "reference_links": [],
+    "download_script": "scripts/download_reference_links.ps1"
+  },
+  "theory": {
+    "enabled": false,
+    "framework": "",
+    "key_definitions": [],
+    "candidate_theorems": [],
+    "proof_or_validation_notes": []
+  },
+  "experiment": {
+    "enabled": false,
+    "budget_needed_from_researcher": false,
+    "experiment_plan": [],
+    "metrics": [],
+    "stopping_rules": []
+  },
+  "questions": [],
+  "repository_links": [
+    {
+      "label": "Copilot",
+      "path": "copilot.html",
+      "purpose": "Material-first browser cockpit"
+    },
+    {
+      "label": "Work order",
+      "path": "../CONTROL/work_order.yaml",
+      "purpose": "Execution boundary"
+    },
+    {
+      "label": "Phase gate",
+      "path": "../CONTROL/phase_gate.yaml",
+      "purpose": "Human confirmation state"
+    },
+    {
+      "label": "Intake schema",
+      "path": "../config/schemas/copilot_intake.schema.json",
+      "purpose": "Sanitized intake packet"
+    },
+    {
+      "label": "Question schema",
+      "path": "../config/schemas/copilot_questions.schema.json",
+      "purpose": "Three targeted questions"
+    },
+    {
+      "label": "Initialization report schema",
+      "path": "../config/schemas/copilot_initialization_report.schema.json",
+      "purpose": "Structured project startup pack"
+    },
+    {
+      "label": "Run manifest",
+      "path": "../PROVENANCE/run_manifest.jsonl",
+      "purpose": "Audit trail"
+    },
+    {
+      "label": "Resource ledger",
+      "path": "../PROVENANCE/resource_ledger.jsonl",
+      "purpose": "Resource accounting"
+    }
+  ]
+}

@@ -117,3 +117,12 @@
 - [x] 五大领域 profile 与模板均新增 `kernel_bindings` 和 evaluator 计算清单。
 - [x] 更新 orchestrator 路由，先进入 research kernel，再调用领域 profile 和领域 skill。
 - [x] 新增 `check_research_kernel.ps1`、`check_domain_kernel_bindings.ps1` 和 `check_no_orphan_skills.ps1`，防止新增 skill 变成未治理工具。
+## Commit 16: Research OS v3.3 Material-first Browser Copilot
+
+- [x] Update governance to `WO-0004` for material-first copilot work.
+- [x] Add `PUBLIC/copilot.html` and sanitized `PUBLIC/copilot_state.json`.
+- [x] Add `research-os-copilot` skill and repo-scoped plugin scaffold under `.agents/plugins/`.
+- [x] Add copilot intake, targeted-question, and initialization-report schemas and templates.
+- [x] Add reference download helper with open-access/landing-page policy.
+- [x] Add copilot bridge, state, rendering, and schema validation scripts.
+- [x] Update root README, docs center, doc map, technical report, dashboard, and orchestrator routing.

@@ -73,3 +73,19 @@ Commit 9 已补强 Research OS v2：研究无关性、Codex harness、研究者�
 - research kernel 是模板级程序契约，不是持久数据库或独立运行时；如果未来需要长期跨项目记忆，需要新增存储、迁移和隐私策略。
 - evaluator contract 先约束“必须列出计算”，但不自动判断计算是否科学合理；高风险领域仍需要专家人工闸门。
 - 数学形式化仅保留 future slot；未来启用 Lean/Coq/Isabelle 前需要单独 work order、工具链安全审查和误报处理规范。
+## v3.3 Current Strengthening
+
+- Added a material-first browser cockpit so researchers start from text, links, or uploads instead of a fixed five-question questionnaire.
+- Added a three-question targeted-question protocol with recommended answers, options, and an Other/free-form path.
+- Added schemas and templates for copilot intake packets, question packets, and initialization reports.
+- Added a repo-scoped `research-os-copilot` skill and plugin scaffold with a local bridge server.
+- Added sanitized public state rendering for motivation, goals, contributions, literature, theory track, experiment track, and repository links.
+- Added a lawful reference download helper that attempts open-access URLs or landing pages and records failures for human handling.
+
+## v3.3 Residual Risks
+
+- The browser cannot independently make Codex execute work; it writes a queue and Codex must confirm execution.
+- The plugin includes a self-contained bridge scaffold and MCP configuration, but production MCP transport may require environment-specific installation and trust review.
+- Runtime uploads are designed for private intake storage, but this implementation does not commit or test real private uploads under the current forbidden path boundary.
+- Zip files are stored as materials only. Unpacking, dependency installation, or demo execution needs a later work order and explicit safety review.
+- Reference download attempts may fail because of copyright, publisher policy, network restrictions, or missing open access; failed items remain human-handled.

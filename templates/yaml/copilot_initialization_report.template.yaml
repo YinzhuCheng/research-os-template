@@ -1,0 +1,48 @@
+schema_version: v1.0
+report_id: INIT-YYYYMMDD-HHMMSS
+session_id: INTAKE-YYYYMMDD-HHMMSS
+created_at: "2026-06-06T00:00:00+08:00"
+research_type: unclear
+motivation: "Why this research is worth doing, grounded in uploaded material and human answers."
+expected_goals:
+  - "Define the initial research objective."
+contribution_claims:
+  - "Candidate contribution; must remain draft until evidence-linked."
+related_work_map:
+  - work: "Paper, system, theorem family, or prior method"
+    shortcoming: "What it does not solve or leaves unclear"
+    relationship_to_this_research: "How this project extends, contrasts, or reuses it"
+    link: "https://example.org"
+reference_links:
+  - title: "Reference title"
+    url: "https://arxiv.org/abs/0000.00000"
+    doi: null
+    access_hint: "Open arXiv landing page; download locally if needed."
+    download_policy: open_access_attempt
+download_script:
+  path: scripts/download_reference_links.ps1
+  policy: "Only open-access attempts and landing pages; no paywall bypass."
+theory_track:
+  enabled: false
+  framework: ""
+  key_definitions: []
+  candidate_theorems: []
+  proof_or_validation_notes: []
+experiment_track:
+  enabled: false
+  experiment_plan: []
+  budget_needed_from_researcher: true
+  metrics: []
+  stopping_rules: []
+minimum_validation:
+  required: false
+  plan: []
+  budget_status: not_applicable
+repository_resource_links:
+  - label: "Work order"
+    path: CONTROL/work_order.yaml
+    purpose: "Execution boundary"
+  - label: "Run manifest"
+    path: PROVENANCE/run_manifest.jsonl
+    purpose: "Audit trail"
+status: needs_human_review
