@@ -89,13 +89,13 @@
 - [x] 新增 skill 镜像同步/检查脚本。
 - [x] 新增 `research-os-doc-site`、`research-os-integration-scout`、`research-os-experiment-manager`、`research-os-replay-eval-harness`。
 - [x] 新增 `docs/integrations/components.yaml` 和 adapter 模板。
-- [ ] 提交 `feat: add auto research skill and integration layer`。
+- [x] 提交 `feat: add auto research skill and integration layer`。
 
 ## Commit 13: v3 harness 验证
 
 - [x] 新增 doc map、harness run、integration component schema。
 - [x] 新增 HTML、链接、integration、skill mirror 检查脚本。
-- [ ] 运行 schema、skill、harness、dashboard、privacy、HTML、link、integration、skill mirror 验证。
-- [ ] 完成浏览器 QA。
-- [ ] 提交 `test: validate research os v3 governance`。
+- [x] 运行 schema、skill、harness、dashboard、privacy、HTML、link、integration、skill mirror 验证。
+- [x] 完成浏览器 QA。
+- [x] 提交 `test: validate research os v3 governance`。
 - [ ] 推送分支并创建 draft PR。

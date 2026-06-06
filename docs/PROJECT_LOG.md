@@ -15,8 +15,8 @@
 - 新增 `.agents/skills/` 仓库级 skill 镜像，并通过镜像一致性检查。
 - 新增 `docs/integrations/components.yaml`，记录 Agent Laboratory/AgentRxiv、AI Scientist-v2、AI co-scientist、Deep Researcher Agent、Claw AI Lab、AG2 和 OpenAI skills catalog 的适配边界。
 - 新增 doc map、harness run、integration component schema 和 HTML/link/integration/skill mirror 检查脚本。
+- 完成完整脚本验证和 Browser QA，截图与报告保留在 `build/browser-qa/`。
 
 待完成：
 
-- 运行完整验证和浏览器 QA。
 - 创建 draft PR。

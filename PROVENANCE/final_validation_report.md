@@ -2,51 +2,64 @@
 
 验证日期：2026-06-06
 
-## 验证结果
+## v3 验证结果
 
 | 检查 | 命令 | 结果 |
 | --- | --- | --- |
-| Schema 轻校验 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1` | 通过 |
-| Skill 结构校验 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1` | 通过，15 个 skill |
-| 隐私扫描 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1` | 通过 |
+| Schema 轻校验 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1` | 通过，10 个 JSON schema 均可解析 |
+| Skill 结构校验 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1` | 通过，19 个 skill |
+| Harness 审计 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1 -PythonPath <bundled-python>` | 通过，hook 编译和外部写入阻断样例通过 |
 | Dashboard 静态检查 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1` | 通过 |
-| 研究中立性 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_neutrality.ps1` | 通过，覆盖 4 类 dry-run 研究 |
-| Harness 审计 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1 -PythonPath <bundled-python>` | 通过 |
-| Resource guard | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_resource_guard.ps1` | 通过 |
-| Live evidence | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_live_evidence.ps1` | 通过 |
-| LaTeX 源码静态检查 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_latex_sources.ps1` | `paper_enabled: false` 时跳过；`-Force` 时通过 |
-| LaTeX 编译 | `pdflatex -interaction=nonstopmode -halt-on-error -output-directory ..\..\build\latex main.tex` | 超时，已终止进程并保留 `build/latex/main.log` |
-| Hash 清单 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\hash_paths.ps1` | 通过，写入 `PROVENANCE/hashes.json` |
-| 公开导出 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\export_public.ps1 -Name v2_validation_export` | 通过，写入 `exports/v2_validation_export.zip` |
+| 隐私扫描 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1` | 通过 |
+| HTML 文档检查 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1` | 通过 |
+| 文档链接检查 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1` | 通过，12 个 markdown/html 文件 |
+| Integration registry 检查 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_integrations.ps1` | 通过，8 个组件 |
+| Skill 镜像检查 | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_skill_mirror.ps1` | 通过，19 个镜像 skill |
+| Git diff whitespace | `git diff --check` | 通过 |
 
-## 说明
+## 浏览器 QA
 
-- MiKTeX/pdflatex 已安装，但本次最小论文编译在 120 秒内未完成，可能卡在首次包解析或依赖安装。源码静态检查已确认主稿、附录、BibTeX、TikZ 与 PGFPlots 样例文件齐全。
-- `tool_search` 未暴露 Browser 控制工具，因此前端只做了静态检查和 JSON 解析；未做截图级视觉 QA。
-- 当前系统 `python` 是 Windows Store 占位程序；harness 验证使用 Codex bundled Python 完成 hook 编译和外部写入阻断样例。
-- 公开导出脚本已实现并通过测试，导出产物保留在 `exports/`。
+使用 Codex in-app Browser 通过本地 HTTP 服务检查以下页面：
 
-## Skill 清单
+- `docs/start-here.html`
+- `docs/technical-report.html`
+- `PUBLIC/index.html`
 
-- `research-os-orchestrator`
-- `research-os-init`
-- `research-os-alignment`
-- `research-os-execution-harness`
-- `research-os-evidence`
-- `research-os-analysis`
-- `research-os-feasibility-probe`
-- `research-os-resource-guard`
-- `research-os-live-evidence-refresh`
-- `research-os-harness-audit`
-- `research-os-paper-authoring`
-- `research-os-visual-communication`
-- `research-os-polish-factcheck`
-- `research-os-review-rebuttal`
-- `research-os-public-export`
+视口：
+
+- Desktop：1440 x 900
+- Mobile：390 x 844
+
+结果：
+
+- 共检查 6 个页面/视口组合。
+- 无缺失关键文案。
+- 无控制台 error。
+- 无水平溢出。
+- 无可见元素越界。
+
+截图和 JSON 报告保留在 `build/browser-qa/`：
+
+- `build/browser-qa/start-here-desktop.png`
+- `build/browser-qa/start-here-mobile.png`
+- `build/browser-qa/technical-report-desktop.png`
+- `build/browser-qa/technical-report-mobile.png`
+- `build/browser-qa/dashboard-desktop.png`
+- `build/browser-qa/dashboard-mobile.png`
+- `build/browser-qa/report.json`
+
+## v3 产物摘要
+
+- 新增面向一般研究者的 `docs/start-here.html`。
+- 新增面向后续 agent 和维护者的 `docs/technical-report.html`。
+- 新增 `.agents/skills/` 仓库级 skill 镜像，`skills/` 仍为权威源。
+- 新增 `docs/integrations/components.yaml`，记录 8 个开源自动研究组件的来源、许可证、安装入口、环境变量名、产物映射和风险。
+- 新增 doc map、harness run、integration component schema 和对应模板。
+- 新增 HTML、链接、integration、skill mirror 检查脚本。
 
 ## 残余风险
 
-- LaTeX 完整编译需要后续确认 MiKTeX 包安装策略或改用固定 TeX Live 环境。
-- 当前 schema 校验是 smoke validation，不是完整 JSON Schema/YAML 语义校验。
-- 静态 dashboard 未做真实浏览器截图验证。
+- LaTeX 完整编译在 v2 阶段曾因本机 MiKTeX 环境超时，v3 未改动论文链路，未重复运行完整 LaTeX 编译。
+- 当前 YAML 语义校验仍以 smoke validation 和确定性文本检查为主，后续可引入完整 YAML schema validator。
+- 开源组件 registry 是适配记录和设计入口，不代表第三方组件已安装、已授权运行或已通过安全审计。
 - Hooks 示例需要研究者在受信任项目中启用 `.codex/config.toml.example` 才会成为运行期控制。

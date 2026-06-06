@@ -39,11 +39,12 @@ Commit 9 已补强 Research OS v2：研究无关性、Codex harness、研究者�
 - 已补普通研究者快速上手 HTML 与后续 agent 技术路线 HTML。
 - 已新增文档地图、项目摘要、项目日志和资产来源记录。
 - 已将 Research OS 文档入口接入根 README 和公开 dashboard。
-- 待补 `.agents/skills/` 仓库级 skill 镜像、开源组件 registry、adapter 模板和 v3 验证脚本。
+- 已补 `.agents/skills/` 仓库级 skill 镜像、开源组件 registry、adapter 模板和 v3 验证脚本。
+- 已完成浏览器 QA，覆盖 `docs/start-here.html`、`docs/technical-report.html` 和 `PUBLIC/index.html` 的 desktop/mobile 视口。
 
 ## v3 剩余风险
 
-- 当前 HTML 已离线可读，但仍需浏览器截图级 QA。
 - 当前 dashboard 能链接到 HTML，但内置 reader 对 HTML/YAML 仍以源码方式展示；直接打开页面是主要使用路径。
 - 开源组件 registry 只应记录适配和来源，不得绕过许可证、密钥、预算或 sandbox 控制。
 - `gh` CLI 未登录，PR 创建将优先使用 GitHub connector；本地 git push 已通过现有凭据成功。
+- YAML 语义校验仍是轻量检查，后续可接入完整 YAML schema validator。
