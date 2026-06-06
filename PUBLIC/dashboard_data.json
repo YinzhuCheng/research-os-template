@@ -18,6 +18,11 @@
     {"label": "验证", "value": "待 v2 检查"}
   ],
   "documents": [
+    {"path": "../docs/start-here.html", "label": "快速上手 HTML"},
+    {"path": "../docs/technical-report.html", "label": "技术路线 HTML"},
+    {"path": "../docs/README.md", "label": "文档中心"},
+    {"path": "../docs/doc_map.yaml", "label": "文档地图"},
+    {"path": "../docs/PROJECT_SUMMARY.md", "label": "项目摘要"},
     {"path": "README.md", "label": "公开区说明"},
     {"path": "research_brief.md", "label": "研究简报"},
     {"path": "claim_evidence_matrix.yaml", "label": "Claim-Evidence"},
@@ -34,6 +39,7 @@
     "确认研究类型、验证对象和最小可行性验证预算。",
     "确认是否需要论文、报告、复现包或决策备忘。",
     "确认真实资源调用是否允许以及预算上限。",
+    "如需接入开源自动研究组件，先登记 components.yaml 并完成许可证/风险检查。",
     "如需公开分享，使用 export_public.ps1 生成脱敏包。"
   ]
 }

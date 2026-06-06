@@ -12,14 +12,31 @@
 
 ## 主要入口
 
+- 快速上手 HTML：[docs/start-here.html](docs/start-here.html)
+- 完整技术路线 HTML：[docs/technical-report.html](docs/technical-report.html)
+- 文档中心：[docs/README.md](docs/README.md)
+- 文档地图：[docs/doc_map.yaml](docs/doc_map.yaml)
 - 计划：[PLAN/00_MASTER_PLAN.md](PLAN/00_MASTER_PLAN.md)
 - Codex 仓库规则：[AGENTS.md](AGENTS.md)
 - Codex harness 示例：[.codex/requirements.md](.codex/requirements.md)
+- 静态 dashboard：[PUBLIC/index.html](PUBLIC/index.html)
 - 公开区：[PUBLIC/README.md](PUBLIC/README.md)
 - 私有区：[PRIVATE/README.md](PRIVATE/README.md)
 - 控制区：[CONTROL/README.md](CONTROL/README.md)
 - 来源与审计：[PROVENANCE/README.md](PROVENANCE/README.md)
 - Skill 套件：[skills/README.md](skills/README.md)
+
+## Research OS v3
+
+v3 将模板定位为通用的 human-in-loop auto researcher 仓库。默认不假设研究方向、模型、provider、数据集、baseline、论文或预算；这些内容只来自研究者入口材料或明确决策记录。
+
+新增重点：
+
+- 面向普通研究者的 HTML 快速上手页。
+- 面向后续 agent 和维护者的 HTML 技术路线。
+- `.agents/skills/` 仓库级 skill 发现镜像。
+- 开源自动研究组件 registry 和 adapter 模板。
+- HTML 链接、skill 镜像、integration registry 和 harness run 检查。
 
 ## 使用原则
 

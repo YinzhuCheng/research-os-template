@@ -1,0 +1,39 @@
+doc_map_id: DOCMAP-0001
+updated_at: 2026-06-06
+language_mode: zh-first
+entrypoints:
+  novice:
+    title: "快速上手"
+    path: "docs/start-here.html"
+    audience: "一般研究者、第一次接触 Codex 的使用者"
+  technical:
+    title: "技术路线"
+    path: "docs/technical-report.html"
+    audience: "后续 agent、维护者、高级研究者"
+  dashboard:
+    title: "公开 dashboard"
+    path: "PUBLIC/index.html"
+    audience: "项目参与者、审计者"
+core_controls:
+  work_order: "CONTROL/work_order.yaml"
+  phase_gate: "CONTROL/phase_gate.yaml"
+  project_config: "config/research_project.yaml"
+  repository_rules: "AGENTS.md"
+audit:
+  run_manifest: "PROVENANCE/run_manifest.jsonl"
+  resource_ledger: "PROVENANCE/resource_ledger.jsonl"
+  live_evidence: "PROVENANCE/live_evidence_snapshot.yaml"
+  claim_evidence: "PUBLIC/claim_evidence_matrix.yaml"
+skills:
+  source: "skills/"
+  repo_scoped_mirror: ".agents/skills/"
+  install_script: "scripts/install_skills.ps1"
+integrations:
+  registry: "docs/integrations/components.yaml"
+  adapter_template: "templates/yaml/integration_component.template.yaml"
+validation:
+  schema: "scripts/validate_schemas.ps1"
+  skill: "scripts/validate_skills.ps1"
+  harness: "scripts/check_harness.ps1"
+  dashboard: "scripts/check_dashboard.ps1"
+  privacy: "scripts/scan_privacy.ps1"

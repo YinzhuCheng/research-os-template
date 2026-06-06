@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Research OS 快速上手</title>
+  <style>
+    :root {
+      --bg: #f7f8f6;
+      --surface: #ffffff;
+      --surface-alt: #eef3ef;
+      --text: #17211b;
+      --muted: #5d6b63;
+      --border: #ccd8cf;
+      --accent: #176b57;
+      --accent-2: #245d8f;
+      --warn: #8a5a00;
+      --danger: #a33a2b;
+      --radius: 8px;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+      --space-7: 48px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    a { color: var(--accent-2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .skip {
+      position: absolute;
+      left: 12px;
+      top: -40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      z-index: 10;
+    }
+    .skip:focus { top: 12px; }
+    header {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .bar, main {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+    .bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding: var(--space-4) 0;
+    }
+    .brand {
+      font-weight: 720;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      font-size: 14px;
+    }
+    .hero {
+      padding: var(--space-7) 0 var(--space-6);
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: var(--space-6);
+      align-items: center;
+    }
+    .eyebrow {
+      color: var(--accent);
+      font-weight: 700;
+      margin: 0 0 var(--space-2);
+      font-size: 14px;
+    }
+    h1, h2, h3 {
+      line-height: 1.22;
+      letter-spacing: 0;
+    }
+    h1 {
+      font-size: 38px;
+      margin: 0 0 var(--space-4);
+      max-width: 780px;
+    }
+    h2 {
+      font-size: 24px;
+      margin: 0 0 var(--space-4);
+    }
+    h3 {
+      font-size: 17px;
+      margin: 0 0 var(--space-2);
+    }
+    p { margin: 0 0 var(--space-4); }
+    .lead {
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 700px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 9px 14px;
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 650;
+    }
+    .button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+    .diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-4);
+      overflow: hidden;
+    }
+    .section {
+      padding: var(--space-6) 0;
+      border-top: 1px solid var(--border);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      min-height: 176px;
+    }
+    .card small {
+      color: var(--muted);
+      display: block;
+      margin-bottom: var(--space-2);
+      font-weight: 650;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: var(--space-5);
+      align-items: start;
+    }
+    .list {
+      display: grid;
+      gap: var(--space-3);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .list li {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-4);
+    }
+    code {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.92em;
+    }
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: #16211b;
+      color: #f8fbf8;
+      border-radius: var(--radius);
+      padding: var(--space-4);
+      overflow: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: table;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: var(--surface-alt); }
+    tr:last-child td { border-bottom: 0; }
+    .note {
+      border-left: 4px solid var(--accent);
+      background: #f2f7f4;
+      padding: var(--space-4);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .footer {
+      color: var(--muted);
+      padding: var(--space-6) 0;
+    }
+    svg text { font-family: inherit; }
+    @media (max-width: 900px) {
+      .bar { align-items: flex-start; flex-direction: column; }
+      .hero, .two-col, .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 30px; }
+      .lead { font-size: 16px; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header>
+    <div class="bar">
+      <div class="brand">Research OS v3</div>
+      <nav aria-label="文档导航">
+        <a href="../README.md">仓库首页</a>
+        <a href="technical-report.html">技术路线</a>
+        <a href="../PUBLIC/index.html">Dashboard</a>
+        <a href="../CONTROL/work_order.yaml">Work Order</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Human-in-loop Auto Researcher</p>
+        <h1>把一个研究想法变成可执行、可追踪、可审计的研究仓库</h1>
+        <p class="lead">Research OS 不要求你先懂 Codex、LLM、机器学习或论文流程。你只需要给出研究目标、材料边界和资源约束，仓库会把后续工作拆成阶段闸门、skill、模板、证据链、资源账本和公开产物。</p>
+        <div class="actions">
+          <a class="button primary" href="#start">开始三步</a>
+          <a class="button" href="technical-report.html">查看技术路线</a>
+          <a class="button" href="../templates/README.md">浏览模板</a>
+        </div>
+      </div>
+      <div class="diagram" role="img" aria-label="研究流程图：想法、对齐、可行性、执行、审计、公开产物">
+        <svg viewBox="0 0 720 420" width="100%" height="100%" aria-hidden="true">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#176b57"></path>
+            </marker>
+          </defs>
+          <rect x="18" y="18" width="684" height="384" rx="8" fill="#f7f8f6" stroke="#ccd8cf"></rect>
+          <g fill="#ffffff" stroke="#9fb0a5" stroke-width="2">
+            <rect x="56" y="72" width="140" height="72" rx="8"></rect>
+            <rect x="290" y="72" width="140" height="72" rx="8"></rect>
+            <rect x="524" y="72" width="140" height="72" rx="8"></rect>
+            <rect x="56" y="258" width="140" height="72" rx="8"></rect>
+            <rect x="290" y="258" width="140" height="72" rx="8"></rect>
+            <rect x="524" y="258" width="140" height="72" rx="8"></rect>
+          </g>
+          <g fill="#17211b" font-size="22" font-weight="700">
+            <text x="126" y="103" text-anchor="middle">研究想法</text>
+            <text x="360" y="103" text-anchor="middle">意图对齐</text>
+            <text x="594" y="103" text-anchor="middle">可行性探针</text>
+            <text x="126" y="289" text-anchor="middle">执行记录</text>
+            <text x="360" y="289" text-anchor="middle">证据审计</text>
+            <text x="594" y="289" text-anchor="middle">公开产物</text>
+          </g>
+          <g fill="#5d6b63" font-size="15">
+            <text x="126" y="126" text-anchor="middle">目标和约束</text>
+            <text x="360" y="126" text-anchor="middle">阶段闸门</text>
+            <text x="594" y="126" text-anchor="middle">预算和停止条件</text>
+            <text x="126" y="312" text-anchor="middle">manifest</text>
+            <text x="360" y="312" text-anchor="middle">claim-evidence</text>
+            <text x="594" y="312" text-anchor="middle">报告和 dashboard</text>
+          </g>
+          <path d="M 198 108 H 278" stroke="#176b57" stroke-width="3" marker-end="url(#arrow)"></path>
+          <path d="M 432 108 H 512" stroke="#176b57" stroke-width="3" marker-end="url(#arrow)"></path>
+          <path d="M 594 146 C 594 205 126 195 126 248" stroke="#176b57" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+          <path d="M 198 294 H 278" stroke="#176b57" stroke-width="3" marker-end="url(#arrow)"></path>
+          <path d="M 432 294 H 512" stroke="#176b57" stroke-width="3" marker-end="url(#arrow)"></path>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section" id="start">
+      <h2>三步开始</h2>
+      <div class="grid">
+        <article class="card">
+          <small>Step 1</small>
+          <h3>写下研究入口</h3>
+          <p>把研究问题、已有材料、隐私边界和你愿意投入的资源写进入口材料。还不确定的内容保持空白，不要让 agent 替你默认模型、数据集、样本量或预算。</p>
+          <a href="../templates/markdown/decision_record.template.md">查看决策记录模板</a>
+        </article>
+        <article class="card">
+          <small>Step 2</small>
+          <h3>确认控制面</h3>
+          <p>检查当前 work order、phase gate 和项目配置。真实资源、凭据、外部写回、公开导出和投稿默认都需要人工确认。</p>
+          <a href="../CONTROL/work_order.yaml">打开 work order</a>
+        </article>
+        <article class="card">
+          <small>Step 3</small>
+          <h3>运行最小可行性探针</h3>
+          <p>先做最小验证，再扩大实验或写作范围。每次实质运行都要记录 manifest 和资源 ledger。</p>
+          <a href="../templates/yaml/feasibility_probe.template.yaml">查看 feasibility 模板</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="two-col">
+        <div>
+          <h2>你需要回答什么</h2>
+          <p>Research OS 会尽量从仓库里发现事实，但研究意图和资源边界必须由人确认。</p>
+        </div>
+        <ul class="list">
+          <li><strong>研究目标：</strong>这次要得到研究简报、验证报告、复现包、决策备忘，还是论文草稿？</li>
+          <li><strong>材料边界：</strong>哪些材料可公开，哪些只能放在 `PRIVATE/`，哪些不能落盘？</li>
+          <li><strong>预算边界：</strong>允许多少时间、算力、云资源、API、人工或仪器机时？</li>
+          <li><strong>停止条件：</strong>什么情况下必须停下来问人，例如证据冲突、预算超限、许可证不清楚或实验失败？</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>常用入口</h2>
+      <table>
+        <thead>
+          <tr><th>你想做什么</th><th>从哪里开始</th><th>产物</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>初始化一个新研究</td><td><a href="../skills/research-os-init/SKILL.md">research-os-init</a></td><td>项目配置、入口材料、source intake</td></tr>
+          <tr><td>确认研究方向和范围</td><td><a href="../skills/research-os-alignment/SKILL.md">research-os-alignment</a></td><td>待决策项、约束、阶段闸门</td></tr>
+          <tr><td>做最小验证</td><td><a href="../skills/research-os-feasibility-probe/SKILL.md">research-os-feasibility-probe</a></td><td>可行性探针、预算、停止条件</td></tr>
+          <tr><td>刷新外部证据</td><td><a href="../skills/research-os-live-evidence-refresh/SKILL.md">research-os-live-evidence-refresh</a></td><td>live evidence snapshot</td></tr>
+          <tr><td>公开分享结果</td><td><a href="../skills/research-os-public-export/SKILL.md">research-os-public-export</a></td><td>脱敏公开包、审计摘要</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2>最小命令</h2>
+      <p>Windows PowerShell 环境中可以先运行这些只读或校验命令。</p>
+      <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</pre>
+      <div class="note">
+        <strong>关键边界：</strong>不要把真实 API key、平台 token、cookie、authorization header、SSH 私钥或云账号密码写进仓库。需要凭据时，只记录环境变量名或 secret store 路径。
+      </div>
+    </section>
+
+    <section class="footer">
+      <p>继续阅读：<a href="technical-report.html">完整技术路线</a>、<a href="../PUBLIC/index.html">公开 dashboard</a>、<a href="doc_map.yaml">文档地图</a>。</p>
+    </section>
+  </main>
+</body>
+</html>

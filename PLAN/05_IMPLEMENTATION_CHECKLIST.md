@@ -65,3 +65,37 @@
 - [x] 运行 v2 通用性、harness、resource guard、live evidence、隐私和回归验证。
 - [x] 更新 v2 最终审计说明。
 - [x] 提交 `feat: add research neutral harness v2`。
+
+## Commit 10: Research OS v3 治理授权
+
+- [x] 将当前本地历史 bootstrap 到远端 `main`。
+- [x] 创建并推送 `codex/research-os-v3` 分支。
+- [x] 将 work order 更新为 `WO-0002`，授权 v3 文档、skill、adapter、schema 和脚本改动。
+- [x] 刷新 live evidence 与 claim-evidence，补充自动科研和 Codex harness 依据。
+- [x] 记录 v3 governance run manifest 和 resource ledger。
+- [x] 提交 `chore: authorize research os v3 documentation work`。
+
+## Commit 11: Human-in-loop 文档站
+
+- [x] 新增 `docs/start-here.html`，面向一般研究者和 Codex 新手。
+- [x] 新增 `docs/technical-report.html`，面向后续 agent 和维护者。
+- [x] 新增 `docs/README.md`、`docs/doc_map.yaml`、`docs/PROJECT_SUMMARY.md`、`docs/PROJECT_LOG.md` 和 `docs/ASSET_SOURCES.md`。
+- [x] 更新根 `README.md` 与 `PUBLIC/index.html` 导航。
+- [ ] 提交 `docs: add human loop research os guide`。
+
+## Commit 12: Skill 与开源组件集成层
+
+- [ ] 新增 `.agents/skills/` 仓库级 skill 镜像。
+- [ ] 新增 skill 镜像同步/检查脚本。
+- [ ] 新增 `research-os-doc-site`、`research-os-integration-scout`、`research-os-experiment-manager`、`research-os-replay-eval-harness`。
+- [ ] 新增 `docs/integrations/components.yaml` 和 adapter 模板。
+- [ ] 提交 `feat: add auto research skill and integration layer`。
+
+## Commit 13: v3 harness 验证
+
+- [ ] 新增 doc map、harness run、integration component schema。
+- [ ] 新增 HTML、链接、integration、skill mirror 检查脚本。
+- [ ] 运行 schema、skill、harness、dashboard、privacy、HTML、link、integration、skill mirror 验证。
+- [ ] 完成浏览器 QA。
+- [ ] 提交 `test: validate research os v3 governance`。
+- [ ] 推送分支并创建 draft PR。
