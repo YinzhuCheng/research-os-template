@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex Research OS Dashboard</title>
+  <style>
+    :root {
+      --bg: #f7f5ef;
+      --surface: #ffffff;
+      --surface-alt: #f1f5f3;
+      --text: #1f2933;
+      --muted: #607080;
+      --border: #d6ddd8;
+      --blue: #2563eb;
+      --green: #117a65;
+      --amber: #a16207;
+      --red: #b42318;
+      --radius: 8px;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .layout {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+    aside {
+      border-right: 1px solid var(--border);
+      background: #fbfaf6;
+      padding: var(--space-5);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    main {
+      padding: var(--space-6);
+      max-width: 1180px;
+      width: 100%;
+    }
+    h1, h2, h3 { line-height: 1.2; letter-spacing: 0; }
+    h1 { font-size: 28px; margin: 0 0 var(--space-2); }
+    h2 { font-size: 18px; margin: 0 0 var(--space-4); }
+    h3 { font-size: 15px; margin: var(--space-4) 0 var(--space-2); }
+    .muted { color: var(--muted); }
+    .brand {
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: var(--space-1);
+    }
+    .nav-list {
+      display: grid;
+      gap: var(--space-2);
+      margin-top: var(--space-5);
+    }
+    .nav-list button {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+    }
+    .nav-list button:hover,
+    .nav-list button.active {
+      border-color: var(--blue);
+      background: #eef4ff;
+    }
+    .topbar {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-5);
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: var(--space-3);
+      margin: var(--space-5) 0;
+    }
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-4);
+      min-height: 86px;
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: var(--space-2);
+    }
+    .metric strong {
+      font-size: 16px;
+    }
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: var(--space-4);
+      align-items: start;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: var(--surface-alt);
+      color: var(--text);
+      font-size: 13px;
+    }
+    .pill.green { border-color: #9bd3c7; color: var(--green); background: #edf8f5; }
+    .pill.amber { border-color: #e8cf8f; color: var(--amber); background: #fff8e5; }
+    .pill.red { border-color: #f1b5b0; color: var(--red); background: #fff1f0; }
+    .reader pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: #17202a;
+      color: #f8fafc;
+      border-radius: var(--radius);
+      padding: var(--space-4);
+      overflow: auto;
+    }
+    .reader table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: var(--space-4) 0;
+      font-size: 14px;
+    }
+    .reader th, .reader td {
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      vertical-align: top;
+    }
+    .reader th { background: var(--surface-alt); }
+    .reader code {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-size: 0.92em;
+    }
+    .toolbar {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+    .toolbar a,
+    .toolbar button {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font: inherit;
+      cursor: pointer;
+    }
+    .empty {
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      color: var(--muted);
+      background: #fffdf8;
+    }
+    @media (max-width: 920px) {
+      .layout { grid-template-columns: 1fr; }
+      aside {
+        position: static;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+      main { padding: var(--space-4); }
+      .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .panel-grid { grid-template-columns: 1fr; }
+      .topbar { display: block; }
+      .toolbar { margin-top: var(--space-3); }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">Codex Research OS</div>
+      <div class="muted">可追踪、可审计的研究项目模板</div>
+      <div class="nav-list" id="nav"></div>
+    </aside>
+    <main>
+      <div class="topbar">
+        <div>
+          <h1 id="projectTitle">Codex Research OS Template</h1>
+          <div class="muted">研究驾驶舱：阶段、证据、实验、论文与审计状态</div>
+          <div class="pill-row" id="projectPills"></div>
+        </div>
+        <div class="toolbar">
+          <button type="button" id="reloadBtn">刷新</button>
+          <a href="../README.md">模板首页</a>
+        </div>
+      </div>
+
+      <section class="status-grid" id="statusGrid"></section>
+
+      <section class="panel-grid">
+        <div>
+          <section class="panel">
+            <h2>当前文档</h2>
+            <div class="reader" id="reader">
+              <div class="empty">选择左侧文档查看内容。通过本地 HTTP 服务打开时可渲染 Markdown/YAML/JSON；file:// 模式可能受浏览器限制。</div>
+            </div>
+          </section>
+        </div>
+        <div>
+          <section class="panel">
+            <h2>下一步决策</h2>
+            <ul id="decisionList"></ul>
+          </section>
+          <section class="panel">
+            <h2>审计提醒</h2>
+            <p class="muted">公开导出前运行：</p>
+            <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</pre>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const fallbackData = {
+      project: {
+        title: "Codex Research OS Template",
+        phase: "initialization",
+        language_mode: "zh-first",
+        intervention_level: "low",
+        privacy_policy: "public_private_split"
+      },
+      status: [
+        {label: "计划", value: "已完成"},
+        {label: "骨架", value: "已完成"},
+        {label: "Schema", value: "已完成"},
+        {label: "核心 Skill", value: "部分完成"},
+        {label: "审计脚本", value: "已完成"},
+        {label: "论文 Skill", value: "待完成"}
+      ],
+      documents: [
+        {path: "README.md", label: "公开区说明"},
+        {path: "research_brief.md", label: "研究简报"},
+        {path: "claim_evidence_matrix.yaml", label: "Claim-Evidence"},
+        {path: "../PROVENANCE/public_audit_summary.md", label: "公开审计摘要"},
+        {path: "../CONTROL/phase_gate.yaml", label: "阶段闸门"},
+        {path: "../PLAN/05_IMPLEMENTATION_CHECKLIST.md", label: "实施清单"},
+        {path: "../PLAN/06_GAP_AUDIT.md", label: "缺口审计"}
+      ],
+      next_decisions: [
+        "确认目标研究的语言模式：zh-first 或 en-only。",
+        "确认目标会议/期刊和投稿格式。",
+        "确认下一阶段是否进入论文/视觉/review skill 实现。"
+      ]
+    };
+
+    let dashboardData = fallbackData;
+    let currentDoc = null;
+
+    function esc(text) {
+      return String(text).replace(/[&<>"']/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch]));
+    }
+
+    function renderInline(text) {
+      return esc(text)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    }
+
+    function renderMarkdown(text) {
+      const lines = text.replace(/\r\n/g, "\n").split("\n");
+      let html = "";
+      let inList = false;
+      let inCode = false;
+      let code = [];
+      const closeList = () => {
+        if (inList) html += "</ul>";
+        inList = false;
+      };
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.startsWith("```")) {
+          if (!inCode) {
+            closeList();
+            inCode = true;
+            code = [];
+          } else {
+            html += `<pre><code>${esc(code.join("\n"))}</code></pre>`;
+            inCode = false;
+          }
+          continue;
+        }
+        if (inCode) {
+          code.push(line);
+          continue;
+        }
+        if (!line.trim()) {
+          closeList();
+          continue;
+        }
+        const heading = line.match(/^(#{1,3})\s+(.+)$/);
+        if (heading) {
+          closeList();
+          html += `<h${heading[1].length}>${renderInline(heading[2])}</h${heading[1].length}>`;
+          continue;
+        }
+        if (line.startsWith("- ")) {
+          if (!inList) {
+            html += "<ul>";
+            inList = true;
+          }
+          html += `<li>${renderInline(line.slice(2))}</li>`;
+          continue;
+        }
+        if (/^\|.+\|$/.test(line) && i + 1 < lines.length && /^\|[\s:|\-]+\|$/.test(lines[i + 1])) {
+          closeList();
+          const header = line.split("|").slice(1, -1).map(cell => `<th>${renderInline(cell.trim())}</th>`).join("");
+          html += `<table><thead><tr>${header}</tr></thead><tbody>`;
+          i += 2;
+          while (i < lines.length && /^\|.+\|$/.test(lines[i])) {
+            const row = lines[i].split("|").slice(1, -1).map(cell => `<td>${renderInline(cell.trim())}</td>`).join("");
+            html += `<tr>${row}</tr>`;
+            i++;
+          }
+          i--;
+          html += "</tbody></table>";
+          continue;
+        }
+        closeList();
+        html += `<p>${renderInline(line)}</p>`;
+      }
+      closeList();
+      return html;
+    }
+
+    function renderDocument(path, text) {
+      const reader = document.getElementById("reader");
+      if (path.endsWith(".md")) {
+        reader.innerHTML = renderMarkdown(text);
+      } else if (path.endsWith(".json") || path.endsWith(".jsonl")) {
+        reader.innerHTML = `<pre><code>${esc(text)}</code></pre>`;
+      } else {
+        reader.innerHTML = `<pre><code>${esc(text)}</code></pre>`;
+      }
+    }
+
+    async function loadDoc(path) {
+      currentDoc = path;
+      document.querySelectorAll(".nav-list button").forEach(button => {
+        button.classList.toggle("active", button.dataset.path === path);
+      });
+      try {
+        const response = await fetch(path, {cache: "no-store"});
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const text = await response.text();
+        renderDocument(path, text);
+      } catch (error) {
+        document.getElementById("reader").innerHTML = `
+          <div class="empty">
+            无法读取 <code>${esc(path)}</code>。如果当前是 file:// 打开，请在模板根目录运行本地 HTTP 服务后访问 <code>PUBLIC/index.html</code>。
+            <br><br>错误：${esc(error.message)}
+          </div>`;
+      }
+    }
+
+    function renderDashboard() {
+      const project = dashboardData.project;
+      document.getElementById("projectTitle").textContent = project.title;
+      document.getElementById("projectPills").innerHTML = [
+        ["阶段", project.phase, "green"],
+        ["语言", project.language_mode, ""],
+        ["介入", project.intervention_level, "amber"],
+        ["隐私", project.privacy_policy, "green"]
+      ].map(([label, value, tone]) => `<span class="pill ${tone}">${label}: ${value}</span>`).join("");
+
+      document.getElementById("statusGrid").innerHTML = dashboardData.status.map(item => `
+        <div class="metric">
+          <span>${esc(item.label)}</span>
+          <strong>${esc(item.value)}</strong>
+        </div>`).join("");
+
+      document.getElementById("nav").innerHTML = dashboardData.documents.map(doc => `
+        <button type="button" data-path="${esc(doc.path)}">${esc(doc.label)}</button>`).join("");
+
+      document.getElementById("decisionList").innerHTML = dashboardData.next_decisions
+        .map(item => `<li>${esc(item)}</li>`)
+        .join("");
+
+      document.querySelectorAll(".nav-list button").forEach(button => {
+        button.addEventListener("click", () => loadDoc(button.dataset.path));
+      });
+      if (!currentDoc && dashboardData.documents.length) {
+        loadDoc(dashboardData.documents[0].path);
+      }
+    }
+
+    async function loadDashboardData() {
+      try {
+        const response = await fetch("dashboard_data.json", {cache: "no-store"});
+        if (response.ok) dashboardData = await response.json();
+      } catch (_) {
+        dashboardData = fallbackData;
+      }
+      renderDashboard();
+    }
+
+    document.getElementById("reloadBtn").addEventListener("click", () => {
+      if (currentDoc) loadDoc(currentDoc);
+      loadDashboardData();
+    });
+
+    loadDashboardData();
+  </script>
+</body>
+</html>

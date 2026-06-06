@@ -34,9 +34,9 @@
 
 ## Commit 6: 静态仪表盘
 
-- [ ] 创建 `PUBLIC/index.html`。
-- [ ] 渲染 Markdown 和 JSON。
-- [ ] 显示阶段、claim、实验、结果、审计状态。
+- [x] 创建 `PUBLIC/index.html`。
+- [x] 渲染 Markdown 和 JSON。
+- [x] 显示阶段、claim、实验、结果、审计状态。
 
 ## Commit 7: 论文与 review skill
 

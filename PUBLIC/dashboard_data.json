@@ -1,0 +1,31 @@
+{
+  "project": {
+    "title": "Codex Research OS Template",
+    "phase": "initialization",
+    "language_mode": "zh-first",
+    "intervention_level": "low",
+    "privacy_policy": "public_private_split"
+  },
+  "status": [
+    {"label": "计划", "value": "已完成"},
+    {"label": "骨架", "value": "已完成"},
+    {"label": "Schema", "value": "已完成"},
+    {"label": "核心 Skill", "value": "部分完成"},
+    {"label": "审计脚本", "value": "已完成"},
+    {"label": "论文 Skill", "value": "待完成"}
+  ],
+  "documents": [
+    {"path": "README.md", "label": "公开区说明"},
+    {"path": "research_brief.md", "label": "研究简报"},
+    {"path": "claim_evidence_matrix.yaml", "label": "Claim-Evidence"},
+    {"path": "../PROVENANCE/public_audit_summary.md", "label": "公开审计摘要"},
+    {"path": "../CONTROL/phase_gate.yaml", "label": "阶段闸门"},
+    {"path": "../PLAN/05_IMPLEMENTATION_CHECKLIST.md", "label": "实施清单"},
+    {"path": "../PLAN/06_GAP_AUDIT.md", "label": "缺口审计"}
+  ],
+  "next_decisions": [
+    "确认目标研究的语言模式：zh-first 或 en-only。",
+    "确认目标会议/期刊和投稿格式。",
+    "确认下一阶段是否进入论文/视觉/review skill 实现。"
+  ]
+}

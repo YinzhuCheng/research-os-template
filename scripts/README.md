@@ -14,3 +14,9 @@ Windows 默认执行策略可能禁止直接运行 `.ps1`。验证时使用：
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
 ```
+
+仪表盘静态检查：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
+```
