@@ -19,4 +19,4 @@
 
 待完成：
 
-- 创建 draft PR。
+- 审查 draft PR：[YinzhuCheng/research-os-template#1](https://github.com/YinzhuCheng/research-os-template/pull/1)。

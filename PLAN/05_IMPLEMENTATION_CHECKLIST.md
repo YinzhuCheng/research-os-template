@@ -98,4 +98,4 @@
 - [x] 运行 schema、skill、harness、dashboard、privacy、HTML、link、integration、skill mirror 验证。
 - [x] 完成浏览器 QA。
 - [x] 提交 `test: validate research os v3 governance`。
-- [ ] 推送分支并创建 draft PR。
+- [x] 推送分支并创建 draft PR：[PR #1](https://github.com/YinzhuCheng/research-os-template/pull/1)。
