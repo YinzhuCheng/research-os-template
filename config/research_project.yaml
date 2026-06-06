@@ -3,14 +3,41 @@ title: "Untitled Codex Research Project"
 language_mode: zh-first
 intervention_level: low
 privacy_policy: public_private_split
-target_venue:
-  name: TBD
-  type: conference
-  submission_format: latex
-budget_limits:
+research_profile:
+  domain: unspecified
+  research_type: unspecified
+  uses_llm: unspecified
+  uses_machine_learning: unspecified
+  validation_object: unspecified
+dissemination:
+  target_type: undecided
+  paper_enabled: false
+  target_name: null
+  output_format: null
+resource_budget:
   currency: CNY
-  model_budget: 100
-  compute_budget: 0
+  total_limit: null
+  categories:
+    time: null
+    compute: null
+    cloud: null
+    lab: null
+    material: null
+    api: null
+    model: null
+    human: null
+    other: null
+resource_guard:
+  hard_stop_on_overrun: true
+  warning_threshold_ratio: 0.8
+  real_resource_requires_confirmation: true
+feasibility_probe:
+  required: true
+  status: not_defined
+  budget_source: researcher_defined
+live_evidence:
+  required_for_time_sensitive_claims: true
+  last_refresh: null
 current_phase: initialization
 phase_gate_required: true
 public_export_enabled: false

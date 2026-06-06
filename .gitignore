@@ -3,6 +3,9 @@ PRIVATE/**
 !PRIVATE/
 !PRIVATE/README.md
 !PRIVATE/.gitkeep
+!PRIVATE/secrets/
+!PRIVATE/secrets/README.md
+!PRIVATE/secrets/.gitkeep
 
 # Local runtime artifacts.
 .codex_state/

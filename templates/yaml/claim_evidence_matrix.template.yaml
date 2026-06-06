@@ -6,6 +6,6 @@ claims:
       - "EXP-001"
       - "RES-001"
     counterevidence: []
-    paper_targets:
-      - "PUBLIC/paper/main.tex#introduction"
+    dissemination_targets:
+      - "PUBLIC/research_brief.md"
     privacy_level: public

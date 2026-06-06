@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ResourceLedgerEntry",
+  "type": "object",
+  "required": ["entry_id", "timestamp", "work_order_id", "resource_type", "amount", "currency_or_unit", "status", "privacy_level"],
+  "properties": {
+    "entry_id": {"type": "string"},
+    "timestamp": {"type": "string"},
+    "work_order_id": {"type": "string"},
+    "resource_type": {"type": "string"},
+    "amount": {"type": ["number", "string", "null"]},
+    "currency_or_unit": {"type": "string"},
+    "status": {"type": "string"},
+    "privacy_level": {"type": "string"},
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": true
+}

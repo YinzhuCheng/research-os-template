@@ -6,6 +6,6 @@ claims:
       - "PLAN/00_MASTER_PLAN.md"
       - "PLAN/01_ARCHITECTURE.md"
     counterevidence: []
-    paper_targets:
-      - "PUBLIC/paper/main.tex#introduction"
+    dissemination_targets:
+      - "PUBLIC/research_brief.md"
     privacy_level: public

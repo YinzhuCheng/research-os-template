@@ -19,9 +19,19 @@ outputs:
   - "templates/"
   - "PUBLIC/claim_evidence_matrix.yaml"
   - "PROVENANCE/run_manifest.jsonl"
-budget:
+resource_budget:
   currency: CNY
-  max_model_cost: 0
+  max_total_cost: 0
+  categories:
+    time: 30 minutes
+    compute: none
+    cloud: none
+    lab: none
+    material: none
+    api: none
+    model: none
+    human: none
+    other: none
   max_runtime_minutes: 30
 stop_conditions:
   - "需要读取 PRIVATE 原始材料。"

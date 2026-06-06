@@ -8,14 +8,14 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "claim", "status", "evidence", "paper_targets"],
+        "required": ["id", "claim", "status", "evidence", "dissemination_targets"],
         "properties": {
           "id": {"type": "string", "pattern": "^CLAIM-[0-9]{3}$"},
           "claim": {"type": "string"},
           "status": {"enum": ["draft", "supported", "partially_supported", "unsupported", "retired"]},
           "evidence": {"type": "array", "items": {"type": "string"}},
           "counterevidence": {"type": "array", "items": {"type": "string"}},
-          "paper_targets": {"type": "array", "items": {"type": "string"}},
+          "dissemination_targets": {"type": "array", "items": {"type": "string"}},
           "privacy_level": {"enum": ["public", "private", "mixed"]}
         },
         "additionalProperties": true

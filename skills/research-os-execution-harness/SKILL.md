@@ -9,13 +9,15 @@ Use this skill before mutating research artifacts or running experiments.
 
 ## Workflow
 
-1. Read `CONTROL/work_order.yaml`, `CONTROL/phase_gate.yaml`, and `config/research_project.yaml`.
+1. Read `AGENTS.md`, `CONTROL/work_order.yaml`, `CONTROL/phase_gate.yaml`, and `config/research_project.yaml`.
 2. Confirm the task stays within `allowed_paths` and avoids `forbidden_paths`.
-3. If confirmation is required by the work order or intervention level, stop and ask.
-4. Execute the task.
-5. Record outputs and errors in `PROVENANCE/run_manifest.jsonl`.
-6. Run privacy scan before any public export.
-7. Update checklist and gap audit after substantive progress.
+3. Run `research-os-resource-guard` mentally or explicitly before real resource use.
+4. If confirmation is required by the work order, intervention level, credentials, real resources, external writeback, budget overrun, public export, or submission, stop and ask.
+5. Execute the task.
+6. Record outputs and errors in `PROVENANCE/run_manifest.jsonl`.
+7. Record real resource use in `PROVENANCE/resource_ledger.jsonl`.
+8. Run privacy scan before any public export.
+9. Update checklist and gap audit after substantive progress.
 
 ## Quick Checks
 

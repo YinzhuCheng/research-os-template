@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FeasibilityProbe",
+  "type": "object",
+  "required": ["probe_id", "research_question_id", "budget_source", "resource_budget_ref", "minimal_path", "success_criteria", "failure_criteria", "privacy_level"],
+  "properties": {
+    "probe_id": {"type": "string"},
+    "research_question_id": {"type": "string"},
+    "budget_source": {"type": "string"},
+    "resource_budget_ref": {"type": "string"},
+    "validation_object": {"type": ["string", "null"]},
+    "minimal_path": {"type": "object"},
+    "success_criteria": {"type": "array"},
+    "failure_criteria": {"type": "array"},
+    "unclear_result_policy": {"type": "array"},
+    "privacy_level": {"type": "string"}
+  },
+  "additionalProperties": true
+}

@@ -13,7 +13,8 @@ Use this skill when research objects need evidence links.
 2. Assign or reuse IDs for `RQ-*`, `HYP-*`, `CLAIM-*`, `EXP-*`, `RUN-*`, and `RES-*`.
 3. Link each claim to evidence and counterevidence.
 4. Mark unsupported claims as `draft`, `partially_supported`, `unsupported`, or `retired`.
-5. Never let the paper assert a claim that has no evidence link.
+5. Never let a public artifact assert a claim that has no evidence link.
+6. For time-sensitive claims, route to `research-os-live-evidence-refresh`.
 
 ## Quick Checks
 

@@ -19,13 +19,18 @@ Use this skill after `research-os-orchestrator` routes an initialization request
    - `CONTROL/phase_gate.yaml`,
    - `PROVENANCE/run_manifest.jsonl`.
 4. Extract:
+   - research domain and research type,
+   - validation object,
+   - resource categories and researcher-defined budget,
+   - dissemination target and whether paper writing is enabled,
    - research question IDs,
    - falsifiable hypotheses,
    - candidate claims,
-   - minimal experiment,
+   - feasibility probe,
    - success and failure criteria,
    - unresolved decisions.
-5. Hand off to `research-os-alignment` before execution begins.
+5. If budget, resource type, validation object, dissemination target, or feasibility path is missing, hand off to `research-os-alignment` instead of inventing defaults.
+6. Hand off to `research-os-feasibility-probe` before large experiments.
 
 ## Output Requirements
 
@@ -33,6 +38,7 @@ Use this skill after `research-os-orchestrator` routes an initialization request
 - In `en-only`, write all docs in English.
 - Keep claims tentative until linked to evidence.
 - Do not invent experimental results.
+- Do not default to LLM, machine learning, datasets, baseline comparisons, LaTeX, paper submission, a model provider, or a fixed budget.
 
 ## Quick Checks
 

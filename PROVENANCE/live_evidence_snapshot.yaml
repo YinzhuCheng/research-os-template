@@ -1,0 +1,83 @@
+snapshot_id: LE-0001
+created_at: 2026-06-06
+refresh_reason: "Research OS v2 harness design references"
+items:
+  - topic: "Codex repository guidance"
+    source_url: "https://developers.openai.com/codex/guides/agents-md"
+    source_type: documentation
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "Codex reads AGENTS.md at global and project scopes and layers instructions from root to current directory."
+    affects:
+      - "AGENTS.md"
+      - ".codex/config.toml.example"
+  - topic: "Codex hooks and sandbox controls"
+    source_url: "https://developers.openai.com/codex/hooks"
+    source_type: documentation
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "PreToolUse, PostToolUse, PermissionRequest and Stop hooks can support policy checks around tools."
+    affects:
+      - ".codex/hooks/"
+      - "research-os-harness-audit"
+  - topic: "Codex sandbox and approval controls"
+    source_url: "https://developers.openai.com/codex/concepts/sandboxing"
+    source_type: documentation
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "Codex documents workspace-write/on-request as a lower-risk local automation preset and danger-full-access/never as full access."
+    affects:
+      - ".codex/config.toml.example"
+      - "AGENTS.md"
+  - topic: "Codex skill structure"
+    source_url: "https://developers.openai.com/codex/skills"
+    source_type: documentation
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "Skills are directories with SKILL.md plus optional scripts, references, assets and agents."
+    affects:
+      - "skills/"
+  - topic: "Codex MCP configuration"
+    source_url: "https://developers.openai.com/codex/mcp"
+    source_type: documentation
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "Project-scoped MCP configuration can live in .codex/config.toml and should reference credentials through environment variables."
+    affects:
+      - ".codex/config.toml.example"
+      - "PRIVATE/secrets/README.md"
+  - topic: "Agent Laboratory"
+    source_url: "https://arxiv.org/abs/2501.04227"
+    source_type: paper
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "Agent Laboratory emphasizes staged literature review, experimentation, report writing and human feedback at each stage."
+    affects:
+      - "research-os-orchestrator"
+      - "research-os-alignment"
+  - topic: "AI co-scientist"
+    source_url: "https://arxiv.org/abs/2502.18864"
+    source_type: paper
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "AI co-scientist frames agentic science around researcher-provided objectives, evidence-backed hypotheses and guidance."
+    affects:
+      - "research-os-init"
+      - "research-os-evidence"
+  - topic: "AI Scientist-v2"
+    source_url: "https://arxiv.org/abs/2504.08066"
+    source_type: paper
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "AI Scientist-v2 highlights iterative hypothesis, experiment, analysis, visualization, writing, reviewer feedback and experiment-manager control."
+    affects:
+      - "research-os-analysis"
+      - "research-os-visual-communication"
+  - topic: "Agentic task cost variability"
+    source_url: "https://arxiv.org/abs/2604.22750"
+    source_type: paper
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "Agentic task token usage can vary substantially, supporting hard resource caps and audit ledgers."
+    affects:
+      - "research-os-resource-guard"

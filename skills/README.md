@@ -8,6 +8,10 @@
 - `research-os-init`
 - `research-os-alignment`
 - `research-os-execution-harness`
+- `research-os-feasibility-probe`
+- `research-os-harness-audit`
+- `research-os-resource-guard`
+- `research-os-live-evidence-refresh`
 - `research-os-evidence`
 - `research-os-analysis`
 - `research-os-paper-authoring`

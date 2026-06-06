@@ -10,10 +10,10 @@
 
 ## Minimum Claim Requirements
 
-Every paper claim needs:
+Every public claim needs:
 
 - evidence link,
 - counterevidence check,
-- target paper section,
+- target dissemination artifact,
 - privacy level,
 - limitation if the claim is not fully supported.

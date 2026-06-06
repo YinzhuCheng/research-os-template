@@ -51,3 +51,17 @@
 - [x] 运行隐私扫描测试。
 - [x] 运行 dashboard 静态检查。
 - [x] 更新最终审计说明。
+
+## Commit 9: Research OS v2 研究无关性与 Codex Harness
+
+- [x] 移除固定 `model_budget: 100`、`target_venue`、默认 LaTeX/投稿目标等方向绑定。
+- [x] 将预算改为研究者入口定义的 `resource_budget`，覆盖时间、算力、云、实验耗材、API、模型、人工、仪器等资源。
+- [x] 将 pilot 改为 `research-os-feasibility-probe`，不限定 LLM/ML/软件/数据集研究。
+- [x] 将论文链路改为可选，仅在 `dissemination` 明确启用时运行。
+- [x] 新增根 `AGENTS.md`、`.codex/config.toml.example`、hooks 示例和 harness requirements。
+- [x] 新增 `research-os-harness-audit`、`research-os-resource-guard`、`research-os-live-evidence-refresh` skill。
+- [x] 增加 `PRIVATE/secrets/README.md`，只允许凭据占位、环境变量名和 secret store 路径。
+- [x] 更新 dashboard，显示 research type、feasibility、resource guard、live evidence、harness audit。
+- [x] 运行 v2 通用性、harness、resource guard、live evidence、隐私和回归验证。
+- [x] 更新 v2 最终审计说明。
+- [x] 提交 `feat: add research neutral harness v2`。

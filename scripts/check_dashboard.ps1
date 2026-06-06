@@ -14,7 +14,10 @@ $required = @(
   "dashboard_data.json",
   "renderMarkdown",
   "Codex Research OS",
-  "PUBLIC/index.html"
+  "PUBLIC/index.html",
+  "feasibility",
+  "resource",
+  "live evidence"
 )
 
 foreach ($item in $required) {

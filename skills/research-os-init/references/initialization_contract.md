@@ -8,12 +8,12 @@ At least one of:
 - Research plan draft.
 - Simple experiment demo or code.
 - Dataset description.
-- Target venue or publication goal.
+- Dissemination goal, if any.
 
 ## Required Outputs
 
-- `research_project.yaml` with language, intervention, venue, phase, and budget.
-- Research brief with question, motivation, hypotheses, minimal experiment, and success criteria.
+- `research_project.yaml` with language, intervention, research profile, dissemination target, phase, and resource budget.
+- Research brief with question, motivation, hypotheses, feasibility probe, success criteria, unclear-result policy, and public boundary.
 - First work order with allowed paths and forbidden paths.
 - Alignment dossier request for the decision maker.
 
@@ -23,3 +23,5 @@ At least one of:
 - Preserve user uncertainty as open questions.
 - Separate user preference from evidence.
 - Keep private raw material out of `PUBLIC/`.
+- Treat budget, tools, model use, sample size, equipment, data source, comparison object, and paper target as researcher-specific variables.
+- If a variable is not inferable from the source, mark it unresolved and ask through alignment.

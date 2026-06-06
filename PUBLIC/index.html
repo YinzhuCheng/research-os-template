@@ -6,9 +6,9 @@
   <title>Codex Research OS Dashboard</title>
   <style>
     :root {
-      --bg: #f7f5ef;
+      --bg: #f6f8fb;
       --surface: #ffffff;
-      --surface-alt: #f1f5f3;
+      --surface-alt: #eef2f7;
       --text: #1f2933;
       --muted: #607080;
       --border: #d6ddd8;
@@ -41,7 +41,7 @@
     }
     aside {
       border-right: 1px solid var(--border);
-      background: #fbfaf6;
+      background: #f9fafb;
       padding: var(--space-5);
       position: sticky;
       top: 0;
@@ -222,7 +222,7 @@
       <div class="topbar">
         <div>
           <h1 id="projectTitle">Codex Research OS Template</h1>
-          <div class="muted">研究驾驶舱：阶段、证据、实验、论文与审计状态</div>
+          <div class="muted">研究驾驶舱：研究类型、feasibility、resource guard、live evidence 与审计状态</div>
           <div class="pill-row" id="projectPills"></div>
         </div>
         <div class="toolbar">
@@ -251,6 +251,8 @@
             <h2>审计提醒</h2>
             <p class="muted">公开导出前运行：</p>
             <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</pre>
+            <p class="muted">真实资源调用前运行：</p>
+            <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_resource_guard.ps1</pre>
           </section>
         </div>
       </section>
@@ -264,20 +266,25 @@
         phase: "initialization",
         language_mode: "zh-first",
         intervention_level: "low",
-        privacy_policy: "public_private_split"
+        privacy_policy: "public_private_split",
+        research_type: "unspecified",
+        dissemination: "undecided"
       },
       status: [
-        {label: "计划", value: "已完成"},
-        {label: "骨架", value: "已完成"},
-        {label: "Schema", value: "已完成"},
-        {label: "核心 Skill", value: "部分完成"},
-        {label: "审计脚本", value: "已完成"},
-        {label: "论文 Skill", value: "待完成"}
+        {label: "研究类型", value: "待入口具体化"},
+        {label: "Feasibility", value: "待定义"},
+        {label: "Resource Guard", value: "已启用"},
+        {label: "Live Evidence", value: "已建档"},
+        {label: "Harness", value: "已补强"},
+        {label: "论文", value: "可选"}
       ],
       documents: [
         {path: "README.md", label: "公开区说明"},
         {path: "research_brief.md", label: "研究简报"},
         {path: "claim_evidence_matrix.yaml", label: "Claim-Evidence"},
+        {path: "../AGENTS.md", label: "AGENTS 规则"},
+        {path: "../PROVENANCE/resource_ledger.jsonl", label: "资源 Ledger"},
+        {path: "../PROVENANCE/live_evidence_snapshot.yaml", label: "Live Evidence"},
         {path: "../PROVENANCE/public_audit_summary.md", label: "公开审计摘要"},
         {path: "../CONTROL/phase_gate.yaml", label: "阶段闸门"},
         {path: "../PLAN/05_IMPLEMENTATION_CHECKLIST.md", label: "实施清单"},
@@ -285,8 +292,9 @@
       ],
       next_decisions: [
         "确认目标研究的语言模式：zh-first 或 en-only。",
-        "确认目标会议/期刊和投稿格式。",
-        "确认下一阶段是否进入论文/视觉/review skill 实现。"
+        "确认研究类型、验证对象和最小可行性验证预算。",
+        "确认是否需要论文、报告、复现包或决策备忘。",
+        "确认真实资源调用是否允许以及预算上限。"
       ]
     };
 
@@ -412,7 +420,9 @@
         ["阶段", project.phase, "green"],
         ["语言", project.language_mode, ""],
         ["介入", project.intervention_level, "amber"],
-        ["隐私", project.privacy_policy, "green"]
+        ["隐私", project.privacy_policy, "green"],
+        ["研究类型", project.research_type || "unspecified", ""],
+        ["传播", project.dissemination || "undecided", ""]
       ].map(([label, value, tone]) => `<span class="pill ${tone}">${label}: ${value}</span>`).join("");
 
       document.getElementById("statusGrid").innerHTML = dashboardData.status.map(item => `

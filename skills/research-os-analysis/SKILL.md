@@ -14,12 +14,13 @@ Use this skill after experiment runs produce results.
 3. Produce:
    - main result summary,
    - ablation analysis,
-   - cost-performance analysis,
+   - resource-performance analysis,
    - failure taxonomy,
    - threats to validity,
    - claim updates.
 4. Retire or narrow unsupported claims.
-5. Hand off figure needs to `research-os-visual-communication`.
+5. If feasibility results contradict expectations, hand off to `research-os-feasibility-probe` for adjustment policy before expanding scope.
+6. Hand off figure needs to `research-os-visual-communication`.
 
 ## Quick Checks
 

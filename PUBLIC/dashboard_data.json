@@ -4,21 +4,26 @@
     "phase": "initialization",
     "language_mode": "zh-first",
     "intervention_level": "low",
-    "privacy_policy": "public_private_split"
+    "privacy_policy": "public_private_split",
+    "research_type": "unspecified",
+    "dissemination": "undecided"
   },
   "status": [
-    {"label": "计划", "value": "已完成"},
-    {"label": "骨架", "value": "已完成"},
-    {"label": "Schema", "value": "已完成"},
-    {"label": "核心 Skill", "value": "部分完成"},
-    {"label": "审计脚本", "value": "已完成"},
-    {"label": "论文 Skill", "value": "已完成"},
-    {"label": "验证", "value": "静态通过"}
+    {"label": "研究类型", "value": "待入口具体化"},
+    {"label": "Feasibility", "value": "待定义"},
+    {"label": "Resource Guard", "value": "已启用"},
+    {"label": "Live Evidence", "value": "已建档"},
+    {"label": "Harness", "value": "已补强"},
+    {"label": "论文", "value": "可选"},
+    {"label": "验证", "value": "待 v2 检查"}
   ],
   "documents": [
     {"path": "README.md", "label": "公开区说明"},
     {"path": "research_brief.md", "label": "研究简报"},
     {"path": "claim_evidence_matrix.yaml", "label": "Claim-Evidence"},
+    {"path": "../AGENTS.md", "label": "AGENTS 规则"},
+    {"path": "../PROVENANCE/resource_ledger.jsonl", "label": "资源 Ledger"},
+    {"path": "../PROVENANCE/live_evidence_snapshot.yaml", "label": "Live Evidence"},
     {"path": "../PROVENANCE/public_audit_summary.md", "label": "公开审计摘要"},
     {"path": "../CONTROL/phase_gate.yaml", "label": "阶段闸门"},
     {"path": "../PLAN/05_IMPLEMENTATION_CHECKLIST.md", "label": "实施清单"},
@@ -26,8 +31,9 @@
   ],
   "next_decisions": [
     "确认目标研究的语言模式：zh-first 或 en-only。",
-    "确认目标会议/期刊和投稿格式。",
-    "后续如需正式投稿，先修复或固定 LaTeX 编译环境。",
+    "确认研究类型、验证对象和最小可行性验证预算。",
+    "确认是否需要论文、报告、复现包或决策备忘。",
+    "确认真实资源调用是否允许以及预算上限。",
     "如需公开分享，使用 export_public.ps1 生成脱敏包。"
   ]
 }

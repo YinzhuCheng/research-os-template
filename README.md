@@ -1,18 +1,20 @@
 # Codex Research OS Template
 
-这是一个通用科研项目模板，用于把对话、研究计划草稿或实验 demo 转成可执行、可审计、可写论文的 Codex 研究仓库。
+这是一个研究方向无关的 Codex 科研项目模板，用于把对话、研究计划草稿或实验 demo 转成可执行、可追溯、可审计的研究仓库。它不默认 LLM、机器学习、数据集、baseline、论文或投稿目标；这些内容只能在入口材料中出现，或由研究者在对齐阶段确认。
 
 ## 默认行为
 
-- 内部研究过程默认中文。
-- 正式论文默认英文 LaTeX。
-- 入口允许设置 `language_mode: en-only`。
-- 默认低介入，但阶段切换必须确认。
-- `PUBLIC/` 可公开，`PRIVATE/` 默认不进 git。
+- 内部计划、实验记录、分析和审计默认中文；入口可设 `language_mode: en-only`。
+- 论文是可选传播产物。只有明确设置论文、报告、投稿等 `dissemination` 目标后，才启用对应写作链路。
+- 预算由研究者定义为 `resource_budget`，可覆盖时间、算力、云资源、实验耗材、API、模型、人工、仪器机时等资源。
+- 默认低介入，但预算、真实资源调用、凭据使用、外部写入、公开导出和投稿必须人工确认。
+- `PUBLIC/` 可公开；`PRIVATE/` 默认不进 git；真实密钥、token、cookie、SSH 私钥和云账号密码不得落盘。
 
 ## 主要入口
 
 - 计划：[PLAN/00_MASTER_PLAN.md](PLAN/00_MASTER_PLAN.md)
+- Codex 仓库规则：[AGENTS.md](AGENTS.md)
+- Codex harness 示例：[.codex/requirements.md](.codex/requirements.md)
 - 公开区：[PUBLIC/README.md](PUBLIC/README.md)
 - 私有区：[PRIVATE/README.md](PRIVATE/README.md)
 - 控制区：[CONTROL/README.md](CONTROL/README.md)
@@ -21,4 +23,4 @@
 
 ## 使用原则
 
-先写研究协议，再执行实验；先绑定 claim 和 evidence，再写论文；公开导出前必须通过隐私扫描。
+先对齐研究者真实意图，再定义最小可行性验证；先登记资源预算和停止条件，再执行 work order；先刷新时效性证据，再依赖外部信息；公开导出前必须通过隐私扫描。

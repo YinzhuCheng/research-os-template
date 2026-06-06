@@ -1,0 +1,9 @@
+probe_id: FP-0001
+research_question_id: RQ-001
+validation_object: null
+resource_budget_ref: config/research_project.yaml#resource_budget
+minimal_path: []
+success_policy: []
+failure_policy: []
+unclear_policy: []
+requires_confirmation: true

@@ -1,0 +1,13 @@
+snapshot_id: LE-0001
+created_at: YYYY-MM-DD
+refresh_reason: "time-sensitive research input"
+items:
+  - topic: null
+    source_url: null
+    source_type: "paper | documentation | pricing | policy | dataset | venue | tool | other"
+    accessed_at: YYYY-MM-DD
+    freshness_risk: "low | medium | high"
+    summary: null
+    affects:
+      - "RQ-001"
+      - "FP-0001"

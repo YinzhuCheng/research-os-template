@@ -1,0 +1,16 @@
+probe_id: FP-0001
+research_question_id: RQ-001
+budget_source: researcher_defined
+resource_budget_ref: config/research_project.yaml#resource_budget
+validation_object: null
+minimal_path:
+  tools: []
+  samples_or_cases: null
+  human_steps: []
+  compute_or_lab_steps: []
+success_criteria: []
+failure_criteria: []
+unclear_result_policy:
+  - "记录不确定性来源。"
+  - "生成需要决策者确认的下一步：继续、缩小、换方法、换对照、补证据或终止。"
+privacy_level: public

@@ -11,9 +11,19 @@ forbidden_paths:
   - "PRIVATE/"
 outputs:
   - "PUBLIC/example_output.md"
-budget:
+resource_budget:
   currency: CNY
-  max_model_cost: 0
+  max_total_cost: null
+  categories:
+    time: null
+    compute: null
+    cloud: null
+    lab: null
+    material: null
+    api: null
+    model: null
+    human: null
+    other: null
   max_runtime_minutes: 10
 stop_conditions:
   - "Sensitive information would be written to PUBLIC."

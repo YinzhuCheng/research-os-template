@@ -1,0 +1,19 @@
+currency: CNY
+total_limit: null
+categories:
+  time: null
+  compute: null
+  cloud: null
+  lab: null
+  material: null
+  api: null
+  model: null
+  human: null
+  other: null
+guard:
+  hard_stop_on_overrun: true
+  warning_threshold_ratio: 0.8
+  real_resource_requires_confirmation: true
+notes:
+  - "预算必须来自研究者输入或对齐决策，不使用模板默认金额。"
+  - "非 LLM、非 ML、非软件研究也应使用同一资源预算结构。"

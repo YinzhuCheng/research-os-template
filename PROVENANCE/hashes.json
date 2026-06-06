@@ -1,18 +1,18 @@
 ﻿[
     {
         "path":  ".\\PUBLIC\\claim_evidence_matrix.yaml",
-        "sha256":  "114a48cf7671dc4724f2138624300c68f57a1d63d9a5a0bba46bed7799dee7b1",
-        "bytes":  331
+        "sha256":  "a63897646a4022b8dff1f278320eedad09c199c4c282c9889f41ed69715a2fc3",
+        "bytes":  329
     },
     {
         "path":  ".\\PUBLIC\\dashboard_data.json",
-        "sha256":  "ea5514bd4e45b8459199f3a5fd83b813b01f20066ead45065ab8855235b6c8da",
-        "bytes":  1379
+        "sha256":  "ee20019e8658a8ea70b4f5d5f59ac7120201234afe19acd37d48d0e0aee734df",
+        "bytes":  1766
     },
     {
         "path":  ".\\PUBLIC\\index.html",
-        "sha256":  "6329f072e85792c74bd5084e3a6cf7d5372c4f3484885274067e3bff87940a3c",
-        "bytes":  14219
+        "sha256":  "22be5440747db54bf0d9fb89a3f8c4ab19d2c63b3aef01f8f28e937974ad8795",
+        "bytes":  14947
     },
     {
         "path":  ".\\PUBLIC\\paper\\appendix.tex",
@@ -26,8 +26,8 @@
     },
     {
         "path":  ".\\PUBLIC\\paper\\figures\\result_plot_example.tex",
-        "sha256":  "83f6a78626956831d2ae3008610657c309b728656b321f9ff1a3a770c5eb8576",
-        "bytes":  500
+        "sha256":  "deda5e8f193eccd2a0da0cdc80ff7d8dfb8ca06fb53420744015b3b250e1e967",
+        "bytes":  510
     },
     {
         "path":  ".\\PUBLIC\\paper\\main.tex",
@@ -46,13 +46,13 @@
     },
     {
         "path":  ".\\PUBLIC\\README.md",
-        "sha256":  "db3aabdabe5fbec0d2af5455313413e3b33a31d5ea8fd6263cb4e57c359e3c69",
-        "bytes":  454
+        "sha256":  "a75edd39b13bbfb4804139f027754b0040fed8898c82a416727697c850bb33bb",
+        "bytes":  704
     },
     {
         "path":  ".\\PUBLIC\\research_brief.md",
-        "sha256":  "7349868e58a4f46c1bccdc95b989f4af1d31cce54b7de6fa8d1b158023074795",
-        "bytes":  253
+        "sha256":  "173b3691b24afed8039d465161f49c02358b1b29ef8b00a1be533fc23b09a7cd",
+        "bytes":  683
     },
     {
         "path":  ".\\CONTROL\\phase_gate.yaml",
@@ -66,18 +66,23 @@
     },
     {
         "path":  ".\\CONTROL\\work_order.yaml",
-        "sha256":  "931dc4d7f0891c2c559c2906e35778e9f87f1651edf071d8d961e2dc0fec4eb0",
-        "bytes":  808
+        "sha256":  "316348c8ff99bb6d8b754adafb5f39fb6aa7e78b35864555b37e73c7adc02255",
+        "bytes":  981
     },
     {
         "path":  ".\\PROVENANCE\\final_validation_report.md",
-        "sha256":  "ac247fea0498fb2c97aa2d716d1916c8016085931d9c00488e9ae7133b5d6910",
-        "bytes":  2266
+        "sha256":  "41a4a8b974f699034d778f21cb0785ce119811b05f57d56f866ba9235262868a",
+        "bytes":  3244
+    },
+    {
+        "path":  ".\\PROVENANCE\\live_evidence_snapshot.yaml",
+        "sha256":  "581a3d1e6270a325a2726240b2f280834fbc4320901fc16294ad75a8a1618637",
+        "bytes":  3504
     },
     {
         "path":  ".\\PROVENANCE\\public_audit_summary.md",
-        "sha256":  "5ae4b5fa6c2974921951eb6fc6f5fdfc9e9f948c4be3c36f9870093b7a37f1c0",
-        "bytes":  385
+        "sha256":  "f71340d78021b177a726912558f4a655a7e20a1f9c3d34476fdc0f50e82fb3ca",
+        "bytes":  1237
     },
     {
         "path":  ".\\PROVENANCE\\README.md",
@@ -85,8 +90,18 @@
         "bytes":  281
     },
     {
+        "path":  ".\\PROVENANCE\\resource_ledger.jsonl",
+        "sha256":  "6208852026d9f10df20ff588cf66a3e5df95d240dc1b889eb1975ccac387e6f3",
+        "bytes":  294
+    },
+    {
         "path":  ".\\PROVENANCE\\run_manifest.jsonl",
-        "sha256":  "aea042d2e38ca1b631a00811a770788c97c3a5bbd0ba15783ea77d07e207e0a6",
-        "bytes":  1564
+        "sha256":  "8c44692886957aa99249137701eea342596169fdf479a98aa6099518710738ca",
+        "bytes":  3164
+    },
+    {
+        "path":  ".\\PROVENANCE\\v2_validation_report.md",
+        "sha256":  "a20358f125066e8824c40481dccbe0132a5066911d44091d6b71ee58f973017c",
+        "bytes":  1795
     }
 ]
