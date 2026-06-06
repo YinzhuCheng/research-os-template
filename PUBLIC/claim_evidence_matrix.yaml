@@ -1,11 +1,62 @@
 claims:
   - id: CLAIM-001
     claim: "模板可以把研究对话、草稿或 demo 转换为可审计研究项目。"
-    status: draft
+    status: supported
     evidence:
       - "PLAN/00_MASTER_PLAN.md"
       - "PLAN/01_ARCHITECTURE.md"
+      - "skills/research-os-orchestrator/SKILL.md"
     counterevidence: []
     dissemination_targets:
       - "PUBLIC/research_brief.md"
+    privacy_level: public
+  - id: CLAIM-002
+    claim: "Human-in-loop stage gate 是自动研究系统的重要质量控制点。"
+    status: supported
+    evidence:
+      - "https://arxiv.org/abs/2501.04227"
+      - "https://arxiv.org/abs/2502.18864"
+      - "CONTROL/phase_gate.yaml"
+    counterevidence: []
+    dissemination_targets:
+      - "docs/start-here.html"
+      - "docs/technical-report.html"
+    privacy_level: public
+  - id: CLAIM-003
+    claim: "自动研究系统需要把假设、实验、分析、报告和审计产物串成可追踪数据流。"
+    status: supported
+    evidence:
+      - "https://arxiv.org/abs/2504.08066"
+      - "https://arxiv.org/abs/2508.14111"
+      - "PROVENANCE/run_manifest.jsonl"
+      - "PROVENANCE/resource_ledger.jsonl"
+    counterevidence: []
+    dissemination_targets:
+      - "docs/technical-report.html"
+    privacy_level: public
+  - id: CLAIM-004
+    claim: "长时间自动实验需要资源上限、零成本监控或低成本监控、失败状态记录和可恢复运行。"
+    status: supported
+    evidence:
+      - "https://arxiv.org/abs/2604.05854"
+      - "skills/research-os-resource-guard/SKILL.md"
+      - "config/schemas/resource_ledger.schema.json"
+    counterevidence: []
+    dissemination_targets:
+      - "docs/technical-report.html"
+      - "docs/integrations/components.yaml"
+    privacy_level: public
+  - id: CLAIM-005
+    claim: "仓库级 AGENTS.md、skills、MCP、hooks、sandbox 和 approval policy 是 Codex harness engineering 的核心控制面。"
+    status: supported
+    evidence:
+      - "https://developers.openai.com/codex/guides/agents-md"
+      - "https://developers.openai.com/codex/skills"
+      - "https://developers.openai.com/codex/mcp"
+      - "https://developers.openai.com/codex/hooks"
+      - "https://developers.openai.com/codex/agent-approvals-security"
+      - ".codex/requirements.md"
+    counterevidence: []
+    dissemination_targets:
+      - "docs/technical-report.html"
     privacy_level: public

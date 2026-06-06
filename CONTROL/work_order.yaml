@@ -1,43 +1,60 @@
-work_order_id: WO-0001
-phase: schema
-goal: "实现研究对象 schema、模板和样例对象。"
+work_order_id: WO-0002
+phase: research-os-v3
+goal: "补齐 Human-in-loop Auto Researcher v3 的治理、文档、skill 发现、开源组件适配和 harness 验证。"
 inputs:
   - "PLAN/00_MASTER_PLAN.md"
-  - "PLAN/01_ARCHITECTURE.md"
+  - "PLAN/06_GAP_AUDIT.md"
+  - "PROVENANCE/live_evidence_snapshot.yaml"
 allowed_paths:
+  - ".agents/"
+  - ".codex/"
   - "config/"
-  - "templates/"
-  - "PUBLIC/"
   - "CONTROL/"
-  - "PROVENANCE/"
+  - "docs/"
   - "PLAN/"
+  - "PROVENANCE/"
+  - "PUBLIC/"
+  - "scripts/"
+  - "skills/"
+  - "templates/"
 forbidden_paths:
   - "PRIVATE/"
 outputs:
-  - "config/research_project.yaml"
-  - "config/schemas/"
-  - "templates/"
+  - ".agents/skills/"
+  - "config/schemas/doc_map.schema.json"
+  - "config/schemas/harness_run.schema.json"
+  - "config/schemas/integration_component.schema.json"
+  - "docs/"
+  - "docs/integrations/components.yaml"
+  - "PUBLIC/index.html"
+  - "PROVENANCE/live_evidence_snapshot.yaml"
   - "PUBLIC/claim_evidence_matrix.yaml"
   - "PROVENANCE/run_manifest.jsonl"
+  - "PROVENANCE/resource_ledger.jsonl"
+  - "config/schemas/"
 resource_budget:
   currency: CNY
   max_total_cost: 0
   categories:
-    time: 30 minutes
+    time: "implementation session"
     compute: none
     cloud: none
     lab: none
     material: none
     api: none
     model: none
-    human: none
+    human: "Codex local implementation only"
     other: none
-  max_runtime_minutes: 30
+  max_runtime_minutes: null
 stop_conditions:
-  - "需要读取 PRIVATE 原始材料。"
-  - "schema 与计划中的接口冲突。"
+  - "需要读取或写入 PRIVATE 原始材料。"
+  - "需要保存 API key、platform token、cookie、authorization header 或云账号密码。"
+  - "需要真实付费 API、云资源、GPU 资源或外部平台写回。"
+  - "第三方组件许可证不允许记录或适配。"
 acceptance_criteria:
-  - "所有核心对象都有稳定模板。"
-  - "claim-evidence 样例能追踪到计划文档。"
-requires_confirmation: false
+  - "普通研究者能从 HTML 快速上手页进入控制文件、模板和 dashboard。"
+  - "后续 agent 能从技术报告定位架构、数据流、stage gate、manifest、ledger、skill 路由和适配器。"
+  - "开源组件 registry 记录来源、许可证、安装入口、环境变量名、产物映射和风险。"
+  - "新增 HTML、schema、skill、integration 和 harness 检查通过。"
+requires_confirmation: true
 privacy_level: public

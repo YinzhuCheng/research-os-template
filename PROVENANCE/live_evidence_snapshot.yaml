@@ -81,3 +81,71 @@ items:
     summary: "Agentic task token usage can vary substantially, supporting hard resource caps and audit ledgers."
     affects:
       - "research-os-resource-guard"
+  - topic: "Agent Laboratory"
+    source_url: "https://arxiv.org/abs/2501.04227"
+    source_type: paper
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "Agent Laboratory uses a human-provided research idea, staged literature review, experimentation and report writing, with user feedback at each stage."
+    affects:
+      - "docs/start-here.html"
+      - "research-os-orchestrator"
+      - "research-os-experiment-manager"
+  - topic: "AI co-scientist"
+    source_url: "https://arxiv.org/abs/2502.18864"
+    source_type: paper
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "AI co-scientist emphasizes scientist-provided objectives, evidence-backed hypotheses, debate, evolution and guidance."
+    affects:
+      - "research-os-alignment"
+      - "docs/integrations/components.yaml"
+  - topic: "AI Scientist-v2"
+    source_url: "https://arxiv.org/abs/2504.08066"
+    source_type: paper_and_code
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "AI Scientist-v2 combines hypothesis generation, experiment execution, analysis, visualization, writing, reviewer feedback and an experiment manager over agentic tree search."
+    affects:
+      - "research-os-experiment-manager"
+      - "research-os-visual-communication"
+      - "docs/technical-report.html"
+  - topic: "Agentic Science survey"
+    source_url: "https://arxiv.org/abs/2508.14111"
+    source_type: survey
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "The survey frames autonomous scientific discovery around capabilities, core processes and domain-specific workflows."
+    affects:
+      - "docs/technical-report.html"
+      - "docs/integrations/components.yaml"
+  - topic: "Deep Researcher Agent"
+    source_url: "https://arxiv.org/abs/2604.05854"
+    source_type: paper_and_code
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "Deep Researcher Agent highlights long-running experiment loops, zero-cost monitoring, constant-size memory, minimal toolsets, ledgers and truthful terminal states."
+    affects:
+      - "research-os-replay-eval-harness"
+      - "research-os-resource-guard"
+      - "docs/integrations/components.yaml"
+  - topic: "Claw AI Lab"
+    source_url: "https://arxiv.org/abs/2605.22662"
+    source_type: paper_and_code
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "Claw AI Lab presents an interactive multi-agent research lab with dashboard monitoring, artifact inspection, rollback/resume and code harness integration."
+    affects:
+      - "PUBLIC/index.html"
+      - "docs/start-here.html"
+      - "docs/technical-report.html"
+  - topic: "OpenAI skills catalog"
+    source_url: "https://github.com/openai/skills"
+    source_type: code_repository
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "The OpenAI skills catalog provides installable skill examples and reinforces skills as reusable workflow units for Codex."
+    affects:
+      - ".agents/skills/"
+      - "scripts/check_skill_mirror.ps1"
+      - "skills/README.md"

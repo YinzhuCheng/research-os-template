@@ -1,8 +1,12 @@
-current_phase: initialization
+current_phase: research-os-v3
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "确认 Commit 3 的 schema 和模板是否满足研究对象追踪。"
+next_required_decision: "完成 v3 文档、skill 镜像、开源组件适配和 harness 验证后，审查 draft PR 并决定是否合并到 main。"
+confirmed_decisions:
+  - "使用分支加 draft PR 的发布策略。"
+  - "默认保持研究无关、human-in-loop 和可选自动实验链路。"
+  - "积极集成开源组件，但默认通过 registry、adapter 模板和许可证记录集成，不 vendoring 大段第三方源码。"
