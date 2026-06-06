@@ -15,6 +15,7 @@
 - 快速上手 HTML：[docs/start-here.html](docs/start-here.html)
 - 五大领域模式 HTML：[docs/domain-modes.html](docs/domain-modes.html)
 - 完整技术路线 HTML：[docs/technical-report.html](docs/technical-report.html)
+- 研究内核模板：[templates/research_kernel/research_cycle.template.yaml](templates/research_kernel/research_cycle.template.yaml)
 - 文档中心：[docs/README.md](docs/README.md)
 - 文档地图：[docs/doc_map.yaml](docs/doc_map.yaml)
 - 开源组件 registry：[docs/integrations/components.yaml](docs/integrations/components.yaml)
@@ -42,6 +43,10 @@ v3 将模板定位为通用的 human-in-loop auto researcher 仓库。默认不�
 - HTML 链接、skill 镜像、integration registry 和 harness run 检查。
 
 ## 使用原则
+
+## Research OS v3.2
+
+v3.2 新增统一研究内核与反馈计算层：所有领域研究循环都先表达为 `candidate -> evaluator_contract -> evaluation_result -> belief_state -> search_trace/negative_result -> next_action_policy -> human_judgment_gate`。每个 evaluator 必须列出计算或检查，包括指标、过程、输入、尺度、阈值、资源估计、失败模式和复现记录。这样领域 skill 是结构化程序的一部分，而不是松散工具箱。
 
 ## Research OS v3.1
 

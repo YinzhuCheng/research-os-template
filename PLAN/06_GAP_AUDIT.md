@@ -59,4 +59,17 @@ Commit 9 已补强 Research OS v2：研究无关性、Codex harness、研究者�
 
 - 当前领域 YAML 仍以轻量结构检查为主，后续可引入完整 YAML parser 和 JSON Schema 语义校验。
 - 领域 agent 目前是 skill 内部角色和 capability registry，不是独立 agent runtime；后续如接入外部 runtime，必须新增 adapter、权限和回放验证。
+
+## v3.2 当前补强方向
+
+- 已新增统一 research kernel，把 candidate、evaluator contract、evaluation result、belief state、search trace、negative result、next-action policy 和 human gate 变成一等对象。
+- 已把“列出计算”固化为 evaluator contract 必填清单：metric/check、formula/procedure、inputs、scale、threshold、resource estimate、failure mode 和 replay note。
+- 已为五大领域 profile 和模板新增 kernel bindings，避免领域 skill 只是一组互不相干的提示词或工具。
+- 已新增 no-orphan-skill 检查：主路由 skill 必须有 schema/template、validator、doc map 或明确治理位置。
+
+## v3.2 剩余风险
+
+- 目前 YAML 语义验证仍以结构和关键字段检查为主；后续可接入严格 YAML parser 与 JSON Schema 实例校验。
+- research kernel 是模板级程序契约，不是持久数据库或独立运行时；如果未来需要长期跨项目记忆，需要新增存储、迁移和隐私策略。
+- evaluator contract 先约束“必须列出计算”，但不自动判断计算是否科学合理；高风险领域仍需要专家人工闸门。
 - 数学形式化仅保留 future slot；未来启用 Lean/Coq/Isabelle 前需要单独 work order、工具链安全审查和误报处理规范。

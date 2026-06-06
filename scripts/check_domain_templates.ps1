@@ -27,6 +27,19 @@ $expectedTemplates = @{
   }
 }
 
+$kernelNeedles = @(
+  "research_kernel:",
+  "evaluator_contracts:",
+  "metric_or_check:",
+  "formula_or_procedure:",
+  "acceptance_threshold:",
+  "resource_estimate:",
+  "failure_mode:",
+  "replay_note:",
+  "negative_result_policy:",
+  "human_judgment_gate:"
+)
+
 foreach ($domain in $expectedTemplates.Keys) {
   $spec = $expectedTemplates[$domain]
   $path = Join-Path $TemplateRoot "$domain\$($spec.File)"
@@ -35,6 +48,9 @@ foreach ($domain in $expectedTemplates.Keys) {
   if ($text -notmatch "domain_id:\s+$domain") { throw "Template domain mismatch: $path" }
   foreach ($needle in $spec.Needles) {
     if ($text -notlike "*$needle*") { throw "Template $path missing $needle" }
+  }
+  foreach ($needle in $kernelNeedles) {
+    if ($text -notlike "*$needle*") { throw "Template $path missing research kernel field $needle" }
   }
   Write-Output "Domain template OK: $domain"
 }

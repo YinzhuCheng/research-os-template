@@ -11,12 +11,14 @@ Use this skill for ML research design, benchmark planning, evaluation protocol, 
 
 1. Read `domain_profiles/machine-learning/profile.yaml` and `domain_profiles/machine-learning/agents.yaml`.
 2. Read control files and route mutation, code execution, or experiment runs through `research-os-execution-harness`.
-3. Create a task card: subfield, inputs, outputs, metric, target claim, and failure modes.
-4. Create a data card: source, license, split policy, privacy, and benchmark contamination risk.
-5. Define baselines before proposing performance claims.
-6. Define ablations, negative controls, seed policy, and cost-performance checks.
-7. Write an `eval_harness_spec` with environment capture, replay command, and manifest links.
-8. Run result-referee review for leakage, statistical validity, ablation sufficiency, and reproducibility.
+3. Route the task and method through `research-os-research-kernel`: task/model cards are candidates; baseline, leakage, ablation, and replay checks are evaluator contracts.
+4. Create a task card: subfield, inputs, outputs, metric, target claim, and failure modes.
+5. Create a data card: source, license, split policy, privacy, and benchmark contamination risk.
+6. Define baselines before proposing performance claims.
+7. Define ablations, negative controls, seed policy, and cost-performance checks.
+8. Write an `eval_harness_spec` with environment capture, replay command, and manifest links.
+9. Preserve failed runs, leakage findings, and inconclusive ablations as `negative_result` or `search_trace`.
+10. Run result-referee review for leakage, statistical validity, ablation sufficiency, and reproducibility.
 
 ## Boundaries
 

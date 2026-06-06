@@ -5,6 +5,7 @@
 已包含：
 
 - `research-os-orchestrator`
+- `research-os-research-kernel`
 - `research-os-init`
 - `research-os-alignment`
 - `research-os-execution-harness`
@@ -43,3 +44,12 @@
 .\scripts\sync_skill_mirror.ps1
 .\scripts\check_skill_mirror.ps1
 ```
+
+## v3.2 skill 治理
+
+主路由 skill 不能只是一个松散工具。进入 `research-os-orchestrator` 主链路前，必须满足：
+
+- 在 `skills/README.md`、`docs/doc_map.yaml` 或技术报告中可发现。
+- 有 schema、template、validator 或明确 kernel exemption。
+- 能通过 `.agents/skills/` 镜像一致性检查。
+- 对研究对象必须说明如何进入 `research-os-research-kernel` 的 candidate、evaluator、belief、trace、negative result 和 human gate。

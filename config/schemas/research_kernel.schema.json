@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-template.local/schemas/research_kernel.schema.json",
+  "title": "Research OS Research Kernel Cycle",
+  "type": "object",
+  "required": [
+    "kernel_schema_version",
+    "cycle_id",
+    "research_question_id",
+    "domain_id",
+    "stage",
+    "candidate",
+    "evaluator_contracts",
+    "belief_state",
+    "search_trace",
+    "next_action_policy",
+    "human_judgment_gate",
+    "privacy_level"
+  ],
+  "properties": {
+    "kernel_schema_version": { "type": "string", "pattern": "^v[0-9]+\\.[0-9]+$" },
+    "cycle_id": { "type": "string", "pattern": "^RK-[0-9]{4}$" },
+    "research_question_id": { "type": "string" },
+    "domain_id": { "type": "string" },
+    "stage": {
+      "type": "string",
+      "enum": ["generate", "evaluate", "update", "human_gate", "stopped"]
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["candidate_id", "candidate_type", "summary", "source_artifacts", "status"],
+      "properties": {
+        "candidate_id": { "type": "string", "pattern": "^CAND-[0-9]{4}$" },
+        "candidate_type": { "type": "string" },
+        "summary": { "type": "string" },
+        "source_artifacts": { "type": "array", "items": { "type": "string" } },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "active", "revised", "retired", "blocked", "ready_for_public_export"]
+        }
+      }
+    },
+    "evaluator_contracts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/evaluator_contract" }
+    },
+    "evaluation_results": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evaluation_result" }
+    },
+    "belief_state": {
+      "type": "object",
+      "required": ["summary", "assumptions", "uncertainty_register", "evidence_links", "confidence_level"],
+      "properties": {
+        "summary": { "type": "string" },
+        "assumptions": { "type": "array", "items": { "type": "string" } },
+        "uncertainty_register": { "type": "array", "items": { "type": "string" } },
+        "evidence_links": { "type": "array", "items": { "type": "string" } },
+        "confidence_level": {
+          "type": "string",
+          "enum": ["unknown", "low", "medium", "high", "human_checked"]
+        }
+      }
+    },
+    "search_trace": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step_id", "action", "result", "linked_artifacts"],
+        "properties": {
+          "step_id": { "type": "string" },
+          "action": { "type": "string" },
+          "result": { "type": "string" },
+          "linked_artifacts": { "type": "array", "items": { "type": "string" } },
+          "negative_result_ref": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "negative_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["negative_result_id", "failed_candidate_ref", "failure_mode", "preserved_as"],
+        "properties": {
+          "negative_result_id": { "type": "string", "pattern": "^NEG-[0-9]{4}$" },
+          "failed_candidate_ref": { "type": "string" },
+          "failure_mode": { "type": "string" },
+          "preserved_as": { "type": "string" },
+          "reuse_note": { "type": "string" }
+        }
+      }
+    },
+    "next_action_policy": {
+      "type": "object",
+      "required": ["decision", "rationale", "stop_conditions", "candidate_updates"],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": ["continue", "revise_candidate", "change_evaluator", "ask_human", "stop", "export"]
+        },
+        "rationale": { "type": "string" },
+        "stop_conditions": { "type": "array", "items": { "type": "string" } },
+        "candidate_updates": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "human_judgment_gate": {
+      "type": "object",
+      "required": ["required", "trigger", "reviewer_role", "decision_status"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "trigger": { "type": "string" },
+        "reviewer_role": { "type": "string" },
+        "decision_status": {
+          "type": "string",
+          "enum": ["not_required", "pending", "approved", "changes_requested", "blocked"]
+        },
+        "decision_record": { "type": ["string", "null"] }
+      }
+    },
+    "privacy_level": { "type": "string" }
+  },
+  "$defs": {
+    "evaluator_contract": {
+      "type": "object",
+      "required": [
+        "evaluator_id",
+        "target_candidate_id",
+        "metric_or_check",
+        "formula_or_procedure",
+        "inputs",
+        "units_or_scale",
+        "acceptance_threshold",
+        "resource_estimate",
+        "failure_mode",
+        "replay_note"
+      ],
+      "properties": {
+        "evaluator_id": { "type": "string", "pattern": "^EVAL-[0-9]{4}$" },
+        "target_candidate_id": { "type": "string" },
+        "metric_or_check": { "type": "string" },
+        "formula_or_procedure": { "type": "string" },
+        "inputs": { "type": "array", "items": { "type": "string" } },
+        "units_or_scale": { "type": "string" },
+        "acceptance_threshold": { "type": "string" },
+        "resource_estimate": { "type": "string" },
+        "failure_mode": { "type": "string" },
+        "replay_note": { "type": "string" }
+      }
+    },
+    "evaluation_result": {
+      "type": "object",
+      "required": ["result_id", "evaluator_ref", "outcome", "summary", "linked_artifacts"],
+      "properties": {
+        "result_id": { "type": "string", "pattern": "^ERES-[0-9]{4}$" },
+        "evaluator_ref": { "type": "string" },
+        "outcome": {
+          "type": "string",
+          "enum": ["pass", "fail", "inconclusive", "partial", "blocked", "needs_human_review"]
+        },
+        "summary": { "type": "string" },
+        "linked_artifacts": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

@@ -1,6 +1,30 @@
 artifact_type: applied_math_model_case
 domain_id: applied-mathematics
 status: draft
+research_kernel:
+  cycle_id: RK-0000
+  candidate_binding:
+    - model_assumption_ledger
+  evaluator_contracts:
+    - evaluator_id: EVAL-0000
+      metric_or_check: "scale, stability, approximation error, and sensitivity adequacy"
+      formula_or_procedure: "check units and dimensionless groups; specify stability notion; bound or empirically probe approximation error; vary key parameters"
+      inputs: [variable_dictionary, model_assumption_ledger, nondimensionalization_note]
+      units_or_scale: "model-specific physical, numerical, or qualitative scale"
+      acceptance_threshold: "assumptions, regime, stability or error path, and interpretation limits recorded"
+      resource_estimate: "local reasoning by default; simulations require work order and resource guard"
+      failure_mode: "unstable_model, invalid_regime, dimensional_inconsistency, sensitivity_reversal"
+      replay_note: "preserve model revisions and numerical validation trace"
+  evaluation_result_binding:
+    - stability_check
+    - approximation_error_note
+    - sensitivity_report
+  belief_state_binding:
+    - model_assumption_ledger
+    - nondimensionalization_note
+  search_trace_required: true
+  negative_result_policy: "failed models remain as invalid_regime_note or failed_model_note"
+  human_judgment_gate: "interpretation limits require researcher review before public claim"
 application_question:
   decision_context: null
   target_quantity: null

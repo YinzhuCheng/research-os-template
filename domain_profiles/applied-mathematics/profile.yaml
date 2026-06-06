@@ -36,6 +36,51 @@ artifact_types:
   - approximation_error_note
   - numerical_validation_plan
   - sensitivity_report
+kernel_bindings:
+  candidate:
+    artifacts:
+      - model_candidate
+      - model_assumption_ledger
+  evaluator_contract:
+    artifacts:
+      - stability_check
+      - approximation_error_note
+      - numerical_validation_plan
+      - sensitivity_report
+    required_fields:
+      - metric_or_check
+      - formula_or_procedure
+      - inputs
+      - units_or_scale
+      - acceptance_threshold
+      - resource_estimate
+      - failure_mode
+      - replay_note
+  evaluation_result:
+    artifacts:
+      - stability_check
+      - approximation_error_note
+      - sensitivity_report
+  belief_state:
+    artifacts:
+      - model_assumption_ledger
+      - nondimensionalization_note
+  search_trace:
+    artifacts:
+      - model_revision_trace
+      - numerical_validation_trace
+  negative_result:
+    artifacts:
+      - failed_model_note
+      - invalid_regime_note
+    policy: "Unstable, dimensionally inconsistent, or invalid-regime models are retained as negative results."
+  next_action_policy:
+    artifacts:
+      - model_revision_decision
+  human_judgment_gate:
+    artifacts:
+      - interpretation_limit_review
+  computation_checklist_required: true
 quality_gates:
   - application_question_bound
   - assumptions_explicit

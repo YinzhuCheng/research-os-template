@@ -40,6 +40,54 @@ artifact_types:
   - benchmark_protocol
   - threat_model
   - artifact_eval_pack
+kernel_bindings:
+  candidate:
+    artifacts:
+      - problem_spec
+      - algorithm_or_system_candidate
+      - system_design_record
+  evaluator_contract:
+    artifacts:
+      - algorithm_invariant_note
+      - complexity_argument
+      - benchmark_protocol
+      - threat_model
+      - artifact_eval_pack
+    required_fields:
+      - metric_or_check
+      - formula_or_procedure
+      - inputs
+      - units_or_scale
+      - acceptance_threshold
+      - resource_estimate
+      - failure_mode
+      - replay_note
+  evaluation_result:
+    artifacts:
+      - complexity_argument
+      - benchmark_result_note
+      - artifact_eval_pack
+  belief_state:
+    artifacts:
+      - problem_spec
+      - invariant_assumption_register
+  search_trace:
+    artifacts:
+      - design_iteration_trace
+      - benchmark_trace
+  negative_result:
+    artifacts:
+      - failed_invariant_note
+      - benchmark_regression_note
+      - threat_model_failure_note
+    policy: "Incorrect invariants, complexity counterexamples, failed benchmarks, and security failures become durable negative results."
+  next_action_policy:
+    artifacts:
+      - design_revision_decision
+  human_judgment_gate:
+    artifacts:
+      - artifact_release_review
+  computation_checklist_required: true
 quality_gates:
   - interface_and_workload_locked
   - correctness_obligations_recorded

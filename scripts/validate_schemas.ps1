@@ -30,6 +30,8 @@ Require-File (Join-Path $Root "templates\yaml\integration_component.template.yam
 Require-File (Join-Path $Root "templates\yaml\harness_run.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\domain_profile.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\agent_capability.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\research_kernel.template.yaml")
+Require-File (Join-Path $Root "templates\research_kernel\research_cycle.template.yaml")
 Require-File (Join-Path $Root "domain_profiles\README.md")
 Require-File (Join-Path $Root "domain_profiles\fundamental-mathematics\profile.yaml")
 Require-File (Join-Path $Root "domain_profiles\applied-mathematics\profile.yaml")
@@ -52,6 +54,7 @@ Require-Text (Join-Path $Root "CONTROL\work_order.yaml") "resource_budget:\s*"
 Require-Text (Join-Path $Root "PUBLIC\claim_evidence_matrix.yaml") "CLAIM-[0-9]{3}"
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "doc_map_id:\s+DOCMAP-[0-9]{4}"
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "domain_profiles"
+Require-Text (Join-Path $Root "docs\doc_map.yaml") "research_kernel"
 Require-Text (Join-Path $Root "docs\integrations\components.yaml") "registry_id:\s+INTEGRATIONS-[0-9]{4}"
 
 Get-Content -LiteralPath (Join-Path $Root "PROVENANCE\run_manifest.jsonl") | ForEach-Object {

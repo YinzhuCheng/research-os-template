@@ -39,6 +39,51 @@ artifact_types:
   - uncertainty_statement
   - sensitivity_analysis
   - statistical_ethics_note
+kernel_bindings:
+  candidate:
+    artifacts:
+      - estimand_card
+      - design_or_model_candidate
+  evaluator_contract:
+    artifacts:
+      - identification_memo
+      - sampling_power_plan
+      - diagnostic_report
+      - sensitivity_analysis
+    required_fields:
+      - metric_or_check
+      - formula_or_procedure
+      - inputs
+      - units_or_scale
+      - acceptance_threshold
+      - resource_estimate
+      - failure_mode
+      - replay_note
+  evaluation_result:
+    artifacts:
+      - diagnostic_report
+      - uncertainty_statement
+      - sensitivity_analysis
+  belief_state:
+    artifacts:
+      - identification_memo
+      - assumption_and_uncertainty_register
+  search_trace:
+    artifacts:
+      - model_diagnostic_trace
+      - sensitivity_trace
+  negative_result:
+    artifacts:
+      - failed_identification_note
+      - diagnostic_failure_note
+    policy: "Failed diagnostics, unidentified estimands, and sensitivity reversals are preserved as negative results."
+  next_action_policy:
+    artifacts:
+      - analysis_revision_decision
+  human_judgment_gate:
+    artifacts:
+      - public_inference_review
+  computation_checklist_required: true
 quality_gates:
   - estimand_defined_before_model
   - identification_assumptions_explicit

@@ -245,6 +245,7 @@
           <button type="button" id="reloadBtn">刷新</button>
           <a href="../docs/start-here.html">快速上手</a>
           <a href="../docs/domain-modes.html">领域模式</a>
+          <a href="../templates/research_kernel/research_cycle.template.yaml">研究内核</a>
           <a href="../docs/technical-report.html">技术路线</a>
           <a href="../README.md">模板首页</a>
         </div>
@@ -282,25 +283,28 @@
     const fallbackData = {
       project: {
         title: "Codex Research OS Template",
-        phase: "research-os-v3.1",
+        phase: "research-os-v3.2",
         language_mode: "zh-first",
         intervention_level: "low",
         privacy_policy: "public_private_split",
-        research_type: "domain-profile-ready",
+        research_type: "research-kernel-ready",
         dissemination: "undecided"
       },
       status: [
         {label: "研究类型", value: "待入口具体化"},
         {label: "Domain Profiles", value: "五大领域已接入"},
+        {label: "Research Kernel", value: "已接入"},
         {label: "Feasibility", value: "待定义"},
         {label: "Resource Guard", value: "已启用"},
         {label: "Live Evidence", value: "已建档"},
-        {label: "Harness", value: "已补强"},
+        {label: "Harness", value: "v3.2 检查中"},
         {label: "论文", value: "可选"}
       ],
       documents: [
         {path: "../docs/start-here.html", label: "快速上手 HTML"},
         {path: "../docs/domain-modes.html", label: "五大领域模式 HTML"},
+        {path: "../templates/research_kernel/research_cycle.template.yaml", label: "研究内核模板"},
+        {path: "../config/schemas/research_kernel.schema.json", label: "Research Kernel Schema"},
         {path: "../docs/technical-report.html", label: "技术路线 HTML"},
         {path: "../docs/README.md", label: "文档中心"},
         {path: "../docs/doc_map.yaml", label: "文档地图"},
@@ -319,6 +323,7 @@
       ],
       next_decisions: [
         "确认目标研究的语言模式：zh-first 或 en-only。",
+        "确认每个候选研究对象是否已进入 candidate/evaluator/belief/trace/human gate 内核循环。",
         "确认研究类型、验证对象和最小可行性验证预算。",
         "确认是否需要论文、报告、复现包或决策备忘。",
         "确认真实资源调用是否允许以及预算上限。",

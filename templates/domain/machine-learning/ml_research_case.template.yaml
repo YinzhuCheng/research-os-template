@@ -1,6 +1,30 @@
 artifact_type: ml_research_case
 domain_id: machine-learning
 status: draft
+research_kernel:
+  cycle_id: RK-0000
+  candidate_binding:
+    - task_card
+    - model_or_method_card
+  evaluator_contracts:
+    - evaluator_id: EVAL-0000
+      metric_or_check: "baseline, leakage, ablation, and reproducibility adequacy"
+      formula_or_procedure: "lock task metric; verify data license and split; compare approved baselines; define ablations and negative controls; capture seeds and replay command"
+      inputs: [task_card, data_card, baseline_matrix, ablation_plan, leakage_audit]
+      units_or_scale: "task metric plus cost-performance and reproducibility notes"
+      acceptance_threshold: "baseline_matrix, leakage_audit, ablation_plan, eval_harness_spec, and reproducibility_pack complete"
+      resource_estimate: "no training or paid compute unless work order and resource guard approve"
+      failure_mode: "leakage, baseline_missing, ablation_inconclusive, seed_instability"
+      replay_note: "preserve manifest links, seeds, environment, and failed runs"
+  evaluation_result_binding:
+    - reproducibility_pack
+    - model_limitations_note
+  belief_state_binding:
+    - data_card
+    - evidence_and_assumption_register
+  search_trace_required: true
+  negative_result_policy: "failed runs, leakage findings, and inconclusive ablations are retained"
+  human_judgment_gate: "public performance claims require human review"
 task_card:
   subfield: null
   input: null

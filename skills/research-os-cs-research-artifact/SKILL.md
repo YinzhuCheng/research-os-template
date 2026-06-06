@@ -11,12 +11,14 @@ Use this skill for computer science research design, algorithm analysis, system 
 
 1. Read `domain_profiles/computer-science/profile.yaml` and `domain_profiles/computer-science/agents.yaml`.
 2. Read control files and route code execution, benchmark runs, or artifact mutation through `research-os-execution-harness`.
-3. Write a problem spec: interface, inputs, outputs, constraints, workloads, and success criteria.
-4. If algorithmic, record invariants, edge cases, proof obligations, and complexity assumptions.
-5. If systems-oriented, record architecture, dependency boundaries, environment, observability, and artifact inventory.
-6. If security-relevant, record assets, adversaries, trust boundaries, and misuse risks.
-7. Define benchmark protocol and replay plan before performance claims.
-8. Produce an artifact evaluation pack with documentation, consistency, completeness, exercisability, and reuse notes.
+3. Route the algorithm, system, protocol, or artifact through `research-os-research-kernel`: the artifact is the candidate; correctness, complexity, benchmark, threat, and artifact-eval checks are evaluator contracts.
+4. Write a problem spec: interface, inputs, outputs, constraints, workloads, and success criteria.
+5. If algorithmic, record invariants, edge cases, proof obligations, and complexity assumptions.
+6. If systems-oriented, record architecture, dependency boundaries, environment, observability, and artifact inventory.
+7. If security-relevant, record assets, adversaries, trust boundaries, and misuse risks.
+8. Define benchmark protocol and replay plan before performance claims.
+9. Preserve failed invariants, benchmark regressions, and artifact failures as `negative_result` or `search_trace`.
+10. Produce an artifact evaluation pack with documentation, consistency, completeness, exercisability, and reuse notes.
 
 ## Boundaries
 

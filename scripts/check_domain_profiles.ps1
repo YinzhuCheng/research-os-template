@@ -28,6 +28,7 @@ $requiredProfileFields = @(
   "activation:",
   "paradigms:",
   "artifact_types:",
+  "kernel_bindings:",
   "quality_gates:",
   "status_lifecycle:",
   "harness_boundaries:",
@@ -51,6 +52,12 @@ foreach ($domain in $expectedDomains) {
   if ($text -notmatch "domain_id:\s+$domain") { throw "Domain id mismatch in $profile" }
   foreach ($status in $commonStatuses) {
     if ($text -notlike "*$status*") { throw "Domain $domain missing lifecycle status $status" }
+  }
+  foreach ($kernelObject in @("candidate:", "evaluator_contract:", "evaluation_result:", "belief_state:", "search_trace:", "negative_result:", "next_action_policy:", "human_judgment_gate:")) {
+    if ($text -notlike "*$kernelObject*") { throw "Domain $domain missing kernel binding $kernelObject" }
+  }
+  if ($text -notmatch "computation_checklist_required:\s+true") {
+    throw "Domain $domain must require computation checklist."
   }
   foreach ($boundary in @("PRIVATE/", "paid_resources: false", "external_write: forbidden_without_explicit_human_confirmation")) {
     if ($text -notlike "*$boundary*") { throw "Domain $domain missing harness boundary $boundary" }

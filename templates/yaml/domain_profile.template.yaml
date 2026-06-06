@@ -14,6 +14,42 @@ paradigms:
     purpose: "Describe the domain research pattern."
 artifact_types:
   - example_artifact
+kernel_bindings:
+  candidate:
+    artifacts:
+      - example_artifact
+  evaluator_contract:
+    artifacts:
+      - example_evaluation_plan
+    required_fields:
+      - metric_or_check
+      - formula_or_procedure
+      - inputs
+      - units_or_scale
+      - acceptance_threshold
+      - resource_estimate
+      - failure_mode
+      - replay_note
+  evaluation_result:
+    artifacts:
+      - example_result_report
+  belief_state:
+    artifacts:
+      - example_assumption_register
+  search_trace:
+    artifacts:
+      - example_iteration_log
+  negative_result:
+    artifacts:
+      - example_failure_log
+    policy: "Preserve failed candidates and inconclusive checks."
+  next_action_policy:
+    artifacts:
+      - example_next_step_decision
+  human_judgment_gate:
+    artifacts:
+      - example_review_decision
+  computation_checklist_required: true
 quality_gates:
   - example_quality_gate
 status_lifecycle:

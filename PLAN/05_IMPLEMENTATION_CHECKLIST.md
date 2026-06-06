@@ -108,3 +108,12 @@
 - [x] 新增 `docs/domain-modes.html`，并接入快速上手、技术报告、dashboard 和 doc map。
 - [x] 新增领域 profile、agent capability、domain templates 和 router 检查脚本。
 - [x] 运行 v3.1 全量验证并提交推送。
+
+## Commit 15: Research OS v3.2 研究内核与反馈计算层
+
+- [x] 将 work order 更新为 `WO-0003`，授权 v3.2 research kernel、领域绑定、模板、skill、文档和 harness 校验。
+- [x] 新增 `research-os-research-kernel` skill，统一 `generate -> evaluate -> update -> human_gate` 研究循环。
+- [x] 新增 `config/schemas/research_kernel.schema.json`、`templates/yaml/research_kernel.template.yaml` 和 `templates/research_kernel/research_cycle.template.yaml`。
+- [x] 五大领域 profile 与模板均新增 `kernel_bindings` 和 evaluator 计算清单。
+- [x] 更新 orchestrator 路由，先进入 research kernel，再调用领域 profile 和领域 skill。
+- [x] 新增 `check_research_kernel.ps1`、`check_domain_kernel_bindings.ps1` 和 `check_no_orphan_skills.ps1`，防止新增 skill 变成未治理工具。

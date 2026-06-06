@@ -11,6 +11,7 @@
     "activation",
     "paradigms",
     "artifact_types",
+    "kernel_bindings",
     "quality_gates",
     "status_lifecycle",
     "harness_boundaries",
@@ -24,6 +25,30 @@
     "activation": { "type": "object" },
     "paradigms": { "type": "array", "minItems": 1 },
     "artifact_types": { "type": "array", "minItems": 1 },
+    "kernel_bindings": {
+      "type": "object",
+      "required": [
+        "candidate",
+        "evaluator_contract",
+        "evaluation_result",
+        "belief_state",
+        "search_trace",
+        "negative_result",
+        "next_action_policy",
+        "human_judgment_gate"
+      ],
+      "properties": {
+        "candidate": { "type": "object" },
+        "evaluator_contract": { "type": "object" },
+        "evaluation_result": { "type": "object" },
+        "belief_state": { "type": "object" },
+        "search_trace": { "type": "object" },
+        "negative_result": { "type": "object" },
+        "next_action_policy": { "type": "object" },
+        "human_judgment_gate": { "type": "object" },
+        "computation_checklist_required": { "type": "boolean" }
+      }
+    },
     "quality_gates": { "type": "array", "minItems": 1 },
     "status_lifecycle": { "type": "object" },
     "harness_boundaries": { "type": "object" },

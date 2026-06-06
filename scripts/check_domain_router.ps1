@@ -20,11 +20,15 @@ $skills = @(
 )
 
 Require-Text "skills\research-os-orchestrator\SKILL.md" "domain profile"
+Require-Text "skills\research-os-orchestrator\SKILL.md" "research-os-research-kernel"
 Require-Text "skills\research-os-orchestrator\references\routing.md" "domain_profiles"
+Require-Text "skills\research-os-orchestrator\references\routing.md" "Anti-Spaghetti Skill Rule"
+Require-Text "skills\research-os-research-kernel\SKILL.md" "evaluator_contract"
 
 foreach ($skill in $skills) {
   Require-Text "skills\research-os-orchestrator\references\routing.md" $skill
   Require-Text "skills\$skill\SKILL.md" "research-os-execution-harness"
+  Require-Text "skills\$skill\SKILL.md" "research-os-research-kernel"
   Require-Text "skills\$skill\SKILL.md" "domain_profiles"
 }
 

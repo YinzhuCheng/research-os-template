@@ -9,6 +9,14 @@
 - BibTeX 模板。
 - review/rebuttal 模板。
 
+## Research kernel templates
+
+`templates/research_kernel/` 和 `templates/yaml/research_kernel.template.yaml` 保存 v3.2 统一研究内核模板。所有领域研究循环都应先表达为：
+
+`candidate -> evaluator_contract -> evaluation_result -> belief_state -> search_trace/negative_result -> next_action_policy -> human_judgment_gate`
+
+每个 evaluator 必须列出计算或检查：`metric_or_check`、`formula_or_procedure`、`inputs`、`units_or_scale`、`acceptance_threshold`、`resource_estimate`、`failure_mode` 和 `replay_note`。
+
 ## Domain templates
 
 `templates/domain/` 保存五大领域的结构化产物模板：

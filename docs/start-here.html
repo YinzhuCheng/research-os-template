@@ -241,6 +241,7 @@
       <nav aria-label="文档导航">
         <a href="../README.md">仓库首页</a>
         <a href="domain-modes.html">领域模式</a>
+        <a href="../templates/research_kernel/research_cycle.template.yaml">研究内核</a>
         <a href="technical-report.html">技术路线</a>
         <a href="../PUBLIC/index.html">Dashboard</a>
         <a href="../CONTROL/work_order.yaml">Work Order</a>
@@ -257,6 +258,7 @@
         <div class="actions">
           <a class="button primary" href="#start">开始三步</a>
           <a class="button" href="domain-modes.html">选择领域模式</a>
+          <a class="button" href="../templates/research_kernel/research_cycle.template.yaml">查看研究内核</a>
           <a class="button" href="technical-report.html">查看技术路线</a>
           <a class="button" href="../templates/README.md">浏览模板</a>
         </div>
@@ -299,6 +301,16 @@
           <path d="M 198 294 H 278" stroke="#176b57" stroke-width="3" marker-end="url(#arrow)"></path>
           <path d="M 432 294 H 512" stroke="#176b57" stroke-width="3" marker-end="url(#arrow)"></path>
         </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>研究内核：先列出计算</h2>
+      <p>v3.2 把所有领域流程统一成 `generate -> evaluate -> update -> human gate`。任何候选想法、模型、算法、实验方案或 estimand 都先进入 <a href="../skills/research-os-research-kernel/SKILL.md">research-os-research-kernel</a>，再调用领域 skill。</p>
+      <div class="grid">
+        <article class="card"><h3>Candidate</h3><p>当前要研究的对象：猜想、模型、方法、算法、系统、estimand、设计或协议。</p></article>
+        <article class="card"><h3>Evaluator</h3><p>必须列出 metric/check、formula/procedure、inputs、scale、threshold、resource、failure mode 和 replay。</p></article>
+        <article class="card"><h3>Trace</h3><p>失败、反例、不稳定、leakage、诊断失败和不确定结果必须进入 `negative_result` 或 `search_trace`。</p></article>
       </div>
     </section>
 
@@ -359,6 +371,7 @@
         </thead>
         <tbody>
           <tr><td>初始化一个新研究</td><td><a href="../skills/research-os-init/SKILL.md">research-os-init</a></td><td>项目配置、入口材料、source intake</td></tr>
+          <tr><td>把研究对象结构化</td><td><a href="../skills/research-os-research-kernel/SKILL.md">research-os-research-kernel</a></td><td>candidate、evaluator、belief、trace、human gate</td></tr>
           <tr><td>确认研究方向和范围</td><td><a href="../skills/research-os-alignment/SKILL.md">research-os-alignment</a></td><td>待决策项、约束、阶段闸门</td></tr>
           <tr><td>做最小验证</td><td><a href="../skills/research-os-feasibility-probe/SKILL.md">research-os-feasibility-probe</a></td><td>可行性探针、预算、停止条件</td></tr>
           <tr><td>刷新外部证据</td><td><a href="../skills/research-os-live-evidence-refresh/SKILL.md">research-os-live-evidence-refresh</a></td><td>live evidence snapshot</td></tr>
@@ -372,6 +385,7 @@
       <p>Windows PowerShell 环境中可以先运行这些只读或校验命令。</p>
       <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_kernel.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</pre>
       <div class="note">
         <strong>关键边界：</strong>不要把真实 API key、平台 token、cookie、authorization header、SSH 私钥或云账号密码写进仓库。需要凭据时，只记录环境变量名或 secret store 路径。
@@ -379,7 +393,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</
     </section>
 
     <section class="footer">
-      <p>继续阅读：<a href="domain-modes.html">五大领域模式</a>、<a href="technical-report.html">完整技术路线</a>、<a href="../PUBLIC/index.html">公开 dashboard</a>、<a href="doc_map.yaml">文档地图</a>。</p>
+      <p>继续阅读：<a href="domain-modes.html">五大领域模式</a>、<a href="../templates/research_kernel/research_cycle.template.yaml">研究内核模板</a>、<a href="technical-report.html">完整技术路线</a>、<a href="../PUBLIC/index.html">公开 dashboard</a>、<a href="doc_map.yaml">文档地图</a>。</p>
     </section>
   </main>
 </body>

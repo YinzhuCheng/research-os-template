@@ -1,0 +1,55 @@
+artifact_type: research_kernel_cycle
+kernel_schema_version: v3.2
+cycle_id: RK-0000
+research_question_id: RQ-000
+domain_id: unspecified
+stage: generate
+loop:
+  sequence:
+    - generate_candidate
+    - evaluate_candidate
+    - update_belief_state
+    - apply_human_judgment_gate
+candidate:
+  candidate_id: CAND-0000
+  candidate_type: null
+  summary: null
+  source_artifacts: []
+  status: draft
+evaluator_contracts:
+  - evaluator_id: EVAL-0000
+    target_candidate_id: CAND-0000
+    metric_or_check: null
+    formula_or_procedure: null
+    inputs: []
+    units_or_scale: null
+    acceptance_threshold: null
+    resource_estimate: "time: TBD; compute: none unless approved; cost: 0 CNY by default"
+    failure_mode: null
+    replay_note: null
+evaluation_results: []
+belief_state:
+  summary: null
+  assumptions: []
+  uncertainty_register: []
+  evidence_links: []
+  confidence_level: unknown
+search_trace:
+  - step_id: STEP-0000
+    action: null
+    result: null
+    linked_artifacts: []
+    negative_result_ref: null
+negative_results: []
+next_action_policy:
+  decision: ask_human
+  rationale: null
+  stop_conditions: []
+  candidate_updates: []
+human_judgment_gate:
+  required: true
+  trigger: "public claim, real resource use, external writeback, privacy boundary, or phase change"
+  reviewer_role: researcher
+  decision_status: pending
+  decision_record: null
+privacy_level: public

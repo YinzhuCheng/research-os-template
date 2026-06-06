@@ -41,6 +41,50 @@ artifact_types:
   - eval_harness_spec
   - reproducibility_pack
   - model_limitations_note
+kernel_bindings:
+  candidate:
+    artifacts:
+      - task_card
+      - model_or_method_card
+  evaluator_contract:
+    artifacts:
+      - baseline_matrix
+      - ablation_plan
+      - leakage_audit
+      - eval_harness_spec
+    required_fields:
+      - metric_or_check
+      - formula_or_procedure
+      - inputs
+      - units_or_scale
+      - acceptance_threshold
+      - resource_estimate
+      - failure_mode
+      - replay_note
+  evaluation_result:
+    artifacts:
+      - reproducibility_pack
+      - model_limitations_note
+  belief_state:
+    artifacts:
+      - data_card
+      - evidence_and_assumption_register
+  search_trace:
+    artifacts:
+      - experiment_trace
+      - ablation_trace
+  negative_result:
+    artifacts:
+      - failed_baseline_note
+      - leakage_or_overfit_note
+    policy: "Failed runs, leakage findings, and inconclusive ablations are preserved before any performance claim."
+  next_action_policy:
+    artifacts:
+      - next_experiment_decision
+  human_judgment_gate:
+    artifacts:
+      - public_claim_review
+  computation_checklist_required: true
 quality_gates:
   - task_metric_locked
   - dataset_license_checked

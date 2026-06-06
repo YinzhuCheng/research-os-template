@@ -66,3 +66,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_agent_capabi
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_templates.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_router.ps1
 ```
+
+Research OS v3.2 研究内核与防杂货化检查：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_kernel.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_kernel_bindings.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_no_orphan_skills.ps1
+```

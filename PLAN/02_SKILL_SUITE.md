@@ -7,6 +7,7 @@
 ## Skill 列表
 
 - `research-os-orchestrator`：入口 skill，读取输入、语言模式、人类介入档位和当前阶段。
+- `research-os-research-kernel`：统一研究内核，把候选对象、评价器契约、计算清单、评价结果、belief state、search trace、negative result 和 human gate 结构化。
 - `research-os-init`：从 GPT 对话、研究草稿、demo 代码生成规范项目。
 - `research-os-alignment`：生成需求对齐清单、隐含假设、建议问题和阶段闸门。
 - `research-os-execution-harness`：生成 work order，执行前后记录审计信息。
@@ -24,7 +25,7 @@
 
 ## 触发关系
 
-`research-os-orchestrator` 可以调用其他子 skill。初始化阶段必须先判断研究类型、预算来源、验证对象和传播目标；缺信息时调用 `alignment`。任何真实资源调用前调用 `resource-guard`，任何时效性外部信息使用前调用 `live-evidence-refresh`，任何执行前后调用 `execution-harness` 和 `harness-audit`。论文阶段只在研究者明确启用时调用 `paper-authoring`、`visual-communication`、`polish-factcheck` 和 `review-rebuttal`。
+`research-os-orchestrator` 可以调用其他子 skill。任何实质研究循环先进入 `research-os-research-kernel`，再根据领域 profile 调用领域 skill。初始化阶段必须先判断研究类型、预算来源、验证对象和传播目标；缺信息时调用 `alignment`。任何真实资源调用前调用 `resource-guard`，任何时效性外部信息使用前调用 `live-evidence-refresh`，任何执行前后调用 `execution-harness` 和 `harness-audit`。论文阶段只在研究者明确启用时调用 `paper-authoring`、`visual-communication`、`polish-factcheck` 和 `review-rebuttal`。
 
 ## 外部参考
 

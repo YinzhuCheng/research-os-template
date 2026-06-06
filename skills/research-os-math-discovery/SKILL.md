@@ -11,12 +11,13 @@ Use this skill for basic mathematics, proof-oriented research, conjecture work, 
 
 1. Read `domain_profiles/fundamental-mathematics/profile.yaml` and `domain_profiles/fundamental-mathematics/agents.yaml`.
 2. Read `CONTROL/work_order.yaml`, `CONTROL/phase_gate.yaml`, and `config/research_project.yaml`; route any mutation or experiment through `research-os-execution-harness`.
-3. Start with definitions: normalize objects, assumptions, notation, quantifiers, and excluded cases.
-4. Build examples before proof attempts: canonical, small, degenerate, and boundary cases.
-5. Generate conjectures only after examples or literature cues are recorded.
-6. Search for counterexamples before proof strategy. If a counterexample is found, revise or retire the conjecture.
-7. Decompose the proof route into lemmas and dependencies; label every unresolved step.
-8. Run proof-referee review and emit `proof_gap_report` before any public theorem claim.
+3. Route the conjecture or theorem note through `research-os-research-kernel`: `conjecture_card` is the candidate; counterexample search and proof-gap review are evaluator contracts.
+4. Start with definitions: normalize objects, assumptions, notation, quantifiers, and excluded cases.
+5. Build examples before proof attempts: canonical, small, degenerate, and boundary cases.
+6. Generate conjectures only after examples or literature cues are recorded.
+7. Search for counterexamples before proof strategy. If a counterexample is found, revise or retire the conjecture and preserve it as `negative_result` or `search_trace`.
+8. Decompose the proof route into lemmas and dependencies; label every unresolved step.
+9. Run proof-referee review and emit `proof_gap_report` before any public theorem claim.
 
 ## Boundaries
 

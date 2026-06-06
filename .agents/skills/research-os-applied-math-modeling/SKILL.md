@@ -11,12 +11,14 @@ Use this skill for applied mathematics, modeling, simulation design, differentia
 
 1. Read `domain_profiles/applied-mathematics/profile.yaml` and `domain_profiles/applied-mathematics/agents.yaml`.
 2. Read control files and use `research-os-execution-harness` before any mutation, simulation, code execution, or resource use.
-3. Translate the application question into variables, parameters, units, equations, objectives, and constraints.
-4. Create a `model_assumption_ledger`; mark missing mechanisms and validity regimes.
-5. Perform scale checks and nondimensionalization before interpreting numerical output.
-6. Record a stability, well-posedness, approximation, or error-check path.
-7. Define minimal numerical validation, sanity checks, baselines, and sensitivity probes.
-8. Separate mathematical conclusions from application recommendations.
+3. Route the model through `research-os-research-kernel`: model candidate is the candidate; stability, error, validation, and sensitivity checks are evaluator contracts.
+4. Translate the application question into variables, parameters, units, equations, objectives, and constraints.
+5. Create a `model_assumption_ledger`; mark missing mechanisms and validity regimes.
+6. Perform scale checks and nondimensionalization before interpreting numerical output.
+7. Record a stability, well-posedness, approximation, or error-check path.
+8. Define minimal numerical validation, sanity checks, baselines, and sensitivity probes.
+9. Preserve unstable, dimensionally inconsistent, or invalid-regime models as `negative_result` or `search_trace`.
+10. Separate mathematical conclusions from application recommendations.
 
 ## Boundaries
 

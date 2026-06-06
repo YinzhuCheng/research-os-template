@@ -88,3 +88,19 @@ claims:
       - "docs/domain-modes.html"
       - "docs/technical-report.html"
     privacy_level: public
+  - id: CLAIM-008
+    claim: "Research OS v3.2 prevents the skill suite from becoming a loose toolbox by routing substantive research through a shared research kernel with candidate, evaluator, belief state, search trace, negative result, next-action policy, and human judgment gate objects."
+    status: supported
+    evidence:
+      - "config/schemas/research_kernel.schema.json"
+      - "templates/research_kernel/research_cycle.template.yaml"
+      - "skills/research-os-research-kernel/SKILL.md"
+      - "scripts/check_research_kernel.ps1"
+      - "scripts/check_domain_kernel_bindings.ps1"
+      - "scripts/check_no_orphan_skills.ps1"
+    counterevidence: []
+    dissemination_targets:
+      - "docs/start-here.html"
+      - "docs/domain-modes.html"
+      - "docs/technical-report.html"
+    privacy_level: public

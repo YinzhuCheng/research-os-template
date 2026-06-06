@@ -14,6 +14,10 @@ entrypoints:
     title: "五大领域模式"
     path: "docs/domain-modes.html"
     audience: "需要基础数学、应用数学、机器学习、计算机科学或统计学研究范式的研究者和 agent"
+  research_kernel:
+    title: "研究内核"
+    path: "templates/research_kernel/research_cycle.template.yaml"
+    audience: "需要把候选、评价器、计算、失败结果和人工闸门统一建模的研究者和 agent"
   dashboard:
     title: "公开 dashboard"
     path: "PUBLIC/index.html"
@@ -37,6 +41,12 @@ domains:
   profile_schema: "config/schemas/domain_profile.schema.json"
   agent_schema: "config/schemas/agent_capability.schema.json"
   templates: "templates/domain/"
+research_kernel:
+  research_kernel_schema: "config/schemas/research_kernel.schema.json"
+  research_kernel_template: "templates/yaml/research_kernel.template.yaml"
+  cycle_template: "templates/research_kernel/research_cycle.template.yaml"
+  skill: "skills/research-os-research-kernel/SKILL.md"
+  workflow_reference: "skills/research-os-research-kernel/references/kernel_workflow.md"
 integrations:
   registry: "docs/integrations/components.yaml"
   adapter_template: "templates/yaml/integration_component.template.yaml"
@@ -49,4 +59,7 @@ validation:
   agent_capabilities: "scripts/check_agent_capabilities.ps1"
   domain_templates: "scripts/check_domain_templates.ps1"
   domain_router: "scripts/check_domain_router.ps1"
+  research_kernel: "scripts/check_research_kernel.ps1"
+  domain_kernel_bindings: "scripts/check_domain_kernel_bindings.ps1"
+  no_orphan_skills: "scripts/check_no_orphan_skills.ps1"
   privacy: "scripts/scan_privacy.ps1"

@@ -1,6 +1,30 @@
 artifact_type: math_discovery_case
 domain_id: fundamental-mathematics
 status: draft
+research_kernel:
+  cycle_id: RK-0000
+  candidate_binding:
+    - conjecture_card
+    - theorem_note
+  evaluator_contracts:
+    - evaluator_id: EVAL-0000
+      metric_or_check: "counterexample search before proof strategy"
+      formula_or_procedure: "enumerate canonical, small, degenerate, and boundary examples; attack hidden assumptions; log every attempted counterexample route"
+      inputs: [definition_block, conjecture_card, example_bank]
+      units_or_scale: "non-numeric proof-discovery check"
+      acceptance_threshold: "counterexample_log completed and proof_gap_report opened before proof_strategy is public"
+      resource_estimate: "local reasoning only; no paid resources"
+      failure_mode: "counterexample_found or proof_gap"
+      replay_note: "preserve example enumeration and counterexample search trace"
+  evaluation_result_binding:
+    - counterexample_log
+    - proof_gap_report
+  belief_state_binding:
+    - example_bank
+    - lemma_dependency_graph
+  search_trace_required: true
+  negative_result_policy: "failed conjectures become counterexample_log or retired_conjecture_note"
+  human_judgment_gate: "human_checked required before theorem-like public claim"
 definition_block:
   objects: []
   notation: []

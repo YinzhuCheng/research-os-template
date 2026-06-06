@@ -31,3 +31,13 @@
 - `docs/domain-modes.html` 领域模式入口。
 - 领域 schema、校验脚本、dashboard/doc map/技术报告链接。
 - AlphaGeometry、FunSearch、AlphaEvolve 的 registry 记录，用作数学与算法发现范式来源。
+
+## 2026-06-06 v3.2
+
+用户要求按照“研究内核与反馈计算层”方案实施，并强调仓库要成为结构化程序，而不是意大利面式杂货工具箱。已新增：
+
+- `research-os-research-kernel` skill，把候选对象、评价器契约、计算清单、评价结果、belief state、search trace、negative result、next action 和 human gate 统一建模。
+- `config/schemas/research_kernel.schema.json`、`templates/yaml/research_kernel.template.yaml` 和 `templates/research_kernel/research_cycle.template.yaml`。
+- 五大领域 profile 的 `kernel_bindings`，以及领域模板中的 evaluator 计算清单。
+- `check_research_kernel.ps1`、`check_domain_kernel_bindings.ps1` 和 `check_no_orphan_skills.ps1`。
+- 文档、dashboard、claim-evidence 和 doc map 的 research kernel 链接。

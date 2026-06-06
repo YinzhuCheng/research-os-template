@@ -36,6 +36,50 @@ artifact_types:
   - proof_strategy
   - proof_gap_report
   - theorem_note
+kernel_bindings:
+  candidate:
+    artifacts:
+      - conjecture_card
+      - theorem_note
+  evaluator_contract:
+    artifacts:
+      - counterexample_search_plan
+      - proof_gap_review_plan
+    required_fields:
+      - metric_or_check
+      - formula_or_procedure
+      - inputs
+      - units_or_scale
+      - acceptance_threshold
+      - resource_estimate
+      - failure_mode
+      - replay_note
+  evaluation_result:
+    artifacts:
+      - counterexample_log
+      - proof_gap_report
+  belief_state:
+    artifacts:
+      - example_bank
+      - lemma_dependency_graph
+  search_trace:
+    artifacts:
+      - example_enumeration_trace
+      - counterexample_search_trace
+  negative_result:
+    artifacts:
+      - counterexample_log
+      - retired_conjecture_note
+    policy: "A failed conjecture is preserved as a negative result or search trace, not deleted."
+  next_action_policy:
+    artifacts:
+      - proof_strategy
+      - revised_conjecture_decision
+  human_judgment_gate:
+    artifacts:
+      - theorem_note
+      - human_checked_decision
+  computation_checklist_required: true
 quality_gates:
   - definition_scope_locked
   - nontrivial_examples_checked

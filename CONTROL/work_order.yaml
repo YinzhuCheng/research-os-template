@@ -1,6 +1,6 @@
-work_order_id: WO-0002
-phase: research-os-v3.1
-goal: "补齐 Human-in-loop Auto Researcher v3.1 的五大领域深度研究范式、domain profile、领域 skill、模板和 harness 验证。"
+work_order_id: WO-0003
+phase: research-os-v3.2
+goal: "补齐 Research OS v3.2 的研究内核与反馈计算层，把五大领域 skill 统一挂接到 generate-evaluate-update-human gate 程序。"
 inputs:
   - "PLAN/00_MASTER_PLAN.md"
   - "PLAN/06_GAP_AUDIT.md"
@@ -36,11 +36,17 @@ outputs:
   - "config/schemas/"
   - "config/schemas/domain_profile.schema.json"
   - "config/schemas/agent_capability.schema.json"
+  - "config/schemas/research_kernel.schema.json"
   - "templates/domain/"
+  - "templates/research_kernel/"
+  - "templates/yaml/research_kernel.template.yaml"
   - "scripts/check_domain_profiles.ps1"
   - "scripts/check_agent_capabilities.ps1"
   - "scripts/check_domain_templates.ps1"
   - "scripts/check_domain_router.ps1"
+  - "scripts/check_research_kernel.ps1"
+  - "scripts/check_domain_kernel_bindings.ps1"
+  - "scripts/check_no_orphan_skills.ps1"
 resource_budget:
   currency: CNY
   max_total_cost: 0
@@ -61,11 +67,10 @@ stop_conditions:
   - "需要真实付费 API、云资源、GPU 资源或外部平台写回。"
   - "第三方组件许可证不允许记录或适配。"
 acceptance_criteria:
-  - "普通研究者能从 HTML 快速上手页进入控制文件、模板和 dashboard。"
-  - "后续 agent 能从技术报告定位架构、数据流、stage gate、manifest、ledger、skill 路由和适配器。"
-  - "开源组件 registry 记录来源、许可证、安装入口、环境变量名、产物映射和风险。"
-  - "新增 HTML、schema、skill、integration 和 harness 检查通过。"
-  - "五个领域 profile、agent registry、artifact template 和领域 skill 均可被脚本发现和校验。"
-  - "数学领域默认不启用形式化证明，仅保留 future slot。"
+  - "新增 research kernel schema 和模板，显式表达 candidate、evaluator_contract、evaluation_result、belief_state、search_trace、negative_result、next_action_policy 和 human_judgment_gate。"
+  - "每个 evaluator contract 都列出计算：metric_or_check、formula_or_procedure、inputs、units_or_scale、acceptance_threshold、resource_estimate、failure_mode 和 replay_note。"
+  - "五个领域 profile 和模板都声明 kernel_bindings，领域产物不再游离于统一研究内核之外。"
+  - "orchestrator 先经过 research-os-research-kernel，再调用领域 profile 和领域 skill。"
+  - "新增 research kernel、domain kernel binding 和 no-orphan-skill 检查脚本并通过验证。"
 requires_confirmation: true
 privacy_level: public
