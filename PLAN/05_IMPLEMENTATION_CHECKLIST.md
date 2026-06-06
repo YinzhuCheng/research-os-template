@@ -27,10 +27,10 @@
 
 ## Commit 5: Harness 与审计脚本
 
-- [ ] 实现 schema 校验。
-- [ ] 实现隐私扫描。
-- [ ] 实现公开导出。
-- [ ] 实现 manifest/hash 工具。
+- [x] 实现 schema 校验。
+- [x] 实现隐私扫描。
+- [x] 实现公开导出。
+- [x] 实现 manifest/hash 工具。
 
 ## Commit 6: 静态仪表盘
 
