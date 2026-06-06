@@ -1,0 +1,39 @@
+artifact_type: ml_research_case
+domain_id: machine-learning
+status: draft
+task_card:
+  subfield: null
+  input: null
+  output: null
+  metric: null
+  user_visible_claim: null
+data_card:
+  dataset_source: null
+  license: null
+  split_policy: null
+  privacy_notes: []
+baseline_matrix:
+  classical_baselines: []
+  neural_baselines: []
+  subfield_baselines: []
+  rationale: []
+ablation_plan:
+  factors: []
+  negative_controls: []
+  seed_policy: null
+leakage_audit:
+  split_leakage: null
+  preprocessing_leakage: null
+  benchmark_contamination: null
+eval_harness_spec:
+  environment: null
+  replay_command: null
+  metrics: []
+  manifest_links: []
+reproducibility_pack:
+  seeds: []
+  versions: []
+  cost_performance_notes: []
+model_limitations_note:
+  limitations: []
+  misuse_risks: []

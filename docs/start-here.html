@@ -240,6 +240,7 @@
       <div class="brand">Research OS v3</div>
       <nav aria-label="文档导航">
         <a href="../README.md">仓库首页</a>
+        <a href="domain-modes.html">领域模式</a>
         <a href="technical-report.html">技术路线</a>
         <a href="../PUBLIC/index.html">Dashboard</a>
         <a href="../CONTROL/work_order.yaml">Work Order</a>
@@ -255,6 +256,7 @@
         <p class="lead">Research OS 不要求你先懂 Codex、LLM、机器学习或论文流程。你只需要给出研究目标、材料边界和资源约束，仓库会把后续工作拆成阶段闸门、skill、模板、证据链、资源账本和公开产物。</p>
         <div class="actions">
           <a class="button primary" href="#start">开始三步</a>
+          <a class="button" href="domain-modes.html">选择领域模式</a>
           <a class="button" href="technical-report.html">查看技术路线</a>
           <a class="button" href="../templates/README.md">浏览模板</a>
         </div>
@@ -340,6 +342,16 @@
     </section>
 
     <section class="section">
+      <h2>需要领域口味时</h2>
+      <p>如果研究已经明显属于基础数学、应用数学、机器学习、计算机科学或统计学，可以先进入 <a href="domain-modes.html">领域模式</a>。领域模式不会替代控制面；它只是在 work order、phase gate、manifest、ledger 和隐私扫描之上，加载对应学科的产物模板、agent roles 和质量闸门。</p>
+      <div class="grid">
+        <article class="card"><h3>基础数学</h3><p>猜想、例子、反例、证明策略和 proof-gap review。</p></article>
+        <article class="card"><h3>机器学习</h3><p>任务卡、数据许可、baseline、ablation、leakage audit 和复现。</p></article>
+        <article class="card"><h3>统计学</h3><p>estimand、识别假设、诊断、不确定性和敏感性分析。</p></article>
+      </div>
+    </section>
+
+    <section class="section">
       <h2>常用入口</h2>
       <table>
         <thead>
@@ -367,7 +379,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</
     </section>
 
     <section class="footer">
-      <p>继续阅读：<a href="technical-report.html">完整技术路线</a>、<a href="../PUBLIC/index.html">公开 dashboard</a>、<a href="doc_map.yaml">文档地图</a>。</p>
+      <p>继续阅读：<a href="domain-modes.html">五大领域模式</a>、<a href="technical-report.html">完整技术路线</a>、<a href="../PUBLIC/index.html">公开 dashboard</a>、<a href="doc_map.yaml">文档地图</a>。</p>
     </section>
   </main>
 </body>

@@ -26,3 +26,11 @@ Research OS v3 是一个通用的 human-in-loop auto researcher 仓库模板。�
 - 开源组件 registry：`docs/integrations/components.yaml`
 - 仓库规则：`AGENTS.md`
 - Codex harness 示例：`.codex/requirements.md`
+
+## v3.1 领域层
+
+- `docs/domain-modes.html`：五大领域入口。
+- `domain_profiles/`：五大领域 profile 和 agent capability registry。
+- `templates/domain/`：五大领域产物模板。
+- `skills/research-os-math-discovery`、`research-os-applied-math-modeling`、`research-os-ml-research-protocol`、`research-os-cs-research-artifact`、`research-os-statistical-inference`：领域执行入口。
+- `scripts/check_domain_profiles.ps1`、`check_agent_capabilities.ps1`、`check_domain_templates.ps1`、`check_domain_router.ps1`：领域层 harness 检查。

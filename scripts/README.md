@@ -57,3 +57,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_integrations
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1
 ```
+
+Research OS v3.1 领域模式检查：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_profiles.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_agent_capabilities.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_templates.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_router.ps1
+```

@@ -99,3 +99,12 @@
 - [x] 完成浏览器 QA。
 - [x] 提交 `test: validate research os v3 governance`。
 - [x] 推送分支并创建 draft PR：[PR #1](https://github.com/YinzhuCheng/research-os-template/pull/1)。
+
+## Commit 14: Research OS v3.1 五大领域深度研究范式
+
+- [x] 新增 `domain_profiles/`，覆盖基础数学、应用数学、机器学习、计算机科学和统计学。
+- [x] 新增五个领域 skill：`research-os-math-discovery`、`research-os-applied-math-modeling`、`research-os-ml-research-protocol`、`research-os-cs-research-artifact`、`research-os-statistical-inference`。
+- [x] 新增 `templates/domain/` 领域产物模板和 `domain_profile` / `agent_capability` schema。
+- [x] 新增 `docs/domain-modes.html`，并接入快速上手、技术报告、dashboard 和 doc map。
+- [x] 新增领域 profile、agent capability、domain templates 和 router 检查脚本。
+- [x] 运行 v3.1 全量验证并提交推送。

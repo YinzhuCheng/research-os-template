@@ -1,0 +1,79 @@
+domain_id: statistics
+display_name: "统计学"
+research_family: statistics_and_data_science
+classification_sources:
+  - name: arXiv statistics taxonomy
+    url: "https://arxiv.org/category_taxonomy"
+  - name: ASA Ethical Guidelines for Statistical Practice
+    url: "https://www.amstat.org/your-career/ethical-guidelines-for-statistical-practice"
+activation:
+  default_enabled: false
+  researcher_decision_required: true
+  triggers:
+    - estimand
+    - inference
+    - causal
+    - regression
+    - Bayesian
+    - p-value
+    - confidence interval
+    - survey
+    - sampling
+    - uncertainty
+paradigms:
+  - id: estimand-first
+    purpose: "Define target quantity, population, treatment/exposure, outcome, and contrast before method choice."
+  - id: identification-and-design
+    purpose: "Record identification assumptions, sampling design, missingness, confounding, and power."
+  - id: model-diagnostics
+    purpose: "Check fit, residuals, prior sensitivity, multiple testing, and robustness."
+  - id: uncertainty-communication
+    purpose: "Report intervals, posterior uncertainty, effect size, and practical significance without dichotomous overclaiming."
+  - id: sensitivity-and-ethics
+    purpose: "Document sensitivity analyses, data limitations, privacy, and ethical practice constraints."
+artifact_types:
+  - estimand_card
+  - identification_memo
+  - sampling_power_plan
+  - diagnostic_report
+  - uncertainty_statement
+  - sensitivity_analysis
+  - statistical_ethics_note
+quality_gates:
+  - estimand_defined_before_model
+  - identification_assumptions_explicit
+  - sampling_or_power_plan_recorded
+  - diagnostics_defined
+  - multiplicity_and_sensitivity_checked
+  - uncertainty_not_reduced_to_binary_significance
+status_lifecycle:
+  common:
+    - draft
+    - needs_human_review
+    - evidence_linked
+    - counterexample_or_failure_checked
+    - ready_for_public_export
+  domain_specific:
+    - estimand_ready
+    - identification_gap
+    - diagnostics_pending
+    - sensitivity_complete
+    - ethics_review_required
+harness_boundaries:
+  allowed_write_roots:
+    - domain_profiles/
+    - templates/domain/statistics/
+    - docs/
+    - PUBLIC/
+    - PROVENANCE/
+  forbidden_write_roots:
+    - PRIVATE/
+  paid_resources: false
+  code_execution: "statistical computation only through research-os-execution-harness when approved"
+  external_write: forbidden_without_explicit_human_confirmation
+  public_claim_rule: "No statistical conclusion is public without estimand, method, uncertainty, diagnostics, and sensitivity limits."
+source_basis:
+  - name: arXiv taxonomy
+    url: "https://arxiv.org/category_taxonomy"
+  - name: ASA Ethical Guidelines
+    url: "https://www.amstat.org/your-career/ethical-guidelines-for-statistical-practice"

@@ -244,6 +244,7 @@
         <div class="toolbar">
           <button type="button" id="reloadBtn">刷新</button>
           <a href="../docs/start-here.html">快速上手</a>
+          <a href="../docs/domain-modes.html">领域模式</a>
           <a href="../docs/technical-report.html">技术路线</a>
           <a href="../README.md">模板首页</a>
         </div>
@@ -281,15 +282,16 @@
     const fallbackData = {
       project: {
         title: "Codex Research OS Template",
-        phase: "initialization",
+        phase: "research-os-v3.1",
         language_mode: "zh-first",
         intervention_level: "low",
         privacy_policy: "public_private_split",
-        research_type: "unspecified",
+        research_type: "domain-profile-ready",
         dissemination: "undecided"
       },
       status: [
         {label: "研究类型", value: "待入口具体化"},
+        {label: "Domain Profiles", value: "五大领域已接入"},
         {label: "Feasibility", value: "待定义"},
         {label: "Resource Guard", value: "已启用"},
         {label: "Live Evidence", value: "已建档"},
@@ -298,6 +300,7 @@
       ],
       documents: [
         {path: "../docs/start-here.html", label: "快速上手 HTML"},
+        {path: "../docs/domain-modes.html", label: "五大领域模式 HTML"},
         {path: "../docs/technical-report.html", label: "技术路线 HTML"},
         {path: "../docs/README.md", label: "文档中心"},
         {path: "../docs/doc_map.yaml", label: "文档地图"},

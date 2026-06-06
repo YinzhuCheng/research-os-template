@@ -1,25 +1,27 @@
 {
   "project": {
     "title": "Codex Research OS Template",
-    "phase": "initialization",
+    "phase": "research-os-v3.1",
     "language_mode": "zh-first",
     "intervention_level": "low",
     "privacy_policy": "public_private_split",
-    "research_type": "unspecified",
+    "research_type": "domain-profile-ready",
     "dissemination": "undecided"
   },
   "status": [
     {"label": "研究类型", "value": "待入口具体化"},
+    {"label": "Domain Profiles", "value": "五大领域已接入"},
     {"label": "Feasibility", "value": "待定义"},
     {"label": "Resource Guard", "value": "已启用"},
     {"label": "Live Evidence", "value": "已建档"},
-    {"label": "Harness", "value": "已补强"},
-    {"label": "论文", "value": "可选"},
-    {"label": "验证", "value": "待 v2 检查"}
+    {"label": "Harness", "value": "v3.1 检查中"},
+    {"label": "论文", "value": "可选"}
   ],
   "documents": [
     {"path": "../docs/start-here.html", "label": "快速上手 HTML"},
+    {"path": "../docs/domain-modes.html", "label": "五大领域模式 HTML"},
     {"path": "../docs/technical-report.html", "label": "技术路线 HTML"},
+    {"path": "../domain_profiles/README.md", "label": "领域 Profile 中心"},
     {"path": "../docs/README.md", "label": "文档中心"},
     {"path": "../docs/doc_map.yaml", "label": "文档地图"},
     {"path": "../docs/integrations/components.yaml", "label": "开源组件 Registry"},
@@ -36,11 +38,11 @@
     {"path": "../PLAN/06_GAP_AUDIT.md", "label": "缺口审计"}
   ],
   "next_decisions": [
+    "确认目标研究是否启用基础数学、应用数学、机器学习、计算机科学、统计学之一，或保持 research-neutral。",
     "确认目标研究的语言模式：zh-first 或 en-only。",
     "确认研究类型、验证对象和最小可行性验证预算。",
     "确认是否需要论文、报告、复现包或决策备忘。",
     "确认真实资源调用是否允许以及预算上限。",
-    "如需接入开源自动研究组件，先登记 components.yaml 并完成许可证/风险检查。",
     "如需公开分享，使用 export_public.ps1 生成脱敏包。"
   ]
 }

@@ -20,3 +20,14 @@
 待完成：
 
 - 审查 draft PR：[YinzhuCheng/research-os-template#1](https://github.com/YinzhuCheng/research-os-template/pull/1)。
+
+## 2026-06-06 v3.1
+
+用户要求将五个领域都深化，而不是只做数学重点和其他领域骨架。已新增：
+
+- `domain_profiles/` 五大领域 profile 与 agent registry。
+- 五个领域 skill 和对应 reference workflow。
+- `templates/domain/` 五大领域 artifact 模板。
+- `docs/domain-modes.html` 领域模式入口。
+- 领域 schema、校验脚本、dashboard/doc map/技术报告链接。
+- AlphaGeometry、FunSearch、AlphaEvolve 的 registry 记录，用作数学与算法发现范式来源。

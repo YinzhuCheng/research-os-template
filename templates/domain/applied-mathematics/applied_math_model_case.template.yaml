@@ -1,0 +1,34 @@
+artifact_type: applied_math_model_case
+domain_id: applied-mathematics
+status: draft
+application_question:
+  decision_context: null
+  target_quantity: null
+variable_dictionary:
+  variables: []
+  parameters: []
+  units: []
+model_assumption_ledger:
+  assumptions: []
+  missing_mechanisms: []
+  validity_regimes: []
+nondimensionalization_note:
+  scales: []
+  dimensionless_groups: []
+  limiting_regimes: []
+stability_check:
+  notion: null
+  result: null
+  unresolved_items: []
+approximation_error_note:
+  approximation: null
+  error_sources: []
+  bounds_or_empirical_checks: []
+numerical_validation_plan:
+  minimal_simulations: []
+  baselines: []
+  sanity_checks: []
+sensitivity_report:
+  varied_parameters: []
+  qualitative_changes: []
+  interpretation_limits: []

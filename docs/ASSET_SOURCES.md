@@ -6,7 +6,7 @@
 
 | 资产 | 路径 | 来源 | 许可证/约束 |
 |---|---|---|---|
-| 文档图示 | `docs/start-here.html`, `docs/technical-report.html` | 仓库内手写 SVG | 与仓库模板同源管理 |
+| 文档图示 | `docs/start-here.html`, `docs/domain-modes.html`, `docs/technical-report.html` | 仓库内手写 SVG | 与仓库模板同源管理 |
 | Dashboard UI | `PUBLIC/index.html` | 仓库内手写 HTML/CSS/JS | 与仓库模板同源管理 |
 
 ## 维护规则

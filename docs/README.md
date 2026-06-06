@@ -4,6 +4,7 @@ Research OS v3 的文档分成三层：
 
 - 入门层：[start-here.html](start-here.html) 面向一般研究者和 Codex 新手，解释如何从一个研究想法进入可审计项目。
 - 技术层：[technical-report.html](technical-report.html) 面向后续 agent、维护者和高级使用者，说明控制面、数据流、skill、harness 和集成方式。
+- 领域层：[domain-modes.html](domain-modes.html) 面向需要学科研究范式的使用者，连接五个领域 profile、agent registry、模板和 skill。
 - 治理层：`PROJECT_SUMMARY.md`、`PROJECT_LOG.md`、`doc_map.yaml` 和 `integrations/components.yaml` 记录仓库状态、变更历史、文档导航和外部组件来源。
 
 ## 快速入口
@@ -13,6 +14,7 @@ Research OS v3 的文档分成三层：
 - 阶段闸门：[../CONTROL/phase_gate.yaml](../CONTROL/phase_gate.yaml)
 - 公开 dashboard：[../PUBLIC/index.html](../PUBLIC/index.html)
 - Skill 套件：[../skills/README.md](../skills/README.md)
+- 领域 profiles：[../domain_profiles/README.md](../domain_profiles/README.md)
 - 来源证据：[../PROVENANCE/live_evidence_snapshot.yaml](../PROVENANCE/live_evidence_snapshot.yaml)
 
 ## 文档维护规则

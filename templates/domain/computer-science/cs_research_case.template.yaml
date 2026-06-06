@@ -1,0 +1,39 @@
+artifact_type: cs_research_case
+domain_id: computer-science
+status: draft
+problem_spec:
+  problem: null
+  inputs: []
+  outputs: []
+  constraints: []
+  workloads: []
+algorithm_invariant_note:
+  invariants: []
+  edge_cases: []
+  proof_obligations: []
+complexity_argument:
+  time: null
+  space: null
+  assumptions: []
+system_design_record:
+  components: []
+  interfaces: []
+  dependencies: []
+  observability: []
+benchmark_protocol:
+  workloads: []
+  baselines: []
+  metrics: []
+  replay_steps: []
+threat_model:
+  assets: []
+  adversaries: []
+  trust_boundaries: []
+  mitigations: []
+artifact_eval_pack:
+  inventory: []
+  documented: false
+  consistent: false
+  complete: false
+  exercisable: false
+  reusable_notes: []

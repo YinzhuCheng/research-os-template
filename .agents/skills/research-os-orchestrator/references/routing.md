@@ -23,3 +23,18 @@
 - `paper`: build LaTeX paper, figures, appendix, and submission checklist only when requested.
 - `review`: run adversarial review and rebuttal loops.
 - `export`: sanitize and package public materials.
+
+## Domain Profile Routing
+
+Use `domain_profiles/` before choosing a field-specific workflow. A domain profile is active only when the researcher selects it or the source material clearly requires it and the phase gate records that decision.
+
+- `domain_profiles/fundamental-mathematics/`: route to `research-os-math-discovery`.
+- `domain_profiles/applied-mathematics/`: route to `research-os-applied-math-modeling`.
+- `domain_profiles/machine-learning/`: route to `research-os-ml-research-protocol`.
+- `domain_profiles/computer-science/`: route to `research-os-cs-research-artifact`.
+- `domain_profiles/statistics/`: route to `research-os-statistical-inference`.
+
+After a domain skill produces a plan or artifact, return to the general Research OS chain as needed:
+`research-os-evidence`, `research-os-feasibility-probe`, `research-os-resource-guard`, `research-os-execution-harness`, `research-os-analysis`, and `research-os-public-export`.
+
+Field routing never bypasses the work order, phase gate, allowed paths, forbidden paths, manifest, ledger, or privacy scan.

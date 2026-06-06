@@ -23,6 +23,11 @@
 - `research-os-polish-factcheck`
 - `research-os-review-rebuttal`
 - `research-os-public-export`
+- `research-os-math-discovery`
+- `research-os-applied-math-modeling`
+- `research-os-ml-research-protocol`
+- `research-os-cs-research-artifact`
+- `research-os-statistical-inference`
 
 安装方式：
 

@@ -1,0 +1,84 @@
+domain_id: machine-learning
+display_name: "机器学习"
+research_family: computing_and_statistics
+classification_sources:
+  - name: arXiv cs.LG and stat.ML
+    url: "https://arxiv.org/category_taxonomy"
+  - name: Papers with Code task taxonomy
+    url: "https://paperswithcode.com/datasets?task=task"
+  - name: ACM artifact review and badging
+    url: "https://www.acm.org/publications/policies/artifact-review-and-badging-current"
+activation:
+  default_enabled: false
+  researcher_decision_required: true
+  triggers:
+    - machine learning
+    - reinforcement learning
+    - transfer learning
+    - computational learning theory
+    - computer vision
+    - natural language processing
+    - generative AI
+    - benchmark
+    - dataset
+paradigms:
+  - id: task-data-metric
+    purpose: "Define task, input/output, dataset license, split, metric, and target failure modes."
+  - id: baseline-ablation
+    purpose: "Require baselines, ablations, and cost-performance comparisons before claims."
+  - id: leakage-reproducibility
+    purpose: "Audit leakage, seed dependence, preprocessing, and evaluation reproducibility."
+  - id: subfield-protocols
+    purpose: "Route CV, NLP, RL, transfer, classical ML, generative AI, and learning theory to specialized rubrics."
+  - id: responsible-reporting
+    purpose: "Record limitations, misuse risk, data provenance, and model card fields when applicable."
+artifact_types:
+  - task_card
+  - data_card
+  - baseline_matrix
+  - ablation_plan
+  - leakage_audit
+  - eval_harness_spec
+  - reproducibility_pack
+  - model_limitations_note
+quality_gates:
+  - task_metric_locked
+  - dataset_license_checked
+  - baseline_matrix_defined
+  - leakage_audit_completed
+  - ablation_plan_defined
+  - seed_and_environment_recorded
+  - cost_performance_reported
+status_lifecycle:
+  common:
+    - draft
+    - needs_human_review
+    - evidence_linked
+    - counterexample_or_failure_checked
+    - ready_for_public_export
+  domain_specific:
+    - protocol_ready
+    - data_blocked
+    - baseline_missing
+    - eval_ready
+    - reproducibility_checked
+harness_boundaries:
+  allowed_write_roots:
+    - domain_profiles/
+    - templates/domain/machine-learning/
+    - docs/
+    - PUBLIC/
+    - PROVENANCE/
+  forbidden_write_roots:
+    - PRIVATE/
+  paid_resources: false
+  code_execution: "experiments only through research-os-execution-harness and resource guard"
+  external_write: forbidden_without_explicit_human_confirmation
+  public_claim_rule: "No ML performance claim is public without task, data license, baseline, leakage audit, and eval harness."
+source_basis:
+  - name: arXiv taxonomy
+    url: "https://arxiv.org/category_taxonomy"
+  - name: ACM artifact review and badging
+    url: "https://www.acm.org/publications/policies/artifact-review-and-badging-current"
+  - name: Papers with Code task taxonomy
+    url: "https://paperswithcode.com/datasets?task=task"

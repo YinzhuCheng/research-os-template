@@ -1,0 +1,83 @@
+domain_id: fundamental-mathematics
+display_name: "基础数学"
+research_family: mathematical_sciences
+classification_sources:
+  - name: MSC2020
+    url: "https://msc2020.org/"
+  - name: arXiv math taxonomy
+    url: "https://arxiv.org/category_taxonomy"
+activation:
+  default_enabled: false
+  researcher_decision_required: true
+  triggers:
+    - theorem
+    - conjecture
+    - proof
+    - counterexample
+    - lemma
+    - definition
+    - mathematical structure
+paradigms:
+  - id: definition-clarification
+    purpose: "Lock objects, morphisms, quantifiers, edge cases, and notation before proof attempts."
+  - id: example-bank
+    purpose: "Build small, canonical, degenerate, and boundary examples before general claims."
+  - id: conjecture-counterexample-proof
+    purpose: "Generate conjectures, search for counterexamples, then attempt proof strategies."
+  - id: lemma-decomposition
+    purpose: "Split claims into lemmas with explicit dependencies and failure conditions."
+  - id: proof-referee
+    purpose: "Review gaps, hidden assumptions, invalid induction steps, and unjustified existence claims."
+artifact_types:
+  - conjecture_card
+  - example_bank
+  - counterexample_log
+  - lemma_dependency_graph
+  - proof_strategy
+  - proof_gap_report
+  - theorem_note
+quality_gates:
+  - definition_scope_locked
+  - nontrivial_examples_checked
+  - counterexample_search_completed
+  - lemma_dependencies_explicit
+  - proof_gaps_labeled
+  - human_mathematician_review_required_before_public_claim
+status_lifecycle:
+  common:
+    - draft
+    - needs_human_review
+    - evidence_linked
+    - counterexample_or_failure_checked
+    - ready_for_public_export
+  domain_specific:
+    - conjecture
+    - counterexample_found
+    - proof_sketch
+    - proof_gap
+    - human_checked
+    - formalization_future_slot
+harness_boundaries:
+  formalization_default: false
+  formalization_future_slot: true
+  allowed_write_roots:
+    - domain_profiles/
+    - templates/domain/fundamental-mathematics/
+    - docs/
+    - PUBLIC/
+    - PROVENANCE/
+  forbidden_write_roots:
+    - PRIVATE/
+  paid_resources: false
+  code_execution: "disabled_by_default; only through research-os-execution-harness when work_order permits"
+  external_write: forbidden_without_explicit_human_confirmation
+  public_claim_rule: "No theorem claim leaves draft until proof gaps and counterexample search are recorded."
+source_basis:
+  - name: MSC2020
+    url: "https://msc2020.org/"
+  - name: AlphaGeometry
+    url: "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/"
+  - name: FunSearch
+    url: "https://deepmind.google/blog/funsearch-making-new-discoveries-in-mathematical-sciences-using-large-language-models/"
+  - name: AlphaEvolve
+    url: "https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/"

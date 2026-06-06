@@ -13,6 +13,7 @@
 ## 主要入口
 
 - 快速上手 HTML：[docs/start-here.html](docs/start-here.html)
+- 五大领域模式 HTML：[docs/domain-modes.html](docs/domain-modes.html)
 - 完整技术路线 HTML：[docs/technical-report.html](docs/technical-report.html)
 - 文档中心：[docs/README.md](docs/README.md)
 - 文档地图：[docs/doc_map.yaml](docs/doc_map.yaml)
@@ -26,6 +27,7 @@
 - 控制区：[CONTROL/README.md](CONTROL/README.md)
 - 来源与审计：[PROVENANCE/README.md](PROVENANCE/README.md)
 - Skill 套件：[skills/README.md](skills/README.md)
+- 领域 profiles：[domain_profiles/README.md](domain_profiles/README.md)
 
 ## Research OS v3
 
@@ -40,5 +42,9 @@ v3 将模板定位为通用的 human-in-loop auto researcher 仓库。默认不�
 - HTML 链接、skill 镜像、integration registry 和 harness run 检查。
 
 ## 使用原则
+
+## Research OS v3.1
+
+v3.1 新增五大领域深度研究范式层：基础数学、应用数学、机器学习、计算机科学和统计学。每个领域都有 `domain_profiles/` 中的 profile、agent registry、`templates/domain/` 中的产物模板，以及对应的领域 skill。数学领域默认不启用形式化证明，先强化猜想、例子、反例、证明策略和 proof-gap review。
 
 先对齐研究者真实意图，再定义最小可行性验证；先登记资源预算和停止条件，再执行 work order；先刷新时效性证据，再依赖外部信息；公开导出前必须通过隐私扫描。

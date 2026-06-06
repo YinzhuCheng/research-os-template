@@ -48,3 +48,15 @@ Commit 9 已补强 Research OS v2：研究无关性、Codex harness、研究者�
 - 开源组件 registry 只应记录适配和来源，不得绕过许可证、密钥、预算或 sandbox 控制。
 - `gh` CLI 未登录，PR 创建将优先使用 GitHub connector；本地 git push 已通过现有凭据成功。
 - YAML 语义校验仍是轻量检查，后续可接入完整 YAML schema validator。
+
+## v3.1 当前补强方向
+
+- 已新增五大领域深度研究范式层，通过 `domain_profiles/`、`templates/domain/`、领域 skill 和校验脚本表达学科口味。
+- 基础数学默认不做形式化证明；先通过猜想、例子、反例、证明策略、proof-gap 和 human review 降低错误证明风险。
+- 应用数学、机器学习、计算机科学和统计学均拥有独立产物模板与质量闸门。
+
+## v3.1 剩余风险
+
+- 当前领域 YAML 仍以轻量结构检查为主，后续可引入完整 YAML parser 和 JSON Schema 语义校验。
+- 领域 agent 目前是 skill 内部角色和 capability registry，不是独立 agent runtime；后续如接入外部 runtime，必须新增 adapter、权限和回放验证。
+- 数学形式化仅保留 future slot；未来启用 Lean/Coq/Isabelle 前需要单独 work order、工具链安全审查和误报处理规范。

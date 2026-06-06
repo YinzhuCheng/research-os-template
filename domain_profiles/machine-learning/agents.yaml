@@ -1,0 +1,72 @@
+domain_id: machine-learning
+agents:
+  - agent_id: ml-task-framer
+    role: "Define task family, inputs, outputs, user-visible claims, metrics, and subfield route."
+    inputs: [research_question, candidate_dataset, target_subfield]
+    outputs: [task_card, metric_contract]
+    allowed_paths: [domain_profiles/machine-learning/, templates/domain/machine-learning/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence for task taxonomy and benchmark status."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Task cards may be public after sensitive data removal."
+  - agent_id: ml-data-license-auditor
+    role: "Audit dataset source, license, split, consent, leakage, privacy, and redistribution risk."
+    inputs: [task_card, dataset_notes]
+    outputs: [data_card, leakage_audit]
+    allowed_paths: [domain_profiles/machine-learning/, templates/domain/machine-learning/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence for dataset license and benchmark status."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "No raw private data in PUBLIC."
+  - agent_id: ml-baseline-curator
+    role: "Select classical, neural, RL, transfer, CV, NLP, generative, or theory baselines as appropriate."
+    inputs: [task_card, data_card]
+    outputs: [baseline_matrix, comparison_rationale]
+    allowed_paths: [domain_profiles/machine-learning/, templates/domain/machine-learning/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence for current benchmark baselines."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Baseline claims require source links."
+  - agent_id: ml-ablation-designer
+    role: "Define ablations, controls, negative controls, seed policy, and cost-performance checks."
+    inputs: [baseline_matrix, proposed_method]
+    outputs: [ablation_plan, cost_performance_plan]
+    allowed_paths: [domain_profiles/machine-learning/, templates/domain/machine-learning/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "No network by default."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Ablation summaries require manifest references."
+  - agent_id: ml-eval-harness-engineer
+    role: "Specify deterministic evaluation scripts, environment capture, seeds, and replay records."
+    inputs: [task_card, ablation_plan]
+    outputs: [eval_harness_spec, reproducibility_pack]
+    allowed_paths: [domain_profiles/machine-learning/, templates/domain/machine-learning/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: "only through execution harness when approved" }
+    network_policy: "No network by default during evaluation."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Evaluation artifacts require privacy scan before publication."
+  - agent_id: ml-subfield-reviewer
+    role: "Apply CV, NLP, RL, transfer, generative AI, classical ML, or learning-theory specific critique."
+    inputs: [task_card, eval_harness_spec, results_summary]
+    outputs: [subfield_review, model_limitations_note]
+    allowed_paths: [domain_profiles/machine-learning/, templates/domain/machine-learning/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence for venue or benchmark rules."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Subfield review must avoid overstated SOTA claims."
+  - agent_id: ml-result-referee
+    role: "Check statistical validity, leakage residuals, ablation sufficiency, and reproducibility status."
+    inputs: [results_summary, leakage_audit, ablation_plan]
+    outputs: [result_validity_report, human_review_questions]
+    allowed_paths: [domain_profiles/machine-learning/, templates/domain/machine-learning/, PROVENANCE/, PUBLIC/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use evidence refresh before public benchmark claims."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Public performance claims need baseline, leakage, ablation, and seed evidence."

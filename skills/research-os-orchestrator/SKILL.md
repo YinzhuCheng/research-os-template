@@ -16,6 +16,10 @@ Use this as the entry skill. Keep orchestration short; load sub-skill references
    - intervention level: `low` by default, with stage gates;
    - privacy boundary: always `PUBLIC/` vs `PRIVATE/`.
 3. Route:
+   - domain-specific research mode: inspect the active domain profile in `domain_profiles/` first, then route to one of:
+     `research-os-math-discovery`, `research-os-applied-math-modeling`,
+     `research-os-ml-research-protocol`, `research-os-cs-research-artifact`, or
+     `research-os-statistical-inference`;
    - initialization or import: use `research-os-init`;
    - intent confirmation: use `research-os-alignment`;
    - feasibility check: use `research-os-feasibility-probe`;

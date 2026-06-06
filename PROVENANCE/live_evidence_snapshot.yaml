@@ -149,3 +149,69 @@ items:
       - ".agents/skills/"
       - "scripts/check_skill_mirror.ps1"
       - "skills/README.md"
+  - topic: "MSC2020"
+    source_url: "https://msc2020.org/"
+    source_type: taxonomy
+    accessed_at: 2026-06-06
+    freshness_risk: low
+    summary: "MSC2020 is maintained by Mathematical Reviews and zbMATH as a classification scheme for mathematical sciences literature."
+    affects:
+      - "domain_profiles/fundamental-mathematics/profile.yaml"
+      - "domain_profiles/applied-mathematics/profile.yaml"
+      - "docs/domain-modes.html"
+  - topic: "ACM Computing Classification System and artifact badges"
+    source_url: "https://www.acm.org/publications/computing-classification-system/css"
+    source_type: taxonomy
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "ACM provides computing classification guidance; ACM artifact review uses documented, consistent, complete and exercisable artifact expectations."
+    affects:
+      - "domain_profiles/computer-science/profile.yaml"
+      - "domain_profiles/machine-learning/profile.yaml"
+      - "templates/domain/computer-science/cs_research_case.template.yaml"
+  - topic: "arXiv category taxonomy"
+    source_url: "https://arxiv.org/category_taxonomy"
+    source_type: taxonomy
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "arXiv taxonomy includes mathematics, computer science, stat.ML, and statistics categories that inform domain profile routing."
+    affects:
+      - "domain_profiles/"
+      - "docs/domain-modes.html"
+  - topic: "ASA Ethical Guidelines for Statistical Practice"
+    source_url: "https://www.amstat.org/your-career/ethical-guidelines-for-statistical-practice"
+    source_type: policy
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "ASA ethical guidance supports statistics profile gates around design, privacy, uncertainty communication and professional responsibility."
+    affects:
+      - "domain_profiles/statistics/profile.yaml"
+      - "skills/research-os-statistical-inference/SKILL.md"
+  - topic: "AlphaGeometry"
+    source_url: "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/"
+    source_type: research_system
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "AlphaGeometry illustrates neuro-symbolic geometry proof search with generated constructions and rule-bound deduction."
+    affects:
+      - "domain_profiles/fundamental-mathematics/profile.yaml"
+      - "docs/integrations/components.yaml"
+  - topic: "FunSearch"
+    source_url: "https://deepmind.google/blog/funsearch-making-new-discoveries-in-mathematical-sciences-using-large-language-models/"
+    source_type: research_system
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "FunSearch pairs LLM-generated code with evaluators for mathematical and computer-science discovery loops."
+    affects:
+      - "docs/integrations/components.yaml"
+      - "domain_profiles/fundamental-mathematics/profile.yaml"
+      - "domain_profiles/computer-science/profile.yaml"
+  - topic: "AlphaEvolve"
+    source_url: "https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/"
+    source_type: research_system
+    accessed_at: 2026-06-06
+    freshness_risk: medium
+    summary: "AlphaEvolve is an evolutionary coding-agent pattern for algorithm discovery and optimization, useful as a reference-only integration."
+    affects:
+      - "docs/integrations/components.yaml"
+      - "domain_profiles/computer-science/profile.yaml"

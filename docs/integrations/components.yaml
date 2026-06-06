@@ -264,3 +264,100 @@ components:
       privacy: "Skills must not instruct agents to leak PRIVATE content."
       external_write: "Plugin or skill install is a local/user action unless explicitly approved."
       license: "Each skill may have its own license; check before copying."
+  - id: alphageometry
+    name: "AlphaGeometry"
+    source_url: "https://github.com/google-deepmind/alphageometry"
+    paper_url: "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/"
+    license: "Apache-2.0 code; CC BY 4.0 checkpoints and vocabulary"
+    accessed_at: 2026-06-06
+    adapter_status: reference_only
+    research_os_phases:
+      - domain_math_discovery
+      - counterexample_search
+      - proof_strategy
+    install_reference: "Use upstream repository as a reference for neuro-symbolic geometry workflows; no default local adapter."
+    credential_env_vars: []
+    inputs:
+      - "geometry problem statement"
+      - "diagram or construction context"
+      - "candidate auxiliary constructions"
+    outputs:
+      - "proof search trace"
+      - "construct suggestion pattern"
+      - "geometry theorem note"
+    artifact_mapping:
+      domain_profile: "domain_profiles/fundamental-mathematics/profile.yaml"
+      math_case: "templates/domain/fundamental-mathematics/math_discovery_case.template.yaml"
+      public_summary: "PUBLIC/research_brief.md after human review"
+    risks:
+      sandbox: "Reference-only until a deterministic adapter and geometry environment are reviewed."
+      cost: "No cost for metadata; any model or compute run requires resource guard."
+      privacy: "Unpublished proof attempts may be private research material."
+      external_write: "No external writeback by default."
+      license: "Preserve upstream notices and distinguish code license from checkpoint/vocabulary license."
+  - id: funsearch
+    name: "FunSearch"
+    source_url: "https://github.com/google-deepmind/funsearch"
+    paper_url: "https://deepmind.google/blog/funsearch-making-new-discoveries-in-mathematical-sciences-using-large-language-models/"
+    license: "Apache-2.0"
+    accessed_at: 2026-06-06
+    adapter_status: planned
+    research_os_phases:
+      - domain_math_discovery
+      - domain_computer_science
+      - feasibility_probe
+      - replay_eval
+    install_reference: "Use upstream repository only inside an approved sandbox; evaluator design must be registered before execution."
+    credential_env_vars: []
+    inputs:
+      - "program search problem"
+      - "evaluator specification"
+      - "seed implementation"
+    outputs:
+      - "candidate programs"
+      - "evaluator scores"
+      - "discovery log"
+    artifact_mapping:
+      cs_case: "templates/domain/computer-science/cs_research_case.template.yaml"
+      math_case: "templates/domain/fundamental-mathematics/math_discovery_case.template.yaml"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      ledger: "PROVENANCE/resource_ledger.jsonl"
+    risks:
+      sandbox: "Generated code and evaluators must run only through research-os-execution-harness."
+      cost: "Evolutionary LLM loops can multiply model calls; default budget is zero."
+      privacy: "Problem seeds may encode unpublished research ideas."
+      external_write: "No external publishing or leaderboard update by default."
+      license: "Apache-2.0 is permissive; preserve notices if code is reused."
+  - id: alphaevolve
+    name: "AlphaEvolve"
+    source_url: "https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/"
+    paper_url: "https://arxiv.org/abs/2506.13131"
+    license: "paper and service reference; no upstream open-source code registered"
+    accessed_at: 2026-06-06
+    adapter_status: reference_only
+    research_os_phases:
+      - domain_computer_science
+      - domain_math_discovery
+      - experiment_manager
+      - replay_eval
+    install_reference: "Use as design reference for evolutionary codebase optimization; register an open-source implementation separately before use."
+    credential_env_vars:
+      - "GEMINI_API_KEY"
+    inputs:
+      - "algorithmic objective"
+      - "evaluator suite"
+      - "candidate codebase"
+    outputs:
+      - "evolved program variants"
+      - "multi-objective scores"
+      - "algorithm discovery report"
+    artifact_mapping:
+      cs_case: "templates/domain/computer-science/cs_research_case.template.yaml"
+      ml_case: "templates/domain/machine-learning/ml_research_case.template.yaml"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Codebase mutation and evaluator execution require strict sandbox and rollback."
+      cost: "Model and compute cost can be high; no execution without explicit budget."
+      privacy: "Candidate codebases may contain proprietary or unpublished material."
+      external_write: "No cloud service, leaderboard, repository push, or external deployment without explicit approval."
+      license: "No vendoring; treat as paper/service reference unless a reviewed open-source implementation is separately registered."

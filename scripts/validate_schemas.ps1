@@ -28,6 +28,14 @@ Require-File (Join-Path $Root "docs\doc_map.yaml")
 Require-File (Join-Path $Root "docs\integrations\components.yaml")
 Require-File (Join-Path $Root "templates\yaml\integration_component.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\harness_run.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\domain_profile.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\agent_capability.template.yaml")
+Require-File (Join-Path $Root "domain_profiles\README.md")
+Require-File (Join-Path $Root "domain_profiles\fundamental-mathematics\profile.yaml")
+Require-File (Join-Path $Root "domain_profiles\applied-mathematics\profile.yaml")
+Require-File (Join-Path $Root "domain_profiles\machine-learning\profile.yaml")
+Require-File (Join-Path $Root "domain_profiles\computer-science\profile.yaml")
+Require-File (Join-Path $Root "domain_profiles\statistics\profile.yaml")
 
 Get-ChildItem -LiteralPath $schemaDir -Filter "*.json" | ForEach-Object {
   Get-Content -Raw -LiteralPath $_.FullName | ConvertFrom-Json | Out-Null
@@ -43,6 +51,7 @@ Require-Text (Join-Path $Root "CONTROL\work_order.yaml") "work_order_id:\s+WO-[0
 Require-Text (Join-Path $Root "CONTROL\work_order.yaml") "resource_budget:\s*"
 Require-Text (Join-Path $Root "PUBLIC\claim_evidence_matrix.yaml") "CLAIM-[0-9]{3}"
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "doc_map_id:\s+DOCMAP-[0-9]{4}"
+Require-Text (Join-Path $Root "docs\doc_map.yaml") "domain_profiles"
 Require-Text (Join-Path $Root "docs\integrations\components.yaml") "registry_id:\s+INTEGRATIONS-[0-9]{4}"
 
 Get-Content -LiteralPath (Join-Path $Root "PROVENANCE\run_manifest.jsonl") | ForEach-Object {

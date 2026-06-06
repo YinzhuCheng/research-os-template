@@ -1,0 +1,41 @@
+domain_id: example-domain
+display_name: "Example Domain"
+research_family: example_family
+classification_sources:
+  - name: "Authoritative taxonomy"
+    url: "https://example.org/taxonomy"
+activation:
+  default_enabled: false
+  researcher_decision_required: true
+  triggers:
+    - example trigger
+paradigms:
+  - id: example-paradigm
+    purpose: "Describe the domain research pattern."
+artifact_types:
+  - example_artifact
+quality_gates:
+  - example_quality_gate
+status_lifecycle:
+  common:
+    - draft
+    - needs_human_review
+    - evidence_linked
+    - counterexample_or_failure_checked
+    - ready_for_public_export
+  domain_specific:
+    - example_status
+harness_boundaries:
+  allowed_write_roots:
+    - domain_profiles/
+    - templates/domain/example-domain/
+    - PROVENANCE/
+  forbidden_write_roots:
+    - PRIVATE/
+  paid_resources: false
+  code_execution: "only through research-os-execution-harness when approved"
+  external_write: forbidden_without_explicit_human_confirmation
+  public_claim_rule: "State the domain-specific public claim rule."
+source_basis:
+  - name: "Primary source"
+    url: "https://example.org/source"

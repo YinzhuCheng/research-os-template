@@ -1,0 +1,76 @@
+domain_id: applied-mathematics
+display_name: "应用数学"
+research_family: mathematical_sciences
+classification_sources:
+  - name: MSC2020 applied and modeling classes
+    url: "https://msc2020.org/"
+  - name: arXiv math and physics taxonomy
+    url: "https://arxiv.org/category_taxonomy"
+activation:
+  default_enabled: false
+  researcher_decision_required: true
+  triggers:
+    - model
+    - differential equation
+    - optimization
+    - simulation
+    - stability
+    - approximation
+    - sensitivity
+paradigms:
+  - id: problem-to-model
+    purpose: "Translate domain question into variables, assumptions, equations, objectives, and constraints."
+  - id: scale-and-regime
+    purpose: "Use nondimensionalization, limiting regimes, and dominant balance to expose structure."
+  - id: well-posedness-stability-error
+    purpose: "Check existence, uniqueness, stability, numerical error, and approximation validity."
+  - id: numerical-validation
+    purpose: "Define minimal simulations, baselines, sanity checks, and sensitivity analyses."
+  - id: interpretation-loop
+    purpose: "Map mathematical outputs back to the application without overstating scope."
+artifact_types:
+  - model_assumption_ledger
+  - variable_dictionary
+  - nondimensionalization_note
+  - stability_check
+  - approximation_error_note
+  - numerical_validation_plan
+  - sensitivity_report
+quality_gates:
+  - application_question_bound
+  - assumptions_explicit
+  - units_and_scales_checked
+  - stability_or_error_path_recorded
+  - numerical_sanity_checks_defined
+  - interpretation_limits_stated
+status_lifecycle:
+  common:
+    - draft
+    - needs_human_review
+    - evidence_linked
+    - counterexample_or_failure_checked
+    - ready_for_public_export
+  domain_specific:
+    - model_candidate
+    - assumption_gap
+    - validation_planned
+    - validation_complete
+    - interpretation_limited
+harness_boundaries:
+  allowed_write_roots:
+    - domain_profiles/
+    - templates/domain/applied-mathematics/
+    - docs/
+    - PUBLIC/
+    - PROVENANCE/
+  forbidden_write_roots:
+    - PRIVATE/
+  paid_resources: false
+  code_execution: "local simulations only through work_order and research-os-execution-harness"
+  external_write: forbidden_without_explicit_human_confirmation
+  public_claim_rule: "No model conclusion is public without assumptions, scale/regime, and sensitivity limits."
+source_basis:
+  - name: MSC2020
+    url: "https://msc2020.org/"
+  - name: arXiv taxonomy
+    url: "https://arxiv.org/category_taxonomy"

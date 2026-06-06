@@ -60,3 +60,31 @@ claims:
     dissemination_targets:
       - "docs/technical-report.html"
     privacy_level: public
+  - id: CLAIM-006
+    claim: "Research OS can deepen field-specific research behavior without losing harness control by representing domain knowledge as profiles, agent capability registries, templates, skills, and validation scripts."
+    status: supported
+    evidence:
+      - "domain_profiles/README.md"
+      - "config/schemas/domain_profile.schema.json"
+      - "config/schemas/agent_capability.schema.json"
+      - "scripts/check_domain_profiles.ps1"
+      - "scripts/check_agent_capabilities.ps1"
+    counterevidence: []
+    dissemination_targets:
+      - "docs/domain-modes.html"
+      - "docs/technical-report.html"
+    privacy_level: public
+  - id: CLAIM-007
+    claim: "The math discovery mode intentionally keeps formal proof assistants disabled by default and instead requires conjecture, example, counterexample, proof-strategy, proof-gap, and human-review states."
+    status: supported
+    evidence:
+      - "domain_profiles/fundamental-mathematics/profile.yaml"
+      - "skills/research-os-math-discovery/SKILL.md"
+      - "templates/domain/fundamental-mathematics/math_discovery_case.template.yaml"
+      - "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/"
+      - "https://deepmind.google/blog/funsearch-making-new-discoveries-in-mathematical-sciences-using-large-language-models/"
+    counterevidence: []
+    dissemination_targets:
+      - "docs/domain-modes.html"
+      - "docs/technical-report.html"
+    privacy_level: public

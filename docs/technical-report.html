@@ -200,6 +200,7 @@
       <nav aria-label="技术报告导航">
         <a href="#architecture">架构</a>
         <a href="#dataflow">数据流</a>
+        <a href="#domains">领域模式</a>
         <a href="#skills">Skill 路由</a>
         <a href="#harness">Harness</a>
         <a href="#integrations">开源集成</a>
@@ -300,6 +301,24 @@
         </div>
       </section>
 
+      <section class="section" id="domains">
+        <h2>领域模式层</h2>
+        <p>`domain_profiles/` 是 v3.1 的领域接口。它把基础数学、应用数学、机器学习、计算机科学和统计学的研究范式拆成 profile、agent registry、artifact template 和 skill route，避免把领域知识堆成不可检查的长提示词。</p>
+        <table>
+          <thead>
+            <tr><th>领域</th><th>Profile</th><th>Skill</th><th>核心质量闸门</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>基础数学</td><td><a href="../domain_profiles/fundamental-mathematics/profile.yaml">fundamental-mathematics</a></td><td><a href="../skills/research-os-math-discovery/SKILL.md">research-os-math-discovery</a></td><td>定义、例子、反例、lemma、proof-gap、human_checked</td></tr>
+            <tr><td>应用数学</td><td><a href="../domain_profiles/applied-mathematics/profile.yaml">applied-mathematics</a></td><td><a href="../skills/research-os-applied-math-modeling/SKILL.md">research-os-applied-math-modeling</a></td><td>假设、尺度、稳定性/误差、数值验证、敏感性</td></tr>
+            <tr><td>机器学习</td><td><a href="../domain_profiles/machine-learning/profile.yaml">machine-learning</a></td><td><a href="../skills/research-os-ml-research-protocol/SKILL.md">research-os-ml-research-protocol</a></td><td>任务、数据许可、baseline、ablation、leakage、replay</td></tr>
+            <tr><td>计算机科学</td><td><a href="../domain_profiles/computer-science/profile.yaml">computer-science</a></td><td><a href="../skills/research-os-cs-research-artifact/SKILL.md">research-os-cs-research-artifact</a></td><td>规约、正确性、复杂度/benchmark、artifact evaluation、威胁模型</td></tr>
+            <tr><td>统计学</td><td><a href="../domain_profiles/statistics/profile.yaml">statistics</a></td><td><a href="../skills/research-os-statistical-inference/SKILL.md">research-os-statistical-inference</a></td><td>estimand、识别、抽样/功效、诊断、不确定性、敏感性</td></tr>
+          </tbody>
+        </table>
+        <p><a href="domain-modes.html">打开领域模式说明页</a>，或查看 <a href="../config/schemas/domain_profile.schema.json">domain profile schema</a> 与 <a href="../config/schemas/agent_capability.schema.json">agent capability schema</a>。</p>
+      </section>
+
       <section class="section" id="skills">
         <h2>Skill 路由</h2>
         <table>
@@ -308,6 +327,7 @@
           </thead>
           <tbody>
             <tr><td>入口</td><td><a href="../skills/research-os-orchestrator/SKILL.md">research-os-orchestrator</a></td><td>读取控制面并分派子流程</td><td>阶段路线、待决策项</td></tr>
+            <tr><td>领域</td><td><a href="domain-modes.html">domain profiles</a></td><td>选择基础数学、应用数学、机器学习、计算机科学或统计学 skill</td><td>profile、agents、templates、领域质量闸门</td></tr>
             <tr><td>对齐</td><td><a href="../skills/research-os-alignment/SKILL.md">research-os-alignment</a></td><td>锁定目标、范围、隐私和资源边界</td><td>决策记录、phase gate</td></tr>
             <tr><td>可行性</td><td><a href="../skills/research-os-feasibility-probe/SKILL.md">research-os-feasibility-probe</a></td><td>定义最小验证，不假设研究范式</td><td>probe yaml、停止条件</td></tr>
             <tr><td>执行</td><td><a href="../skills/research-os-execution-harness/SKILL.md">research-os-execution-harness</a></td><td>检查路径、预算、manifest 和 ledger</td><td>运行记录、验证报告</td></tr>
@@ -365,6 +385,10 @@
         <h2>验证命令</h2>
         <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_profiles.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_agent_capabilities.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_templates.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_router.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1 -PythonPath "C:\path\to\python.exe"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1

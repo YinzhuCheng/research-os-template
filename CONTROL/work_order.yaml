@@ -1,6 +1,6 @@
 work_order_id: WO-0002
-phase: research-os-v3
-goal: "补齐 Human-in-loop Auto Researcher v3 的治理、文档、skill 发现、开源组件适配和 harness 验证。"
+phase: research-os-v3.1
+goal: "补齐 Human-in-loop Auto Researcher v3.1 的五大领域深度研究范式、domain profile、领域 skill、模板和 harness 验证。"
 inputs:
   - "PLAN/00_MASTER_PLAN.md"
   - "PLAN/06_GAP_AUDIT.md"
@@ -11,6 +11,7 @@ allowed_paths:
   - "config/"
   - "CONTROL/"
   - "docs/"
+  - "domain_profiles/"
   - "PLAN/"
   - "PROVENANCE/"
   - "PUBLIC/"
@@ -25,6 +26,7 @@ outputs:
   - "config/schemas/harness_run.schema.json"
   - "config/schemas/integration_component.schema.json"
   - "docs/"
+  - "domain_profiles/"
   - "docs/integrations/components.yaml"
   - "PUBLIC/index.html"
   - "PROVENANCE/live_evidence_snapshot.yaml"
@@ -32,6 +34,13 @@ outputs:
   - "PROVENANCE/run_manifest.jsonl"
   - "PROVENANCE/resource_ledger.jsonl"
   - "config/schemas/"
+  - "config/schemas/domain_profile.schema.json"
+  - "config/schemas/agent_capability.schema.json"
+  - "templates/domain/"
+  - "scripts/check_domain_profiles.ps1"
+  - "scripts/check_agent_capabilities.ps1"
+  - "scripts/check_domain_templates.ps1"
+  - "scripts/check_domain_router.ps1"
 resource_budget:
   currency: CNY
   max_total_cost: 0
@@ -56,5 +65,7 @@ acceptance_criteria:
   - "后续 agent 能从技术报告定位架构、数据流、stage gate、manifest、ledger、skill 路由和适配器。"
   - "开源组件 registry 记录来源、许可证、安装入口、环境变量名、产物映射和风险。"
   - "新增 HTML、schema、skill、integration 和 harness 检查通过。"
+  - "五个领域 profile、agent registry、artifact template 和领域 skill 均可被脚本发现和校验。"
+  - "数学领域默认不启用形式化证明，仅保留 future slot。"
 requires_confirmation: true
 privacy_level: public
