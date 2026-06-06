@@ -1,0 +1,14 @@
+\begin{tikzpicture}[
+  node distance=1.4cm,
+  box/.style={draw=ResearchBlue!70, rounded corners=2pt, fill=ResearchBlue!6, align=center, minimum width=2.8cm, minimum height=0.85cm},
+  arrow/.style={->, thick, draw=ResearchGray}
+]
+\node[box] (input) {Research Inputs};
+\node[box, right=of input] (plan) {Structured Plan};
+\node[box, right=of plan] (run) {Audited Runs};
+\node[box, below=of plan] (paper) {Paper Claims};
+\draw[arrow] (input) -- (plan);
+\draw[arrow] (plan) -- (run);
+\draw[arrow] (run) -- (paper);
+\draw[arrow] (paper) -- (plan);
+\end{tikzpicture}

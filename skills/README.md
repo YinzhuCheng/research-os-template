@@ -9,6 +9,11 @@
 - `research-os-alignment`
 - `research-os-execution-harness`
 - `research-os-evidence`
+- `research-os-analysis`
+- `research-os-paper-authoring`
+- `research-os-visual-communication`
+- `research-os-polish-factcheck`
+- `research-os-review-rebuttal`
 - `research-os-public-export`
 
 安装方式：

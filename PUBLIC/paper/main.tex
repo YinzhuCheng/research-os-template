@@ -1,0 +1,65 @@
+\documentclass[10pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{hyperref}
+\usetikzlibrary{positioning,arrows.meta}
+\pgfplotsset{compat=1.18}
+
+\definecolor{ResearchBlue}{HTML}{2563EB}
+\definecolor{ResearchGreen}{HTML}{117A65}
+\definecolor{ResearchAmber}{HTML}{A16207}
+\definecolor{ResearchGray}{HTML}{4B5563}
+
+\title{A Codex Research OS Paper Title}
+\author{Anonymous Authors}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This placeholder manuscript demonstrates the default English LaTeX output path. Replace it with evidence-backed content generated from the Research OS workflow.
+\end{abstract}
+
+\section{Introduction}
+
+All formal paper claims should link back to `PUBLIC/claim_evidence_matrix.yaml`.
+
+\section{Method}
+
+\begin{figure}[t]
+  \centering
+  \input{figures/method_overview.tikz}
+  \caption{Method overview for the audited research workflow.}
+  \label{fig:method}
+\end{figure}
+
+\section{Results}
+
+\begin{figure}[t]
+  \centering
+  \input{figures/result_plot_example.tex}
+  \caption{Placeholder vector result plot. Replace values with audited results.}
+  \label{fig:results}
+\end{figure}
+
+\section{Limitations}
+
+Limitations should be explicit and evidence-linked.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\appendix
+\input{appendix}
+
+\end{document}

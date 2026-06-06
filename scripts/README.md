@@ -20,3 +20,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.p
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
 ```
+
+LaTeX 源码静态检查：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_latex_sources.ps1
+```

@@ -1,0 +1,89 @@
+\documentclass[10pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{hyperref}
+\usetikzlibrary{positioning,arrows.meta}
+\pgfplotsset{compat=1.18}
+
+\definecolor{ResearchBlue}{HTML}{2563EB}
+\definecolor{ResearchGreen}{HTML}{117A65}
+\definecolor{ResearchAmber}{HTML}{A16207}
+\definecolor{ResearchGray}{HTML}{4B5563}
+
+\title{A Codex Research OS Paper Title}
+\author{Anonymous Authors}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Write a precise English abstract grounded in the claim-evidence matrix. Avoid claims that are not supported by experiments or literature.
+\end{abstract}
+
+\section{Introduction}
+
+State the problem, why it matters, what prior work misses, and the paper's scoped contributions.
+
+\section{Method}
+
+Figure~\ref{fig:method} should explain the research method or system.
+
+\begin{figure}[t]
+  \centering
+  \input{figures/method_overview.tikz}
+  \caption{Method overview. The caption should state the intended takeaway, not only describe the boxes.}
+  \label{fig:method}
+\end{figure}
+
+\section{Experiments}
+
+Describe datasets, baselines, metrics, budget, random seeds, and stopping criteria.
+
+\section{Results}
+
+\begin{figure}[t]
+  \centering
+  \input{figures/result_plot_example.tex}
+  \caption{Example vector result plot. Replace placeholder values with audited results from `RES-*`.}
+  \label{fig:results}
+\end{figure}
+
+\begin{table}[t]
+  \centering
+  \caption{Example result table with aligned numbers.}
+  \label{tab:main}
+  \begin{tabular}{lS[table-format=2.1]S[table-format=2.1]}
+    \toprule
+    {Method} & {Score} & {Cost} \\
+    \midrule
+    Baseline & 42.0 & 10.0 \\
+    Proposed & 48.5 & 8.2 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Limitations}
+
+State limitations directly and link them to evidence gaps or scope constraints.
+
+\section{Conclusion}
+
+Summarize only what the evidence supports.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\appendix
+\input{appendix}
+
+\end{document}

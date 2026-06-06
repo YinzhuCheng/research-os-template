@@ -40,9 +40,9 @@
 
 ## Commit 7: 论文与 review skill
 
-- [ ] 创建 paper/visual/polish/review/export skill。
-- [ ] 增加 LaTeX、BibTeX、图表、附录模板。
-- [ ] 增加 review/rebuttal 模板。
+- [x] 创建 paper/visual/polish/review/export skill。
+- [x] 增加 LaTeX、BibTeX、图表、附录模板。
+- [x] 增加 review/rebuttal 模板。
 
 ## Commit 8: 验证与补缺
 

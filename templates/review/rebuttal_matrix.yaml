@@ -1,0 +1,9 @@
+responses:
+  - id: REV-001
+    concern: TBD
+    severity: S2
+    response: TBD
+    revision: TBD
+    evidence:
+      - CLAIM-001
+    status: open
