@@ -66,6 +66,7 @@
       <p class="muted">For future agents and maintainers.</p>
       <nav aria-label="Technical report navigation">
         <a href="#architecture">Architecture</a>
+        <a href="#environment">Environment</a>
         <a href="#copilot">Copilot</a>
         <a href="#kernel">Research Kernel</a>
         <a href="#domains">Domain Modes</a>
@@ -73,6 +74,7 @@
         <a href="#validation">Validation</a>
         <a href="../PUBLIC/copilot.html">Copilot Page</a>
         <a href="../PUBLIC/index.html">PUBLIC/index.html</a>
+        <a href="environment.md">environment.md</a>
         <a href="../README.md">README.md</a>
         <a href="../CONTROL/work_order.yaml">work_order.yaml</a>
         <a href="../CONTROL/phase_gate.yaml">phase_gate.yaml</a>
@@ -80,13 +82,13 @@
     </aside>
     <main>
       <header>
-        <h1>Research OS v3.3 Technical Report</h1>
-        <p class="lead">Research OS is a structured human-in-loop auto researcher. v3.3 adds a material-first browser cockpit while preserving the research kernel, domain profiles, work orders, phase gates, manifests, ledgers, and privacy boundaries.</p>
+        <h1>Research OS v3.4 Technical Report</h1>
+        <p class="lead">Research OS is a structured human-in-loop auto researcher. v3.4 makes the runtime environment explicit, prunes stale generated outputs, and keeps the material-first browser cockpit, research kernel, domain profiles, work orders, phase gates, manifests, ledgers, and privacy boundaries connected.</p>
       </header>
 
       <section class="section" id="architecture">
         <h2>Architecture</h2>
-        <div class="flow" role="img" aria-label="Research OS v3.3 architecture">
+        <div class="flow" role="img" aria-label="Research OS v3.4 architecture">
           <svg viewBox="0 0 1080 420" width="100%" height="100%" aria-hidden="true">
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -131,6 +133,19 @@
             </g>
           </svg>
         </div>
+      </section>
+
+      <section class="section" id="environment">
+        <h2>Runtime Environment</h2>
+        <p>The repository has a documented environment contract. Required tools are Git, PowerShell, Python 3.10+, a modern browser, and the Codex desktop app for the full in-app browser workflow. LaTeX and Node.js remain optional.</p>
+        <table>
+          <thead><tr><th>Layer</th><th>Path</th><th>Responsibility</th></tr></thead>
+          <tbody>
+            <tr><td>Environment guide</td><td><a href="environment.md">docs/environment.md</a></td><td>Required tools, optional tools, and OS-specific caveats.</td></tr>
+            <tr><td>Installer/check runner</td><td><a href="../scripts/install_environment.ps1">scripts/install_environment.ps1</a></td><td>Checks the repo and can optionally try Windows Git/Python installation.</td></tr>
+            <tr><td>Environment check</td><td><a href="../scripts/check_environment.ps1">scripts/check_environment.ps1</a></td><td>Verifies PowerShell, Git, Python, key files, optional Codex bridge files, and optional LaTeX.</td></tr>
+          </tbody>
+        </table>
       </section>
 
       <section class="section" id="copilot">
@@ -186,7 +201,9 @@
 
       <section class="section" id="validation">
         <h2>Validation Commands</h2>
-        <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
+        <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment_docs.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_kernel.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_no_orphan_skills.ps1
@@ -197,6 +214,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_brid
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_latex_sources.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</pre>
       </section>
     </main>

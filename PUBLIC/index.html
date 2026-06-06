@@ -82,12 +82,13 @@
       <div class="topbar">
         <div>
           <h1 id="projectTitle">Codex Research OS Template</h1>
-          <p class="muted">Research cockpit, feasibility, resource guard, live evidence, research kernel, and governance links.</p>
+          <p class="muted">Research cockpit, environment checks, feasibility, resource guard, live evidence, research kernel, and governance links.</p>
           <div class="pill-row" id="projectPills"></div>
         </div>
         <div class="toolbar">
           <button type="button" id="reloadBtn">Refresh</button>
           <a href="copilot.html">Copilot</a>
+          <a href="../docs/environment.md">Environment</a>
           <a href="../docs/start-here.html">Start Here</a>
           <a href="../docs/domain-modes.html">Domain Modes</a>
           <a href="../templates/research_kernel/research_cycle.template.yaml">Research Kernel</a>
@@ -128,7 +129,7 @@
     const fallbackData = {
       project: {
         title: "Codex Research OS Template",
-        phase: "research-os-v3.3",
+        phase: "research-os-v3.4",
         language_mode: "zh-first",
         intervention_level: "low",
         privacy_policy: "public_private_split",
@@ -139,18 +140,24 @@
         {label: "Copilot", value: "material-first intake"},
         {label: "Research Type", value: "decided from material"},
         {label: "Questions", value: "exactly three targeted"},
+        {label: "Environment", value: "documented and checkable"},
         {label: "feasibility", value: "budget-gated"},
         {label: "resource guard", value: "enabled"},
         {label: "live evidence", value: "required"}
       ],
       documents: [
         {path: "copilot.html", label: "Material-first Copilot"},
+        {path: "../docs/environment.md", label: "Environment Guide"},
+        {path: "../scripts/install_environment.ps1", label: "Environment Installer"},
+        {path: "../scripts/check_environment.ps1", label: "Environment Check"},
         {path: "../docs/codex-browser-copilot.html", label: "Copilot Bridge Technical Doc"},
         {path: "../docs/start-here.html", label: "Start Here HTML"},
         {path: "../docs/technical-report.html", label: "Technical Route HTML"},
+        {path: "../PROVENANCE/final_validation_report_v3_4.md", label: "Final Validation v3.4"},
         {path: "../CONTROL/work_order.yaml", label: "Work Order"}
       ],
       next_decisions: [
+        "Run scripts/install_environment.ps1 or scripts/check_environment.ps1 before first use.",
         "Open PUBLIC/copilot.html and provide material-first intake.",
         "Answer exactly three targeted questions after Codex analyzes material.",
         "Provide budget before experimental validation."

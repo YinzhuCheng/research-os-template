@@ -61,10 +61,12 @@
       <p class="muted">For researchers who want Codex to organize a project from existing material.</p>
       <nav aria-label="Start here navigation">
         <a href="#first">First Step</a>
+        <a href="#environment">Environment</a>
         <a href="#three">Three Questions</a>
         <a href="#init">Initialization</a>
         <a href="../PUBLIC/copilot.html">Copilot</a>
         <a href="../PUBLIC/index.html">PUBLIC/index.html</a>
+        <a href="environment.md">environment.md</a>
         <a href="domain-modes.html">domain-modes.html</a>
         <a href="technical-report.html">Technical Report</a>
         <a href="../README.md">README.md</a>
@@ -94,6 +96,13 @@
             <p>Codex classifies the project as theory, experiment, theory+experiment, engineering system, survey, or unclear.</p>
           </article>
         </div>
+      </section>
+
+      <section class="section" id="environment">
+        <h2>Check The Local Environment</h2>
+        <p>Before the first run, read <a href="environment.md">docs/environment.md</a> and run the environment checker. Install commands may need small changes by operating system version, enterprise image, proxy, or package manager.</p>
+        <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install_environment.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1</pre>
       </section>
 
       <section class="section" id="three">

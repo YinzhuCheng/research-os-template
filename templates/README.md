@@ -1,28 +1,13 @@
-# templates 区
+# Templates
 
-此目录保存可复制模板：
+This directory stores reusable Research OS scaffolds. Templates describe artifact structure; they are not evidence and they are not runtime-private material.
 
-- Markdown 模板。
-- YAML 对象模板。
-- 资源预算、可行性验证和实时证据刷新模板。
-- LaTeX 投稿模板；仅在研究者指定论文/投稿目标后启用。
-- BibTeX 模板。
-- review/rebuttal 模板。
+Main groups:
 
-## Research kernel templates
+- `markdown/`: research briefs, evidence notes, feasibility reports, paper sections, review/rebuttal, and public export summaries.
+- `yaml/`: structured packets, component registries, resource budgets, live-evidence refreshes, copilot intake/questions/initialization reports, and research-kernel objects.
+- `domain/`: field-specific artifact templates for mathematics, applied mathematics, machine learning, computer science, and statistics.
+- `research_kernel/`: the shared `candidate -> evaluator_contract -> evaluation_result -> belief_state -> search_trace/negative_result -> next_action_policy -> human_judgment_gate` loop.
+- `latex/`: optional paper scaffold used only after a paper-oriented work order or explicit researcher decision.
 
-`templates/research_kernel/` 和 `templates/yaml/research_kernel.template.yaml` 保存 v3.2 统一研究内核模板。所有领域研究循环都应先表达为：
-
-`candidate -> evaluator_contract -> evaluation_result -> belief_state -> search_trace/negative_result -> next_action_policy -> human_judgment_gate`
-
-每个 evaluator 必须列出计算或检查：`metric_or_check`、`formula_or_procedure`、`inputs`、`units_or_scale`、`acceptance_threshold`、`resource_estimate`、`failure_mode` 和 `replay_note`。
-
-## Domain templates
-
-`templates/domain/` 保存五大领域的结构化产物模板：
-
-- 基础数学：猜想、例子、反例、证明策略和 proof-gap。
-- 应用数学：假设、尺度、稳定性/误差、数值验证和敏感性。
-- 机器学习：任务、数据、baseline、ablation、leakage 和 eval harness。
-- 计算机科学：规约、正确性、复杂度、benchmark、威胁模型和 artifact evaluation。
-- 统计学：estimand、识别、抽样/功效、诊断、不确定性和敏感性。
+`PUBLIC/paper/` should be generated from `templates/latex/` when needed; the default repository should not carry stale generated paper output.

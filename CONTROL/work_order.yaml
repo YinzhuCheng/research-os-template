@@ -1,14 +1,15 @@
-work_order_id: WO-0004
-phase: research-os-v3.3
-goal: "Implement the material-first Codex Browser Copilot bridge for Research OS."
+work_order_id: WO-0005
+phase: research-os-v3.4
+goal: "Document and install the runtime environment, then simplify the repository by removing redundant generated legacy artifacts."
 inputs:
-  - "PLAN/00_MASTER_PLAN.md"
-  - "PLAN/05_IMPLEMENTATION_CHECKLIST.md"
-  - "PLAN/06_GAP_AUDIT.md"
+  - "README.md"
   - "docs/doc_map.yaml"
+  - "scripts/README.md"
+  - "PROVENANCE/final_validation_report_v3_3.md"
 allowed_paths:
   - ".agents/"
   - ".codex/"
+  - "AGENTS.md"
   - "config/"
   - "CONTROL/"
   - "docs/"
@@ -16,35 +17,26 @@ allowed_paths:
   - "PLAN/"
   - "PROVENANCE/"
   - "PUBLIC/"
+  - "README.md"
   - "scripts/"
   - "skills/"
   - "templates/"
 forbidden_paths:
   - "PRIVATE/"
 outputs:
-  - ".agents/plugins/"
-  - ".agents/skills/"
-  - "config/schemas/copilot_intake.schema.json"
-  - "config/schemas/copilot_questions.schema.json"
-  - "config/schemas/copilot_initialization_report.schema.json"
-  - "docs/codex-browser-copilot.html"
+  - "docs/environment.md"
+  - "scripts/install_environment.ps1"
+  - "scripts/check_environment.ps1"
+  - "scripts/check_latex_sources.ps1"
+  - "scripts/README.md"
+  - "README.md"
+  - "docs/README.md"
   - "docs/doc_map.yaml"
-  - "PUBLIC/copilot.html"
-  - "PUBLIC/copilot_state.json"
   - "PUBLIC/dashboard_data.json"
   - "PUBLIC/index.html"
-  - "skills/research-os-copilot/"
-  - "templates/copilot/"
-  - "templates/yaml/copilot_intake.template.yaml"
-  - "templates/yaml/copilot_questions.template.yaml"
-  - "templates/yaml/copilot_initialization_report.template.yaml"
-  - "scripts/check_copilot_bridge.ps1"
-  - "scripts/check_copilot_intake_schema.ps1"
-  - "scripts/check_copilot_state.ps1"
-  - "scripts/check_copilot_resource_rendering.ps1"
-  - "scripts/download_reference_links.ps1"
   - "PROVENANCE/run_manifest.jsonl"
   - "PROVENANCE/resource_ledger.jsonl"
+  - "PROVENANCE/public_audit_summary.md"
 resource_budget:
   currency: CNY
   max_total_cost: 0
@@ -60,16 +52,15 @@ resource_budget:
     other: none
   max_runtime_minutes: null
 stop_conditions:
-  - "Need to read or write real PRIVATE intake material during this implementation."
+  - "Need to read or write real PRIVATE intake material."
   - "Need to store API keys, platform tokens, cookies, authorization headers, SSH keys, or cloud credentials."
   - "Need paid API calls, cloud resources, GPU resources, lab resources, or external platform writeback."
-  - "Need to bypass copyright, paywalls, robots restrictions, or repository privacy boundaries."
+  - "Need to remove run_manifest.jsonl or resource_ledger.jsonl audit trails."
 acceptance_criteria:
-  - "The browser cockpit starts from free text or uploaded material, not a fixed five-question intake."
-  - "Codex generates exactly three targeted questions before project initialization; every question has a recommended answer and free-form Other path."
-  - "Initialization reports include motivation, expected goals, contribution claims, related work gaps, reference links, conditional theory track, conditional experiment track, minimum validation, and repository resource links."
-  - "The copilot bridge has schemas, templates, validators, plugin/MCP scaffold, docs, dashboard links, and sanitized public state."
-  - "Raw uploads remain private at runtime; no raw private material is committed or rendered in PUBLIC."
-  - "Reference download support uses legal open-access or landing-page paths only and records failures for human handling."
+  - "Environment requirements are documented with OS-version caveats."
+  - "An installation/check script exists for normal local operation."
+  - "Generated or stale redundant artifacts are removed while authoritative templates and current audit trails remain."
+  - "Dashboard, docs, doc map, scripts README, and validation checks reflect the simplified structure."
+  - "All standard Research OS validation checks pass after cleanup."
 requires_confirmation: true
 privacy_level: public

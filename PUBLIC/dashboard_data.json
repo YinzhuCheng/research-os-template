@@ -1,7 +1,7 @@
 {
   "project": {
     "title": "Codex Research OS Template",
-    "phase": "research-os-v3.3",
+    "phase": "research-os-v3.4",
     "language_mode": "zh-first",
     "intervention_level": "low",
     "privacy_policy": "public_private_split",
@@ -17,11 +17,15 @@
     {"label": "feasibility", "value": "budget-gated"},
     {"label": "resource guard", "value": "enabled"},
     {"label": "live evidence", "value": "required when time-sensitive"},
-    {"label": "Harness", "value": "v3.3 checks"}
+    {"label": "Harness", "value": "v3.4 environment and cleanup checks"},
+    {"label": "Paper Output", "value": "generated only when enabled"}
   ],
   "documents": [
     {"path": "copilot.html", "label": "Material-first Copilot"},
     {"path": "copilot_state.json", "label": "Sanitized Copilot State"},
+    {"path": "../docs/environment.md", "label": "Environment Guide"},
+    {"path": "../scripts/install_environment.ps1", "label": "Environment Installer"},
+    {"path": "../scripts/check_environment.ps1", "label": "Environment Check"},
     {"path": "../docs/codex-browser-copilot.html", "label": "Copilot Bridge Technical Doc"},
     {"path": "../docs/start-here.html", "label": "Start Here HTML"},
     {"path": "../docs/domain-modes.html", "label": "Domain Modes HTML"},
@@ -43,12 +47,15 @@
     {"path": "../PROVENANCE/run_manifest.jsonl", "label": "Run Manifest"},
     {"path": "../PROVENANCE/resource_ledger.jsonl", "label": "Resource Ledger"},
     {"path": "../PROVENANCE/live_evidence_snapshot.yaml", "label": "Live Evidence"},
+    {"path": "../PROVENANCE/public_audit_summary.md", "label": "Public Audit Summary"},
+    {"path": "../PROVENANCE/final_validation_report_v3_4.md", "label": "Final Validation v3.4"},
     {"path": "../CONTROL/work_order.yaml", "label": "Work Order"},
     {"path": "../CONTROL/phase_gate.yaml", "label": "Phase Gate"},
     {"path": "../PLAN/05_IMPLEMENTATION_CHECKLIST.md", "label": "Implementation Checklist"},
     {"path": "../PLAN/06_GAP_AUDIT.md", "label": "Gap Audit"}
   ],
   "next_decisions": [
+    "Run scripts/install_environment.ps1 or scripts/check_environment.ps1 before first use.",
     "Open PUBLIC/copilot.html and provide material-first intake.",
     "After intake analysis, answer exactly three targeted Codex questions.",
     "Confirm whether initialization should include theory, experiment, or both.",

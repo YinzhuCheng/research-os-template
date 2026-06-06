@@ -13,7 +13,7 @@ Use this skill when turning research outputs into a manuscript and `disseminatio
 2. Write English LaTeX by default unless `language_mode: en-only` already applies to all materials.
 3. Use claims only if they have evidence links.
 4. Keep abstract, introduction, method, experiments, results, limitations, and appendix aligned.
-5. Generate or update:
+5. Use `templates/latex/` as the source scaffold, then generate or update:
    - `PUBLIC/paper/main.tex`,
    - `PUBLIC/paper/appendix.tex`,
    - `PUBLIC/paper/references.bib`,
@@ -24,5 +24,6 @@ Use this skill when turning research outputs into a manuscript and `disseminatio
 ## Quick Checks
 
 - Read `references/latex_authoring.md` before writing manuscript text.
+- `PUBLIC/paper/` is not a default tracked scaffold. Create it only after `dissemination.paper_enabled: true` or an explicit paper work order.
 - Avoid final bullet lists in manuscript prose unless the venue style explicitly accepts them.
 - Never invent citations or results.

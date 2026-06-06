@@ -1,128 +1,51 @@
-# 实施检查清单
+# Implementation Checklist
 
-## Commit 1: 计划文档
+This checklist tracks the durable Research OS template state. Detailed historical snapshots can be recovered from git history; the current tree keeps the operational checklist concise.
 
-- [x] 创建 `research-os-template/`。
-- [x] 初始化独立 git 仓库。
-- [x] 写入 `PLAN/` 文档。
-- [x] 提交 `docs: add research os implementation plan`。
+## Core Repository
 
-## Commit 2: 目录骨架
+- [x] Maintain a research-neutral template that does not assume LLM, ML, dataset, baseline, paper, venue, or budget by default.
+- [x] Keep public/private separation with `PUBLIC/` for sanitized output and `PRIVATE/` ignored by git.
+- [x] Gate execution through `CONTROL/work_order.yaml`, `CONTROL/phase_gate.yaml`, and `config/research_project.yaml`.
+- [x] Record substantive runs in `PROVENANCE/run_manifest.jsonl`.
+- [x] Record resource boundaries and usage in `PROVENANCE/resource_ledger.jsonl`.
 
-- [x] 创建 `PUBLIC/`、`PRIVATE/`、`CONTROL/`、`PROVENANCE/`、`config/`、`skills/`、`scripts/`、`templates/`。
-- [x] 创建 `.gitignore`，忽略 `PRIVATE/**`，保留 `PRIVATE/README.md` 和 `.gitkeep`。
-- [x] 写入隐私边界说明和基础配置。
+## v3 Documentation And Skills
 
-## Commit 3: Schema 与模板
+- [x] Provide researcher-facing onboarding in `docs/start-here.html`.
+- [x] Provide agent-facing technical routing in `docs/technical-report.html`.
+- [x] Maintain a public dashboard in `PUBLIC/index.html` backed by `PUBLIC/dashboard_data.json`.
+- [x] Maintain a structured document map in `docs/doc_map.yaml`.
+- [x] Mirror skills from `skills/` to `.agents/skills/` and validate the mirror.
+- [x] Register open-source auto-research components as adapters/registry entries instead of vendoring large projects.
 
-- [x] 实现 `research_project.yaml`。
-- [x] 实现 work order、run manifest、claim-evidence、research brief 模板。
-- [x] 写入样例对象。
+## v3.1 Domain Layer
 
-## Commit 4: 入口、初始化、对齐 skill
+- [x] Add five deep domain profiles: fundamental mathematics, applied mathematics, machine learning, computer science, and statistics.
+- [x] Add field-specific skills, agent-role registries, artifact templates, and validation scripts.
+- [x] Keep mathematical proof workflows non-formal by default while supporting conjectures, examples, counterexamples, proof strategies, and proof-gap reports.
 
-- [x] 创建 orchestrator/init/alignment skill。
-- [x] 每个 skill 含 `SKILL.md`、`references/`、必要 `assets/`。
-- [x] 创建安装脚本。
+## v3.2 Research Kernel
 
-## Commit 5: Harness 与审计脚本
+- [x] Introduce the shared `candidate -> evaluator_contract -> evaluation_result -> belief_state -> search_trace/negative_result -> next_action_policy -> human_judgment_gate` loop.
+- [x] Require evaluator computation checklists: metric/check, procedure, inputs, scale, threshold, resource estimate, failure mode, and replay note.
+- [x] Bind domain templates and skills to kernel objects to prevent toolbox sprawl.
+- [x] Validate orphan skills so main-route skills need schema/template/validator/doc coverage.
 
-- [x] 实现 schema 校验。
-- [x] 实现隐私扫描。
-- [x] 实现公开导出。
-- [x] 实现 manifest/hash 工具。
+## v3.3 Material-first Copilot
 
-## Commit 6: 静态仪表盘
+- [x] Replace fixed first-round questions with free text, links, and material upload intake.
+- [x] Generate exactly three targeted questions after Codex profiles the material.
+- [x] Provide recommended answers, options, and an Other/free-form path for each targeted question.
+- [x] Render sanitized initialization state in the browser cockpit.
+- [x] Add a repo-scoped plugin scaffold and local bridge server.
 
-- [x] 创建 `PUBLIC/index.html`。
-- [x] 渲染 Markdown 和 JSON。
-- [x] 显示阶段、claim、实验、结果、审计状态。
+## v3.4 Environment And Cleanup
 
-## Commit 7: 论文与 review skill
-
-- [x] 创建 paper/visual/polish/review/export skill。
-- [x] 增加 LaTeX、BibTeX、图表、附录模板。
-- [x] 增加 review/rebuttal 模板。
-
-## Commit 8: 验证与补缺
-
-- [x] 运行全部脚本验证。
-- [x] 运行 skill frontmatter 校验。
-- [x] 运行隐私扫描测试。
-- [x] 运行 dashboard 静态检查。
-- [x] 更新最终审计说明。
-
-## Commit 9: Research OS v2 研究无关性与 Codex Harness
-
-- [x] 移除固定 `model_budget: 100`、`target_venue`、默认 LaTeX/投稿目标等方向绑定。
-- [x] 将预算改为研究者入口定义的 `resource_budget`，覆盖时间、算力、云、实验耗材、API、模型、人工、仪器等资源。
-- [x] 将 pilot 改为 `research-os-feasibility-probe`，不限定 LLM/ML/软件/数据集研究。
-- [x] 将论文链路改为可选，仅在 `dissemination` 明确启用时运行。
-- [x] 新增根 `AGENTS.md`、`.codex/config.toml.example`、hooks 示例和 harness requirements。
-- [x] 新增 `research-os-harness-audit`、`research-os-resource-guard`、`research-os-live-evidence-refresh` skill。
-- [x] 增加 `PRIVATE/secrets/README.md`，只允许凭据占位、环境变量名和 secret store 路径。
-- [x] 更新 dashboard，显示 research type、feasibility、resource guard、live evidence、harness audit。
-- [x] 运行 v2 通用性、harness、resource guard、live evidence、隐私和回归验证。
-- [x] 更新 v2 最终审计说明。
-- [x] 提交 `feat: add research neutral harness v2`。
-
-## Commit 10: Research OS v3 治理授权
-
-- [x] 将当前本地历史 bootstrap 到远端 `main`。
-- [x] 创建并推送 `codex/research-os-v3` 分支。
-- [x] 将 work order 更新为 `WO-0002`，授权 v3 文档、skill、adapter、schema 和脚本改动。
-- [x] 刷新 live evidence 与 claim-evidence，补充自动科研和 Codex harness 依据。
-- [x] 记录 v3 governance run manifest 和 resource ledger。
-- [x] 提交 `chore: authorize research os v3 documentation work`。
-
-## Commit 11: Human-in-loop 文档站
-
-- [x] 新增 `docs/start-here.html`，面向一般研究者和 Codex 新手。
-- [x] 新增 `docs/technical-report.html`，面向后续 agent 和维护者。
-- [x] 新增 `docs/README.md`、`docs/doc_map.yaml`、`docs/PROJECT_SUMMARY.md`、`docs/PROJECT_LOG.md` 和 `docs/ASSET_SOURCES.md`。
-- [x] 更新根 `README.md` 与 `PUBLIC/index.html` 导航。
-- [x] 提交 `docs: add human loop research os guide`。
-
-## Commit 12: Skill 与开源组件集成层
-
-- [x] 新增 `.agents/skills/` 仓库级 skill 镜像。
-- [x] 新增 skill 镜像同步/检查脚本。
-- [x] 新增 `research-os-doc-site`、`research-os-integration-scout`、`research-os-experiment-manager`、`research-os-replay-eval-harness`。
-- [x] 新增 `docs/integrations/components.yaml` 和 adapter 模板。
-- [x] 提交 `feat: add auto research skill and integration layer`。
-
-## Commit 13: v3 harness 验证
-
-- [x] 新增 doc map、harness run、integration component schema。
-- [x] 新增 HTML、链接、integration、skill mirror 检查脚本。
-- [x] 运行 schema、skill、harness、dashboard、privacy、HTML、link、integration、skill mirror 验证。
-- [x] 完成浏览器 QA。
-- [x] 提交 `test: validate research os v3 governance`。
-- [x] 推送分支并创建 draft PR：[PR #1](https://github.com/YinzhuCheng/research-os-template/pull/1)。
-
-## Commit 14: Research OS v3.1 五大领域深度研究范式
-
-- [x] 新增 `domain_profiles/`，覆盖基础数学、应用数学、机器学习、计算机科学和统计学。
-- [x] 新增五个领域 skill：`research-os-math-discovery`、`research-os-applied-math-modeling`、`research-os-ml-research-protocol`、`research-os-cs-research-artifact`、`research-os-statistical-inference`。
-- [x] 新增 `templates/domain/` 领域产物模板和 `domain_profile` / `agent_capability` schema。
-- [x] 新增 `docs/domain-modes.html`，并接入快速上手、技术报告、dashboard 和 doc map。
-- [x] 新增领域 profile、agent capability、domain templates 和 router 检查脚本。
-- [x] 运行 v3.1 全量验证并提交推送。
-
-## Commit 15: Research OS v3.2 研究内核与反馈计算层
-
-- [x] 将 work order 更新为 `WO-0003`，授权 v3.2 research kernel、领域绑定、模板、skill、文档和 harness 校验。
-- [x] 新增 `research-os-research-kernel` skill，统一 `generate -> evaluate -> update -> human_gate` 研究循环。
-- [x] 新增 `config/schemas/research_kernel.schema.json`、`templates/yaml/research_kernel.template.yaml` 和 `templates/research_kernel/research_cycle.template.yaml`。
-- [x] 五大领域 profile 与模板均新增 `kernel_bindings` 和 evaluator 计算清单。
-- [x] 更新 orchestrator 路由，先进入 research kernel，再调用领域 profile 和领域 skill。
-- [x] 新增 `check_research_kernel.ps1`、`check_domain_kernel_bindings.ps1` 和 `check_no_orphan_skills.ps1`，防止新增 skill 变成未治理工具。
-## Commit 16: Research OS v3.3 Material-first Browser Copilot
-
-- [x] Update governance to `WO-0004` for material-first copilot work.
-- [x] Add `PUBLIC/copilot.html` and sanitized `PUBLIC/copilot_state.json`.
-- [x] Add `research-os-copilot` skill and repo-scoped plugin scaffold under `.agents/plugins/`.
-- [x] Add copilot intake, targeted-question, and initialization-report schemas and templates.
-- [x] Add reference download helper with open-access/landing-page policy.
-- [x] Add copilot bridge, state, rendering, and schema validation scripts.
-- [x] Update root README, docs center, doc map, technical report, dashboard, and orchestrator routing.
+- [x] Document required and optional runtime tools in `docs/environment.md`.
+- [x] Add `scripts/install_environment.ps1` with OS-version caveats and conservative Windows `winget` support.
+- [x] Add `scripts/check_environment.ps1` and `scripts/check_environment_docs.ps1`.
+- [x] Treat `templates/latex/` as the authoritative optional paper scaffold.
+- [x] Remove stale generated `PUBLIC/paper/` output from the current tree.
+- [x] Remove old validation snapshots while preserving durable manifest and ledger files.
+- [x] Run the full v3.4 validation set and record `PROVENANCE/final_validation_report_v3_4.md`.

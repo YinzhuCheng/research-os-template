@@ -14,6 +14,10 @@ entrypoints:
     title: "Technical Route"
     path: "docs/technical-report.html"
     audience: "Future agents, maintainers, and advanced researchers"
+  environment:
+    title: "Runtime Environment"
+    path: "docs/environment.md"
+    audience: "Researchers and agents preparing a local Research OS run"
   copilot_bridge:
     title: "Codex Browser Copilot Bridge"
     path: "docs/codex-browser-copilot.html"
@@ -35,6 +39,12 @@ core_controls:
   phase_gate: "CONTROL/phase_gate.yaml"
   project_config: "config/research_project.yaml"
   repository_rules: "AGENTS.md"
+environment:
+  guide: "docs/environment.md"
+  installer: "scripts/install_environment.ps1"
+  checker: "scripts/check_environment.ps1"
+  latex_source_check: "scripts/check_latex_sources.ps1"
+  note: "Install commands may need OS-version, enterprise image, proxy, or package-manager adjustments."
 copilot:
   cockpit: "PUBLIC/copilot.html"
   sanitized_state: "PUBLIC/copilot_state.json"
@@ -73,6 +83,9 @@ integrations:
   registry: "docs/integrations/components.yaml"
   adapter_template: "templates/yaml/integration_component.template.yaml"
 validation:
+  environment: "scripts/check_environment.ps1"
+  environment_install: "scripts/install_environment.ps1"
+  environment_docs: "scripts/check_environment_docs.ps1"
   schema: "scripts/validate_schemas.ps1"
   skill: "scripts/validate_skills.ps1"
   harness: "scripts/check_harness.ps1"

@@ -45,6 +45,16 @@
       "purpose": "Material-first browser cockpit"
     },
     {
+      "label": "Environment guide",
+      "path": "../docs/environment.md",
+      "purpose": "Runtime requirements and install notes"
+    },
+    {
+      "label": "Environment check",
+      "path": "../scripts/check_environment.ps1",
+      "purpose": "Verify local runtime before first use"
+    },
+    {
       "label": "Work order",
       "path": "../CONTROL/work_order.yaml",
       "purpose": "Execution boundary"

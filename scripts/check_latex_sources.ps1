@@ -1,15 +1,22 @@
 param(
-  [string]$PaperDir = "PUBLIC\paper",
+  [string]$PaperDir = "",
+  [switch]$Generated,
   [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
 
+$TemplateDir = "templates\latex"
+if (!$PaperDir) {
+  if ($Generated) { $PaperDir = "PUBLIC\paper" }
+  else { $PaperDir = $TemplateDir }
+}
+
 $configPath = "config\research_project.yaml"
-if (!$Force -and (Test-Path -LiteralPath $configPath)) {
+if ($Generated -and !$Force -and (Test-Path -LiteralPath $configPath)) {
   $config = Get-Content -Raw -Encoding UTF8 -LiteralPath $configPath
   if ($config -match "paper_enabled:\s*false") {
-    Write-Output "LaTeX source static check skipped because dissemination.paper_enabled is false. Use -Force to check paper templates."
+    Write-Output "Generated LaTeX check skipped because dissemination.paper_enabled is false. Use -Generated -Force to check PUBLIC\paper."
     exit 0
   }
 }

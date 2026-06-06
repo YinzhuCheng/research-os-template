@@ -68,12 +68,14 @@
       <nav aria-label="Copilot bridge navigation">
         <a href="#flow">Flow</a>
         <a href="#bridge">Bridge</a>
+        <a href="#environment">Environment</a>
         <a href="#schemas">Schemas</a>
         <a href="#initialization">Initialization</a>
         <a href="#safety">Safety</a>
         <a href="#validation">Validation</a>
         <a href="../PUBLIC/copilot.html">PUBLIC/copilot.html</a>
         <a href="../PUBLIC/index.html">PUBLIC/index.html</a>
+        <a href="environment.md">environment.md</a>
         <a href="../README.md">README.md</a>
         <a href="../CONTROL/work_order.yaml">work_order.yaml</a>
         <a href="../CONTROL/phase_gate.yaml">phase_gate.yaml</a>
@@ -81,7 +83,7 @@
     </aside>
     <main>
       <header>
-        <h1>Research OS v3.3 Browser Copilot Bridge</h1>
+        <h1>Research OS v3.4 Browser Copilot Bridge</h1>
         <p class="lead">This page defines how the Codex in-app browser becomes a research cockpit without pretending that browser JavaScript can execute research work by itself. The browser collects material, Codex performs analysis and execution after confirmation.</p>
       </header>
 
@@ -155,6 +157,13 @@
         </div>
       </section>
 
+      <section class="section" id="environment">
+        <h2>Local Runtime</h2>
+        <p>The browser cockpit can render statically, but the bridge workflow needs the local runtime described in <a href="environment.md">docs/environment.md</a>. Use the checker before starting the bridge.</p>
+        <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1 -RequireCodexPluginFiles
+python .agents/plugins/plugins/research-os-copilot/scripts/research_os_copilot_server.py --serve</pre>
+      </section>
+
       <section class="section" id="schemas">
         <h2>Interfaces</h2>
         <table>
@@ -201,7 +210,8 @@
 
       <section class="section" id="validation">
         <h2>Validation</h2>
-        <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_intake_schema.ps1
+        <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1 -RequireCodexPluginFiles
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_intake_schema.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_state.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_resource_rendering.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_bridge.ps1

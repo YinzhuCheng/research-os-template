@@ -17,6 +17,7 @@ $required = @(
   "PUBLIC/index.html",
   "copilot.html",
   "material-first",
+  "environment",
   "feasibility",
   "resource",
   "live evidence"
@@ -28,5 +29,17 @@ foreach ($item in $required) {
   }
 }
 
-Get-Content -Raw -Encoding UTF8 -LiteralPath "PUBLIC\dashboard_data.json" | ConvertFrom-Json | Out-Null
+$data = Get-Content -Raw -Encoding UTF8 -LiteralPath "PUBLIC\dashboard_data.json" | ConvertFrom-Json
+$requiredDocumentPaths = @(
+  "../docs/environment.md",
+  "../scripts/install_environment.ps1",
+  "../scripts/check_environment.ps1"
+)
+
+foreach ($path in $requiredDocumentPaths) {
+  if (!($data.documents.path -contains $path)) {
+    throw "Dashboard data missing document path: $path"
+  }
+}
+
 Write-Output "Dashboard static check passed."

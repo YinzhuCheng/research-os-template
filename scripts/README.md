@@ -1,76 +1,63 @@
-# scripts 区
+# Scripts
 
-此目录保存确定性辅助脚本：
+This directory stores deterministic helper scripts for local Research OS operation. Scripts must be auditable, avoid writing secrets, and respect `CONTROL/work_order.yaml`.
 
-- schema 校验。
-- 隐私扫描。
-- 公开导出。
-- hash/manifest 工具。
-- dashboard 静态检查。
-- LaTeX/图表 QA。
-
-Windows 默认执行策略可能禁止直接运行 `.ps1`。验证时使用：
+## Environment
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install_environment.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment_docs.ps1
 ```
 
-仪表盘静态检查：
+`install_environment.ps1 -InstallMissing` can try Windows `winget` installs for Git and Python. Package names and install commands may need adjustment across Windows/macOS/Linux versions, enterprise images, proxies, and package managers.
+
+If `python` is not on `PATH`, pass an explicit runtime:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
-```
-
-LaTeX 源码静态检查：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_latex_sources.ps1
-```
-
-Research OS v2 检查：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_neutrality.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_resource_guard.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_live_evidence.ps1
-```
-
-如系统 `python` 不可用，可显式传入可用 Python 运行时来编译 hooks：
-
-```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1 -PythonPath "C:\path\to\python.exe"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1 -PythonPath "C:\path\to\python.exe"
 ```
 
-Skill 结构检查：
+## Core Validation
 
 ```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
-```
-
-Research OS v3 文档、集成和 skill 镜像检查：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\sync_skill_mirror.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_skill_mirror.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_integrations.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1
 ```
 
-Research OS v3.1 领域模式检查：
+## Research Kernel And Domains
 
 ```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_kernel.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_kernel_bindings.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_no_orphan_skills.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_profiles.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_agent_capabilities.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_templates.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_router.ps1
 ```
 
-Research OS v3.2 研究内核与防杂货化检查：
+## Copilot And Integrations
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_kernel.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_domain_kernel_bindings.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_no_orphan_skills.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_bridge.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_intake_schema.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_state.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_resource_rendering.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_integrations.ps1
+```
+
+## Optional Paper Track
+
+`templates/latex/` is the authoritative paper scaffold. `PUBLIC/paper/` is generated only after a paper-oriented work order or explicit researcher decision.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_latex_sources.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_latex_sources.ps1 -Generated -Force
 ```

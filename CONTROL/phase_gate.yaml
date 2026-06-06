@@ -1,14 +1,13 @@
-current_phase: research-os-v3.3
+current_phase: research-os-v3.4
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "Review the material-first Copilot bridge, install the repo-scoped plugin if desired, and decide whether to use a heartbeat automation for pending intake detection."
+next_required_decision: "Review the environment/install flow and simplified repository structure, then decide whether to enable real runtime uploads or generated paper outputs in a later work order."
 confirmed_decisions:
-  - "Use a material-first intake: initial free text or upload, followed by three targeted questions."
-  - "Use plugin + MCP + browser cockpit as the preferred bridge shape."
-  - "Browser submissions enqueue work; Codex asks for confirmation before execution."
-  - "Raw uploaded material defaults to PRIVATE/intake at runtime and is not committed."
-  - "Reference downloads are convenience scripts for lawful open sources or landing pages, not paywall bypass."
+  - "Keep `templates/latex/` as the authoritative optional paper template."
+  - "Remove default generated public paper copies from `PUBLIC/paper/`; regenerate only after paper output is explicitly enabled."
+  - "Keep current manifest, resource ledger, and v3.3 validation report; older validation reports can be recovered from git history."
+  - "Do not touch `PRIVATE/` or real uploaded materials during cleanup."
