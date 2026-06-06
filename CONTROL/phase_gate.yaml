@@ -1,0 +1,8 @@
+current_phase: initialization
+intervention_level: low
+stage_gate_required: true
+external_write_requires_confirmation: true
+public_export_requires_confirmation: true
+submission_requires_confirmation: true
+budget_overrun_requires_confirmation: true
+next_required_decision: "确认 Commit 3 的 schema 和模板是否满足研究对象追踪。"

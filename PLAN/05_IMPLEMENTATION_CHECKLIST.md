@@ -9,9 +9,9 @@
 
 ## Commit 2: 目录骨架
 
-- [ ] 创建 `PUBLIC/`、`PRIVATE/`、`CONTROL/`、`PROVENANCE/`、`config/`、`skills/`、`scripts/`、`templates/`。
-- [ ] 创建 `.gitignore`，忽略 `PRIVATE/**`，保留 `PRIVATE/README.md` 和 `.gitkeep`。
-- [ ] 写入隐私边界说明和基础配置。
+- [x] 创建 `PUBLIC/`、`PRIVATE/`、`CONTROL/`、`PROVENANCE/`、`config/`、`skills/`、`scripts/`、`templates/`。
+- [x] 创建 `.gitignore`，忽略 `PRIVATE/**`，保留 `PRIVATE/README.md` 和 `.gitkeep`。
+- [x] 写入隐私边界说明和基础配置。
 
 ## Commit 3: Schema 与模板
 
