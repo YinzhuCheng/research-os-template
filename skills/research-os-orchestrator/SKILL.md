@@ -9,13 +9,14 @@ Use this as the entry skill. Keep orchestration short; load sub-skill references
 
 ## Workflow
 
-1. Inspect `config/research_project.yaml`, `CONTROL/phase_gate.yaml`, `PLAN/05_IMPLEMENTATION_CHECKLIST.md`, and `PLAN/06_GAP_AUDIT.md` if present.
+1. Inspect `config/research_flow.yaml`, `config/research_project.yaml`, `CONTROL/work_order.yaml`, `CONTROL/phase_gate.yaml`, `PLAN/05_IMPLEMENTATION_CHECKLIST.md`, and `PLAN/06_GAP_AUDIT.md` if present.
 2. Determine:
    - source type: dialogue, draft plan, demo code, existing project, or continuation;
    - language mode: `zh-first` by default, or `en-only` if requested;
    - intervention level: `low` by default, with stage gates;
    - privacy boundary: always `PUBLIC/` vs `PRIVATE/`.
 3. Route:
+   - process contract: use `config/research_flow.yaml` as the canonical stage sequence and skill handoff contract;
    - material-first browser intake: use `research-os-copilot` for pending `CONTROL/copilot_inbox/` packets, `PUBLIC/copilot.html` interactions, exactly three targeted questions, and initialization reports;
    - research kernel: normalize any substantive research loop through `research-os-research-kernel` first, producing or updating `candidate`, `evaluator_contract`, `belief_state`, `search_trace`, `negative_result`, `next_action_policy`, and `human_judgment_gate`;
    - domain-specific research mode: inspect the active domain profile in `domain_profiles/` first, then route to one of:
@@ -41,6 +42,6 @@ Use this as the entry skill. Keep orchestration short; load sub-skill references
 
 ## Quick Checks
 
-- Read `references/routing.md` before changing routing or stage-gate behavior.
+- Read `references/routing.md` and `config/research_flow.yaml` before changing routing or stage-gate behavior.
 - If a requested action touches external writeback, submission, public export, budget overrun, real resources, credentials, or privacy policy changes, stop for human confirmation.
 - If the user asks for implementation, create or reuse a work order before editing project artifacts.

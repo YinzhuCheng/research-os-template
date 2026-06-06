@@ -1,11 +1,14 @@
-work_order_id: WO-0005
-phase: research-os-v3.4
-goal: "Document and install the runtime environment, then simplify the repository by removing redundant generated legacy artifacts."
+work_order_id: WO-0006
+phase: research-os-v3.5
+goal: "Harden the Research OS process contract and skill governance so the automation flow is clear, skill-triggered, and validator-enforced."
 inputs:
-  - "README.md"
+  - "AGENTS.md"
+  - ".codex/requirements.md"
+  - "CONTROL/README.md"
+  - "skills/README.md"
+  - "skills/research-os-orchestrator/references/routing.md"
+  - "docs/technical-report.html"
   - "docs/doc_map.yaml"
-  - "scripts/README.md"
-  - "PROVENANCE/final_validation_report_v3_3.md"
 allowed_paths:
   - ".agents/"
   - ".codex/"
@@ -24,19 +27,23 @@ allowed_paths:
 forbidden_paths:
   - "PRIVATE/"
 outputs:
-  - "docs/environment.md"
-  - "scripts/install_environment.ps1"
-  - "scripts/check_environment.ps1"
-  - "scripts/check_latex_sources.ps1"
-  - "scripts/README.md"
-  - "README.md"
-  - "docs/README.md"
+  - "AGENTS.md"
+  - ".codex/requirements.md"
+  - "CONTROL/README.md"
+  - "config/research_flow.yaml"
+  - "config/schemas/research_flow.schema.json"
+  - "docs/process-contract.md"
+  - "skills/README.md"
+  - "skills/research-os-orchestrator/SKILL.md"
+  - "skills/research-os-orchestrator/references/routing.md"
+  - "docs/technical-report.html"
   - "docs/doc_map.yaml"
   - "PUBLIC/dashboard_data.json"
   - "PUBLIC/index.html"
+  - "scripts/check_research_flow.ps1"
+  - "scripts/check_governance_text.ps1"
   - "PROVENANCE/run_manifest.jsonl"
   - "PROVENANCE/resource_ledger.jsonl"
-  - "PROVENANCE/public_audit_summary.md"
 resource_budget:
   currency: CNY
   max_total_cost: 0
@@ -53,14 +60,15 @@ resource_budget:
   max_runtime_minutes: null
 stop_conditions:
   - "Need to read or write real PRIVATE intake material."
-  - "Need to store API keys, platform tokens, cookies, authorization headers, SSH keys, or cloud credentials."
+  - "Need to store API keys, platform tokens, cookies, auth headers, SSH keys, or cloud credentials."
   - "Need paid API calls, cloud resources, GPU resources, lab resources, or external platform writeback."
   - "Need to remove run_manifest.jsonl or resource_ledger.jsonl audit trails."
 acceptance_criteria:
-  - "Environment requirements are documented with OS-version caveats."
-  - "An installation/check script exists for normal local operation."
-  - "Generated or stale redundant artifacts are removed while authoritative templates and current audit trails remain."
-  - "Dashboard, docs, doc map, scripts README, and validation checks reflect the simplified structure."
-  - "All standard Research OS validation checks pass after cleanup."
+  - "AGENTS.md, .codex/requirements.md, and CONTROL/README.md are readable and constrain the latest process."
+  - "config/research_flow.yaml defines the canonical material-first Research OS flow."
+  - "skills/README.md contains a trigger matrix with responsibilities and boundaries for main-route skills."
+  - "orchestrator routing, technical report, doc map, and dashboard point to the process contract."
+  - "New validators catch missing flow bindings and unreadable governance text."
+  - "All standard Research OS validation checks pass after the hardening."
 requires_confirmation: true
 privacy_level: public

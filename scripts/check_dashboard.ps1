@@ -17,6 +17,7 @@ $required = @(
   "PUBLIC/index.html",
   "copilot.html",
   "material-first",
+  "process contract",
   "environment",
   "feasibility",
   "resource",
@@ -32,6 +33,8 @@ foreach ($item in $required) {
 $data = Get-Content -Raw -Encoding UTF8 -LiteralPath "PUBLIC\dashboard_data.json" | ConvertFrom-Json
 $requiredDocumentPaths = @(
   "../docs/environment.md",
+  "../docs/process-contract.md",
+  "../config/research_flow.yaml",
   "../scripts/install_environment.ps1",
   "../scripts/check_environment.ps1"
 )

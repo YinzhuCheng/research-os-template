@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-template.local/schemas/research_flow.schema.json",
+  "title": "Research OS Process Contract",
+  "type": "object",
+  "required": [
+    "flow_id",
+    "version",
+    "language_mode",
+    "canonical_sequence",
+    "spec_priority",
+    "global_rules",
+    "stages"
+  ],
+  "properties": {
+    "flow_id": { "type": "string", "pattern": "^RESEARCH-FLOW-[0-9]{4}$" },
+    "version": { "type": "string" },
+    "language_mode": { "type": "string", "enum": ["zh-first", "en-only"] },
+    "canonical_sequence": {
+      "type": "array",
+      "minItems": 10,
+      "items": { "type": "string" }
+    },
+    "spec_priority": {
+      "type": "array",
+      "minItems": 5,
+      "items": { "type": "string" }
+    },
+    "global_rules": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 10,
+      "items": { "$ref": "#/$defs/stage" }
+    }
+  },
+  "$defs": {
+    "stage": {
+      "type": "object",
+      "required": [
+        "id",
+        "purpose",
+        "inputs",
+        "outputs",
+        "required_skill",
+        "optional_skills",
+        "human_gate",
+        "prohibited",
+        "validation"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "purpose": { "type": "string" },
+        "inputs": { "type": "array", "items": { "type": "string" } },
+        "outputs": { "type": "array", "items": { "type": "string" } },
+        "required_skill": { "type": "string", "pattern": "^research-os-[a-z0-9-]+$" },
+        "optional_skills": { "type": "array", "items": { "type": "string" } },
+        "human_gate": { "type": "string" },
+        "prohibited": { "type": "array", "items": { "type": "string" } },
+        "validation": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

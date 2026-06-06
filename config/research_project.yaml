@@ -1,5 +1,7 @@
 project_id: research-os-template
 title: "Untitled Codex Research Project"
+template_version: research-os-v3.5
+process_contract: config/research_flow.yaml
 language_mode: zh-first
 intervention_level: low
 privacy_policy: public_private_split
@@ -39,6 +41,7 @@ live_evidence:
   required_for_time_sensitive_claims: true
   last_refresh: null
 current_phase: copilot_intake
+current_phase_note: "Default runtime phase for a new project instance; CONTROL/phase_gate.yaml records the current template/work-order phase."
 phase_gate_required: true
 public_export_enabled: false
 created_from:

@@ -10,11 +10,22 @@ It does not assume an LLM, machine learning task, dataset, baseline, paper, venu
 - [Public Dashboard](PUBLIC/index.html): project navigation and document reader.
 - [Quick Start](docs/start-here.html): onboarding for general researchers and Codex beginners.
 - [Technical Report](docs/technical-report.html): repository route for future agents and maintainers.
+- [Process Contract](docs/process-contract.md): canonical automation flow and skill handoff rules.
 - [Environment Guide](docs/environment.md): required runtime, optional tools, and OS-specific install notes.
 - [Copilot Bridge Doc](docs/codex-browser-copilot.html): browser-to-Codex bridge details.
 - [Domain Modes](docs/domain-modes.html): five domain-specific research paradigms.
 - [Research Kernel Template](templates/research_kernel/research_cycle.template.yaml): shared feedback computation loop.
 - [Document Map](docs/doc_map.yaml): structured navigation.
+
+## Research OS v3.5
+
+v3.5 hardens the process contract and skill governance:
+
+- `config/research_flow.yaml` defines the canonical machine-readable flow.
+- `docs/process-contract.md` explains the human-readable flow and skill handoffs.
+- `skills/README.md` is now a trigger matrix instead of a flat skill list.
+- Governance text in `AGENTS.md`, `.codex/requirements.md`, and `CONTROL/README.md` is readable and validator-checked.
+- New validators check process flow and governance text quality.
 
 ## Research OS v3.4
 
@@ -60,6 +71,8 @@ Every evaluator must list the computation or check: metric, procedure, inputs, s
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install_environment.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment_docs.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_flow.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_governance_text.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_bridge.ps1

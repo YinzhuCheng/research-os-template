@@ -14,6 +14,10 @@ entrypoints:
     title: "Technical Route"
     path: "docs/technical-report.html"
     audience: "Future agents, maintainers, and advanced researchers"
+  process_contract:
+    title: "Process Contract"
+    path: "docs/process-contract.md"
+    audience: "Researchers and agents following the canonical automation flow"
   environment:
     title: "Runtime Environment"
     path: "docs/environment.md"
@@ -38,7 +42,14 @@ core_controls:
   work_order: "CONTROL/work_order.yaml"
   phase_gate: "CONTROL/phase_gate.yaml"
   project_config: "config/research_project.yaml"
+  research_flow: "config/research_flow.yaml"
   repository_rules: "AGENTS.md"
+process_contract:
+  machine_readable: "config/research_flow.yaml"
+  schema: "config/schemas/research_flow.schema.json"
+  human_readable: "docs/process-contract.md"
+  skill_trigger_matrix: "skills/README.md"
+  orchestrator_routing: "skills/research-os-orchestrator/references/routing.md"
 environment:
   guide: "docs/environment.md"
   installer: "scripts/install_environment.ps1"
@@ -86,6 +97,8 @@ validation:
   environment: "scripts/check_environment.ps1"
   environment_install: "scripts/install_environment.ps1"
   environment_docs: "scripts/check_environment_docs.ps1"
+  research_flow: "scripts/check_research_flow.ps1"
+  governance_text: "scripts/check_governance_text.ps1"
   schema: "scripts/validate_schemas.ps1"
   skill: "scripts/validate_skills.ps1"
   harness: "scripts/check_harness.ps1"

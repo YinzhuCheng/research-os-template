@@ -3,6 +3,7 @@
 Research OS documentation is layered so a researcher can start quickly while later agents can audit every path.
 
 - [Material-first Copilot](../PUBLIC/copilot.html): browser cockpit for free text, links, and uploaded research material.
+- [Process Contract](process-contract.md): canonical Research OS flow and skill handoff rules.
 - [Environment Guide](environment.md): runtime requirements, optional tools, and installation notes.
 - [Copilot Bridge Technical Doc](codex-browser-copilot.html): browser-to-Codex state machine, schemas, plugin bridge, and safety rules.
 - [Start Here](start-here.html): quick start for general researchers and Codex beginners.
@@ -16,6 +17,7 @@ Core controls:
 - [Work order](../CONTROL/work_order.yaml)
 - [Phase gate](../CONTROL/phase_gate.yaml)
 - [Project config](../config/research_project.yaml)
+- [Research flow](../config/research_flow.yaml)
 - [Repository rules](../AGENTS.md)
 - [Public dashboard](../PUBLIC/index.html)
 - [Environment check](../scripts/check_environment.ps1)

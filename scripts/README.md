@@ -8,6 +8,8 @@ This directory stores deterministic helper scripts for local Research OS operati
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install_environment.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment_docs.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_flow.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_governance_text.ps1
 ```
 
 `install_environment.ps1 -InstallMissing` can try Windows `winget` installs for Git and Python. Package names and install commands may need adjustment across Windows/macOS/Linux versions, enterprise images, proxies, and package managers.

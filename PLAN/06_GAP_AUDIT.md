@@ -12,6 +12,8 @@ This audit lists current residual risks after the v3.4 repository cleanup. Histo
 - Copilot intake: material-first browser cockpit, targeted three-question protocol, schemas, sanitized state, and bridge scaffold exist.
 - Environment setup: runtime requirements and install/check scripts exist.
 - Cleanup: generated paper output is no longer tracked by default; old validation snapshots were pruned from the current tree.
+- Process contract: v3.5 adds a machine-readable canonical flow and skill trigger matrix.
+- Governance readability: v3.5 rewrites key control documents and adds a validator for unreadable governance text.
 
 ## Remaining Risks
 
@@ -23,6 +25,7 @@ This audit lists current residual risks after the v3.4 repository cleanup. Histo
 - External component integrations are adapter registrations only. License/security review is required before vendoring or executing third-party research systems.
 - Mathematical formalization remains a future slot. Lean/Coq/Isabelle integration needs a dedicated work order, toolchain review, and false-proof handling policy.
 - Paper generation is optional. `templates/latex/` is checked statically, but generated `PUBLIC/paper/` output is only created after paper enablement.
+- The process contract is template-level. Real project instances may still need a project-specific work order before running private intake or experiments.
 
 ## Next Improvement Slots
 
@@ -31,3 +34,4 @@ This audit lists current residual risks after the v3.4 repository cleanup. Histo
 - Add a safe private-intake test harness that uses synthetic files only and never commits `PRIVATE/`.
 - Add OS-specific installer variants once the target deployment platforms are known.
 - Add optional formal proof adapters after the mathematical discovery loop is stable.
+- Add richer schema-instance validation for `config/research_flow.yaml` once a YAML parser is adopted.

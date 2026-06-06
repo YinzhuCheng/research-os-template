@@ -50,6 +50,16 @@
       "purpose": "Runtime requirements and install notes"
     },
     {
+      "label": "Process contract",
+      "path": "../docs/process-contract.md",
+      "purpose": "Canonical flow and skill handoff rules"
+    },
+    {
+      "label": "Research flow YAML",
+      "path": "../config/research_flow.yaml",
+      "purpose": "Machine-readable process contract"
+    },
+    {
       "label": "Environment check",
       "path": "../scripts/check_environment.ps1",
       "purpose": "Verify local runtime before first use"

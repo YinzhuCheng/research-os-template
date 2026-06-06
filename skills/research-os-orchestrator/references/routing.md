@@ -1,30 +1,35 @@
 # Routing Reference
 
-## Language Mode
+Use `config/research_flow.yaml` as the canonical process contract. This file explains how to interpret it.
 
-- `zh-first`: internal planning, logs, analysis, and audit are Chinese; formal paper follows venue language only when a paper target is explicitly enabled.
-- `en-only`: all project materials should be English unless a source quote or data field requires another language.
+## Specification Priority
 
-## Intervention Level
+When instructions conflict, apply:
 
-- `low`: Codex proceeds within a phase, but pauses at phase gates and high-risk actions.
-- `medium`: Codex also pauses for major protocols, core claims, dissemination structure, and important figures.
-- `high`: Codex proposes every mutating work order and waits for approval before execution.
+1. Latest user instruction.
+2. `CONTROL/work_order.yaml` and `CONTROL/phase_gate.yaml`.
+3. `AGENTS.md`.
+4. `config/research_flow.yaml`.
+5. `config/research_project.yaml` and schemas.
+6. Current docs and dashboard.
+7. Historical `PLAN/` and `PROVENANCE/` records.
 
-## Stage Routing
+## Canonical Stage Routing
 
-- `copilot_intake`: process material-first browser intake through `research-os-copilot`; do not use the retired fixed five-question intake.
-- `initialization`: create config, research brief, alignment dossier, first work order.
-- `research_kernel`: normalize substantive work into candidate, evaluator contract, evaluation result, belief state, search trace, negative result, next-action policy, and human judgment gate.
-- `literature`: build literature matrix and evidence map.
-- `protocol`: write experiments and stop conditions.
-- `execution`: run work orders and record manifests.
-- `analysis`: interpret results and update claim-evidence.
-- `feasibility`: define and run a researcher-budgeted minimal feasibility probe.
-- `evidence_refresh`: refresh time-sensitive literature, tool, policy, price, resource, or venue evidence.
-- `paper`: build LaTeX paper, figures, appendix, and submission checklist only when requested.
-- `review`: run adversarial review and rebuttal loops.
-- `export`: sanitize and package public materials.
+The stage sequence is:
+
+`material_intake -> targeted_questions -> initialization -> research_kernel -> domain_or_general_route -> feasibility_or_evidence -> execution_harness -> analysis -> acceptance_gate -> next_loop_or_export`
+
+- `material_intake`: use `research-os-copilot`; raw uploads stay private.
+- `targeted_questions`: use `research-os-copilot`; ask exactly three targeted questions with recommended answer, options, and Other/free-form path.
+- `initialization`: use `research-os-init`, with `research-os-alignment` and `research-os-evidence` as needed.
+- `research_kernel`: use `research-os-research-kernel`; define candidate and evaluator contract before field routing.
+- `domain_or_general_route`: inspect `domain_profiles/`; only then route to a domain skill.
+- `feasibility_or_evidence`: use `research-os-feasibility-probe`, `research-os-evidence`, `research-os-live-evidence-refresh`, and `research-os-resource-guard` as needed.
+- `execution_harness`: use `research-os-execution-harness`; experiment loops may be planned with `research-os-experiment-manager`, but execution still uses the harness.
+- `analysis`: use `research-os-analysis`; preserve failures and negative results.
+- `acceptance_gate`: use `research-os-alignment`; require human confirmation for scope, budget, privacy, dissemination, or external behavior changes.
+- `next_loop_or_export`: loop through orchestrator again, or use public/paper/export skills only when enabled.
 
 ## Domain Profile Routing
 
@@ -67,3 +72,5 @@ Do not add a skill to the main route unless it has:
 - validator coverage;
 - `docs/doc_map.yaml` or documentation presence;
 - `.agents/skills/` mirror consistency.
+
+Do not let a skill become a hidden sub-router. If it starts deciding broad process stages, move that logic to `research-os-orchestrator` and `config/research_flow.yaml`.

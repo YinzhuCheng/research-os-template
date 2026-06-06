@@ -66,6 +66,7 @@
       <p class="muted">For future agents and maintainers.</p>
       <nav aria-label="Technical report navigation">
         <a href="#architecture">Architecture</a>
+        <a href="#process">Process Contract</a>
         <a href="#environment">Environment</a>
         <a href="#copilot">Copilot</a>
         <a href="#kernel">Research Kernel</a>
@@ -74,6 +75,7 @@
         <a href="#validation">Validation</a>
         <a href="../PUBLIC/copilot.html">Copilot Page</a>
         <a href="../PUBLIC/index.html">PUBLIC/index.html</a>
+        <a href="process-contract.md">process-contract.md</a>
         <a href="environment.md">environment.md</a>
         <a href="../README.md">README.md</a>
         <a href="../CONTROL/work_order.yaml">work_order.yaml</a>
@@ -82,13 +84,13 @@
     </aside>
     <main>
       <header>
-        <h1>Research OS v3.4 Technical Report</h1>
-        <p class="lead">Research OS is a structured human-in-loop auto researcher. v3.4 makes the runtime environment explicit, prunes stale generated outputs, and keeps the material-first browser cockpit, research kernel, domain profiles, work orders, phase gates, manifests, ledgers, and privacy boundaries connected.</p>
+        <h1>Research OS v3.5 Technical Report</h1>
+        <p class="lead">Research OS is a structured human-in-loop auto researcher. v3.5 hardens the process contract and skill governance so the material-first browser cockpit, research kernel, domain profiles, work orders, phase gates, manifests, ledgers, and privacy boundaries follow one inspectable route.</p>
       </header>
 
       <section class="section" id="architecture">
         <h2>Architecture</h2>
-        <div class="flow" role="img" aria-label="Research OS v3.4 architecture">
+        <div class="flow" role="img" aria-label="Research OS v3.5 architecture">
           <svg viewBox="0 0 1080 420" width="100%" height="100%" aria-hidden="true">
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -133,6 +135,22 @@
             </g>
           </svg>
         </div>
+      </section>
+
+      <section class="section" id="process">
+        <h2>Process Contract</h2>
+        <p>The canonical automation route is machine-readable in <a href="../config/research_flow.yaml">config/research_flow.yaml</a> and explained for humans in <a href="process-contract.md">docs/process-contract.md</a>. Skill selection is centralized in <a href="../skills/README.md">skills/README.md</a>.</p>
+        <pre>material_intake
+-> targeted_questions
+-> initialization
+-> research_kernel
+-> domain_or_general_route
+-> feasibility_or_evidence
+-> execution_harness
+-> analysis
+-> acceptance_gate
+-> next_loop_or_export</pre>
+        <p>Every stage declares inputs, outputs, required skill, optional skills, human gate, prohibited actions, and validation checks. This is the main guard against a spaghetti toolbox.</p>
       </section>
 
       <section class="section" id="environment">
@@ -203,6 +221,8 @@
         <h2>Validation Commands</h2>
         <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment_docs.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_flow.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_governance_text.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_kernel.ps1

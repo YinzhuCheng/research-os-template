@@ -1,13 +1,13 @@
-current_phase: research-os-v3.4
+current_phase: research-os-v3.5
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "Review the environment/install flow and simplified repository structure, then decide whether to enable real runtime uploads or generated paper outputs in a later work order."
+next_required_decision: "After process-contract hardening, decide whether to test synthetic PRIVATE intake handling or keep the template as documentation-first."
 confirmed_decisions:
-  - "Keep `templates/latex/` as the authoritative optional paper template."
-  - "Remove default generated public paper copies from `PUBLIC/paper/`; regenerate only after paper output is explicitly enabled."
-  - "Keep current manifest, resource ledger, and v3.3 validation report; older validation reports can be recovered from git history."
-  - "Do not touch `PRIVATE/` or real uploaded materials during cleanup."
+  - "Use the latest material-first copilot flow: no fixed five-question intake; exactly three targeted questions after material profiling."
+  - "Keep current skills; clarify triggers and boundaries instead of splitting or merging skills in v3.5."
+  - "Make config/research_flow.yaml the canonical machine-readable process contract."
+  - "Do not touch PRIVATE/ or real uploaded materials during this governance pass."

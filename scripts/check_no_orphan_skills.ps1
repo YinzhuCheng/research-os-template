@@ -15,6 +15,7 @@ if (!(Test-Path -LiteralPath $skillsDir)) { throw "Skills directory missing." }
 
 $skillsReadme = Read-Text "skills\README.md"
 $routing = Read-Text "skills\research-os-orchestrator\references\routing.md"
+$researchFlow = Read-Text "config\research_flow.yaml"
 $docMap = Read-Text "docs\doc_map.yaml"
 $technicalReport = Read-Text "docs\technical-report.html"
 
@@ -51,6 +52,15 @@ foreach ($docNeedle in @("research_kernel", "research_kernel_schema", "research_
 
 if ($routing -notmatch "Anti-Spaghetti Skill Rule") {
   throw "Routing must state the anti-spaghetti skill rule."
+}
+
+if ($researchFlow -notmatch "canonical_sequence") {
+  throw "Research flow must state canonical_sequence."
+}
+
+foreach ($required in @("research-os-orchestrator", "research-os-copilot", "research-os-research-kernel", "research-os-execution-harness")) {
+  if ($researchFlow -notmatch [regex]::Escape($required)) { throw "config/research_flow.yaml missing required skill: $required" }
+  if ($skillsReadme -notmatch [regex]::Escape($required)) { throw "skills/README.md missing trigger matrix skill: $required" }
 }
 
 Write-Output "No orphan skill validation passed for $($skills.Count) skill(s)."

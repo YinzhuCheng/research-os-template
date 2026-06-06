@@ -1,0 +1,237 @@
+flow_id: RESEARCH-FLOW-0001
+version: research-os-v3.5
+language_mode: zh-first
+canonical_sequence:
+  - material_intake
+  - targeted_questions
+  - initialization
+  - research_kernel
+  - domain_or_general_route
+  - feasibility_or_evidence
+  - execution_harness
+  - analysis
+  - acceptance_gate
+  - next_loop_or_export
+spec_priority:
+  - latest_user_instruction
+  - work_order_and_phase_gate
+  - AGENTS.md
+  - config/research_flow.yaml
+  - config_and_schemas
+  - current_docs
+  - historical_plan_and_provenance
+global_rules:
+  - "Use repo skills before generic Codex execution."
+  - "Do not use the retired fixed five-question intake."
+  - "Exactly three targeted questions are required after material profiling and before initialization."
+  - "Substantive research work must pass through research-os-research-kernel before domain-specific skills."
+  - "Execution, mutation, resource use, public export, and external writeback must pass through harness and human gates."
+  - "Failed, null, inconclusive, and partial outcomes must be preserved as search_trace or negative_result."
+stages:
+  - id: material_intake
+    purpose: "Collect researcher text, links, and uploaded material into a private-first intake packet."
+    inputs:
+      - "researcher free text"
+      - "source links"
+      - "uploaded material metadata"
+    outputs:
+      - "copilot_intake packet"
+      - "sanitized public copilot state"
+    required_skill: research-os-copilot
+    optional_skills:
+      - research-os-harness-audit
+    human_gate: "Required for reading private raw uploads or following external links."
+    prohibited:
+      - "Do not execute uploaded zip/demo files."
+      - "Do not move raw private material into PUBLIC/."
+    validation:
+      - scripts/check_copilot_intake_schema.ps1
+      - scripts/check_copilot_state.ps1
+  - id: targeted_questions
+    purpose: "Ask exactly three material-specific questions that change the initialization plan."
+    inputs:
+      - "copilot_intake packet"
+      - "material profile"
+    outputs:
+      - "copilot_questions packet"
+    required_skill: research-os-copilot
+    optional_skills:
+      - research-os-alignment
+    human_gate: "Researcher answers all three questions; each question must provide recommended answer, options, and Other/free-form path."
+    prohibited:
+      - "Do not ask the retired fixed five-question intake."
+      - "Do not initialize before the three-question packet exists unless the user explicitly bypasses intake."
+    validation:
+      - scripts/check_copilot_intake_schema.ps1
+  - id: initialization
+    purpose: "Create a structured startup package from material and three answers."
+    inputs:
+      - "copilot_intake packet"
+      - "copilot_questions answers"
+    outputs:
+      - "initialization report"
+      - "sanitized dashboard state"
+      - "repository links"
+    required_skill: research-os-init
+    optional_skills:
+      - research-os-copilot
+      - research-os-alignment
+      - research-os-evidence
+    human_gate: "Required if initialization would set budget, paper target, public export, or external resource assumptions."
+    prohibited:
+      - "Do not invent budget, baseline, model, provider, dataset, venue, or paper goal."
+    validation:
+      - scripts/check_copilot_state.ps1
+      - scripts/check_dashboard.ps1
+  - id: research_kernel
+    purpose: "Normalize the active research object into candidate, evaluator, belief, trace, negative result, next action, and human gate."
+    inputs:
+      - "initialization report"
+      - "research brief"
+      - "domain or general research object"
+    outputs:
+      - "research kernel cycle"
+      - "evaluator contracts with computation checklist"
+    required_skill: research-os-research-kernel
+    optional_skills:
+      - research-os-evidence
+      - research-os-resource-guard
+    human_gate: "Required before public claims, phase changes, real resources, privacy boundary changes, or external writeback."
+    prohibited:
+      - "Do not route directly to domain skills without a candidate and evaluator contract."
+      - "Do not discard failed or inconclusive candidates."
+    validation:
+      - scripts/check_research_kernel.ps1
+      - scripts/check_domain_kernel_bindings.ps1
+  - id: domain_or_general_route
+    purpose: "Apply field-specific taste only after the shared kernel state exists."
+    inputs:
+      - "research kernel cycle"
+      - "domain profile when selected or clearly implied"
+    outputs:
+      - "domain artifact plan"
+      - "quality gates"
+    required_skill: research-os-orchestrator
+    optional_skills:
+      - research-os-math-discovery
+      - research-os-applied-math-modeling
+      - research-os-ml-research-protocol
+      - research-os-cs-research-artifact
+      - research-os-statistical-inference
+    human_gate: "Required if the domain is ambiguous or changes the research plan materially."
+    prohibited:
+      - "Do not let field routing bypass work order, kernel, resource guard, or execution harness."
+    validation:
+      - scripts/check_domain_router.ps1
+      - scripts/check_domain_profiles.ps1
+      - scripts/check_agent_capabilities.ps1
+      - scripts/check_domain_templates.ps1
+  - id: feasibility_or_evidence
+    purpose: "Choose the smallest useful validation path and link claims to evidence before execution or public assertion."
+    inputs:
+      - "candidate"
+      - "evaluator contracts"
+      - "claim-evidence matrix"
+    outputs:
+      - "feasibility probe"
+      - "claim-evidence updates"
+      - "live evidence refresh when needed"
+    required_skill: research-os-orchestrator
+    optional_skills:
+      - research-os-feasibility-probe
+      - research-os-evidence
+      - research-os-live-evidence-refresh
+      - research-os-resource-guard
+    human_gate: "Required for budget, real resource choices, time-sensitive unverified claims, and expanding beyond minimum validation."
+    prohibited:
+      - "Do not proceed to execution without budget/resource boundaries when resources are needed."
+    validation:
+      - scripts/check_research_kernel.ps1
+      - scripts/scan_privacy.ps1
+  - id: execution_harness
+    purpose: "Execute only approved work orders inside allowed paths and with audit records."
+    inputs:
+      - "work order"
+      - "phase gate"
+      - "resource budget"
+      - "approved evaluator or experiment plan"
+    outputs:
+      - "run manifest entry"
+      - "resource ledger entry"
+      - "result artifacts"
+    required_skill: research-os-execution-harness
+    optional_skills:
+      - research-os-experiment-manager
+      - research-os-resource-guard
+      - research-os-replay-eval-harness
+    human_gate: "Required for credentials, paid resources, cloud/lab/API use, external writeback, budget overrun, and unsafe code execution."
+    prohibited:
+      - "Do not write forbidden paths."
+      - "Do not infer success from output existence alone."
+    validation:
+      - scripts/check_harness.ps1
+      - scripts/validate_schemas.ps1
+  - id: analysis
+    purpose: "Interpret observed results without hiding null, failed, partial, or contradictory outcomes."
+    inputs:
+      - "run manifest"
+      - "resource ledger"
+      - "result artifacts"
+      - "claim-evidence matrix"
+    outputs:
+      - "analysis report"
+      - "claim-evidence updates"
+      - "negative_result or search_trace updates"
+    required_skill: research-os-analysis
+    optional_skills:
+      - research-os-evidence
+      - research-os-replay-eval-harness
+      - research-os-visual-communication
+    human_gate: "Required before upgrading claims to public-ready or changing the next action policy."
+    prohibited:
+      - "Do not smooth away failed or null results."
+    validation:
+      - scripts/check_research_kernel.ps1
+      - scripts/scan_privacy.ps1
+  - id: acceptance_gate
+    purpose: "Align the next step with the researcher before continuing, stopping, exporting, or publishing."
+    inputs:
+      - "analysis report"
+      - "next_action_policy"
+      - "human_judgment_gate"
+    outputs:
+      - "accepted next action"
+      - "revised plan"
+      - "new work order when needed"
+    required_skill: research-os-alignment
+    optional_skills:
+      - research-os-harness-audit
+      - research-os-resource-guard
+    human_gate: "Always required when next action changes scope, budget, privacy boundary, dissemination, or external behavior."
+    prohibited:
+      - "Do not continue a new loop without a recorded acceptance or explicit low-risk work order allowance."
+    validation:
+      - scripts/check_harness.ps1
+  - id: next_loop_or_export
+    purpose: "Either start the next research loop or package sanitized public outputs."
+    inputs:
+      - "accepted next action"
+      - "public export decision"
+    outputs:
+      - "next cycle"
+      - "public export package"
+      - "paper/report artifacts when enabled"
+    required_skill: research-os-orchestrator
+    optional_skills:
+      - research-os-public-export
+      - research-os-paper-authoring
+      - research-os-polish-factcheck
+      - research-os-review-rebuttal
+      - research-os-visual-communication
+    human_gate: "Required for public export, paper submission, external upload, or writeback."
+    prohibited:
+      - "Do not enter paper/review/export flows unless explicitly enabled."
+    validation:
+      - scripts/check_docs_links.ps1
+      - scripts/check_dashboard.ps1
+      - scripts/scan_privacy.ps1

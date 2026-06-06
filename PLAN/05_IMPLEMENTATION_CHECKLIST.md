@@ -49,3 +49,14 @@ This checklist tracks the durable Research OS template state. Detailed historica
 - [x] Remove stale generated `PUBLIC/paper/` output from the current tree.
 - [x] Remove old validation snapshots while preserving durable manifest and ledger files.
 - [x] Run the full v3.4 validation set and record `PROVENANCE/final_validation_report_v3_4.md`.
+
+## v3.5 Process Contract And Skill Governance
+
+- [x] Plan the v3.5 hardening pass around a single canonical Research OS process.
+- [x] Rewrite unreadable governance entrypoints: `AGENTS.md`, `.codex/requirements.md`, and `CONTROL/README.md`.
+- [x] Add `config/research_flow.yaml` and `config/schemas/research_flow.schema.json`.
+- [x] Upgrade `skills/README.md` into a trigger matrix with responsibilities and boundaries.
+- [x] Update orchestrator routing to reference the process contract.
+- [x] Add `docs/process-contract.md`.
+- [x] Add `scripts/check_research_flow.ps1` and `scripts/check_governance_text.ps1`.
+- [x] Run the full v3.5 validation set and record `PROVENANCE/final_validation_report_v3_5.md`.
