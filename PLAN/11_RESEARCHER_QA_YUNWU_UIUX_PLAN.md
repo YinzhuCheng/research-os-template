@@ -5,7 +5,7 @@
 | Step | Area | Status |
 | --- | --- | --- |
 | 1 | Land v4.3 work order, phase gate, and executable plan | completed |
-| 2 | Run researcher-perspective Playwright walkthroughs and local screenshots | pending |
+| 2 | Run researcher-perspective Playwright walkthroughs and local screenshots | completed |
 | 3 | Fix desktop UI copy, mojibake guards, researcher workflow UX, and native dialogs | pending |
 | 4 | Run signal-first Yunwu UX review within USD 3 and apply high-impact findings | pending |
 | 5 | Run validation, record provenance/resource use, commit, and push each step | pending |
@@ -40,3 +40,10 @@ Before each implementation step, reread this plan, check for gaps, execute only 
 
 - `git diff --check` passed.
 - `scripts/validate_schemas.ps1` passed.
+
+## Step 2 Validation
+
+- Existing Playwright workflow passed on desktop and narrow viewport.
+- Researcher QA screenshots were captured locally under ignored `apps/research-os-desktop/test-results/researcher-qa/baseline/`.
+- Rendered HTML had no Unicode replacement character and no browser console errors.
+- Baseline issues were recorded in `PROVENANCE/researcher_qa_baseline_v4_3.md`.
