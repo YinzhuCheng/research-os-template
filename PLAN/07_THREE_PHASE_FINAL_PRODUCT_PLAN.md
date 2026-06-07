@@ -45,7 +45,7 @@
 | 4 | git-backed 存档功能 | completed | passed: archive check, copilot bridge check, archive unit tests | pushed: `bb2e86d` |
 | 5 | UI/UX 重整 | completed | passed: dashboard, copilot resource rendering, HTML docs, docs links, archive checks | pushed: `0049d37` |
 | 6 | 文档、dashboard 数据与检查脚本 | completed | passed: governance, research flow, dashboard, HTML docs, docs links, integrations, archive, schema checks | pushed: `6158186` |
-| 7 | 完整验证与浏览器 QA | completed | passed: full validation, bundled-Python unit tests, desktop/mobile browser QA, privacy scan | ready for final step commit |
+| 7 | 完整验证与浏览器 QA | completed | passed: full validation, bundled-Python unit tests, desktop/mobile browser QA, privacy scan | pushed: `f9bb611` |
 
 ## 产物轨道
 
