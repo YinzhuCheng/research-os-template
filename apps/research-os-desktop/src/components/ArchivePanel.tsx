@@ -34,7 +34,7 @@ export function ArchivePanel() {
         <Archive size={18} aria-hidden="true" />
         <div>
           <h2>存档</h2>
-          <p>创建 git-backed snapshot，并写入脱敏索引；适合长任务前、阶段切换前和风险操作前。</p>
+          <p>创建 git-backed snapshot，并写入脱敏索引；适合长任务前、阶段切换前和风险操作前。中断后可用最近存档对比、恢复或继续。</p>
         </div>
       </div>
       <div className="metric-row">
@@ -71,7 +71,7 @@ export function ArchivePanel() {
         </button>
       </div>
       {create.error ? <p className="error-text">{create.error.message}</p> : null}
-      <p className="muted">已有存档：{archives.data?.archives.length ?? 0}</p>
+      <p className="muted">已有存档：{archives.data?.archives.length ?? 0}。后续会在这里提供恢复、对比和继续入口。</p>
     </section>
   );
 }

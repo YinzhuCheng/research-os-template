@@ -1,4 +1,4 @@
-import { Play, Square } from "lucide-react";
+import { Play, RefreshCw, Square } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../api";
@@ -52,7 +52,22 @@ export function RuntimePanel() {
           <p>{runtimeReady ? "Codex SDK 可用，所有执行仍经过 Research OS 审批。" : "Codex SDK 未安装或不可用；先配置运行时，再启动真实执行。"}</p>
         </div>
       </div>
-      {!runtimeReady ? <p className="empty-state">当前只能查看项目状态和准备下一轮指令。安装或配置 Codex runtime 后，Thread/Turn 按钮会用于真实执行。</p> : null}
+      {!runtimeReady ? (
+        <div className="empty-state action-state">
+          <strong>研究引擎未就绪。</strong>
+          <p>当前仍可整理材料、回答对齐问题和创建存档；真实 Codex 执行需要先安装或配置 runtime。</p>
+          <div className="inline-actions">
+            <button className="secondary-action" type="button" onClick={() => environment.refetch()} disabled={environment.isFetching}>
+              <RefreshCw size={16} aria-hidden="true" />
+              {environment.isFetching ? "正在检测" : "重试检测"}
+            </button>
+          </div>
+          <details>
+            <summary>配置说明</summary>
+            <p>确认已安装 Codex runtime 或 Python SDK，并在 Profile 中选择可用模型。若 sidecar 崩溃，重启应用后会按 `.rosproj` 继续恢复。</p>
+          </details>
+        </div>
+      ) : null}
       <label className="field">
         <span>下一轮指令</span>
         <textarea value={turnText} onChange={(event) => setTurnText(event.target.value)} rows={4} />

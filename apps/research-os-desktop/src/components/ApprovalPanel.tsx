@@ -64,14 +64,14 @@ export function ApprovalPanel() {
             <div className="approval-actions">
               <button type="button" className="secondary-action" onClick={() => decide.mutate({ approvalId: approval.approval_id, decision: "decline" })}>
                 <ShieldX size={14} aria-hidden="true" />
-                拒绝
+                拒绝本次
               </button>
               <button type="button" className="primary-action" onClick={() => decide.mutate({ approvalId: approval.approval_id, decision: "accept" })}>
                 <ShieldCheck size={14} aria-hidden="true" />
-                允许
+                允许一次
               </button>
               <button type="button" className="secondary-action" onClick={() => decide.mutate({ approvalId: approval.approval_id, decision: "cancel" })}>
-                取消
+                取消队列
               </button>
             </div>
           </article>

@@ -1,0 +1,182 @@
+{
+  "generated_at": "2026-06-07T15:43:52.685Z",
+  "source_docs": [
+    "https://yunwu.apifox.cn/api-232421952",
+    "https://yunwu.apifox.cn/doc-5459028"
+  ],
+  "endpoint": "https://yunwu.ai/v1/chat/completions",
+  "usage_endpoint": "https://api.apiplus.org/v1/dashboard/billing/usage?start_date=2026-06-07&end_date=2026-06-07",
+  "before_usage": {
+    "ok": true,
+    "status": 200,
+    "json": {
+      "object": "list",
+      "total_usage": 280631.8728
+    }
+  },
+  "before_subscription": {
+    "ok": true,
+    "status": 200,
+    "json": {
+      "object": "billing_subscription",
+      "has_payment_method": true,
+      "soft_limit_usd": 2896.217674,
+      "hard_limit_usd": 2896.217674,
+      "system_hard_limit_usd": 2896.217674,
+      "access_until": 0,
+      "token_name": "codex"
+    }
+  },
+  "calls": [
+    {
+      "id": "researcher-workflow",
+      "started_at": "2026-06-07T15:42:28.602Z",
+      "status": 200,
+      "request": {
+        "model": "gpt-5.4",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are an expert software product reviewer. Do not ask follow-up questions. Be specific and concise."
+          },
+          {
+            "role": "user",
+            "content": "Act as a pragmatic research PI evaluating a desktop research copilot. Based only on this sanitized UI summary, identify whether a real researcher can understand the workflow from project creation to research loop to final products. Return concise JSON with score_0_10, top_blockers, concrete_improvements, and copy_changes. Research OS Desktop is a Windows desktop research copilot app using Tauri + React + Python sidecar. Current UI is Chinese-first. Screenshots show: Project Center with create/open .rosproj, sidecar status, profile/model form; Workspace with three-phase bar, material intake, acceptance/next-step choice prompt, Codex execution stream, approval queue, archive panel, final product modal. Recent fixes: macro phase labels now show Chinese labels instead of raw loop; runtime events now show readable event cards with expandable JSON; approvals show method/risk/reason/command/scope and allow/decline/cancel; archive preview shows macro/internal phase, changed paths, privacy scan; Tauri native dialog support added with browser fallback; mojibake guard added. Remaining risks: profile form may be too technical; runtime unavailable path may need clearer install/configure action; final product default recommendation is report."
+          }
+        ],
+        "temperature": 0.2,
+        "max_tokens": 1200,
+        "reasoning_effort": "low",
+        "stream": false
+      },
+      "response": {
+        "id": "resp_023d3b27563705f7016a25916951f88198bb63069c16ab415f",
+        "object": "chat.completion",
+        "created": 1780846964,
+        "model": "gpt-5.4",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"score_0_10\":7,\"top_blockers\":[\"Project setup still appears too technical for first-time researchers: profile/model/sidecar concepts may obscure the basic 'create project -> add materials -> run loop' path.\",\"When runtime is unavailable, the recovery path is likely unclear; users may not know whether to install, configure, or switch modes.\",\"The final product step may bias users toward the default report without making other output types equally understandable.\",\"Phase/navigation is more readable now, but the end-to-end workflow may still feel fragmented across intake, execution stream, approvals, archive, and final product surfaces.\"],\"concrete_improvements\":[\"Make project creation wizard-like: 1) create/open project, 2) choose research goal/template, 3) confirm runtime readiness, 4) enter workspace.\",\"Demote advanced profile/model settings behind an 'Advanced' section; show a simple default configuration with plain-language labels.\",\"Add a prominent runtime status banner with direct actions: 'Install runtime', 'Configure runtime', 'Retry connection', and 'Use limited mode'.\",\"In the workspace, add a persistent 'You are here' guide showing current phase, next decision, and expected output.\",\"Frame the acceptance/next-step choice as a clear researcher action, e.g. 'Review findings and choose next action' with 2–3 recommended options.\",\"For approvals, add one-line plain-language summaries before technical fields so non-technical researchers can decide faster.\",\"In final product modal, present output types as goal-based choices (report / memo / dataset summary / literature review) rather than a default-first recommendation.\",\"Add a compact end-to-end empty-state checklist in new projects: 'Add materials -> Run analysis -> Review approvals -> Check archive -> Export final product'.\"],\"copy_changes\":[\"Change technical labels like 'profile/model' to plain Chinese equivalents such as '研究设置' and 'AI模型（高级）'.\",\"For unavailable runtime, use action-oriented copy: '研究引擎未就绪。请安装或配置后继续。' with buttons '立即安装', '打开配置', '重试'.\",\"For project entry, prefer '新建研究项目' / '打开研究项目' over file-centric wording, while keeping .rosproj secondary.\",\"For the next-step prompt, replace abstract wording with '已完成当前分析。请选择下一步：继续深入、整理结论、生成成果'.\",\"For approvals, prepend a summary line such as '本操作将修改 X 个文件，风险：中/高，原因：…'.\",\"In final product modal, replace default-report framing with '选择你要产出的成果类型' and mark '报告' as '推荐' only when appropriate, not as implicit default.\",\"For sidecar/runtime status, use user-facing copy like '研究引擎已连接/未连接' instead of implementation terms.\",\"Ensure phase labels consistently use researcher language: '资料收集', '分析执行', '成果产出' rather than system-oriented terminology.\"]}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 330,
+          "completion_tokens": 612,
+          "total_tokens": 942
+        }
+      }
+    },
+    {
+      "id": "desktop-ux-accessibility",
+      "started_at": "2026-06-07T15:42:46.152Z",
+      "status": 200,
+      "request": {
+        "model": "gpt-5.4",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are an expert software product reviewer. Do not ask follow-up questions. Be specific and concise."
+          },
+          {
+            "role": "user",
+            "content": "Act as a senior desktop UX engineer. Evaluate this app for information architecture, empty states, keyboard/accessibility, narrow window usability, and visual professionalism. Return concise JSON with severity, issue, why_it_matters, recommended_fix. Research OS Desktop is a Windows desktop research copilot app using Tauri + React + Python sidecar. Current UI is Chinese-first. Screenshots show: Project Center with create/open .rosproj, sidecar status, profile/model form; Workspace with three-phase bar, material intake, acceptance/next-step choice prompt, Codex execution stream, approval queue, archive panel, final product modal. Recent fixes: macro phase labels now show Chinese labels instead of raw loop; runtime events now show readable event cards with expandable JSON; approvals show method/risk/reason/command/scope and allow/decline/cancel; archive preview shows macro/internal phase, changed paths, privacy scan; Tauri native dialog support added with browser fallback; mojibake guard added. Remaining risks: profile form may be too technical; runtime unavailable path may need clearer install/configure action; final product default recommendation is report."
+          }
+        ],
+        "temperature": 0.2,
+        "max_tokens": 1200,
+        "reasoning_effort": "low",
+        "stream": false
+      },
+      "response": {
+        "id": "resp_0c62ac1c52f7ebed016a259179898c819aad785284bc513996",
+        "object": "chat.completion",
+        "created": 1780846995,
+        "model": "gpt-5.4",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[\n  {\n    \"severity\": \"high\",\n    \"issue\": \"Project Center information architecture is too technical for first-run users\",\n    \"why_it_matters\": \"Mixing project creation/opening, sidecar health, and profile/model configuration in one entry screen increases cognitive load and makes the app feel like an engineering console rather than a research copilot. Users may not know what is required versus optional before starting work.\",\n    \"recommended_fix\": \"Separate the screen into a primary project-start area and a secondary advanced configuration area. Make create/open project the dominant action, collapse profile/model settings under '高级设置', and add brief plain-language descriptions for required fields.\"\n  },\n  {\n    \"severity\": \"medium\",\n    \"issue\": \"Profile/model form likely exposes implementation details instead of user goals\",\n    \"why_it_matters\": \"If users see raw model/provider terminology too early, they must translate technical settings into research intent. This slows onboarding and reduces perceived professionalism.\",\n    \"recommended_fix\": \"Reframe the form around outcomes such as speed, quality, and privacy. Provide sensible defaults, presets, and inline helper text in Chinese. Keep raw provider/model controls behind an advanced expander.\"\n  },\n  {\n    \"severity\": \"high\",\n    \"issue\": \"Runtime unavailable state may not provide a clear recovery path\",\n    \"why_it_matters\": \"A status indicator without a direct next action leaves users blocked, especially in desktop environments where sidecar/runtime installation is a prerequisite. This is a critical empty-state failure.\",\n    \"recommended_fix\": \"Turn the unavailable state into an action-oriented empty state with explicit buttons such as '安装运行时', '配置路径', and '重试检测'. Include a short explanation, current detected status, and link to logs/details.\"\n  },\n  {\n    \"severity\": \"medium\",\n    \"issue\": \"Workspace contains many concurrent regions with weak hierarchy\",\n    \"why_it_matters\": \"Three-phase progress, material intake, next-step prompt, execution stream, approvals, archive, and final output all compete for attention. Users may struggle to identify the single current task.\",\n    \"recommended_fix\": \"Establish a stronger task hierarchy: pin the current step and required action at the top, keep passive observability panels secondary, and progressively reveal archive/debug information. Use one dominant call-to-action per phase.\"\n  },\n  {\n    \"severity\": \"medium\",\n    \"issue\": \"Acceptance/next-step prompt may be ambiguous as an empty or transitional state\",\n    \"why_it_matters\": \"When the system pauses for user choice, the app must clearly communicate what happened, what is waiting, and what each option will do. Ambiguity causes hesitation and accidental progression.\",\n    \"recommended_fix\": \"Present this state as a decision card with a clear summary, consequences of each choice, recommended option, and keyboard-default focus on the safest action.\"\n  },\n  {\n    \"severity\": \"low\",\n    \"issue\": \"Final product modal defaulting to report may bias users away from better output types\",\n    \"why_it_matters\": \"A default recommendation strongly influences selection. If 'report' is preselected too often, users may miss archives or structured outputs better suited to their task.\",\n    \"recommended_fix\": \"Only recommend 'report' when confidence is high and explain why. Otherwise use a neutral default, show 2–3 output types with use-case labels, and remember the user's last choice.\"\n  },\n  {\n    \"severity\": \"medium\",\n    \"issue\": \"Empty states in archive and approval areas may still feel system-centric\",\n    \"why_it_matters\": \"Panels that are empty without explanation appear unfinished. Users need to know when content will appear and whether they must take action.\",\n    \"recommended_fix\": \"Add explicit empty states such as '暂无待审批操作' with a note on what triggers approvals, and '暂无归档快照' with when snapshots are created. Include subtle icons and one-line guidance.\"\n  },\n  {\n    \"severity\": \"high\",\n    \"issue\": \"Keyboard flow is likely weak across complex multi-panel workspace interactions\",\n    \"why_it_matters\": \"Desktop power users expect full keyboard operation. Streams, approval actions, expandable JSON, dialogs, and modals can easily create focus traps or inefficient tab order if not intentionally designed.\",\n    \"recommended_fix\": \"Define a predictable tab order, visible focus states, Enter/Esc behavior, arrow-key navigation for lists/cards, and shortcuts for core actions like approve/decline, expand details, open project, and retry runtime checks.\"\n  },\n  {\n    \"severity\": \"high\",\n    \"issue\": \"Accessibility risk in event cards, approval cards, and expandable JSON\",\n    \"why_it_matters\": \"Readable cards are an improvement, but if expand/collapse state, semantic labels, and screen-reader announcements are missing, critical execution information remains inaccessible.\",\n    \"recommended_fix\": \"Use proper button semantics with aria-expanded, label action buttons clearly, announce new runtime events in a polite live region, and ensure JSON/detail panes are navigable and copyable by keyboard.\"\n  },\n  {\n    \"severity\": \"medium\",\n    \"issue\": \"Narrow window usability is at risk due to dense multi-pane layout\",\n    \"why_it_matters\": \"Desktop apps are frequently snapped to half-screen widths on Windows. Simultaneous panels can become cramped, causing truncation, horizontal scrolling, and loss of action clarity.\",\n    \"recommended_fix\": \"Introduce responsive breakpoints for narrow widths: stack secondary panels below the main task area, collapse archive/debug sections into tabs or drawers, preserve sticky primary actions, and aggressively manage text truncation with tooltips.\"\n  },\n  {\n    \"severity\": \"medium\",\n    \"issue\": \"Visual professionalism may still be inconsistent if system, debug, and product UI are visually mixed\",\n    \"why_it_matters\": \"When operational diagnostics share the same visual weight as user-facing workflow steps, the product can feel unfinished or internal. This reduces trust in a research assistant context.\",\n    \"recommended_fix\": \"Differentiate user workflow surfaces from diagnostic surfaces with a clearer type scale, spacing system, subdued debug styling, and consistent card/action patterns. Reserve high-contrast emphasis for current task and risk states only.\"\n  },\n  {\n    \"severity\": \"low\",\n    \"issue\": \"Chinese-first localization is good, but mixed fallback strings remain a professionalism risk\",\n    \"why_it_matters\": \"Even with mojibake protection and fixed phase labels, any remaining English/internal terminology breaks flow and signals incomplete polish.\",\n    \"recommended_fix\": \"Run a full localization pass on status text, approval metadata labels, dialog fallback text, and error states. Standardize terminology and ensure truncation rules work for Chinese in narrow layouts.\"\n  }\n]"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 314,
+          "completion_tokens": 1389,
+          "total_tokens": 1703
+        }
+      }
+    },
+    {
+      "id": "safety-runtime-recovery",
+      "started_at": "2026-06-07T15:43:14.499Z",
+      "status": 200,
+      "request": {
+        "model": "gpt-5.4",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are an expert software product reviewer. Do not ask follow-up questions. Be specific and concise."
+          },
+          {
+            "role": "user",
+            "content": "Act as a local-agent safety/recovery reviewer. Evaluate permissions, approval UX, archive UX, runtime unavailable state, retry/continue semantics, and whether the app helps users recover from Codex interruption without restarting. Return concise JSON with risks, missing_user_feedback, and implementation-level fixes. Research OS Desktop is a Windows desktop research copilot app using Tauri + React + Python sidecar. Current UI is Chinese-first. Screenshots show: Project Center with create/open .rosproj, sidecar status, profile/model form; Workspace with three-phase bar, material intake, acceptance/next-step choice prompt, Codex execution stream, approval queue, archive panel, final product modal. Recent fixes: macro phase labels now show Chinese labels instead of raw loop; runtime events now show readable event cards with expandable JSON; approvals show method/risk/reason/command/scope and allow/decline/cancel; archive preview shows macro/internal phase, changed paths, privacy scan; Tauri native dialog support added with browser fallback; mojibake guard added. Remaining risks: profile form may be too technical; runtime unavailable path may need clearer install/configure action; final product default recommendation is report."
+          }
+        ],
+        "temperature": 0.2,
+        "max_tokens": 1200,
+        "reasoning_effort": "low",
+        "stream": false
+      },
+      "response": {
+        "id": "resp_0b4a5b386a9de25a016a2591944548819ab726f3cdd66ace70",
+        "object": "chat.completion",
+        "created": 1780847029,
+        "model": "gpt-5.4",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"risks\": [\n    {\n      \"area\": \"permissions\",\n      \"risk\": \"Approval cards are richer now, but users may still approve high-impact actions without understanding persistence, reversibility, or blast radius.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"area\": \"approval_ux\",\n      \"risk\": \"Allow/decline/cancel exists, but the distinction between decline vs cancel may be unclear during live execution, increasing accidental blocking or unintended continuation.\",\n      \"severity\": \"medium\"\n    },\n    {\n      \"area\": \"archive_ux\",\n      \"risk\": \"Archive preview improves transparency, but recovery value is limited if users cannot clearly restore, re-open, diff, or resume from a specific archived state.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"area\": \"runtime_unavailable\",\n      \"risk\": \"If Python sidecar/Codex runtime is unavailable, users may hit a dead-end state without a single obvious repair path, especially on Windows installs with env/config issues.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"area\": \"retry_continue\",\n      \"risk\": \"Interruption handling appears visible in the stream, but resume semantics may still be ambiguous: retry last step, continue from checkpoint, or restart full run.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"area\": \"interruption_recovery\",\n      \"risk\": \"The app shows execution history and archives, but may not yet provide a strong guided recovery flow after Codex interruption without forcing users back to Project Center or a fresh run.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"area\": \"profile_setup\",\n      \"risk\": \"Technical model/profile fields can front-load failure and make recovery harder because users may not know whether interruption was caused by bad configuration, permissions, or runtime.\",\n      \"severity\": \"medium\"\n    }\n  ],\n  \"missing_user_feedback\": [\n    {\n      \"area\": \"permissions\",\n      \"missing\": \"No explicit warning tier for destructive/system-wide actions such as recursive edits, shell commands, deletes, network access, or writes outside workspace.\"\n    },\n    {\n      \"area\": \"permissions\",\n      \"missing\": \"No clear post-approval confirmation indicating what was executed, what changed, and whether changes can be reverted.\"\n    },\n    {\n      \"area\": \"approval_ux\",\n      \"missing\": \"No inline explanation of approve vs decline vs cancel semantics and their effect on the current queued task.\"\n    },\n    {\n      \"area\": \"archive_ux\",\n      \"missing\": \"No obvious user-facing message that archive snapshots can be used for recovery, comparison, or resume.\"\n    },\n    {\n      \"area\": \"archive_ux\",\n      \"missing\": \"No visible status for archive completeness/integrity when interruption happens mid-run.\"\n    },\n    {\n      \"area\": \"runtime_unavailable\",\n      \"missing\": \"Runtime unavailable state needs a primary CTA with explicit diagnosis and next steps: install Python sidecar, repair path, configure profile, or retry connection.\"\n    },\n    {\n      \"area\": \"runtime_unavailable\",\n      \"missing\": \"No clear distinction between 'not installed', 'misconfigured', 'busy', 'crashed', and 'permission denied' runtime failures.\"\n    },\n    {\n      \"area\": \"retry_continue\",\n      \"missing\": \"No explicit checkpoint/resume indicator showing the last completed macro/internal phase and what will happen on continue.\"\n    },\n    {\n      \"area\": \"retry_continue\",\n      \"missing\": \"No user feedback about whether retry is idempotent or may duplicate side effects.\"\n    },\n    {\n      \"area\": \"interruption_recovery\",\n      \"missing\": \"No dedicated interrupted-session banner/modal explaining that the workspace can be resumed without restarting and what state was preserved.\"\n    },\n    {\n      \"area\": \"interruption_recovery\",\n      \"missing\": \"No one-click action to recover latest interrupted run from the current project.\"\n    },\n    {\n      \"area\": \"final_product\",\n      \"missing\": \"Default recommendation of report may bias users away from resume/recovery-oriented next steps when execution stopped before completion.\"\n    }\n  ],\n  \"implementation-level fixes\": [\n    {\n      \"area\": \"permissions\",\n      \"fix\": \"Add risk-tier badges on approval cards: 只读, 工作区写入, 工作区外写入, 执行命令, 网络访问, 删除/覆盖. Color-code and require secondary confirmation for high-risk tiers.\"\n    },\n    {\n      \"area\": \"permissions\",\n      \"fix\": \"Show affected scope as normalized paths plus count of files/targets. For shell commands, render tokenized command preview and highlight dangerous flags.\"\n    },\n    {\n      \"area\": \"permissions\",\n      \"fix\": \"After approval execution, append a result card with changed files, exit code, duration, and a '撤销建议/恢复入口' link when revert is possible.\"\n    },\n    {\n      \"area\": \"approval_ux\",\n      \"fix\": \"Rename actions in Chinese-first UI to semantically distinct labels, e.g. '批准执行', '拒绝该步骤', '暂不处理'. Add tooltip/subtext describing queue behavior.\"\n    },\n    {\n      \"area\": \"approval_ux\",\n      \"fix\": \"If user clicks decline, require optional reason and then have agent produce an adjusted plan instead of hard-failing silently.\"\n    },\n    {\n      \"area\": \"archive_ux\",\n      \"fix\": \"Turn archive panel into recovery surface: '打开快照', '对比当前工作区', '从此状态继续', '导出快照'.\"\n    },\n    {\n      \"area\": \"archive_ux\",\n      \"fix\": \"Persist per-checkpoint metadata: macro_phase, internal_phase, last_completed_action, pending_approvals, changed_paths, sidecar/runtime version, profile id, timestamp.\"\n    },\n    {\n      \"area\": \"archive_ux\",\n      \"fix\": \"Mark interrupted snapshots with badge like '可恢复' or '快照不完整', based on whether checkpoint commit finished cleanly.\"\n    },\n    {\n      \"area\": \"runtime_unavailable\",\n      \"fix\": \"Implement a dedicated empty/error state component with diagnosis-specific CTAs: '安装运行时', '重新检测', '打开配置', '查看日志', '使用浏览器回退对话框'.\"\n    },\n    {\n      \"area\": \"runtime_unavailable\",\n      \"fix\": \"Map sidecar failures to actionable codes in Tauri->React events: NOT_INSTALLED, PATH_INVALID, CONFIG_MISSING, START_FAILED, CRASHED, PORT_BUSY, PERMISSION_DENIED, OFFLINE.\"\n    },\n    {\n      \"area\": \"runtime_unavailable\",\n      \"fix\": \"Bundle a preflight check on project open and before run start; block execution with a repair checklist instead of failing mid-stream.\"\n    },\n    {\n      \"area\": \"retry_continue\",\n      \"fix\": \"Separate controls: '重试该步骤', '从上个检查点继续', '重新开始本轮'. Each button should show exact resume point and side-effect warning.\"\n    },\n    {\n      \"area\": \"retry_continue\",\n      \"fix\": \"Store deterministic run state in a local session record: run_id, project_id, phase pointers, event offset, approval decisions, workspace snapshot ref, pending prompt context.\"\n    },\n    {\n      \"area\": \"retry_continue\",\n      \"fix\": \"On continue, rehydrate stream UI from persisted events and insert a synthetic banner: '已恢复到：宏阶段X / 内部阶段Y / 最近完成步骤Z'.\"\n    },\n    {\n      \"area\": \"interruption_recovery\",\n      \"fix\": \"On app launch/project reopen, detect unfinished run and show a recovery banner with one-click actions: '继续', '查看中断原因', '从快照恢复', '放弃本次运行'.\"\n    },\n    {\n      \"area\": \"interruption_recovery\",\n      \"fix\": \"Auto-save interruption reason and last heartbeat from sidecar; surface user-readable causes such as 'Codex连接中断', 'Python sidecar崩溃', '审批等待超时'.\"\n    },\n    {\n      \"area\": \"interruption_recovery\",\n      \"fix\": \"Do not require returning to Project Center for recovery; keep resume controls in Workspace header and archive panel.\"\n    },\n    {\n      \"area\": \"profile_setup\",\n      \"fix\": \"Collapse advanced profile/model settings behind '高级配置'. Add presets and inline validation so runtime/setup errors are caught before execution.\"\n    },\n    {\n      \"area\": \"final_product\",\n      \"fix\": \"If run was interrupted or partially completed, suppress report-first recommendation and instead prioritize '继续执行' and '查看恢复选项'.\"\n    }\n  ]\n}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 325,
+          "completion_tokens": 1835,
+          "total_tokens": 2160
+        }
+      }
+    }
+  ],
+  "after_usage": {
+    "ok": true,
+    "status": 200,
+    "json": {
+      "object": "list",
+      "total_usage": 280636.6698
+    }
+  },
+  "after_subscription": {
+    "ok": true,
+    "status": 200,
+    "json": {
+      "object": "billing_subscription",
+      "has_payment_method": true,
+      "soft_limit_usd": 2896.217674,
+      "hard_limit_usd": 2896.217674,
+      "system_hard_limit_usd": 2896.217674,
+      "access_until": 0,
+      "token_name": "codex"
+    }
+  }
+}

@@ -7,7 +7,7 @@
 | 1 | Land v4.3 work order, phase gate, and executable plan | completed |
 | 2 | Run researcher-perspective Playwright walkthroughs and local screenshots | completed |
 | 3 | Fix desktop UI copy, mojibake guards, researcher workflow UX, and native dialogs | completed |
-| 4 | Run signal-first Yunwu UX review within USD 3 and apply high-impact findings | pending |
+| 4 | Run signal-first Yunwu UX review within USD 3 and apply high-impact findings | completed |
 | 5 | Run validation, record provenance/resource use, commit, and push each step | pending |
 
 ## Operating Rule
@@ -58,3 +58,12 @@ Before each implementation step, reread this plan, check for gaps, execute only 
 - Vitest passed.
 - Tauri Windows build passed and produced local MSI and NSIS bundles.
 - Post-fix screenshots were captured locally under ignored `apps/research-os-desktop/test-results/researcher-qa/after-ui-fix/`.
+
+## Step 4 Validation
+
+- Rendered current Yunwu public docs with Playwright; chat endpoint and free usage query services were confirmed.
+- Ran three sanitized `gpt-5.4` low-reasoning UI review calls.
+- Token-log quota total was 23,985, estimated at USD 0.04797 using the documented `$1 = 500,000 tokens` exchange rate.
+- Applied high-impact review findings to project center, runtime recovery, approval action labels, archive recovery copy, final product defaulting, and workspace action guidance.
+- TypeScript, `scripts/check_desktop_app.ps1`, Playwright, and Vite build passed after review-driven fixes.
+- Final screenshots were captured locally under ignored `apps/research-os-desktop/test-results/researcher-qa/after-yunwu-fix/`.

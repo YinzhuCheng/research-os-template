@@ -126,6 +126,22 @@ button {
   margin-top: 2px;
 }
 
+.current-action {
+  align-items: center;
+  background: #edf7f3;
+  border: 1px solid #b7d8ce;
+  border-radius: var(--radius);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+}
+
+.current-action span {
+  color: #33433d;
+}
+
 .center-grid,
 .workspace-grid {
   display: grid;
@@ -446,10 +462,45 @@ em {
   margin-top: 16px;
 }
 
+.compact-panel {
+  padding: 14px 18px;
+}
+
+.advanced-summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.advanced-summary span {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.advanced-summary small {
+  color: var(--text-muted);
+}
+
 .profile-form {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.action-state {
+  display: grid;
+  gap: 8px;
+}
+
+.action-state p {
+  margin: 0;
+}
+
+.action-state details {
+  color: #33433d;
 }
 
 .metric-row {

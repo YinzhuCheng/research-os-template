@@ -62,6 +62,11 @@ function Workspace() {
 
       <PhaseBar active={activePhase} />
 
+      <section className="current-action" aria-label="当前研究行动">
+        <strong>当前需要你完成的事：验收上一阶段结果，并选择下一轮研究行动。</strong>
+        <span>先回答右侧对齐问题；需要真实执行时再启动 Codex。存档和审批是保护机制，不是主线任务。</span>
+      </section>
+
       {state.error ? (
         <div className="notice danger" role="alert">
           <AlertTriangle size={16} aria-hidden="true" />

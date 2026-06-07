@@ -16,7 +16,7 @@ const tracks = [
 ];
 
 export function FinalProductModal({ open, onClose, onSubmit, pending = false, error }: Props) {
-  const [selected, setSelected] = useState(["report"]);
+  const [selected, setSelected] = useState<string[]>([]);
   const [freeForm, setFreeForm] = useState("");
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -39,7 +39,7 @@ export function FinalProductModal({ open, onClose, onSubmit, pending = false, er
           <X size={18} />
         </button>
         <h2 id="final-product-title">进入最终产物阶段</h2>
-        <p className="muted">可多选产物类型。关闭弹窗会继续停留在第二阶段，不会改变当前研究循环。</p>
+        <p className="muted">选择你要产出的成果类型，可多选。报告是常见推荐，但不会自动替你勾选；关闭弹窗会继续停留在第二阶段。</p>
         <div className="track-list">
           {tracks.map(({ id, label, description, Icon }) => (
             <label className={`track-row ${selected.includes(id) ? "selected" : ""}`} key={id}>
