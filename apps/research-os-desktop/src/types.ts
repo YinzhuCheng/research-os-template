@@ -54,10 +54,29 @@ export interface Approval {
   command?: string;
 }
 
+export interface SubmissionWorkflowItem {
+  id: string;
+  label: string;
+  status: string;
+  required_evidence?: string;
+}
+
+export interface SubmissionWorkflow {
+  target_venue?: string;
+  article_type?: string;
+  target_section?: string;
+  status?: string;
+  source_verification?: SubmissionWorkflowItem[];
+  proof_audit?: SubmissionWorkflowItem[];
+  review_rounds?: Array<Record<string, unknown>>;
+  workflow_gaps?: Array<Record<string, unknown>>;
+}
+
 export interface SidecarState {
   project: RosProject | null;
   research_state: Record<string, unknown>;
   choice_prompts: ChoicePrompt[];
+  submission_workflow?: SubmissionWorkflow;
   run_monitor: Record<string, unknown>;
   archive_index: { archives: unknown[] };
 }

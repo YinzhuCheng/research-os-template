@@ -27,6 +27,20 @@ const choicePrompt = {
   free_form_placeholder: "补充研究偏好",
 };
 
+const submissionWorkflow = {
+  target_venue: "Neural Networks",
+  article_type: "Full Article",
+  target_section: "Mathematical and Computational Analysis",
+  source_verification: [
+    { id: "SRC-GUIDE", label: "Neural Networks Guide for Authors", status: "needs_online_refresh", required_evidence: "official guide URL" },
+  ],
+  proof_audit: [
+    { id: "PROOF-GATES", label: "Gate constructions", status: "needs_review" },
+  ],
+  review_rounds: [],
+  workflow_gaps: [],
+};
+
 test.beforeEach(async ({ page }) => {
   await page.route("http://127.0.0.1:8789/**", async (route) => {
     const url = new URL(route.request().url());
@@ -59,10 +73,12 @@ test.beforeEach(async ({ page }) => {
     if (path === "/api/intake") return json({ ok: true });
     if (path === "/api/choice-response") return json({ response: { response_id: "CR-1" } });
     if (path === "/api/final-products") return json({ plan: { product_plan_id: "FP-1" } });
+    if (path === "/api/workflow-gap") return json({ gap: { gap_id: "GAP-1", status: "recorded" } });
     if (path === "/api/state") {
       return json({
         project,
-        research_state: { schema_version: "research-state-v1", status: "ready" },
+        research_state: { schema_version: "research-state-v1", status: "ready", submission_workflow: submissionWorkflow },
+        submission_workflow: submissionWorkflow,
         choice_prompts: [choicePrompt],
         run_monitor: { runs: [] },
         archive_index: { archives: [] },
@@ -76,7 +92,7 @@ test("desktop project workflow is clickable and readable", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "研究项目工作台" })).toBeVisible();
   await page.getByRole("button", { name: /选择保存位置/ }).click();
-  await expect(page.getByText(/无法打开系统文件选择器|手动输入/)).toBeVisible();
+  await expect(page.getByText(/当前不是 Tauri 桌面运行环境/)).toBeVisible();
   await page.getByRole("button", { name: /创建项目/ }).click();
   await expect(page.getByRole("heading", { name: "材料与目标" })).toBeVisible();
   await expect(page.getByText("阶段：半自动循环研究阶段")).toBeVisible();
@@ -87,14 +103,20 @@ test("desktop project workflow is clickable and readable", async ({ page }) => {
   await page.getByLabel("自然语言补充").fill("保留软件产物目标。");
   await page.getByRole("button", { name: /保存选择/ }).click();
 
+  await expect(page.getByRole("heading", { name: "论文投稿工作流" })).toBeVisible();
+  await expect(page.getByText("Neural Networks", { exact: true })).toBeVisible();
+  await expect(page.getByText("来源真实性核查")).toBeVisible();
+  await page.getByLabel("记录新的 app 或工作流不足").fill("来源核查表需要逐条验收。");
+  await page.getByRole("button", { name: /记录缺口/ }).click();
+
   await page.getByRole("button", { name: /进入最终产物/ }).click();
   await expect(page.getByRole("dialog", { name: "进入最终产物阶段" })).toBeVisible();
   await page.getByLabel("关闭最终产物选择").click();
   await expect(page.getByRole("dialog", { name: "进入最终产物阶段" })).toHaveCount(0);
 
   await page.getByRole("button", { name: /进入最终产物/ }).click();
-  await page.getByRole("dialog", { name: "进入最终产物阶段" }).getByText("软件", { exact: true }).click();
-  await page.getByLabel("自然语言目标调整").fill("软件优先做成稳定桌面工具。");
+  await page.getByRole("dialog", { name: "进入最终产物阶段" }).getByLabel(/论文/).check();
+  await page.getByLabel("自然语言目标调整").fill("论文目标为 Neural Networks Full Article。");
   await page.getByRole("button", { name: /确认进入/ }).click();
 
   await expect(page.getByText("Codex 输出")).toBeVisible();
@@ -104,6 +126,8 @@ test("desktop project workflow is clickable and readable", async ({ page }) => {
   await expect(page.getByText("1 个待存档变更")).toBeVisible();
   await page.getByRole("button", { name: /刷新预览/ }).click();
   const html = await page.content();
-  expect(html).not.toContain("鐮");
+  expect(html).not.toContain(String.fromCharCode(0x942e));
+  expect(html).not.toContain(String.fromCharCode(0x9352));
+  expect(html).not.toContain(String.fromCharCode(0x7ecb));
   expect(html).not.toContain(String.fromCharCode(0xfffd));
 });

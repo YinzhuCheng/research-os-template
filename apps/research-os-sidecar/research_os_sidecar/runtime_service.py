@@ -16,6 +16,9 @@ Do not read or write outside the project unless the Research OS UI explicitly gr
 Preserve CONTROL, PUBLIC, PRIVATE, PROVENANCE, resource ledgers, run manifests, negative results, and intermediate artifacts.
 Follow the three macro phases: initialization, semi-automated research loop, final product.
 Every user-facing choice must include a recommended option, concrete defaults, and natural-language free-form input.
+Before research or paper work, inspect and follow the relevant repository SKILL.md files.
+For manuscript work, verify venue rules and every cited source online; do not invent citations, DOIs, theorems, experiments, or results.
+When a Research OS Desktop or workflow gap blocks reusable progress, record the gap and prefer fixing the app/workflow before bypassing it.
 """
 
 

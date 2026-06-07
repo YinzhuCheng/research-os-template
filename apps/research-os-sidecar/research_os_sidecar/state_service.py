@@ -38,6 +38,69 @@ DEFAULT_CHOICE_PROMPTS = [
 ]
 
 
+DEFAULT_SUBMISSION_WORKFLOW = {
+    "target_venue": "Neural Networks",
+    "article_type": "Full Article",
+    "target_section": "Mathematical and Computational Analysis",
+    "status": "paper_workflow_ready",
+    "author_metadata": {
+        "author": "Cheng Yinzhu",
+        "corresponding_author": "Cheng Yinzhu",
+        "affiliations": [
+            "Renmin University of China",
+            "Beijing Institute of Mathematical Sciences and Applications (BIMSA)",
+        ],
+        "funding": "none",
+        "competing_interests": "none",
+        "ai_declaration": "verify_current_elsevier_policy_before_finalizing",
+    },
+    "source_verification": [
+        {
+            "id": "SRC-GUIDE",
+            "label": "Neural Networks Guide for Authors",
+            "status": "needs_online_refresh",
+            "required_evidence": "official guide URL, access date, article type, abstract/highlights/AI declaration rules",
+        },
+        {
+            "id": "SRC-TEMPLATE",
+            "label": "Elsevier LaTeX template and bibliography style",
+            "status": "needs_online_refresh",
+            "required_evidence": "official template URL, template package version or access date",
+        },
+        {
+            "id": "SRC-REFERENCES",
+            "label": "All manuscript references",
+            "status": "needs_doi_arxiv_publisher_check",
+            "required_evidence": "DOI, arXiv, publisher page, or other reliable source for every cited item",
+        },
+    ],
+    "proof_audit": [
+        {
+            "id": "PROOF-MODEL",
+            "label": "Quadratic network model and output-layer assumptions",
+            "status": "needs_review",
+        },
+        {
+            "id": "PROOF-GATES",
+            "label": "Identity, addition, and multiplication gate validity under hidden-layer activation rules",
+            "status": "needs_review",
+        },
+        {
+            "id": "PROOF-BOUNDS",
+            "label": "Depth and width bounds for monomials and full polynomials",
+            "status": "needs_review",
+        },
+        {
+            "id": "PROOF-NOVELTY",
+            "label": "Novelty framing against arithmetic circuits, polynomial networks, and approximation theory",
+            "status": "needs_review",
+        },
+    ],
+    "review_rounds": [],
+    "workflow_gaps": [],
+}
+
+
 class ResearchStateService:
     def __init__(self, project_root_provider) -> None:
         self._project_root_provider = project_root_provider
@@ -47,10 +110,13 @@ class ResearchStateService:
         research_state = read_json(root / "PUBLIC" / "research_state.json", self._default_research_state())
         project_state = read_json(root / ".research-os" / "project.json", {})
         prompts = research_state.get("choice_prompts") or research_state.get("questions") or DEFAULT_CHOICE_PROMPTS
+        if "submission_workflow" not in research_state:
+            research_state["submission_workflow"] = DEFAULT_SUBMISSION_WORKFLOW
         return {
             "project": project_state,
             "research_state": research_state,
             "choice_prompts": prompts,
+            "submission_workflow": research_state.get("submission_workflow", DEFAULT_SUBMISSION_WORKFLOW),
             "run_monitor": read_json(root / "PUBLIC" / "run_monitor.json", {"runs": []}),
             "archive_index": read_json(root / "PUBLIC" / "archive_index.json", {"archives": []}),
         }
@@ -89,6 +155,7 @@ class ResearchStateService:
                 "active_session_id": session_id,
                 "pending_user_confirmation": True,
                 "choice_prompts": DEFAULT_CHOICE_PROMPTS,
+                "submission_workflow": state.get("submission_workflow", DEFAULT_SUBMISSION_WORKFLOW),
                 "intake_summary": {
                     "free_text_present": bool(free_text.strip()),
                     "free_text_summary": "Raw free text is private; summarized metadata is safe to render.",
@@ -133,7 +200,24 @@ class ResearchStateService:
             "user_free_form_expectations": free_form,
             "status": "approved",
         }
+        if "paper" in selected:
+            plan["tracks"]["paper"].update(
+                {
+                    "target_venue": "Neural Networks",
+                    "article_type": "Full Article",
+                    "target_section": "Mathematical and Computational Analysis",
+                    "source_verification_required": True,
+                    "proof_audit_required": True,
+                    "review_rebuttal_required": True,
+                }
+            )
         write_json(root / "PUBLIC" / "final_product_plan.json", plan)
+        state = read_json(root / "PUBLIC" / "research_state.json", self._default_research_state())
+        state["macro_phase"] = "final_product"
+        state["internal_phase"] = "final_product_selection"
+        state["submission_workflow"] = state.get("submission_workflow", DEFAULT_SUBMISSION_WORKFLOW)
+        state["updated_at"] = now_iso()
+        write_json(root / "PUBLIC" / "research_state.json", state)
         return plan
 
     def submit_choice_response(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -151,7 +235,9 @@ class ResearchStateService:
             "free_form": free_form,
             "source": "desktop_app",
         }
-        write_json(root / "CONTROL" / "choice_responses" / f"{response['response_id']}.json", response)
+        target = root / "CONTROL" / "choice_responses" / f"{response['response_id']}.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        write_json(target, response)
         state = read_json(root / "PUBLIC" / "research_state.json", self._default_research_state())
         state["updated_at"] = now_iso()
         state["last_choice_response"] = {
@@ -163,6 +249,33 @@ class ResearchStateService:
         write_json(root / "PUBLIC" / "research_state.json", state)
         return response
 
+    def record_workflow_gap(self, payload: dict[str, Any]) -> dict[str, Any]:
+        root = self._project_root_provider()
+        description = str(payload.get("description") or "").strip()
+        severity = str(payload.get("severity") or "medium").strip() or "medium"
+        source = str(payload.get("source") or "desktop_app").strip() or "desktop_app"
+        if not description:
+            raise ValueError("Workflow gap description is required.")
+        record = {
+            "gap_id": f"GAP-{now_iso().replace(':', '').replace('-', '').split('.')[0]}",
+            "created_at": now_iso(),
+            "severity": severity,
+            "source": source,
+            "description": description,
+            "status": "recorded",
+            "policy": "Fix app/workflow first when the gap blocks reusable paper progress.",
+        }
+        append_jsonl(root / "PROVENANCE" / "app_workflow_gaps.jsonl", record)
+        state = read_json(root / "PUBLIC" / "research_state.json", self._default_research_state())
+        workflow = state.get("submission_workflow", DEFAULT_SUBMISSION_WORKFLOW)
+        gaps = list(workflow.get("workflow_gaps", []))
+        gaps.append(record)
+        workflow["workflow_gaps"] = gaps[-20:]
+        state["submission_workflow"] = workflow
+        state["updated_at"] = now_iso()
+        write_json(root / "PUBLIC" / "research_state.json", state)
+        return record
+
     def _default_research_state(self) -> dict[str, Any]:
         return {
             "schema_version": "research-state-v1",
@@ -171,4 +284,5 @@ class ResearchStateService:
             "status": "ready_for_intake",
             "pending_user_confirmation": False,
             "choice_prompts": DEFAULT_CHOICE_PROMPTS,
+            "submission_workflow": DEFAULT_SUBMISSION_WORKFLOW,
         }

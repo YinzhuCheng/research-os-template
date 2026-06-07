@@ -39,14 +39,14 @@ export function FinalProductModal({ open, onClose, onSubmit, pending = false, er
           <X size={18} />
         </button>
         <h2 id="final-product-title">进入最终产物阶段</h2>
-        <p className="muted">选择你要产出的成果类型，可多选。报告是常见推荐，但不会自动替你勾选；关闭弹窗会继续停留在第二阶段。</p>
+        <p className="muted">选择你要产出的成果类型，可多选。当前投稿任务推荐选择论文；关闭弹窗会继续停留在第二阶段。</p>
         <div className="track-list">
           {tracks.map(({ id, label, description, Icon }) => (
             <label className={`track-row ${selected.includes(id) ? "selected" : ""}`} key={id}>
               <input type="checkbox" checked={selected.includes(id)} onChange={() => toggle(id)} />
               <Icon size={18} aria-hidden="true" />
               <span>
-                <strong>{label}{id === "report" ? <em>推荐</em> : null}</strong>
+                <strong>{label}{id === "paper" ? <em>推荐</em> : null}</strong>
                 <small>{description}</small>
               </span>
             </label>
@@ -54,7 +54,7 @@ export function FinalProductModal({ open, onClose, onSubmit, pending = false, er
         </div>
         <label className="field">
           <span>自然语言目标调整</span>
-          <textarea value={freeForm} onChange={(event) => setFreeForm(event.target.value)} rows={4} placeholder="例如：软件优先做成桌面工具；论文目标偏向 CHI；报告需要 PPT 和 HTML。" />
+          <textarea value={freeForm} onChange={(event) => setFreeForm(event.target.value)} rows={4} placeholder="例如：论文目标为 Neural Networks Full Article，必须联网核查引用真实性，并保留 rebuttal 攻防记录。" />
         </label>
         {error ? <p className="error-text">{error}</p> : null}
         <div className="modal-actions">

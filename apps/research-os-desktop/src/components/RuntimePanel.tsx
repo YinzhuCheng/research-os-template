@@ -4,9 +4,16 @@ import { useState } from "react";
 import { api } from "../api";
 import { useAppStore } from "../store";
 
+const DEFAULT_PAPER_TURN = `请按 Research OS app-first 工作流继续本论文项目：
+1. 先读取并遵守相关仓库 skills：research-os-execution-harness、research-os-live-evidence-refresh、research-os-paper-authoring、research-os-review-rebuttal，以及需要时的 research-os-visual-communication。
+2. 对 Neural Networks 投稿规则、Elsevier 模板、每条引用和 DOI/arXiv/publisher 来源进行联网核查；不要凭记忆引用，不要编造引用。
+3. 审计平方激活函数神经网络稿件中的模型定义、identity/addition/multiplication gates、深度/宽度界和 novelty framing。
+4. 如果 app 或工作流阻碍了可复用推进，先记录缺口并建议修 app，再继续论文。
+5. 本轮只产出可验收的下一步结果和结构化记录，不绕过 Research OS 阶段门。`;
+
 function eventTitle(event: Record<string, unknown>) {
   const type = String(event.type ?? "runtime_event");
-  const method = event.method ? ` · ${String(event.method)}` : "";
+  const method = event.method ? ` / ${String(event.method)}` : "";
   if (type === "assistant_message") return "Codex 输出";
   if (type === "runtime_error") return "运行时需要修复";
   if (type === "thread_started") return "Thread 已启动";
@@ -27,7 +34,7 @@ function eventSummary(event: Record<string, unknown>) {
 export function RuntimePanel() {
   const project = useAppStore((store) => store.project);
   const activeProfileId = useAppStore((store) => store.activeProfileId);
-  const [turnText, setTurnText] = useState("读取 Research OS 状态，提出下一步对齐问题；不要绕过验收门。");
+  const [turnText, setTurnText] = useState(DEFAULT_PAPER_TURN);
   const events = useQuery({ queryKey: ["runtime-events"], queryFn: () => api.runtimeEvents(0), refetchInterval: 2500 });
   const environment = useQuery({ queryKey: ["runtime-environment"], queryFn: api.environment, retry: false });
   const runtimeReady = Boolean(environment.data?.codex_sdk_available);
@@ -54,7 +61,7 @@ export function RuntimePanel() {
       </div>
       {!runtimeReady ? (
         <div className="empty-state action-state">
-          <strong>研究引擎未就绪。</strong>
+          <strong>研究引擎尚未就绪</strong>
           <p>当前仍可整理材料、回答对齐问题和创建存档；真实 Codex 执行需要先安装或配置 runtime。</p>
           <div className="inline-actions">
             <button className="secondary-action" type="button" onClick={() => environment.refetch()} disabled={environment.isFetching}>
@@ -70,7 +77,7 @@ export function RuntimePanel() {
       ) : null}
       <label className="field">
         <span>下一轮指令</span>
-        <textarea value={turnText} onChange={(event) => setTurnText(event.target.value)} rows={4} />
+        <textarea value={turnText} onChange={(event) => setTurnText(event.target.value)} rows={8} />
       </label>
       <div className="inline-actions">
         <button className="secondary-action" type="button" onClick={() => startThread.mutate()} disabled={!runtimeReady || startThread.isPending}>

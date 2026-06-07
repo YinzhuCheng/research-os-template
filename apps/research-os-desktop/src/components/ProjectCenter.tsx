@@ -24,8 +24,8 @@ function rememberProject(path: string) {
 export function ProjectCenter() {
   const queryClient = useQueryClient();
   const setProject = useAppStore((store) => store.setProject);
-  const [name, setName] = useState("Untitled Research Project");
-  const [projectFile, setProjectFile] = useState("D:/ResearchOSProjects/untitled.rosproj");
+  const [name, setName] = useState("Neural Networks Submission");
+  const [projectFile, setProjectFile] = useState("D:/ResearchOSProjects/neural-network-submission.rosproj");
   const [openPath, setOpenPath] = useState("");
   const [dialogNotice, setDialogNotice] = useState("");
   const [recent, setRecent] = useState<string[]>(readRecentProjects);

@@ -84,7 +84,26 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertTrue((root / "CONTROL" / "choice_responses" / f"{response['response_id']}.json").exists())
             readback = state.read_state()
             self.assertIn("research_state", readback)
+            self.assertIn("submission_workflow", readback)
             self.assertNotIn("copilot" + "_state", readback)
+
+    def test_workflow_gap_is_recorded_in_provenance_and_state(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            root = Path(project["project_root"])
+            state = ResearchStateService(projects.require_project_root)
+
+            gap = state.record_workflow_gap({"description": "source verification table needs per-reference acceptance"})
+            self.assertEqual(gap["status"], "recorded")
+            self.assertTrue((root / "PROVENANCE" / "app_workflow_gaps.jsonl").exists())
+            readback = state.read_state()
+            gaps = readback["submission_workflow"]["workflow_gaps"]
+            self.assertEqual(gaps[-1]["description"], "source verification table needs per-reference acceptance")
 
     def test_project_path_escape_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

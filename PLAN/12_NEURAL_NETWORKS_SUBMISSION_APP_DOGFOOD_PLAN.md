@@ -4,8 +4,8 @@
 
 | Step | Area | Status |
 | --- | --- | --- |
-| 1 | Land submission work order, phase gate, budget, and executable plan | in_progress |
-| 2 | Fix app blockers for real paper workflow dogfooding | pending |
+| 1 | Land submission work order, phase gate, budget, and executable plan | completed |
+| 2 | Fix app blockers for real paper workflow dogfooding | completed |
 | 3 | Create `.rosproj` sandbox and import the neural-network materials through the app/sidecar path | pending |
 | 4 | Run initialization, evidence refresh, proof audit, and acceptance-gated research loops | pending |
 | 5 | Produce the Neural Networks Full Article package through the paper final-product track | pending |
@@ -39,10 +39,26 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 
 ## Gap Audit
 
-- The current desktop UI and tests still appear to contain Chinese mojibake in app-facing strings; fix before using screenshots or app-driven choices as evidence.
-- The sidecar has intake and final-product primitives but lacks a first-class paper submission workflow view, source verification ledger, proof-audit ledger, and app bug/workflow-gap log.
-- The runtime adapter can launch Codex SDK turns but the app does not yet provide enough structured prompts for literature verification, proof audit, and Neural Networks submission packaging.
+- Desktop UI/test mojibake is fixed in app source and Playwright/Vitest mocks; `check_desktop_app.ps1` now blocks the known mojibake code points.
+- The sidecar now exposes a submission workflow state object and app/workflow gap logging route, enough for the neural-network paper dogfooding pass.
+- The runtime adapter now instructs Codex to inspect relevant skills, verify venue rules and citations online, and record app/workflow gaps before bypassing them.
 - The manuscript draft currently proves exact polynomial representation for quadratic-activation networks, but venue fit, novelty framing, proof obligations, learning-theory context, and citation authenticity still need verification.
+
+## Step 1 Validation
+
+- `git diff --check` passed.
+- `scripts/validate_schemas.ps1` passed after correcting `privacy_level` to `mixed`.
+- `scripts/check_resource_guard.ps1` passed.
+- Commit pushed: `ff95bac v4.4: start Neural Networks submission dogfooding`.
+
+## Step 2 Validation
+
+- TypeScript `tsc --noEmit` passed with bundled Node.
+- `scripts/check_desktop_app.ps1` passed with expanded mojibake guard.
+- Sidecar unit tests passed: 8 tests.
+- Vitest passed: 1 test.
+- Playwright passed: 2 tests across desktop and narrow viewports.
+- Vite production build passed.
 
 ## Deliverables
 

@@ -45,6 +45,8 @@ export const api = {
     request<Record<string, unknown>>("/api/choice-response", { method: "POST", body: JSON.stringify({ prompt_id, option_id, free_form }) }),
   finalProducts: (tracks: string[], free_form: string) =>
     request<Record<string, unknown>>("/api/final-products", { method: "POST", body: JSON.stringify({ tracks, free_form }) }),
+  recordWorkflowGap: (description: string, severity = "medium") =>
+    request<Record<string, unknown>>("/api/workflow-gap", { method: "POST", body: JSON.stringify({ description, severity }) }),
   archivePreview: () => request<Record<string, unknown>>("/api/archive-preview"),
   archives: () => request<{ archives: unknown[] }>("/api/archives"),
   createArchive: (description: string, user_free_form = "") =>

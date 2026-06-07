@@ -6,6 +6,7 @@ import { ApprovalPanel } from "./components/ApprovalPanel";
 import { ArchivePanel } from "./components/ArchivePanel";
 import { ChoicePrompt } from "./components/ChoicePrompt";
 import { FinalProductModal } from "./components/FinalProductModal";
+import { PaperWorkflowPanel } from "./components/PaperWorkflowPanel";
 import { PhaseBar } from "./components/PhaseBar";
 import { ProjectCenter } from "./components/ProjectCenter";
 import { RuntimePanel } from "./components/RuntimePanel";
@@ -63,8 +64,8 @@ function Workspace() {
       <PhaseBar active={activePhase} />
 
       <section className="current-action" aria-label="当前研究行动">
-        <strong>当前需要你完成的事：验收上一阶段结果，并选择下一轮研究行动。</strong>
-        <span>先回答右侧对齐问题；需要真实执行时再启动 Codex。存档和审批是保护机制，不是主线任务。</span>
+        <strong>当前任务：把平方激活函数神经网络初稿推进为 Neural Networks Full Article。</strong>
+        <span>先通过 app 记录材料、来源核查、证明审计和 workflow 缺口；需要真实执行时再启动 Codex。</span>
       </section>
 
       {state.error ? (
@@ -123,6 +124,7 @@ function Workspace() {
           {saveChoice.error ? <p className="error-text">{saveChoice.error.message}</p> : null}
         </section>
 
+        <PaperWorkflowPanel workflow={state.data?.submission_workflow} />
         <RuntimePanel />
         <ApprovalPanel />
         <ArchivePanel />

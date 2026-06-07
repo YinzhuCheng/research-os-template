@@ -5,7 +5,7 @@ import type { MacroPhase } from "../types";
 const phases: Array<{ id: MacroPhase; label: string; detail: string; Icon: typeof Rocket }> = [
   { id: "initialization", label: "初始化阶段", detail: "材料、问题、项目启动包", Icon: Rocket },
   { id: "research_loop", label: "半自动循环研究阶段", detail: "验收、对齐、执行、分析", Icon: FlaskConical },
-  { id: "final_product", label: "最终产物阶段", detail: "论文、报告、软件", Icon: FileStack }
+  { id: "final_product", label: "最终产物阶段", detail: "论文、报告、软件", Icon: FileStack },
 ];
 
 export function PhaseBar({ active }: { active: MacroPhase | string }) {

@@ -301,6 +301,12 @@ button:disabled {
   color: #8b1d12;
 }
 
+.notice.info {
+  background: #eef6ff;
+  border: 1px solid #bfd7f2;
+  color: #194b78;
+}
+
 .phase-bar {
   display: grid;
   gap: 10px;
@@ -522,6 +528,70 @@ em {
   padding: 8px 8px 8px 26px;
 }
 
+.paper-workflow-panel {
+  grid-column: 1 / -1;
+}
+
+.workflow-summary {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.workflow-summary div {
+  background: #f8faf9;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+}
+
+.workflow-summary span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.workflow-block {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.workflow-block-title {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.workflow-item {
+  align-items: center;
+  background: #fbfcfc;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 10px;
+}
+
+.workflow-item small {
+  color: var(--text-muted);
+  display: block;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.workflow-item > span {
+  background: #edf2f0;
+  border-radius: 999px;
+  color: #33433d;
+  font-size: 12px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
 .recent-list {
   border-top: 1px solid var(--surface-muted);
   display: grid;
@@ -630,7 +700,8 @@ em {
   .center-grid,
   .workspace-grid,
   .phase-bar,
-  .profile-form {
+  .profile-form,
+  .workflow-summary {
     grid-template-columns: 1fr;
   }
 
@@ -648,6 +719,11 @@ em {
 
   .approval-row {
     flex-direction: column;
+  }
+
+  .workflow-item {
+    align-items: start;
+    grid-template-columns: 1fr;
   }
 }
 

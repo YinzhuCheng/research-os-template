@@ -153,6 +153,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"response": self.context.state.submit_choice_response(payload)})
             elif path == "/api/final-products":
                 self.send_json({"plan": self.context.state.select_final_products(list(payload.get("tracks") or []), str(payload.get("free_form") or ""))})
+            elif path == "/api/workflow-gap":
+                self.send_json({"gap": self.context.state.record_workflow_gap(payload)})
             elif path == "/api/import-file":
                 root = self.context.projects.require_project_root()
                 self.send_json({"import": import_file_to_project(Path(str(payload.get("source_path") or "")), root, str(payload.get("target_subdir") or "INBOX/imports"))})

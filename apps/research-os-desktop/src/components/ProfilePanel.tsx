@@ -11,13 +11,13 @@ export function ProfilePanel() {
   const setActiveProfileId = useAppStore((store) => store.setActiveProfileId);
   const profiles = useQuery({ queryKey: ["profiles"], queryFn: api.profiles });
   const [draft, setDraft] = useState<Profile>({
-    profile_id: "custom-openai-compatible",
-    label: "OpenAI Compatible",
+    profile_id: "yunwu-gpt-55-xhigh",
+    label: "Yunwu GPT-5.5 xhigh",
     type: "custom_provider",
-    provider_id: "custom",
-    model: "",
-    base_url: "",
-    secret_ref: "env:OPENAI_API_KEY",
+    provider_id: "yunwu",
+    model: "gpt-5.5",
+    base_url: "https://yunwu.ai/v1",
+    secret_ref: "env:YUNWU_API_KEY",
   });
   const save = useMutation({
     mutationFn: () => api.saveProfile(draft),
@@ -33,7 +33,7 @@ export function ProfilePanel() {
             <KeyRound size={18} aria-hidden="true" />
             <strong>高级设置：AI 模型与密钥引用</strong>
           </span>
-          <small>{activeProfile ? `${activeProfile.label}${activeProfile.model ? ` · ${activeProfile.model}` : ""}` : "未选择 profile"}</small>
+          <small>{activeProfile ? `${activeProfile.label}${activeProfile.model ? ` / ${activeProfile.model}` : ""}` : "未选择 profile"}</small>
         </summary>
         <p className="hint-text">普通研究流程不需要先改这里。Profile 只保存 provider、模型和 secret 引用；不要把 API key、token 或密码粘贴进项目。</p>
         <div className="profile-list">
@@ -46,7 +46,7 @@ export function ProfilePanel() {
               onClick={() => setActiveProfileId(profile.profile_id)}
             >
               <strong>{profile.label}</strong>
-              <small>{profile.provider_id ?? profile.type}{profile.model ? ` · ${profile.model}` : ""}</small>
+              <small>{profile.provider_id ?? profile.type}{profile.model ? ` / ${profile.model}` : ""}</small>
             </button>
           ))}
         </div>
@@ -65,11 +65,11 @@ export function ProfilePanel() {
           </label>
           <label className="field">
             <span>默认模型</span>
-            <input value={draft.model ?? ""} onChange={(event) => setDraft({ ...draft, model: event.target.value })} placeholder="gpt-5.4" />
+            <input value={draft.model ?? ""} onChange={(event) => setDraft({ ...draft, model: event.target.value })} placeholder="gpt-5.5" />
           </label>
           <label className="field">
             <span>Secret 引用</span>
-            <input value={draft.secret_ref ?? ""} onChange={(event) => setDraft({ ...draft, secret_ref: event.target.value })} placeholder="env:OPENAI_API_KEY" />
+            <input value={draft.secret_ref ?? ""} onChange={(event) => setDraft({ ...draft, secret_ref: event.target.value })} placeholder="env:YUNWU_API_KEY" />
           </label>
         </div>
         <button className="secondary-action" type="button" onClick={() => save.mutate()} disabled={save.isPending}>
