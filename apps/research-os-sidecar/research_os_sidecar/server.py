@@ -34,8 +34,8 @@ class AppContext:
         self.profiles = ProfileService()
         self.approvals = ApprovalService()
         self.runtime = RuntimeService(self.projects.require_project_root, self.approvals)
-        self.state = ResearchStateService(self.projects.require_project_root)
-        self.paper_artifacts = PaperArtifactService(self.projects.require_project_root)
+        self.state = ResearchStateService(self.projects.require_project_root, self.projects.update_project)
+        self.paper_artifacts = PaperArtifactService(self.projects.require_project_root, self.projects.update_project)
         self.archives = ArchiveService(self.projects.require_project_root)
 
 

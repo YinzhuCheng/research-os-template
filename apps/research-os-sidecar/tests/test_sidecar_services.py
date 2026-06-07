@@ -126,6 +126,25 @@ class SidecarServiceTests(unittest.TestCase):
             gaps = readback["submission_workflow"]["workflow_gaps"]
             self.assertEqual(gaps[-1]["description"], "source verification table needs per-reference acceptance")
 
+    def test_final_product_selection_syncs_project_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            state = ResearchStateService(projects.require_project_root, projects.update_project)
+
+            state.select_final_products(["paper"], "prepare a submission package")
+
+            project_file = Path(project["project_file"])
+            readback = json.loads(project_file.read_text(encoding="utf-8"))
+            self.assertEqual(readback["current_macro_phase"], "final_product")
+            self.assertEqual(readback["current_phase"], "final_product_selection")
+            mirror = json.loads((Path(project["project_root"]) / ".research-os" / "project.json").read_text(encoding="utf-8"))
+            self.assertEqual(mirror["current_macro_phase"], "final_product")
+
     def test_paper_artifact_service_writes_public_submission_files(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
@@ -164,6 +183,27 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertEqual(readback["submission_workflow"]["status"], "submission_package_draft_written")
             self.assertEqual(readback["submission_workflow"]["source_verification"][0]["status"], "verified")
             self.assertEqual(readback["submission_workflow"]["proof_audit"][0]["status"], "accepted")
+
+    def test_paper_artifact_service_syncs_project_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            service = PaperArtifactService(projects.require_project_root, projects.update_project)
+
+            service.write_artifacts(
+                {
+                    "summary": "paper iteration",
+                    "files": [{"path": "PUBLIC/paper/main.tex", "content": "\\section{Test}\n", "role": "manuscript"}],
+                }
+            )
+
+            readback = json.loads(Path(project["project_file"]).read_text(encoding="utf-8"))
+            self.assertEqual(readback["current_macro_phase"], "final_product")
+            self.assertEqual(readback["current_phase"], "final_product_production")
 
     def test_paper_artifact_service_rejects_private_escape_and_secret_content(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -7,8 +7,8 @@
 | 1 | Land submission work order, phase gate, budget, and executable plan | completed |
 | 2 | Fix app blockers for real paper workflow dogfooding | completed |
 | 3 | Create `.rosproj` sandbox and import the neural-network materials through the app/sidecar path | completed |
-| 4 | Run initialization, evidence refresh, proof audit, and acceptance-gated research loops | pending |
-| 5 | Produce the Neural Networks Full Article package through the paper final-product track | pending |
+| 4 | Run initialization, evidence refresh, proof audit, and acceptance-gated research loops | completed |
+| 5 | Produce the Neural Networks Full Article package through the paper final-product track | in_progress |
 | 6 | Run paid Yunwu `gpt-5.5` `xhigh` review/rebuttal rounds within USD 90-105 target range | pending |
 | 7 | Validate, archive, package, record screenshots/provenance, commit, and push | pending |
 
@@ -48,6 +48,8 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - The initialization path now returns exactly three paper-oriented choice prompts, matching the Research OS rule for material analysis.
 - The paper workflow also needed a reusable artifact-writing path. Added a sidecar `PaperArtifactService` so final-product files and audit records are written under controlled public/provenance paths instead of ad hoc manual edits.
 - The artifact endpoint also needed workflow-state updates so the desktop panel reflects verified source/proof status rather than only file creation.
+- Real app dogfooding exposed a phase metadata drift: `PUBLIC/research_state.json` had reached `final_product`, but `.rosproj` and `.research-os/project.json` still showed `initialization`. The sidecar now synchronizes project phase metadata when final-product selection or paper artifact writes update the research state.
+- PowerShell `Invoke-RestMethod`/`Invoke-WebRequest` showed unreliable POST behavior in this Windows session after the sidecar restart. The Python urllib client remained stable for app API dogfooding, so future sidecar QA should include a native app client path rather than relying only on PowerShell.
 
 ## Step 1 Validation
 
@@ -77,6 +79,11 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - Added workflow status merge support to the paper artifact endpoint.
 - Sidecar unit tests passed again: 13 tests.
 - `scripts/check_desktop_app.ps1` passed again.
+- Produced a v0.1 paper package through the controlled paper artifact endpoint in the private `.rosproj` project.
+- Compiled `PUBLIC/paper/main.tex` with `latexmk`; output `main.pdf` has 11 pages and the log scan found no fatal errors, undefined references, undefined citations, or overfull/underfull boxes.
+- Captured PDF and app screenshots under the private project `PROVENANCE/paper/screenshots/` directory.
+- Created a private project archive `ARCH-20260608T073545`; archive preview and creation both reported `private_paths_included: false` and `secrets_scan: passed`.
+- Fixed and verified app phase synchronization; the repaired app screenshot shows `final_product / final_product_production` instead of the stale initialization phase.
 
 ## Step 3 Validation
 

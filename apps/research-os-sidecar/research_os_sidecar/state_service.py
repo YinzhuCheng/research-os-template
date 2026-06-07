@@ -160,8 +160,9 @@ DEFAULT_SUBMISSION_WORKFLOW = {
 
 
 class ResearchStateService:
-    def __init__(self, project_root_provider) -> None:
+    def __init__(self, project_root_provider, project_update=None) -> None:
         self._project_root_provider = project_root_provider
+        self._project_update = project_update
 
     def read_state(self) -> dict[str, Any]:
         root = self._project_root_provider()
@@ -223,6 +224,7 @@ class ResearchStateService:
             }
         )
         write_json(root / "PUBLIC" / "research_state.json", state)
+        self._sync_project_phase("initialization", "initialization_intake")
         append_jsonl(
             root / "PROVENANCE" / "run_manifest.jsonl",
             {
@@ -276,6 +278,7 @@ class ResearchStateService:
         state["submission_workflow"] = state.get("submission_workflow", DEFAULT_SUBMISSION_WORKFLOW)
         state["updated_at"] = now_iso()
         write_json(root / "PUBLIC" / "research_state.json", state)
+        self._sync_project_phase("final_product", "final_product_selection")
         return plan
 
     def submit_choice_response(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -333,6 +336,11 @@ class ResearchStateService:
         state["updated_at"] = now_iso()
         write_json(root / "PUBLIC" / "research_state.json", state)
         return record
+
+    def _sync_project_phase(self, macro_phase: str, internal_phase: str) -> None:
+        if not self._project_update:
+            return
+        self._project_update({"current_macro_phase": macro_phase, "current_phase": internal_phase})
 
     def _default_research_state(self) -> dict[str, Any]:
         return {

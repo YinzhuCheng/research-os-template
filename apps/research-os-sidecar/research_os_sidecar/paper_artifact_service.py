@@ -15,8 +15,9 @@ ALLOWED_ARTIFACT_PREFIXES = (
 
 
 class PaperArtifactService:
-    def __init__(self, project_root_provider) -> None:
+    def __init__(self, project_root_provider, project_update=None) -> None:
         self._project_root_provider = project_root_provider
+        self._project_update = project_update
 
     def write_artifacts(self, payload: dict[str, Any]) -> dict[str, Any]:
         root = self._project_root_provider()
@@ -101,3 +102,5 @@ class PaperArtifactService:
         state["internal_phase"] = "final_product_production"
         state["updated_at"] = now_iso()
         write_json(root / "PUBLIC" / "research_state.json", state)
+        if self._project_update:
+            self._project_update({"current_macro_phase": "final_product", "current_phase": "final_product_production"})
