@@ -47,6 +47,7 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - The private `.rosproj` sandbox was created under `PRIVATE/projects/neural-network-submission/`; raw inputs remain outside git and were imported through the app/sidecar path.
 - The initialization path now returns exactly three paper-oriented choice prompts, matching the Research OS rule for material analysis.
 - The paper workflow also needed a reusable artifact-writing path. Added a sidecar `PaperArtifactService` so final-product files and audit records are written under controlled public/provenance paths instead of ad hoc manual edits.
+- The artifact endpoint also needed workflow-state updates so the desktop panel reflects verified source/proof status rather than only file creation.
 
 ## Step 1 Validation
 
@@ -73,6 +74,9 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - `scripts/check_desktop_app.ps1` passed.
 - TypeScript `tsc --noEmit` passed with bundled Node.
 - `git diff --check` passed.
+- Added workflow status merge support to the paper artifact endpoint.
+- Sidecar unit tests passed again: 13 tests.
+- `scripts/check_desktop_app.ps1` passed again.
 
 ## Step 3 Validation
 

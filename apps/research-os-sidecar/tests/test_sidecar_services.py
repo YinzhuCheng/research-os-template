@@ -140,6 +140,15 @@ class SidecarServiceTests(unittest.TestCase):
             result = service.write_artifacts(
                 {
                     "summary": "draft paper package",
+                    "workflow_updates": {
+                        "status": "submission_package_draft_written",
+                        "source_verification": [
+                            {"id": "SRC-GUIDE", "label": "Guide", "status": "verified"},
+                        ],
+                        "proof_audit": [
+                            {"id": "PROOF-MODEL", "label": "Model", "status": "accepted"},
+                        ],
+                    },
                     "files": [
                         {"path": "PUBLIC/paper/main.tex", "content": "\\section{Test}\n", "role": "manuscript"},
                         {"path": "PUBLIC/submission/highlights.txt", "content": "Highlight one\n", "role": "submission"},
@@ -152,6 +161,9 @@ class SidecarServiceTests(unittest.TestCase):
             readback = json.loads((root / "PUBLIC" / "research_state.json").read_text(encoding="utf-8"))
             artifacts = readback["submission_workflow"]["artifact_status"]
             self.assertIn("PUBLIC/paper/main.tex", {item["path"] for item in artifacts})
+            self.assertEqual(readback["submission_workflow"]["status"], "submission_package_draft_written")
+            self.assertEqual(readback["submission_workflow"]["source_verification"][0]["status"], "verified")
+            self.assertEqual(readback["submission_workflow"]["proof_audit"][0]["status"], "accepted")
 
     def test_paper_artifact_service_rejects_private_escape_and_secret_content(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -43,7 +43,8 @@ class PaperArtifactService:
                     "updated_at": now_iso(),
                 }
             )
-        self._update_research_state(root, batch_id, written, str(payload.get("summary") or ""))
+        workflow_updates = payload.get("workflow_updates") if isinstance(payload.get("workflow_updates"), dict) else {}
+        self._update_research_state(root, batch_id, written, str(payload.get("summary") or ""), workflow_updates)
         append_jsonl(
             root / "PROVENANCE" / "run_manifest.jsonl",
             {
@@ -69,9 +70,19 @@ class PaperArtifactService:
             raise SecurityError(f"Paper artifacts may not target PRIVATE paths: {value}")
         return normalized
 
-    def _update_research_state(self, root: Path, batch_id: str, written: list[dict[str, Any]], summary: str) -> None:
+    def _update_research_state(
+        self,
+        root: Path,
+        batch_id: str,
+        written: list[dict[str, Any]],
+        summary: str,
+        workflow_updates: dict[str, Any],
+    ) -> None:
         state = read_json(root / "PUBLIC" / "research_state.json", {"schema_version": "research-state-v1"})
         workflow = state.get("submission_workflow") or {}
+        for key in ("source_verification", "proof_audit", "review_rounds", "status"):
+            if key in workflow_updates:
+                workflow[key] = workflow_updates[key]
         previous = list(workflow.get("artifact_status") or [])
         indexed = {str(item.get("path")): item for item in previous if isinstance(item, dict)}
         for item in written:
@@ -83,7 +94,8 @@ class PaperArtifactService:
             "written_count": len(written),
             "updated_at": now_iso(),
         }
-        workflow["status"] = "paper_artifacts_written"
+        if "status" not in workflow_updates:
+            workflow["status"] = "paper_artifacts_written"
         state["submission_workflow"] = workflow
         state["macro_phase"] = "final_product"
         state["internal_phase"] = "final_product_production"
