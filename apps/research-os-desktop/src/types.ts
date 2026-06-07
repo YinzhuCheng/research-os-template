@@ -6,7 +6,7 @@ export interface RosProject {
   name: string;
   project_file: string;
   project_root: string;
-  current_macro_phase: MacroPhase;
+  current_macro_phase: MacroPhase | string;
   current_phase: string;
   default_profile_id: string;
   codex: {
@@ -46,10 +46,12 @@ export interface ChoicePrompt {
 export interface Approval {
   approval_id: string;
   method: string;
-  risk: { risk: string; decision: string; reason: string };
+  risk?: { risk?: string; decision?: string; reason?: string } | string;
   created_at: string;
   status: "pending" | "resolved";
   params: Record<string, unknown>;
+  summary?: string;
+  command?: string;
 }
 
 export interface SidecarState {

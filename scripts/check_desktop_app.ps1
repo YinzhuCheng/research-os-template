@@ -42,8 +42,12 @@ Forbid-Path ".agents\plugins\plugins\research-os-$legacyCopilot"
 
 Require-Text "apps\research-os-desktop\package.json" "@tauri-apps/cli"
 Require-Text "apps\research-os-desktop\package.json" "lucide-react"
+Require-Text "apps\research-os-desktop\src\tauriDialog.ts" "plugin:dialog|open"
+Require-Text "apps\research-os-desktop\src-tauri\Cargo.toml" "tauri-plugin-dialog"
 Require-Text "apps\research-os-desktop\src-tauri\tauri.conf.json" "research-os-core"
+Require-Text "apps\research-os-desktop\src-tauri\capabilities\default.json" "dialog:default"
 Require-Text "apps\research-os-desktop\src-tauri\src\main.rs" "--seed-root"
+Require-Text "apps\research-os-desktop\src-tauri\src\main.rs" "tauri_plugin_dialog"
 Require-Text "apps\research-os-desktop\src\App.tsx" "submitIntake"
 Require-Text "apps\research-os-desktop\src\App.tsx" "FinalProductModal"
 Require-Text "apps\research-os-desktop\src\App.tsx" "api.finalProducts"
@@ -63,5 +67,21 @@ Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "in
 Require-Text "docs\desktop-app.md" ".rosproj"
 Require-Text "PUBLIC\dashboard_data.json" "Desktop App"
 Require-Text "docs\doc_map.yaml" "desktop_app"
+
+$desktopTextFiles = @(
+  "apps\research-os-desktop\src",
+  "apps\research-os-desktop\tests"
+)
+$mojibakeMarkers = @([char]0x9435, [char]0x93c9, [char]0x9356, [char]0x8930, [char]0xfffd)
+foreach ($rootPath in $desktopTextFiles) {
+  Get-ChildItem -LiteralPath $rootPath -Recurse -File -Include *.ts,*.tsx,*.css | ForEach-Object {
+    $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $_.FullName
+    foreach ($marker in $mojibakeMarkers) {
+      if ($text.Contains([string]$marker)) {
+        throw "Desktop UI text contains mojibake marker U+$([int][char]$marker): $($_.FullName)"
+      }
+    }
+  }
+}
 
 Write-Output "Desktop app checks passed."

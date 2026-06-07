@@ -102,6 +102,11 @@ button {
   white-space: nowrap;
 }
 
+.status-pill.subtle {
+  background: #f8faf9;
+  color: #33433d;
+}
+
 .status-card {
   align-items: center;
   background: #f8faf9;
@@ -356,6 +361,64 @@ button:disabled {
   text-align: left;
 }
 
+.approval-row {
+  justify-content: space-between;
+}
+
+.approval-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.approval-copy p {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.approval-copy code {
+  background: #edf2f0;
+  border-radius: 5px;
+  color: #16201c;
+  display: block;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  padding: 6px 8px;
+}
+
+.approval-title-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.risk-badge {
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  text-transform: uppercase;
+}
+
+.risk-low {
+  background: #e8f6ef;
+  color: #126144;
+}
+
+.risk-medium {
+  background: #fff5d6;
+  color: #835600;
+}
+
+.risk-high,
+.risk-critical {
+  background: #ffe2dc;
+  color: #9f2218;
+}
+
 .choice-row.selected,
 .track-row.selected,
 .profile-button.active {
@@ -397,6 +460,17 @@ em {
   padding: 8px 0;
 }
 
+.changed-paths {
+  background: #f8faf9;
+  border: 1px solid var(--surface-muted);
+  border-radius: 6px;
+  color: #33433d;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 10px 0 12px;
+  padding: 8px 8px 8px 26px;
+}
+
 .recent-list {
   border-top: 1px solid var(--surface-muted);
   display: grid;
@@ -435,6 +509,40 @@ em {
   color: #aabcb5;
   font-size: 13px;
   margin: 0;
+}
+
+.event-card {
+  border-bottom: 1px solid rgba(219, 232, 226, 0.15);
+  display: grid;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.event-card:first-child {
+  padding-top: 0;
+}
+
+.event-card:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.event-card strong {
+  color: #f5fbf8;
+  font-size: 13px;
+}
+
+.event-card details {
+  color: #b9cbc4;
+  font-size: 12px;
+}
+
+.event-card summary {
+  cursor: pointer;
+}
+
+.event-card pre {
+  margin-top: 8px;
 }
 
 .modal-backdrop {
@@ -485,6 +593,10 @@ em {
   .status-card {
     justify-content: flex-start;
     width: 100%;
+  }
+
+  .approval-row {
+    flex-direction: column;
   }
 }
 

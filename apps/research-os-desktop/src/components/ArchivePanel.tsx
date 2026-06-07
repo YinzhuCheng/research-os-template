@@ -2,6 +2,15 @@ import { Archive, RefreshCw } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../api";
+import { internalPhaseLabel, macroPhaseLabel } from "../labels";
+
+function asString(value: unknown, fallback = "unknown") {
+  return typeof value === "string" && value ? value : fallback;
+}
+
+function changedPaths(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
 
 export function ArchivePanel() {
   const queryClient = useQueryClient();
@@ -16,6 +25,8 @@ export function ArchivePanel() {
       queryClient.invalidateQueries({ queryKey: ["archive-preview"] });
     },
   });
+  const changed = changedPaths(preview.data?.changed_paths);
+  const dirty = Boolean(preview.data?.dirty);
 
   return (
     <section className="panel">
@@ -27,13 +38,24 @@ export function ArchivePanel() {
         </div>
       </div>
       <div className="metric-row">
-        <span>阶段</span>
-        <strong>{String(preview.data?.phase ?? "unknown")}</strong>
+        <span>宏观阶段</span>
+        <strong>{macroPhaseLabel(asString(preview.data?.macro_phase))}</strong>
       </div>
       <div className="metric-row">
-        <span>未提交变更</span>
-        <strong>{preview.data?.dirty ? "有" : "无"}</strong>
+        <span>内部阶段</span>
+        <strong>{internalPhaseLabel(asString(preview.data?.phase))}</strong>
       </div>
+      <div className="metric-row">
+        <span>Git 状态</span>
+        <strong>{dirty ? `${changed.length} 个待存档变更` : "干净，无待存档变更"}</strong>
+      </div>
+      {changed.length > 0 ? (
+        <ul className="changed-paths" aria-label="待存档变更">
+          {changed.slice(0, 5).map((item) => <li key={item}>{item}</li>)}
+          {changed.length > 5 ? <li>还有 {changed.length - 5} 个路径...</li> : null}
+        </ul>
+      ) : null}
+      <p className="hint-text">隐私检查：{String(preview.data?.secrets_scan ?? "待刷新")}；PRIVATE 路径不会进入公开索引。</p>
       <label className="field">
         <span>存档描述</span>
         <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} placeholder="说明这个存档的研究状态、风险或下一步意图。" />

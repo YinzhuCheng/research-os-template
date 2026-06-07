@@ -73,6 +73,7 @@ fn sidecar_url() -> &'static str {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             app.manage(SidecarProcess(Mutex::new(spawn_sidecar(app))));
             Ok(())

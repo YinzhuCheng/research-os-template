@@ -9,6 +9,7 @@ import { FinalProductModal } from "./components/FinalProductModal";
 import { PhaseBar } from "./components/PhaseBar";
 import { ProjectCenter } from "./components/ProjectCenter";
 import { RuntimePanel } from "./components/RuntimePanel";
+import { internalPhaseLabel, macroPhaseLabel, normalizeMacroPhase } from "./labels";
 import { useAppStore } from "./store";
 
 function Workspace() {
@@ -36,7 +37,9 @@ function Workspace() {
       queryClient.invalidateQueries({ queryKey: ["state"] });
     },
   });
-  const activePhase = project?.current_macro_phase ?? "initialization";
+  const activePhase = normalizeMacroPhase(project?.current_macro_phase);
+  const activePhaseLabel = macroPhaseLabel(project?.current_macro_phase);
+  const internalLabel = internalPhaseLabel(project?.current_phase);
   const prompts = state.data?.choice_prompts ?? [];
 
   return (
@@ -48,7 +51,8 @@ function Workspace() {
           <p className="path-text">{project?.project_root}</p>
         </div>
         <div className="header-actions">
-          <span className="status-pill">阶段：{activePhase}</span>
+          <span className="status-pill">阶段：{activePhaseLabel}</span>
+          <span className="status-pill subtle">内部：{internalLabel}</span>
           <button className="primary-action" type="button" onClick={() => setFinalOpen(true)}>
             <FileStack size={16} aria-hidden="true" />
             进入最终产物

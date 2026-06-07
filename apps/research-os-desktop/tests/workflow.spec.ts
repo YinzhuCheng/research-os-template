@@ -6,8 +6,8 @@ const project = {
   name: "Demo Research Project",
   project_file: "D:/ResearchOSProjects/demo.rosproj",
   project_root: "D:/ResearchOSProjects/demo",
-  current_macro_phase: "initialization",
-  current_phase: "initialization_intake",
+  current_macro_phase: "loop",
+  current_phase: "loop_acceptance_gate",
   default_profile_id: "custom-openai-compatible",
   codex: { thread_id: null, last_turn_id: null, last_status: "not_started" },
 };
@@ -37,9 +37,24 @@ test.beforeEach(async ({ page }) => {
     if (path === "/api/projects/create") return json({ project });
     if (path === "/api/profiles") return json({ profiles: [] });
     if (path === "/api/runtime/environment") return json({ codex_cli: null, codex_sdk_available: false, adapter: "mock" });
-    if (path === "/api/runtime/events") return json({ cursor: 0, events: [] });
-    if (path === "/api/approvals") return json({ approvals: [] });
-    if (path === "/api/archive-preview") return json({ phase: "initialization_intake", dirty: false, changed_paths: [] });
+    if (path === "/api/runtime/events") {
+      return json({ cursor: 1, events: [{ event_id: "ev-1", type: "assistant_message", message: "已完成证据草图，等待研究者验收。" }] });
+    }
+    if (path === "/api/approvals") {
+      return json({
+        approvals: [
+          {
+            approval_id: "APR-1",
+            method: "shell_command",
+            risk: { risk: "medium", decision: "requires_confirmation", reason: "本地命令需要研究者确认。" },
+            params: { command: "python -m pytest tests", cwd: "D:/ResearchOSProjects/demo" },
+            created_at: "2026-06-07T22:00:00+08:00",
+            status: "pending",
+          },
+        ],
+      });
+    }
+    if (path === "/api/archive-preview") return json({ phase: "loop_acceptance_gate", macro_phase: "research_loop", dirty: true, changed_paths: ["PUBLIC/research_state.json"], secrets_scan: "passed" });
     if (path === "/api/archives") return json({ archives: [] });
     if (path === "/api/intake") return json({ ok: true });
     if (path === "/api/choice-response") return json({ response: { response_id: "CR-1" } });
@@ -60,8 +75,12 @@ test.beforeEach(async ({ page }) => {
 test("desktop project workflow is clickable and readable", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "研究项目工作台" })).toBeVisible();
+  await page.getByRole("button", { name: /选择保存位置/ }).click();
+  await expect(page.getByText(/无法打开系统文件选择器|手动输入/)).toBeVisible();
   await page.getByRole("button", { name: /创建项目/ }).click();
   await expect(page.getByRole("heading", { name: "材料与目标" })).toBeVisible();
+  await expect(page.getByText("阶段：半自动循环研究阶段")).toBeVisible();
+  await expect(page.getByText("内部：验收门")).toBeVisible();
 
   await page.getByLabel("研究材料、目标、草稿或链接").fill("这是一段桌面端研究材料。");
   await page.getByRole("button", { name: /保存材料并初始化/ }).click();
@@ -78,9 +97,13 @@ test("desktop project workflow is clickable and readable", async ({ page }) => {
   await page.getByLabel("自然语言目标调整").fill("软件优先做成稳定桌面工具。");
   await page.getByRole("button", { name: /确认进入/ }).click();
 
-  await expect(page.getByText("当前没有待确认请求")).toBeVisible();
+  await expect(page.getByText("Codex 输出")).toBeVisible();
+  await expect(page.getByText("已完成证据草图，等待研究者验收。", { exact: true })).toBeVisible();
+  await expect(page.getByText("shell_command")).toBeVisible();
+  await expect(page.getByText("python -m pytest tests")).toBeVisible();
+  await expect(page.getByText("1 个待存档变更")).toBeVisible();
   await page.getByRole("button", { name: /刷新预览/ }).click();
   const html = await page.content();
   expect(html).not.toContain("鐮");
-  expect(html).not.toContain("�");
+  expect(html).not.toContain(String.fromCharCode(0xfffd));
 });

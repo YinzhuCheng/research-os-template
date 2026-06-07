@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Research OS main window with no direct shell or filesystem permissions.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "dialog:default"]
 }

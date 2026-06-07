@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api } from "../api";
 import { useAppStore } from "../store";
+import { chooseRosprojSavePath, selectExistingRosproj } from "../tauriDialog";
 import { ProfilePanel } from "./ProfilePanel";
 
 const RECENT_KEY = "researchOS.recentProjects.v1";
@@ -26,6 +27,7 @@ export function ProjectCenter() {
   const [name, setName] = useState("Untitled Research Project");
   const [projectFile, setProjectFile] = useState("D:/ResearchOSProjects/untitled.rosproj");
   const [openPath, setOpenPath] = useState("");
+  const [dialogNotice, setDialogNotice] = useState("");
   const [recent, setRecent] = useState<string[]>(readRecentProjects);
   const health = useQuery({ queryKey: ["health"], queryFn: api.health, retry: false });
   const createPathValid = useMemo(() => projectFile.trim().toLowerCase().endsWith(".rosproj"), [projectFile]);
@@ -48,6 +50,26 @@ export function ProjectCenter() {
       queryClient.invalidateQueries({ queryKey: ["project"] });
     },
   });
+
+  async function chooseCreatePath() {
+    setDialogNotice("");
+    try {
+      const selected = await chooseRosprojSavePath(projectFile);
+      if (selected) setProjectFile(selected);
+    } catch {
+      setDialogNotice("当前不是 Tauri 桌面运行环境，无法打开系统文件选择器；请先手动输入 .rosproj 路径。");
+    }
+  }
+
+  async function chooseOpenPath() {
+    setDialogNotice("");
+    try {
+      const selected = await selectExistingRosproj();
+      if (selected) setOpenPath(selected);
+    } catch {
+      setDialogNotice("当前不是 Tauri 桌面运行环境，无法打开系统文件选择器；请先手动输入已有 .rosproj 路径。");
+    }
+  }
 
   return (
     <main className="project-center">
@@ -86,6 +108,10 @@ export function ProjectCenter() {
             <span>.rosproj 路径</span>
             <input value={projectFile} onChange={(event) => setProjectFile(event.target.value)} aria-invalid={!createPathValid} />
           </label>
+          <button className="secondary-action" type="button" onClick={chooseCreatePath}>
+            <FolderOpen size={16} aria-hidden="true" />
+            选择保存位置
+          </button>
           {!createPathValid ? <p className="hint-text">路径应以 `.rosproj` 结尾，项目目录会使用同名文件夹。</p> : null}
           <button className="primary-action" type="button" onClick={() => create.mutate()} disabled={create.isPending || !createPathValid || !name.trim()}>
             <Plus size={16} aria-hidden="true" />
@@ -106,10 +132,17 @@ export function ProjectCenter() {
             <span>.rosproj 路径</span>
             <input value={openPath} onChange={(event) => setOpenPath(event.target.value)} placeholder="D:/ResearchOSProjects/demo.rosproj" aria-invalid={Boolean(openPath) && !openPathValid} />
           </label>
-          <button className="secondary-action" type="button" onClick={() => open.mutate()} disabled={open.isPending || !openPathValid}>
-            <FolderOpen size={16} aria-hidden="true" />
-            {open.isPending ? "正在打开" : "打开项目"}
-          </button>
+          <div className="inline-actions">
+            <button className="secondary-action" type="button" onClick={chooseOpenPath}>
+              <FolderOpen size={16} aria-hidden="true" />
+              选择项目文件
+            </button>
+            <button className="secondary-action" type="button" onClick={() => open.mutate()} disabled={open.isPending || !openPathValid}>
+              <FolderOpen size={16} aria-hidden="true" />
+              {open.isPending ? "正在打开" : "打开项目"}
+            </button>
+          </div>
+          {dialogNotice ? <p className="hint-text">{dialogNotice}</p> : null}
           {open.error ? <p className="error-text">{open.error.message}</p> : null}
           <div className="recent-list" aria-label="最近项目">
             <strong>最近项目</strong>

@@ -1,4 +1,5 @@
 import { CheckCircle2, Circle, FileStack, FlaskConical, Rocket } from "lucide-react";
+import { normalizeMacroPhase } from "../labels";
 import type { MacroPhase } from "../types";
 
 const phases: Array<{ id: MacroPhase; label: string; detail: string; Icon: typeof Rocket }> = [
@@ -7,13 +8,14 @@ const phases: Array<{ id: MacroPhase; label: string; detail: string; Icon: typeo
   { id: "final_product", label: "最终产物阶段", detail: "论文、报告、软件", Icon: FileStack }
 ];
 
-export function PhaseBar({ active }: { active: MacroPhase }) {
-  const activeIndex = phases.findIndex((phase) => phase.id === active);
+export function PhaseBar({ active }: { active: MacroPhase | string }) {
+  const normalizedActive = normalizeMacroPhase(active);
+  const activeIndex = phases.findIndex((phase) => phase.id === normalizedActive);
   return (
     <ol className="phase-bar" aria-label="Research OS 三阶段">
       {phases.map((phase, index) => {
         const complete = index < activeIndex;
-        const selected = phase.id === active;
+        const selected = phase.id === normalizedActive;
         const Icon = phase.Icon;
         return (
           <li className={`phase-item ${selected ? "active" : ""} ${complete ? "complete" : ""}`} key={phase.id}>

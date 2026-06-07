@@ -1,6 +1,33 @@
 import { ShieldCheck, ShieldX } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
+import type { Approval } from "../types";
+
+function riskLevel(approval: Approval) {
+  return typeof approval.risk === "string" ? approval.risk : approval.risk?.risk ?? "medium";
+}
+
+function riskReason(approval: Approval) {
+  return typeof approval.risk === "string" ? "需要研究者确认后才能继续。" : approval.risk?.reason ?? "需要研究者确认后才能继续。";
+}
+
+function approvalSummary(approval: Approval) {
+  const params = approval.params ?? {};
+  if (approval.summary) return approval.summary;
+  if (approval.command) return approval.command;
+  if (typeof params.command === "string") return params.command;
+  if (typeof params.summary === "string") return params.summary;
+  if (typeof params.path === "string") return params.path;
+  return approval.method || approval.approval_id;
+}
+
+function approvalScope(approval: Approval) {
+  const params = approval.params ?? {};
+  if (typeof params.cwd === "string") return params.cwd;
+  if (typeof params.path === "string") return params.path;
+  if (typeof params.file === "string") return params.file;
+  return "项目沙箱或受控权限范围";
+}
 
 export function ApprovalPanel() {
   const queryClient = useQueryClient();
@@ -25,9 +52,14 @@ export function ApprovalPanel() {
       <div className="approval-list">
         {(approvals.data?.approvals ?? []).map((approval) => (
           <article className="approval-row" key={approval.approval_id}>
-            <div>
-              <strong>{approval.method}</strong>
-              <small>{approval.risk.reason}</small>
+            <div className="approval-copy">
+              <div className="approval-title-row">
+                <strong>{approval.method || "权限请求"}</strong>
+                <span className={`risk-badge risk-${riskLevel(approval)}`}>{riskLevel(approval)}</span>
+              </div>
+              <p>{riskReason(approval)}</p>
+              <code>{approvalSummary(approval)}</code>
+              <small>作用范围：{approvalScope(approval)}</small>
             </div>
             <div className="approval-actions">
               <button type="button" className="secondary-action" onClick={() => decide.mutate({ approvalId: approval.approval_id, decision: "decline" })}>
@@ -37,6 +69,9 @@ export function ApprovalPanel() {
               <button type="button" className="primary-action" onClick={() => decide.mutate({ approvalId: approval.approval_id, decision: "accept" })}>
                 <ShieldCheck size={14} aria-hidden="true" />
                 允许
+              </button>
+              <button type="button" className="secondary-action" onClick={() => decide.mutate({ approvalId: approval.approval_id, decision: "cancel" })}>
+                取消
               </button>
             </div>
           </article>
