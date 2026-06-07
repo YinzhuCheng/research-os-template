@@ -1,11 +1,11 @@
-current_phase: research-os-v4.3-researcher-qa-yunwu-uiux
+current_phase: research-os-v4.4-neural-networks-submission
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "After v4.3 validation, decide whether to broaden the desktop app from mocked sidecar QA into live Codex runtime dogfooding."
+next_required_decision: "Dogfood Research OS Desktop on the neural-network paper: fix app blockers first, then use the app to produce a Neural Networks Full Article submission package."
 confirmed_decisions:
   - "Research OS Desktop is the only primary user interface."
   - "The old browser bridge is retired."
@@ -22,3 +22,10 @@ confirmed_decisions:
   - "Researcher QA screenshots are stored locally under ignored test artifact directories and are not committed."
   - "Yunwu UI review may spend up to USD 3 using a signal-first policy."
   - "Native Tauri file dialogs may be added if compatible with the current desktop stack."
+  - "For this work order, the target venue is Neural Networks as a Full Article in Mathematical and Computational Analysis."
+  - "Author and corresponding author are Cheng Yinzhu."
+  - "Affiliations are Renmin University of China and Beijing Institute of Mathematical Sciences and Applications (BIMSA)."
+  - "Funding and competing interests are none."
+  - "Yunwu gpt-5.5 xhigh may be used up to USD 105 hard cap after availability and usage measurement are verified."
+  - "All source authenticity, venue rules, references, and AI declaration requirements must be checked online before finalizing the paper."
+  - "The local untracked neural network directory is source material, not a git deliverable."

@@ -1,29 +1,38 @@
 project_id: research-os-desktop
 title: "Research OS Desktop Seed Project"
-template_version: research-os-v4.3
+template_version: research-os-v4.4
 process_contract: config/research_flow.yaml
 language_mode: zh-first
 intervention_level: low
 privacy_policy: public_private_split
 research_profile:
-  domain: unspecified
-  research_type: unspecified
-  uses_llm: unspecified
-  uses_machine_learning: unspecified
-  validation_object: unspecified
+  domain: neural_network_theory
+  research_type: mathematical_and_computational_analysis
+  uses_llm: manuscript_preparation_and_review
+  uses_machine_learning: theoretical_subject_matter
+  validation_object: exact_polynomial_representation_for_quadratic_activation_networks
 dissemination:
-  target_type: undecided
-  target_types: []
-  paper_enabled: false
-  target_name: null
-  output_format: null
-  final_product_enabled: false
-  final_product_tracks: []
+  target_type: paper
+  target_types:
+    - paper
+  paper_enabled: true
+  target_name: "Neural Networks"
+  target_section: "Mathematical and Computational Analysis"
+  article_type: "Full Article"
+  output_format: latex_pdf
+  final_product_enabled: true
+  final_product_tracks:
+    - paper
   product_expectations:
     paper:
-      target_venue: null
-      venue_template_path: null
-      comparable_papers: []
+      target_venue: "Neural Networks"
+      target_section: "Mathematical and Computational Analysis"
+      article_type: "Full Article"
+      venue_template_path: "neural network/目标期刊模板与示例论文/templates/elsarticle"
+      comparable_papers:
+        - "neural network/目标期刊模板与示例论文/reference_papers/01_Echo_state_networks_are_universal__Grigoryeva_Ortega_2018_arXiv.pdf"
+        - "neural network/目标期刊模板与示例论文/reference_papers/02_Embedding_and_approximation_theorems_for_echo_state_networks__Hart_Hook_Dawes_2020_arXiv.pdf"
+        - "neural network/目标期刊模板与示例论文/reference_papers/03_Fading_memory_echo_state_networks_are_universal__Gonon_Ortega_2021_arXiv.pdf"
       default_language: English
     report:
       output_formats:
@@ -42,16 +51,16 @@ choice_policy:
   free_form_required: true
   applies_to_all_user_choices: true
 resource_budget:
-  currency: CNY
-  total_limit: null
+  currency: USD
+  total_limit: 105
   categories:
     time: null
     compute: null
     cloud: null
     lab: null
     material: null
-    api: null
-    model: null
+    api: 105
+    model: 105
     human: null
     other: null
 resource_guard:
@@ -65,9 +74,9 @@ feasibility_probe:
 live_evidence:
   required_for_time_sensitive_claims: true
   last_refresh: null
-current_macro_phase: initialization
-current_phase: initialization_intake
-current_phase_note: "Default runtime phase for a new project instance; CONTROL/phase_gate.yaml records the current seed/work-order phase."
+current_macro_phase: final_product
+current_phase: final_product_production
+current_phase_note: "Repository seed is dogfooding a live paper final-product workflow while the actual paper project is kept in a private .rosproj sandbox."
 phase_gate_required: true
 public_export_enabled: false
 desktop_app:
@@ -82,5 +91,14 @@ created_from:
   source_type: desktop_app_seed
   source_paths: []
 owners:
-  decision_maker: TBD
+  decision_maker: Cheng Yinzhu
   codex_operator: Codex
+submission_metadata:
+  author: "Cheng Yinzhu"
+  corresponding_author: "Cheng Yinzhu"
+  affiliations:
+    - "Renmin University of China"
+    - "Beijing Institute of Mathematical Sciences and Applications (BIMSA)"
+  funding: "This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors."
+  competing_interests: "The author declares no competing financial interests or personal relationships that could have appeared to influence the work reported in this paper."
+  ai_declaration_policy: "Verify current Neural Networks / Elsevier guide before finalizing; include an AI-assisted manuscript-preparation declaration if required."

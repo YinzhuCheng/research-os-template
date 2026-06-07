@@ -1,6 +1,6 @@
-work_order_id: WO-0014
-phase: research-os-v4.3-researcher-qa-yunwu-uiux
-goal: "Run researcher-perspective desktop app QA, use signal-first Yunwu UX review within USD 3, and fix high-impact bugs and user experience gaps."
+work_order_id: WO-0015
+phase: research-os-v4.4-neural-networks-submission
+goal: "Use Research OS Desktop app-first dogfooding to turn the local quadratic-activation neural-network draft into a Neural Networks Full Article submission package."
 inputs:
   - "AGENTS.md"
   - "CONTROL/work_order.yaml"
@@ -11,6 +11,7 @@ inputs:
   - "PUBLIC/"
   - "scripts/"
   - "apps/"
+  - "neural network/ (local untracked source material; do not commit raw inputs)"
   - "local screenshots under ignored test-results directories"
 allowed_paths:
   - ".agents/"
@@ -30,8 +31,10 @@ allowed_paths:
   - "templates/"
   - "tests/"
   - "tools/"
+  - "PRIVATE/projects/neural-network-submission/"
 forbidden_paths:
-  - "PRIVATE/"
+  - "PRIVATE/secrets/"
+  - "PRIVATE/external_repos/"
 outputs:
   - "README.md"
   - "AGENTS.md"
@@ -42,28 +45,30 @@ outputs:
   - "apps/"
   - "config/"
   - "tests/"
+  - "PRIVATE/projects/neural-network-submission/"
   - "PROVENANCE/run_manifest.jsonl"
   - "PROVENANCE/resource_ledger.jsonl"
 resource_budget:
   currency: USD
-  max_total_cost: 3
+  max_total_cost: 105
   categories:
     time: "local implementation session"
     compute: "local validation and packaging"
-    api: "Yunwu gpt-5.4 low-reasoning UI review, signal-first, hard cap USD 3"
+    api: "Yunwu gpt-5.5 xhigh paper review/rebuttal rounds, target USD 90-105, hard cap USD 105"
   max_runtime_minutes: null
 stop_conditions:
-  - "Need to read, inspect, or commit real PRIVATE intake material."
+  - "Need to commit real PRIVATE intake material."
   - "Need to store real API keys, account tokens, cookies, authorization headers, or provider secrets."
-  - "Need external writeback other than git push to the current branch."
+  - "Need external writeback other than git push to the current branch or read-only online source verification."
   - "Yunwu usage cannot be measured or estimated safely before paid review calls."
+  - "gpt-5.5 or xhigh reasoning is unavailable and no user-approved fallback exists."
 acceptance_criteria:
-  - "Researcher-perspective desktop and narrow viewport screenshots are captured locally and summarized."
-  - "Desktop UI source and tests no longer contain Chinese mojibake."
-  - "Validation fails if known mojibake markers reappear in desktop source or tests."
-  - "Project creation/open/import uses native Tauri dialogs when compatible, or an explicit validated fallback."
-  - "Yunwu UX review is sanitized, within USD 3, and actual or estimated cost is recorded."
-  - "High-impact researcher workflow bugs and UX gaps found in local/Yunwu review are fixed."
-  - "Privacy, schema, docs, desktop, sidecar, frontend, Playwright, and package checks pass or failures are reported."
+  - "Research OS Desktop can drive a real paper workflow for the neural-network materials without relying on manual manuscript bypasses."
+  - "Desktop UI source and tests no longer contain Chinese mojibake; validation fails if it reappears."
+  - "The local neural-network materials are imported into a project sandbox without committing raw input files."
+  - "Official venue rules and citation metadata are refreshed online with recorded sources."
+  - "The final paper package compiles and includes manuscript, appendix or supplement if needed, references, highlights, cover letter, checklist, source verification, proof audit, and required declarations."
+  - "Yunwu review/rebuttal calls use gpt-5.5 xhigh if available, are redacted, measured, and stay within the hard USD 105 ceiling."
+  - "App interaction records, app/workflow gap records, screenshots, run manifests, resource ledger entries, and archive records are preserved."
 requires_confirmation: false
-privacy_level: public
+privacy_level: mixed
