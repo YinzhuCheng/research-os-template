@@ -61,6 +61,13 @@ export interface SubmissionWorkflowItem {
   required_evidence?: string;
 }
 
+export interface PaperArtifactStatus {
+  path: string;
+  role?: string;
+  bytes?: number;
+  updated_at?: string;
+}
+
 export interface SubmissionWorkflow {
   target_venue?: string;
   article_type?: string;
@@ -68,6 +75,7 @@ export interface SubmissionWorkflow {
   status?: string;
   source_verification?: SubmissionWorkflowItem[];
   proof_audit?: SubmissionWorkflowItem[];
+  artifact_status?: PaperArtifactStatus[];
   review_rounds?: Array<Record<string, unknown>>;
   workflow_gaps?: Array<Record<string, unknown>>;
 }

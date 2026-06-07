@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from research_os_sidecar.approval_service import ApprovalService
 from research_os_sidecar.archive_service import ArchiveService
+from research_os_sidecar.paper_artifact_service import PaperArtifactService
 from research_os_sidecar.profile_service import ProfileService
 from research_os_sidecar.project_service import ProjectService
 from research_os_sidecar.security import SecurityError, import_directory_to_project, resolve_under
@@ -124,6 +125,50 @@ class SidecarServiceTests(unittest.TestCase):
             readback = state.read_state()
             gaps = readback["submission_workflow"]["workflow_gaps"]
             self.assertEqual(gaps[-1]["description"], "source verification table needs per-reference acceptance")
+
+    def test_paper_artifact_service_writes_public_submission_files(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            root = Path(project["project_root"])
+            service = PaperArtifactService(projects.require_project_root)
+
+            result = service.write_artifacts(
+                {
+                    "summary": "draft paper package",
+                    "files": [
+                        {"path": "PUBLIC/paper/main.tex", "content": "\\section{Test}\n", "role": "manuscript"},
+                        {"path": "PUBLIC/submission/highlights.txt", "content": "Highlight one\n", "role": "submission"},
+                    ],
+                }
+            )
+            self.assertEqual(len(result["written"]), 2)
+            self.assertTrue((root / "PUBLIC" / "paper" / "main.tex").exists())
+            self.assertTrue((root / "PUBLIC" / "submission" / "highlights.txt").exists())
+            readback = json.loads((root / "PUBLIC" / "research_state.json").read_text(encoding="utf-8"))
+            artifacts = readback["submission_workflow"]["artifact_status"]
+            self.assertIn("PUBLIC/paper/main.tex", {item["path"] for item in artifacts})
+
+    def test_paper_artifact_service_rejects_private_escape_and_secret_content(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            projects.create_project("Demo", base / "demo.rosproj")
+            service = PaperArtifactService(projects.require_project_root)
+
+            with self.assertRaises(SecurityError):
+                service.write_artifacts({"files": [{"path": "../outside.tex", "content": "x"}]})
+            with self.assertRaises(SecurityError):
+                service.write_artifacts({"files": [{"path": "PRIVATE/paper/main.tex", "content": "x"}]})
+            with self.assertRaises(SecurityError):
+                service.write_artifacts({"files": [{"path": "PUBLIC/paper/main.tex", "content": "api_key=secret"}]})
 
     def test_project_path_escape_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

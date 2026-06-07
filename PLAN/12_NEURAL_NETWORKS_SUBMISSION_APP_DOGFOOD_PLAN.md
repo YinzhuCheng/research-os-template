@@ -46,6 +46,7 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - Real project intake exposed four reusable app gaps and fixes: directory-level source import, Windows long-path copy support, collision-free IDs for rapid choice responses, and single-sidecar port protection.
 - The private `.rosproj` sandbox was created under `PRIVATE/projects/neural-network-submission/`; raw inputs remain outside git and were imported through the app/sidecar path.
 - The initialization path now returns exactly three paper-oriented choice prompts, matching the Research OS rule for material analysis.
+- The paper workflow also needed a reusable artifact-writing path. Added a sidecar `PaperArtifactService` so final-product files and audit records are written under controlled public/provenance paths instead of ad hoc manual edits.
 
 ## Step 1 Validation
 
@@ -62,6 +63,16 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - Vitest passed: 1 test.
 - Playwright passed: 2 tests across desktop and narrow viewports.
 - Vite production build passed.
+
+## Step 4 Partial Validation
+
+- Added controlled paper artifact writing for `PUBLIC/paper/`, `PUBLIC/submission/`, and `PROVENANCE/paper/`.
+- Updated the desktop paper workflow panel to surface generated paper artifacts for researcher acceptance.
+- `py_compile` passed for the new sidecar service and server route.
+- Sidecar unit tests passed: 13 tests.
+- `scripts/check_desktop_app.ps1` passed.
+- TypeScript `tsc --noEmit` passed with bundled Node.
+- `git diff --check` passed.
 
 ## Step 3 Validation
 

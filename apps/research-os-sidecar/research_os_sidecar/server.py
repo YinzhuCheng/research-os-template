@@ -12,6 +12,7 @@ from typing import Any
 from .approval_service import ApprovalService
 from .archive_service import ArchiveService
 from .common import DEFAULT_PORT, public_error
+from .paper_artifact_service import PaperArtifactService
 from .profile_service import ProfileService
 from .project_service import ProjectService
 from .runtime_service import RuntimeService
@@ -34,6 +35,7 @@ class AppContext:
         self.approvals = ApprovalService()
         self.runtime = RuntimeService(self.projects.require_project_root, self.approvals)
         self.state = ResearchStateService(self.projects.require_project_root)
+        self.paper_artifacts = PaperArtifactService(self.projects.require_project_root)
         self.archives = ArchiveService(self.projects.require_project_root)
 
 
@@ -156,6 +158,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"plan": self.context.state.select_final_products(list(payload.get("tracks") or []), str(payload.get("free_form") or ""))})
             elif path == "/api/workflow-gap":
                 self.send_json({"gap": self.context.state.record_workflow_gap(payload)})
+            elif path == "/api/paper-artifacts/write":
+                self.send_json({"paper_artifacts": self.context.paper_artifacts.write_artifacts(payload)})
             elif path == "/api/import-file":
                 root = self.context.projects.require_project_root()
                 self.send_json({"import": import_file_to_project(Path(str(payload.get("source_path") or "")), root, str(payload.get("target_subdir") or "INBOX/imports"))})

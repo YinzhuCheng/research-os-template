@@ -83,6 +83,25 @@ export function PaperWorkflowPanel({ workflow }: { workflow?: SubmissionWorkflow
 
       <div className="workflow-block">
         <div className="workflow-block-title">
+          <BookOpenCheck size={16} aria-hidden="true" />
+          <strong>投稿包文件</strong>
+        </div>
+        {(workflow?.artifact_status ?? []).length === 0 ? (
+          <p className="empty-state">尚未生成论文文件。Codex 完成受控写入后，main.tex、references.bib、审计报告和投稿材料会显示在这里。</p>
+        ) : null}
+        {(workflow?.artifact_status ?? []).map((item) => (
+          <article className="workflow-item" key={item.path}>
+            <div>
+              <strong>{item.path}</strong>
+              <small>{item.role ?? "paper_artifact"}</small>
+            </div>
+            <span>{item.bytes ? `${Math.round(item.bytes / 1024)} KB` : "已写入"}</span>
+          </article>
+        ))}
+      </div>
+
+      <div className="workflow-block">
+        <div className="workflow-block-title">
           <Bug size={16} aria-hidden="true" />
           <strong>App / 工作流缺口</strong>
         </div>
