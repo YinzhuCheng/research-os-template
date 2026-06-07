@@ -5,11 +5,11 @@ description: Run adversarial self-review, venue-style peer review, rebuttal draf
 
 # Research OS Review Rebuttal
 
-Use this skill after a paper draft exists.
+Use this skill after a paper draft exists, or after a formal report draft explicitly requests review/rebuttal-style iteration.
 
 ## Workflow
 
-1. Read paper, appendix, claim-evidence matrix, result analysis, and target venue.
+1. Read paper or formal report draft, appendix or supplemental material, claim-evidence matrix, result analysis, and target venue or report audience.
 2. Generate multiple reviewer roles:
    - novelty skeptic,
    - method correctness reviewer,

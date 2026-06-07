@@ -29,7 +29,10 @@ Use repo skills before generic Codex execution. The canonical process is defined
 | Maintain docs/dashboard/doc map | `research-os-doc-site` | docs, dashboard, doc map, work order | updated offline docs and navigation | No private material, no remote assets by default. |
 | Audit harness/control surfaces | `research-os-harness-audit` | AGENTS, Codex config, work order, phase gate, git state | audit report and required decisions | Audit only; no cleanup unless separately authorized. |
 | Register external auto-research components | `research-os-integration-scout` | source URL, license, adapter intent | registry entry and risk boundary | Registry/adapters only; no vendoring by default. |
+| Select final products | `research-os-final-product` | accepted loop artifact, product goals, evidence matrix | final product plan and track routing | Requires acceptance gate; no export/submission without approval. |
 | Write a paper | `research-os-paper-authoring` | enabled dissemination target, claim matrix, results | LaTeX paper artifacts | Only when paper is explicitly enabled or requested. |
+| Write a research report | `research-os-report-authoring` | accepted artifacts, manifests, evidence matrix | HTML, LaTeX/PDF, or PPT report artifacts | Process-rich report; no invented results or private leaks. |
+| Productize software | `research-os-software-productization` | accepted artifact, codebase, user product expectations | software artifact, docs, tests, QA notes | Defaults to stable/polished/user-friendly; release needs approval. |
 | Improve research visuals | `research-os-visual-communication` | figure/table/report/paper needs | figure plan or visual artifacts | Evidence figures must stay source-linked. |
 | Polish/fact-check prose | `research-os-polish-factcheck` | manuscript/report and evidence matrix | polish report or edits | Only after a draft exists. |
 | Review/rebuttal | `research-os-review-rebuttal` | paper/formal report draft and target venue | review matrix, rebuttal plan | Paper/formal report route only. |

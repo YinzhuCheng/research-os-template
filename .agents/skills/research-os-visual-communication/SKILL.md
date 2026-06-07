@@ -5,13 +5,13 @@ description: Improve research paper visual communication, including LaTeX typogr
 
 # Research OS Visual Communication
 
-Use this skill for the visual and presentation layer of research outputs.
+Use this skill for the visual and presentation layer of research outputs, including papers, research reports, software documentation, dashboards, and public artifacts.
 
 ## Workflow
 
 1. Prefer vector-native figures: TikZ, PGFPlots, SVG, Graphviz, or Mermaid exported to vector.
 2. Use bitmap or AIGC images only for graphical abstracts or concept illustrations, never for experimental data.
-3. Maintain a figure plan with purpose, evidence source, rendering toolchain, and paper section.
+3. Maintain a figure plan with purpose, evidence source, rendering toolchain, and paper/report/software-doc section.
 4. Check figure diversity:
    - main result,
    - ablation,

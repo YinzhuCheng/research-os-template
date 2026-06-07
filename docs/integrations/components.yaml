@@ -361,3 +361,232 @@ components:
       privacy: "Candidate codebases may contain proprietary or unpublished material."
       external_write: "No cloud service, leaderboard, repository push, or external deployment without explicit approval."
       license: "No vendoring; treat as paper/service reference unless a reviewed open-source implementation is separately registered."
+  - id: quarto
+    name: "Quarto"
+    source_url: "https://github.com/quarto-dev/quarto"
+    paper_url: "https://quarto.org/license"
+    license: "MIT for Quarto 1.4+; note bundled components have their own licenses"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_report
+      - final_product_paper
+      - visual_communication
+    install_reference: "Use upstream installation only after a report/publishing work order selects Quarto."
+    credential_env_vars: []
+    inputs:
+      - "markdown or qmd report source"
+      - "figures"
+      - "bibliography"
+    outputs:
+      - "HTML report"
+      - "PDF report"
+      - "slides"
+    artifact_mapping:
+      final_product_plan: "templates/yaml/final_product_plan.template.yaml"
+      report_output: "PUBLIC/report/ only after privacy review"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Publishing build should run only through the execution harness."
+      cost: "No direct cost; compute time is local unless external publishing is selected."
+      privacy: "Report source may contain private unpublished material."
+      external_write: "Quarto Pub, GitHub Pages, or hosted publish requires explicit approval."
+      license: "Record Quarto and bundled component licenses before redistribution."
+  - id: typst
+    name: "Typst"
+    source_url: "https://github.com/typst/typst"
+    paper_url: "https://typst.app/open-source/"
+    license: "Apache-2.0 compiler"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_report
+      - final_product_paper
+      - visual_communication
+    install_reference: "Use the local compiler only when a selected product track chooses Typst output."
+    credential_env_vars: []
+    inputs:
+      - "Typst source"
+      - "figures"
+      - "bibliography"
+    outputs:
+      - "PDF document"
+      - "typeset report"
+    artifact_mapping:
+      report_output: "PUBLIC/report/ after privacy scan"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Local compilation is low risk but still uses selected source files."
+      cost: "Local compute only."
+      privacy: "Do not compile or export private content into PUBLIC/."
+      external_write: "Typst web collaboration or upload is out of scope without approval."
+      license: "Preserve notices for compiler or templates if bundled."
+  - id: marp-cli
+    name: "Marp CLI"
+    source_url: "https://github.com/marp-team/marp-cli"
+    paper_url: "https://github.com/marp-team/marp"
+    license: "MIT"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_report
+      - presentation_export
+      - visual_communication
+    install_reference: "Use only when the report track selects PPT/slides output."
+    credential_env_vars: []
+    inputs:
+      - "Markdown slides"
+      - "local images"
+    outputs:
+      - "HTML slides"
+      - "PDF slides"
+      - "PPTX slides"
+    artifact_mapping:
+      slides_output: "PUBLIC/report/slides/ after privacy scan"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Local file access must stay in allowed paths."
+      cost: "Local compute only."
+      privacy: "Slides may summarize unpublished results."
+      external_write: "No hosted slide publish without approval."
+      license: "MIT; preserve notices if redistributing templates or themes."
+  - id: mkdocs-material
+    name: "Material for MkDocs"
+    source_url: "https://github.com/squidfunk/mkdocs-material"
+    paper_url: "https://squidfunk.github.io/mkdocs-material/"
+    license: "MIT"
+    accessed_at: "2026-06-07"
+    adapter_status: reference_only
+    research_os_phases:
+      - final_product_report
+      - software_documentation
+      - public_export
+    install_reference: "Use as a documentation-site design reference; no default dependency."
+    credential_env_vars: []
+    inputs:
+      - "Markdown docs"
+      - "navigation config"
+    outputs:
+      - "static documentation site"
+    artifact_mapping:
+      docs_output: "PUBLIC/docs/ only after privacy review"
+      asset_sources: "docs/ASSET_SOURCES.md"
+    risks:
+      sandbox: "Site builds must avoid remote assets and private source leakage."
+      cost: "Local compute only."
+      privacy: "Documentation can accidentally expose internal research notes."
+      external_write: "GitHub Pages or hosting deploy requires explicit approval."
+      license: "MIT; preserve notices if theme assets are copied."
+  - id: lucide-icons
+    name: "Lucide Icons"
+    source_url: "https://github.com/lucide-icons/lucide"
+    paper_url: "https://github.com/lucide-icons/lucide/blob/main/LICENSE"
+    license: "ISC with Feather-derived MIT notices"
+    accessed_at: "2026-06-07"
+    adapter_status: active_reference
+    research_os_phases:
+      - dashboard
+      - copilot_ui
+      - software_documentation
+    install_reference: "Use only inline SVG subsets copied with attribution; no CDN."
+    credential_env_vars: []
+    inputs:
+      - "icon names"
+      - "inline SVG subset"
+    outputs:
+      - "offline UI icons"
+    artifact_mapping:
+      asset_sources: "docs/ASSET_SOURCES.md"
+      dashboard: "PUBLIC/index.html"
+      copilot: "PUBLIC/copilot.html"
+    risks:
+      sandbox: "No execution risk for inline SVG."
+      cost: "None."
+      privacy: "No private data expected."
+      external_write: "None."
+      license: "Record icon provenance and license notices."
+  - id: hatch
+    name: "Hatch"
+    source_url: "https://github.com/pypa/hatch"
+    paper_url: "https://hatch.pypa.io/"
+    license: "MIT"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_software
+      - packaging
+      - testing
+    install_reference: "Use only when a Python software product track selects Hatch packaging."
+    credential_env_vars: []
+    inputs:
+      - "pyproject.toml"
+      - "Python package source"
+    outputs:
+      - "wheel"
+      - "sdist"
+      - "test environment"
+    artifact_mapping:
+      software_output: "PUBLIC/software/ after privacy scan"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Build hooks and environment scripts must be reviewed."
+      cost: "Local compute unless publishing is selected."
+      privacy: "Package metadata may expose private project names."
+      external_write: "PyPI or registry publish requires explicit approval."
+      license: "MIT; dependency licenses still need review."
+  - id: pyinstaller
+    name: "PyInstaller"
+    source_url: "https://github.com/pyinstaller/pyinstaller"
+    paper_url: "https://pyinstaller.org/en/stable/license.html"
+    license: "GPL-2.0 with bootloader exception; selected files Apache-2.0"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_software
+      - packaging
+    install_reference: "Use only when a Python software product track explicitly selects executable packaging."
+    credential_env_vars: []
+    inputs:
+      - "Python entrypoint"
+      - "package dependencies"
+    outputs:
+      - "standalone executable bundle"
+    artifact_mapping:
+      software_output: "PUBLIC/software/ after privacy scan"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Executable bundling can include unintended files; inspect build manifest."
+      cost: "Local compute only."
+      privacy: "Bundles may accidentally include private config or data files."
+      external_write: "Release upload requires explicit approval."
+      license: "Generated bundles can use project license subject to dependency licenses; review before distribution."
+  - id: fastapi
+    name: "FastAPI"
+    source_url: "https://github.com/fastapi/fastapi"
+    paper_url: "https://fastapi.tiangolo.com/"
+    license: "MIT"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_software
+      - api_service
+      - software_documentation
+    install_reference: "Use only when a software product track selects a Python API service."
+    credential_env_vars: []
+    inputs:
+      - "API contract"
+      - "Python service code"
+      - "tests"
+    outputs:
+      - "local API service"
+      - "OpenAPI schema"
+      - "service documentation"
+    artifact_mapping:
+      software_docs: "PUBLIC/software/ after privacy scan"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Local services must bind to localhost by default."
+      cost: "Local compute unless deployed."
+      privacy: "API examples may expose unpublished data."
+      external_write: "Deployment requires explicit approval."
+      license: "MIT; dependency and deployment stack licenses still need review."

@@ -31,8 +31,11 @@ Use this as the entry skill. Keep orchestration short; load sub-skill references
    - harness audit: use `research-os-harness-audit`;
    - execution and audit: use `research-os-execution-harness`;
    - evidence and literature: use `research-os-evidence`;
-   - paper writing: use `research-os-paper-authoring` only when `dissemination.paper_enabled` is true or the researcher explicitly asks for a paper;
-   - figures and visual polish: use `research-os-visual-communication` when a report, paper, dashboard, or public artifact needs visual communication;
+   - final product phase: use `research-os-final-product` when the researcher chooses paper, research report, software, or a multi-track final product;
+   - paper writing: use `research-os-paper-authoring` only when `dissemination.paper_enabled` is true, the researcher explicitly asks for a paper, or the final product plan selects paper;
+   - report writing: use `research-os-report-authoring` when the final product plan selects a process-rich research report;
+   - software productization: use `research-os-software-productization` when the final product plan selects software;
+   - figures and visual polish: use `research-os-visual-communication` when a report, paper, software document, dashboard, or public artifact needs visual communication;
    - prose/fact polish: use `research-os-polish-factcheck`;
    - review/rebuttal: use `research-os-review-rebuttal` only for papers or formal reports;
    - public package: use `research-os-public-export`.

@@ -16,20 +16,22 @@ When instructions conflict, apply:
 
 ## Canonical Stage Routing
 
-The stage sequence is:
+The user-facing macro sequence is:
 
-`material_intake -> targeted_questions -> initialization -> research_kernel -> domain_or_general_route -> feasibility_or_evidence -> execution_harness -> analysis -> acceptance_gate -> next_loop_or_export`
+`initialization -> semi_automated_research_loop -> final_product`
 
-- `material_intake`: use `research-os-copilot`; raw uploads stay private.
-- `targeted_questions`: use `research-os-copilot`; ask exactly three targeted questions with recommended answer, options, and Other/free-form path.
-- `initialization`: use `research-os-init`, with `research-os-alignment` and `research-os-evidence` as needed.
-- `research_kernel`: use `research-os-research-kernel`; define candidate and evaluator contract before field routing.
-- `domain_or_general_route`: inspect `domain_profiles/`; only then route to a domain skill.
-- `feasibility_or_evidence`: use `research-os-feasibility-probe`, `research-os-evidence`, `research-os-live-evidence-refresh`, and `research-os-resource-guard` as needed.
-- `execution_harness`: use `research-os-execution-harness`; experiment loops may be planned with `research-os-experiment-manager`, but execution still uses the harness.
-- `analysis`: use `research-os-analysis`; preserve failures and negative results.
-- `acceptance_gate`: use `research-os-alignment`; require human confirmation for scope, budget, privacy, dissemination, or external behavior changes.
-- `next_loop_or_export`: loop through orchestrator again, or use public/paper/export skills only when enabled.
+The internal stage sequence is:
+
+`initialization_intake -> loop_acceptance_gate -> loop_plan_alignment -> loop_user_decision -> loop_execute_analyze -> final_product_selection -> final_product_production -> export_release_gate`
+
+- `initialization_intake`: use `research-os-copilot` and `research-os-init`; raw uploads stay private; ask exactly three targeted questions with recommended option, concrete options, and Other/free-form path.
+- `loop_acceptance_gate`: use `research-os-alignment`; the researcher must accept the previous artifact before the loop advances.
+- `loop_plan_alignment`: use `research-os-alignment` and `research-os-orchestrator`; propose the next plan and ask one to three high-impact choice prompts.
+- `loop_user_decision`: use `research-os-orchestrator`; record selected options and free-form notes before changing work orders, phase gates, or domain routes.
+- `loop_execute_analyze`: use `research-os-research-kernel` with harness, evidence, feasibility, resource, domain, and analysis skills as needed; preserve kernel objects and failed results.
+- `final_product_selection`: use `research-os-final-product`; select paper, research report, software, or a multi-track combination with natural-language expectations.
+- `final_product_production`: use `research-os-final-product` to route to paper, report, software, review/rebuttal, visual, polish, and export skills.
+- `export_release_gate`: use `research-os-public-export`; require human confirmation for public export, submission, software release, external upload, or writeback.
 
 ## Domain Profile Routing
 
@@ -52,7 +54,7 @@ Use `research-os-copilot` when a researcher starts from `PUBLIC/copilot.html`, u
 
 The route is:
 
-`material_input -> save_intake -> pending_intake_analysis -> three targeted questions -> initialization report -> research-os-research-kernel -> domain profile -> execution harness`
+`material_input -> save_intake -> pending_intake_analysis -> three targeted questions -> initialization report -> loop_acceptance_gate -> loop_plan_alignment`
 
 Rules:
 
