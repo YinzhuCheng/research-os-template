@@ -55,10 +55,24 @@ if (!($data.status.label -contains "Copilot Usability")) {
 if (!($data.status.label -contains "UI Settings")) {
   throw "Dashboard data missing UI Settings status."
 }
+if (!($data.status.label -contains "Macro Phases")) {
+  throw "Dashboard data missing Macro Phases status."
+}
+if (!($data.status.label -contains "Final Products")) {
+  throw "Dashboard data missing Final Products status."
+}
+if (!($data.status.label -contains "Archives")) {
+  throw "Dashboard data missing Archives status."
+}
 $requiredDocumentPaths = @(
+  "archive_index.json",
   "../docs/environment.md",
   "../docs/process-contract.md",
   "../config/research_flow.yaml",
+  "../config/schemas/choice_prompt.schema.json",
+  "../config/schemas/final_product_plan.schema.json",
+  "../config/schemas/archive_record.schema.json",
+  "../templates/yaml/final_product_plan.template.yaml",
   "evidence_board.json",
   "run_monitor.json",
   "../config/schemas/copilot_answers.schema.json",

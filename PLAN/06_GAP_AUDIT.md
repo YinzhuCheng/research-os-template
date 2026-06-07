@@ -17,6 +17,12 @@ This audit lists current residual risks after the v3.4 repository cleanup. Histo
 - P0/P1 audit hardening: v3.6 adds strict schema-instance validation, HTML trailing-content checks, manifest write-path guard, sanitized Copilot intake packets, answer/confirmation APIs, stronger hooks, local eval fixtures, run monitor, adapter contract, release package allowlist, tests, and CI skeleton.
 - Lightweight Copilot usability: v3.7 adds generated public Evidence Board and Run Monitor summaries, readable JSON/JSONL/YAML dashboard rendering, Copilot Evidence Board/resource summaries, and synthetic private-intake validation without touching real `PRIVATE/`.
 - UI personalization: v3.8 adds five local visual styles and Chinese/English interface settings to Dashboard and Copilot, with Chinese as the default UI language and English as the default final-paper language.
+- Three-phase flow: v3.9 exposes initialization, semi-automated loop research, and final product as the user-facing macro phases while consolidating internal governance into eight controlled stages.
+- Loop acceptance: v3.9 makes acceptance of the previous artifact a blocking gate before next-step planning.
+- Choice prompts: v3.9 requires recommended options, default options, and natural-language free-form input for every user-facing choice.
+- Final products: v3.9 adds paper, research report, and software tracks with dedicated skills and schema/template support.
+- Archives: v3.9 adds git-backed snapshot APIs, schema/template support, public sanitized archive index, archive validation, and UI entry points.
+- UI structure: v3.9 adds phase bars, grouped actions, final product modal, archive modal, local natural-language UI expectations, and inline icon provenance.
 
 ## Remaining Risks
 
@@ -26,6 +32,9 @@ This audit lists current residual risks after the v3.4 repository cleanup. Histo
 - The repo-scoped plugin scaffold may need Codex app trust, marketplace, or MCP-install adjustments by environment.
 - `PUBLIC/index.html` has lightweight JSON/JSONL/YAML rendering for selected resources, but it is intentionally not a rich control console or editing UI.
 - UI preferences are browser-local and static-page friendly. A future project instance may want schema-backed defaults if teams need shared UI policy.
+- Final product generation is now planned and routed, but actual paper/report/software outputs still require project-specific material and researcher selection.
+- Git-backed archives are local repository snapshots. Whether project instances should push archive commits by default remains an explicit post-v3.9 product decision.
+- Archive privacy checks block obvious secret/private paths, but they do not replace a human review before public export or submission.
 - External component integrations are adapter registrations only. License/security review is required before vendoring or executing third-party research systems.
 - Mathematical formalization remains a future slot. Lean/Coq/Isabelle integration needs a dedicated work order, toolchain review, and false-proof handling policy.
 - Paper generation is optional. `templates/latex/` is checked statically, but generated `PUBLIC/paper/` output is only created after paper enablement.

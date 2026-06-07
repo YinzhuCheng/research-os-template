@@ -71,6 +71,8 @@
         <a href="#copilot">Copilot</a>
         <a href="#kernel">Research Kernel</a>
         <a href="#domains">Domain Modes</a>
+        <a href="#final-products">Final Products</a>
+        <a href="#archives">Archives</a>
         <a href="#harness">Harness</a>
         <a href="#validation">Validation</a>
         <a href="../PUBLIC/copilot.html">Copilot Page</a>
@@ -84,13 +86,13 @@
     </aside>
     <main>
       <header>
-        <h1>Research OS v3.5 Technical Report</h1>
-        <p class="lead">Research OS is a structured human-in-loop auto researcher. v3.5 hardens the process contract and skill governance so the material-first browser cockpit, research kernel, domain profiles, work orders, phase gates, manifests, ledgers, and privacy boundaries follow one inspectable route.</p>
+        <h1>Research OS v3.9 Technical Report</h1>
+        <p class="lead">Research OS is a structured human-in-loop auto researcher. v3.9 presents a simple three-phase user model while keeping an auditable internal state machine for the browser cockpit, research kernel, final product tracks, work orders, phase gates, manifests, ledgers, archives, and privacy boundaries.</p>
       </header>
 
       <section class="section" id="architecture">
         <h2>Architecture</h2>
-        <div class="flow" role="img" aria-label="Research OS v3.5 architecture">
+        <div class="flow" role="img" aria-label="Research OS v3.9 architecture">
           <svg viewBox="0 0 1080 420" width="100%" height="100%" aria-hidden="true">
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -110,8 +112,8 @@
             <g fill="#18212b" font-size="18" font-weight="700">
               <text x="150" y="106" text-anchor="middle">Browser Copilot</text>
               <text x="390" y="106" text-anchor="middle">CONTROL</text>
-              <text x="630" y="106" text-anchor="middle">Research Kernel</text>
-              <text x="870" y="106" text-anchor="middle">Domain Skills</text>
+              <text x="630" y="106" text-anchor="middle">Loop Kernel</text>
+              <text x="870" y="106" text-anchor="middle">Final Product</text>
               <text x="270" y="271" text-anchor="middle">Harness</text>
               <text x="540" y="271" text-anchor="middle">PROVENANCE</text>
               <text x="810" y="271" text-anchor="middle">PUBLIC</text>
@@ -119,8 +121,8 @@
             <g fill="#607080" font-size="14">
               <text x="150" y="130" text-anchor="middle">material-first intake</text>
               <text x="390" y="130" text-anchor="middle">work order / gate</text>
-              <text x="630" y="130" text-anchor="middle">candidate / evaluator</text>
-              <text x="870" y="130" text-anchor="middle">field taste / artifacts</text>
+              <text x="630" y="130" text-anchor="middle">accept / plan / execute</text>
+              <text x="870" y="130" text-anchor="middle">paper / report / software</text>
               <text x="270" y="295" text-anchor="middle">validation / privacy</text>
               <text x="540" y="295" text-anchor="middle">manifest / ledger</text>
               <text x="810" y="295" text-anchor="middle">dashboard / report</text>
@@ -140,17 +142,20 @@
       <section class="section" id="process">
         <h2>Process Contract</h2>
         <p>The canonical automation route is machine-readable in <a href="../config/research_flow.yaml">config/research_flow.yaml</a> and explained for humans in <a href="process-contract.md">docs/process-contract.md</a>. Skill selection is centralized in <a href="../skills/README.md">skills/README.md</a>.</p>
-        <pre>material_intake
--> targeted_questions
--> initialization
--> research_kernel
--> domain_or_general_route
--> feasibility_or_evidence
--> execution_harness
--> analysis
--> acceptance_gate
--> next_loop_or_export</pre>
-        <p>Every stage declares inputs, outputs, required skill, optional skills, human gate, prohibited actions, and validation checks. This is the main guard against a spaghetti toolbox.</p>
+        <pre>initialization
+-> semi_automated_research_loop
+-> final_product
+
+internal:
+initialization_intake
+-> loop_acceptance_gate
+-> loop_plan_alignment
+-> loop_user_decision
+-> loop_execute_analyze
+-> final_product_selection
+-> final_product_production
+-> export_release_gate</pre>
+        <p>Every internal stage declares inputs, outputs, required skill, optional skills, human gate, prohibited actions, and validation checks. The retired user-facing names <code>domain_or_general_route</code>, <code>feasibility_or_evidence</code>, <code>acceptance_gate</code>, and <code>next_loop_or_export</code> now live only as internal objects or validations.</p>
       </section>
 
       <section class="section" id="environment">
@@ -183,7 +188,7 @@
 
       <section class="section" id="kernel">
         <h2>Research Kernel</h2>
-        <p>All substantive work must pass through <a href="../skills/research-os-research-kernel/SKILL.md">research-os-research-kernel</a>. This prevents the repository from becoming a toolbox of unrelated prompts.</p>
+        <p>All substantive loop execution must pass through <a href="../skills/research-os-research-kernel/SKILL.md">research-os-research-kernel</a> and the execution harness. This prevents the repository from becoming a toolbox of unrelated prompts.</p>
         <pre>candidate
 -> evaluator_contract
 -> evaluation_result
@@ -192,6 +197,25 @@
 -> next_action_policy
 -> human_judgment_gate</pre>
         <p>Evaluator contracts must list metric or check, procedure, inputs, scale, acceptance threshold, resource estimate, failure mode, and replay note.</p>
+      </section>
+
+      <section class="section" id="final-products">
+        <h2>Final Product Tracks</h2>
+        <table>
+          <thead><tr><th>Track</th><th>Primary skill</th><th>Default output contract</th></tr></thead>
+          <tbody>
+            <tr><td>Paper</td><td><a href="../skills/research-os-paper-authoring/SKILL.md">research-os-paper-authoring</a></td><td>Target venue, template, optional comparable papers, English LaTeX/PDF, and review/rebuttal iteration.</td></tr>
+            <tr><td>Research report</td><td><a href="../skills/research-os-report-authoring/SKILL.md">research-os-report-authoring</a></td><td>Process-rich report with initial data, negative results, reproducibility detail, and HTML, LaTeX/PDF, or PPT targets.</td></tr>
+            <tr><td>Software</td><td><a href="../skills/research-os-software-productization/SKILL.md">research-os-software-productization</a></td><td>Stable, engineered, polished, user-friendly software with documentation and preserved intermediate artifacts.</td></tr>
+          </tbody>
+        </table>
+        <p><a href="../skills/research-os-final-product/SKILL.md">research-os-final-product</a> coordinates multi-track selection and writes a <a href="../templates/yaml/final_product_plan.template.yaml">final_product_plan</a>. Every selection provides recommended defaults and natural-language free-form expectations.</p>
+      </section>
+
+      <section class="section" id="archives">
+        <h2>Git-Backed Archives</h2>
+        <p>Archives are local git snapshots with timestamp, current phase, commit, and researcher description. The bridge exposes preview/create/list APIs, writes or appends <code>PROVENANCE/archive_index.jsonl</code> after the first real archive, and mirrors a sanitized public index to <a href="../PUBLIC/archive_index.json">PUBLIC/archive_index.json</a>.</p>
+        <p>Archive validation rejects <code>PRIVATE/</code> paths and secret-like material. Use <a href="../scripts/check_archives.ps1">scripts/check_archives.ps1</a> before committing archive-related changes.</p>
       </section>
 
       <section class="section" id="domains">
@@ -232,6 +256,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_stat
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_resource_rendering.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_bridge.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_archives.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_latex_sources.ps1

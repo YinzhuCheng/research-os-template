@@ -1,5 +1,5 @@
 doc_map_id: DOCMAP-0001
-updated_at: "2026-06-06"
+updated_at: "2026-06-07"
 language_mode: zh-first
 entrypoints:
   copilot:
@@ -38,12 +38,38 @@ entrypoints:
     title: "Public Dashboard"
     path: "PUBLIC/index.html"
     audience: "Project participants and auditors"
+  final_product_plan:
+    title: "Final Product Plan Template"
+    path: "templates/yaml/final_product_plan.template.yaml"
+    audience: "Researchers selecting paper, report, software, or multi-track outputs"
+  archive_index:
+    title: "Sanitized Archive Index"
+    path: "PUBLIC/archive_index.json"
+    audience: "Researchers and auditors reviewing git-backed snapshots"
 core_controls:
   work_order: "CONTROL/work_order.yaml"
   phase_gate: "CONTROL/phase_gate.yaml"
   project_config: "config/research_project.yaml"
   research_flow: "config/research_flow.yaml"
   repository_rules: "AGENTS.md"
+choice_prompt:
+  schema: "config/schemas/choice_prompt.schema.json"
+  template: "templates/yaml/choice_prompt.template.yaml"
+  contract: "config/research_flow.yaml"
+final_products:
+  plan_schema: "config/schemas/final_product_plan.schema.json"
+  plan_template: "templates/yaml/final_product_plan.template.yaml"
+  coordinator_skill: "skills/research-os-final-product/SKILL.md"
+  report_skill: "skills/research-os-report-authoring/SKILL.md"
+  software_skill: "skills/research-os-software-productization/SKILL.md"
+  paper_skill: "skills/research-os-paper-authoring/SKILL.md"
+archives:
+  archive_schema: "config/schemas/archive_record.schema.json"
+  archive_template: "templates/yaml/archive_record.template.yaml"
+  public_index: "PUBLIC/archive_index.json"
+  provenance_index: "PROVENANCE/archive_index.jsonl"
+  create_script: "scripts/create_archive_snapshot.ps1"
+  validator: "scripts/check_archives.ps1"
 process_contract:
   machine_readable: "config/research_flow.yaml"
   schema: "config/schemas/research_flow.schema.json"
@@ -136,6 +162,7 @@ validation:
   copilot_intake_schema: "scripts/check_copilot_intake_schema.ps1"
   copilot_state: "scripts/check_copilot_state.ps1"
   copilot_resource_rendering: "scripts/check_copilot_resource_rendering.ps1"
+  archives: "scripts/check_archives.ps1"
   integrations: "scripts/check_integrations.ps1"
   eval_fixtures: "scripts/check_eval_fixtures.ps1"
   package_artifacts: "scripts/check_package_artifacts.ps1"

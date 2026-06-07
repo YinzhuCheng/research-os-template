@@ -23,6 +23,7 @@ $agents = Read-Text "AGENTS.md"
 $docMap = Read-Text "docs\doc_map.yaml"
 $technical = Read-Text "docs\technical-report.html"
 $dashboard = Read-Text "PUBLIC\dashboard_data.json"
+$processContract = Read-Text "docs\process-contract.md"
 
 $sequence = @(
   "initialization_intake",
@@ -72,14 +73,18 @@ $mustMention = @(
   "initialization_intake",
   "loop_acceptance_gate",
   "final_product_selection",
+  "final_product_production",
+  "export_release_gate",
   "research-os-orchestrator",
   "research-os-research-kernel",
+  "research-os-final-product",
   "exactly three targeted questions",
+  "loop_acceptance_gate",
   "free-form"
 )
 
 foreach ($needle in $mustMention) {
-  if ($flow -notlike "*$needle*" -and $flowSchema -notlike "*$needle*" -and $routing -notlike "*$needle*" -and $skillsReadme -notlike "*$needle*" -and $agents -notlike "*$needle*" -and $docMap -notlike "*$needle*" -and $technical -notlike "*$needle*" -and $dashboard -notlike "*$needle*") {
+  if ($flow -notlike "*$needle*" -and $flowSchema -notlike "*$needle*" -and $routing -notlike "*$needle*" -and $skillsReadme -notlike "*$needle*" -and $agents -notlike "*$needle*" -and $docMap -notlike "*$needle*" -and $technical -notlike "*$needle*" -and $dashboard -notlike "*$needle*" -and $processContract -notlike "*$needle*") {
     throw "Process governance missing required concept: $needle"
   }
 }
@@ -89,7 +94,11 @@ Require-Text "docs\doc_map.yaml" "config/research_flow.yaml"
 Require-Text "PUBLIC\dashboard_data.json" "../docs/process-contract.md"
 Require-Text "PUBLIC\dashboard_data.json" "../config/research_flow.yaml"
 Require-Text "docs\technical-report.html" "config/research_flow.yaml"
+Require-Text "docs\technical-report.html" "Final Product Tracks"
+Require-Text "docs\technical-report.html" "Git-Backed Archives"
 Require-Text "AGENTS.md" "Use Repo Skills First"
 Require-Text "AGENTS.md" "Canonical Flow"
+Require-Text "docs\process-contract.md" "Choice Prompt Contract"
+Require-Text "docs\process-contract.md" "Archive Contract"
 
 Write-Output "Research flow governance check passed."

@@ -91,3 +91,17 @@ This checklist tracks the durable Research OS template state. Detailed historica
 - [x] Show that final paper output defaults to English regardless of interface language.
 - [x] Persist UI style/language locally and support URL overrides for QA or direct links.
 - [x] Add responsive wrapping and narrow-screen constraints to avoid text overflow after language switching.
+
+## v3.9 Three-Phase Flow, Final Products, And Archives
+
+- [x] Persist the v3.9 execution plan in `PLAN/07_THREE_PHASE_FINAL_PRODUCT_PLAN.md`.
+- [x] Replace the user-facing process model with three macro phases: initialization, semi-automated loop research, and final product.
+- [x] Consolidate the internal process into eight controlled stages while preserving work order, phase gate, kernel, resource, audit, manifest, and ledger controls.
+- [x] Add the universal `choice_prompt` contract with recommended option, defaults, and natural-language free-form input.
+- [x] Add final product plan schema/template and paper, report, and software product tracks.
+- [x] Add `research-os-final-product`, `research-os-report-authoring`, and `research-os-software-productization` skills and mirror them under `.agents/skills/`.
+- [x] Register metadata-only open-source resources for final product tooling without vendoring or executing third-party systems.
+- [x] Add git-backed archive preview/create/list bridge APIs, archive schema/template, public archive index, validator, and unit test.
+- [x] Add Dashboard/Copilot three-phase phase bars, structured action groups, final product modal, archive modal, and natural-language UI expectation fields.
+- [x] Update docs, dashboard data, doc map, asset provenance, checklist, and gap audit for v3.9.
+- [ ] Complete full validation and browser QA for desktop and mobile.

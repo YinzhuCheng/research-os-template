@@ -15,7 +15,30 @@ It does not assume an LLM, machine learning task, dataset, baseline, paper, venu
 - [Copilot Bridge Doc](docs/codex-browser-copilot.html): browser-to-Codex bridge details.
 - [Domain Modes](docs/domain-modes.html): five domain-specific research paradigms.
 - [Research Kernel Template](templates/research_kernel/research_cycle.template.yaml): shared feedback computation loop.
+- [Final Product Plan Template](templates/yaml/final_product_plan.template.yaml): paper/report/software output planning.
+- [Archive Record Template](templates/yaml/archive_record.template.yaml): git-backed archive metadata.
 - [Document Map](docs/doc_map.yaml): structured navigation.
+
+## Research OS v3.9
+
+v3.9 presents the system to researchers as three macro phases:
+
+`initialization -> semi-automated loop research -> final product`
+
+Internally, the process is governed by eight clearer stages:
+
+`initialization_intake -> loop_acceptance_gate -> loop_plan_alignment -> loop_user_decision -> loop_execute_analyze -> final_product_selection -> final_product_production -> export_release_gate`
+
+Key changes:
+
+- The loop phase blocks progression until the researcher accepts the previous artifact.
+- Every user-facing choice prompt has a recommended option, default options, and a natural-language free-form path.
+- Final product selection supports paper, research report, software, or multiple tracks.
+- Paper output uses venue/template/comparable-paper inputs when provided and defaults to English LaTeX/PDF.
+- Research reports emphasize process, initial data, negative results, and reproducibility; supported targets are HTML, LaTeX/PDF, and PPT.
+- Software output defaults to stable, engineered, polished, user-friendly productization with documentation and preserved research artifacts.
+- Git-backed archives record timestamp, phase, commit, and user description while excluding `PRIVATE/` and secrets.
+- Dashboard and Copilot now expose a three-phase phase bar, structured action groups, final product entry, archive entry, and natural-language UI expectations.
 
 ## Research OS v3.5
 
@@ -74,10 +97,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment_
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_flow.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_governance_text.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_strict_schema_instances.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_bridge.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_intake_schema.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_state.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_resource_rendering.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_archives.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1
 ```
 

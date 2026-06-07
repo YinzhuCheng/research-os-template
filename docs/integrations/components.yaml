@@ -1,5 +1,5 @@
 ﻿registry_id: INTEGRATIONS-0001
-updated_at: "2026-06-06"
+updated_at: "2026-06-07"
 default_policy: "metadata_and_adapter_templates_only"
 components:
   - id: agent-laboratory

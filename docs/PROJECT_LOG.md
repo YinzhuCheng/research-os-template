@@ -41,3 +41,22 @@
 - 五大领域 profile 的 `kernel_bindings`，以及领域模板中的 evaluator 计算清单。
 - `check_research_kernel.ps1`、`check_domain_kernel_bindings.ps1` 和 `check_no_orphan_skills.ps1`。
 - 文档、dashboard、claim-evidence 和 doc map 的 research kernel 链接。
+
+## 2026-06-07 v3.9
+
+用户要求将 Research OS 重新定位为三阶段：初始化阶段、半自动循环研究阶段、最终产物阶段；第二阶段必须采用“验收上一阶段产物 -> 计划对齐 -> 用户选择/自然语言回复 -> 执行分析”的循环，并要求每个大步骤重读落盘计划、验证、提交和推送。
+
+已完成：
+
+- 新增 `PLAN/07_THREE_PHASE_FINAL_PRODUCT_PLAN.md`，并将 `CONTROL/work_order.yaml`、`CONTROL/phase_gate.yaml` 和 `config/research_project.yaml` 更新到 v3.9。
+- 将 `config/research_flow.yaml` 改为三阶段宏观模型和 8 个内部受控阶段。
+- 新增 `choice_prompt`、`final_product_plan`、`archive_record` schema/template。
+- 新增最终产物技能：`research-os-final-product`、`research-os-report-authoring`、`research-os-software-productization`，并接入 paper、review/rebuttal、visual communication 相关技能。
+- 注册 Quarto、Typst、Marp、MkDocs Material、Lucide、Hatch、PyInstaller、FastAPI 等 metadata-only 开源资源，不 vendoring、不执行第三方系统。
+- 新增 git-backed archive bridge API、PowerShell 创建脚本、archive validator、公开脱敏 archive index 和 archive 单测。
+- 重整 `PUBLIC/index.html` 和 `PUBLIC/copilot.html`：三阶段 phase bar、结构化按钮分组、最终产物弹窗、存档弹窗、自然语言 UI 目标输入和离线 inline SVG 图标。
+- 更新 README、AGENTS、process contract、start-here、technical report、doc map、dashboard data、asset sources、implementation checklist、gap audit 和项目摘要。
+
+待完成：
+
+- Step 7 完整验证、浏览器 desktop/mobile QA、v3.9 final validation report、manifest 和 resource ledger 记录。

@@ -28,9 +28,17 @@ When instructions conflict, use this order:
 
 The canonical flow is defined in `config/research_flow.yaml`:
 
-`material_intake -> targeted_questions -> initialization -> research_kernel -> domain_or_general_route -> feasibility_or_evidence -> execution_harness -> analysis -> acceptance_gate -> next_loop_or_export`
+User-facing macro phases:
+
+`initialization -> semi_automated_research_loop -> final_product`
+
+Internal controlled stages:
+
+`initialization_intake -> loop_acceptance_gate -> loop_plan_alignment -> loop_user_decision -> loop_execute_analyze -> final_product_selection -> final_product_production -> export_release_gate`
 
 The first screen is material-first. Do not ask the retired fixed five-question intake. After material profiling, ask exactly three targeted questions, each with a recommended answer, options, and an Other/free-form path.
+During the loop phase, do not advance past `loop_acceptance_gate` unless the researcher accepts the previous artifact. If the researcher rejects it or gives revision instructions, keep the loop in revision mode and update the current artifact before planning the next step.
+Every user-facing choice prompt, including final product selection and archive descriptions, must provide a recommended option, concrete defaults, and a natural-language free-form path.
 
 ## Research Neutrality
 
@@ -41,8 +49,11 @@ The first screen is material-first. Do not ask the retired fixed five-question i
 ## Language And Outputs
 
 - Default language mode is `zh-first`: plans, logs, analysis, internal audit, and dashboard content use Chinese unless a work order says otherwise.
-- Paper writing, LaTeX, visual paper polish, review/rebuttal, and submission flows run only when `dissemination.paper_enabled: true` or the researcher explicitly asks for a paper/submission.
-- Without a paper target, default outputs are research briefs, validation reports, audit packs, reproducibility packs, or decision memos.
+- Final product flows run only after `final_product_selection` or an explicit researcher request.
+- Paper writing, LaTeX, visual paper polish, review/rebuttal, and submission flows run only when `dissemination.paper_enabled: true`, the paper track is selected, or the researcher explicitly asks for a paper/submission.
+- Report output may include more process, initial data, negative results, and reproducibility detail than a paper. Supported report targets are HTML, LaTeX/PDF, and PPT when enabled.
+- Software output defaults to stable, engineered, polished, user-friendly productization with documentation and preserved intermediate research artifacts, unless the researcher adjusts the target in natural language.
+- Without a final product target, default outputs are research briefs, validation reports, audit packs, reproducibility packs, or decision memos.
 
 ## Control And Audit
 

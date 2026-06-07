@@ -10,6 +10,9 @@ Research OS documentation is layered so a researcher can start quickly while lat
 - [Technical Report](technical-report.html): full repository route for maintainers and future agents.
 - [Domain Modes](domain-modes.html): five deep domain paradigms for mathematics, applied mathematics, machine learning, computer science, and statistics.
 - [Research Kernel Template](../templates/research_kernel/research_cycle.template.yaml): shared generate-evaluate-update-human gate program.
+- [Final Product Plan Template](../templates/yaml/final_product_plan.template.yaml): paper/report/software output planning.
+- [Archive Index](../PUBLIC/archive_index.json): sanitized git-backed archive index.
+- [v3.9 Plan](../PLAN/07_THREE_PHASE_FINAL_PRODUCT_PLAN.md): three-phase implementation plan and step status.
 - [Document Map](doc_map.yaml): authoritative navigation map.
 
 Core controls:
