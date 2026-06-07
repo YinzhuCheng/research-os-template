@@ -1,15 +1,20 @@
-current_phase: research-os-v3.8
+current_phase: research-os-v3.9
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "After v3.8 UI personalization, decide whether project-instance defaults should be configured through a schema-backed user preferences file."
+next_required_decision: "After v3.9, decide whether project instances should enable git-backed archive push by default or keep archives local-only until explicit confirmation."
 confirmed_decisions:
   - "Use the latest material-first copilot flow: no fixed five-question intake; exactly three targeted questions after material profiling."
   - "Keep Research OS positioned as a researcher copilot for the initial release, not a fully autonomous research agent."
-  - "Add only local browser UI preferences: five visual styles and Chinese/English interface language."
   - "Chinese is the default interface language; final paper output remains English by default."
   - "Do not touch PRIVATE/ or real uploaded materials during this pass."
   - "Use only local validation, local browser QA, and zero-cost checks for this pass."
+  - "Expose three user-facing macro phases: initialization, semi-automated loop research, and final product."
+  - "Allow internal Research OS stages to be consolidated or removed when responsibilities become clearer."
+  - "Keep acceptance gating strict: if the user rejects the previous artifact, the loop stays in revision mode."
+  - "Every user-facing choice must include a recommended option, concrete options, and natural-language free-form input."
+  - "Final product selection supports multiple tracks: paper, research report, and software."
+  - "Software product output defaults to stable, engineered, polished, and user-friendly unless the researcher changes expectations in natural language."
