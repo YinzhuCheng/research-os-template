@@ -13,6 +13,7 @@ Research OS documentation is layered so a researcher can start quickly while lat
 - [Final Product Plan Template](../templates/yaml/final_product_plan.template.yaml): paper/report/software output planning.
 - [Archive Index](../PUBLIC/archive_index.json): sanitized git-backed archive index.
 - [v3.9 Plan](../PLAN/07_THREE_PHASE_FINAL_PRODUCT_PLAN.md): three-phase implementation plan and step status.
+- [v3.9 Final Validation](../PROVENANCE/final_validation_report_v3_9.md): validation, unit test, browser QA, and privacy summary.
 - [Document Map](doc_map.yaml): authoritative navigation map.
 
 Core controls:

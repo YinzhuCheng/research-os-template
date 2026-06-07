@@ -57,6 +57,6 @@
 - 重整 `PUBLIC/index.html` 和 `PUBLIC/copilot.html`：三阶段 phase bar、结构化按钮分组、最终产物弹窗、存档弹窗、自然语言 UI 目标输入和离线 inline SVG 图标。
 - 更新 README、AGENTS、process contract、start-here、technical report、doc map、dashboard data、asset sources、implementation checklist、gap audit 和项目摘要。
 
-待完成：
+最终验证：
 
-- Step 7 完整验证、浏览器 desktop/mobile QA、v3.9 final validation report、manifest 和 resource ledger 记录。
+- Step 7 已完成完整静态验证、bundled-Python 单测、desktop/mobile Browser QA、privacy scan，并新增 `PROVENANCE/final_validation_report_v3_9.md`。

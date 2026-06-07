@@ -76,6 +76,7 @@
     {"path": "../PROVENANCE/resource_ledger.jsonl", "label": "Resource Ledger"},
     {"path": "../PROVENANCE/live_evidence_snapshot.yaml", "label": "Live Evidence"},
     {"path": "../PROVENANCE/public_audit_summary.md", "label": "Public Audit Summary"},
+    {"path": "../PROVENANCE/final_validation_report_v3_9.md", "label": "Final Validation v3.9"},
     {"path": "../PLAN/07_THREE_PHASE_FINAL_PRODUCT_PLAN.md", "label": "v3.9 Three-Phase Plan"},
     {"path": "../PROVENANCE/final_validation_report_v3_8.md", "label": "Final Validation v3.8"},
     {"path": "../PROVENANCE/final_validation_report_v3_7.md", "label": "Final Validation v3.7"},

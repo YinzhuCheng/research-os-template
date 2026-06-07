@@ -104,4 +104,4 @@ This checklist tracks the durable Research OS template state. Detailed historica
 - [x] Add git-backed archive preview/create/list bridge APIs, archive schema/template, public archive index, validator, and unit test.
 - [x] Add Dashboard/Copilot three-phase phase bars, structured action groups, final product modal, archive modal, and natural-language UI expectation fields.
 - [x] Update docs, dashboard data, doc map, asset provenance, checklist, and gap audit for v3.9.
-- [ ] Complete full validation and browser QA for desktop and mobile.
+- [x] Complete full validation and browser QA for desktop and mobile.

@@ -112,6 +112,7 @@
     .primary:hover { filter: brightness(.94); }
     .icon { width: 16px; height: 16px; flex: 0 0 auto; }
     .layout { min-height: 100vh; display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+    .layout > *, .panel-grid > *, .doc-body { min-width: 0; }
     aside { position: sticky; top: 0; height: 100vh; overflow: auto; border-right: 1px solid var(--border); background: var(--nav-bg); padding: var(--s5); }
     main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: var(--s6) 0; }
     h1, h2, h3 { line-height: 1.22; letter-spacing: 0; overflow-wrap: anywhere; }
@@ -211,7 +212,7 @@
     body[data-theme="dark"] .pill.warn { background: #302711; }
     @media (max-width: 960px) {
       .layout { grid-template-columns: 1fr; }
-      aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      aside { position: static; width: 100%; min-width: 0; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
       main { padding: var(--s5) 0; }
       .topbar { display: block; }
       .toolbar { margin-top: var(--s3); }
@@ -649,6 +650,7 @@
         "Resource Ledger": "资源 Ledger",
         "Live Evidence": "实时证据",
         "Public Audit Summary": "公开审计摘要",
+        "Final Validation v3.9": "最终验证 v3.9",
         "v3.9 Three-Phase Plan": "v3.9 三阶段计划",
         "Final Validation v3.8": "最终验证 v3.8",
         "Final Validation v3.7": "最终验证 v3.7",
