@@ -50,6 +50,7 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - The artifact endpoint also needed workflow-state updates so the desktop panel reflects verified source/proof status rather than only file creation.
 - Real app dogfooding exposed a phase metadata drift: `PUBLIC/research_state.json` had reached `final_product`, but `.rosproj` and `.research-os/project.json` still showed `initialization`. The sidecar now synchronizes project phase metadata when final-product selection or paper artifact writes update the research state.
 - PowerShell `Invoke-RestMethod`/`Invoke-WebRequest` showed unreliable POST behavior in this Windows session after the sidecar restart. The Python urllib client remained stable for app API dogfooding, so future sidecar QA should include a native app client path rather than relying only on PowerShell.
+- Inspecting the paid-review profile UI exposed another reusable quality gap: the profile settings component could render mojibake if Chinese text is read or edited through the wrong encoding path. The profile component text was normalized and the desktop validation script now includes ASCII-only fallback-pattern checks so the guard itself cannot be corrupted by non-ASCII sequence literals.
 
 ## Step 1 Validation
 
@@ -84,6 +85,7 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - Captured PDF and app screenshots under the private project `PROVENANCE/paper/screenshots/` directory.
 - Created a private project archive `ARCH-20260608T073545`; archive preview and creation both reported `private_paths_included: false` and `secrets_scan: passed`.
 - Fixed and verified app phase synchronization; the repaired app screenshot shows `final_product / final_product_production` instead of the stale initialization phase.
+- Fixed the profile/model settings panel copy and rebuilt the mojibake guard using ASCII-only regexes. `scripts/check_desktop_app.ps1`, TypeScript, Vitest, and `git diff --check` passed after this UI quality repair.
 
 ## Step 3 Validation
 

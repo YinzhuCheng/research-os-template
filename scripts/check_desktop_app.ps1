@@ -82,7 +82,7 @@ Require-Text "docs\desktop-app.md" ".rosproj"
 Require-Text "PUBLIC\dashboard_data.json" "Desktop App"
 Require-Text "docs\doc_map.yaml" "desktop_app"
 
-$desktopTextFiles = @(
+$desktopTextRoots = @(
   "apps\research-os-desktop\src",
   "apps\research-os-desktop\tests"
 )
@@ -93,13 +93,23 @@ $mojibakeCodePoints = @(
   0x20ac, 0x00c3, 0x00c2, 0x9205, 0x9241
 )
 
-foreach ($rootPath in $desktopTextFiles) {
+$mojibakeAsciiRegexes = @(
+  "\?/(strong|p|span|small|button|section|summary|details|label)",
+  "\?[A-Za-z]*(rofile|oken)"
+)
+
+foreach ($rootPath in $desktopTextRoots) {
   Get-ChildItem -LiteralPath $rootPath -Recurse -File -Include *.ts,*.tsx,*.css | ForEach-Object {
     $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $_.FullName
     foreach ($codePoint in $mojibakeCodePoints) {
       $marker = [char]$codePoint
       if ($text.Contains([string]$marker)) {
         throw "Desktop UI text contains mojibake marker U+$('{0:X4}' -f $codePoint): $($_.FullName)"
+      }
+    }
+    foreach ($regex in $mojibakeAsciiRegexes) {
+      if ($text -match $regex) {
+        throw "Desktop UI text contains mojibake-like ASCII fallback matching '$regex': $($_.FullName)"
       }
     }
   }

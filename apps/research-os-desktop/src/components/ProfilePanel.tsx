@@ -35,9 +35,13 @@ export function ProfilePanel() {
           </span>
           <small>{activeProfile ? `${activeProfile.label}${activeProfile.model ? ` / ${activeProfile.model}` : ""}` : "未选择 profile"}</small>
         </summary>
-        <p className="hint-text">普通研究流程不需要先改这里。Profile 只保存 provider、模型和 secret 引用；不要把 API key、token 或密码粘贴进项目。</p>
+        <p className="hint-text">
+          普通研究流程不需要先改这里。Profile 只保存 provider、模型和 secret 引用；不要把 API key、token 或密码粘贴进项目。
+        </p>
         <div className="profile-list">
-          {(profiles.data?.profiles ?? []).length === 0 ? <p className="empty-state">暂无 profile。可以先使用环境变量引用创建一个 OpenAI-compatible profile。</p> : null}
+          {(profiles.data?.profiles ?? []).length === 0 ? (
+            <p className="empty-state">暂无 profile。可以先使用环境变量引用创建一个 OpenAI-compatible profile。</p>
+          ) : null}
           {(profiles.data?.profiles ?? []).map((profile) => (
             <button
               className={`profile-button ${profile.profile_id === activeProfileId ? "active" : ""}`}
@@ -46,7 +50,10 @@ export function ProfilePanel() {
               onClick={() => setActiveProfileId(profile.profile_id)}
             >
               <strong>{profile.label}</strong>
-              <small>{profile.provider_id ?? profile.type}{profile.model ? ` / ${profile.model}` : ""}</small>
+              <small>
+                {profile.provider_id ?? profile.type}
+                {profile.model ? ` / ${profile.model}` : ""}
+              </small>
             </button>
           ))}
         </div>
