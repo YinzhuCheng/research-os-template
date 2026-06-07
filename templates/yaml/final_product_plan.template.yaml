@@ -1,0 +1,41 @@
+product_plan_id: FP-0001
+created_at: "2026-06-07T00:00:00+08:00"
+phase: final_product_selection
+selected_tracks:
+  - paper
+choice_prompts:
+  - prompt_id: CP-final-product-track
+    purpose: "Select one or more final product tracks with free-form expectations."
+tracks:
+  paper:
+    enabled: true
+    target_venue: null
+    venue_template_path: null
+    comparable_papers: []
+    default_language: English
+    output_formats:
+      - latex
+      - pdf
+    review_rebuttal_iteration: true
+  report:
+    enabled: false
+    output_formats:
+      - html
+      - latex_pdf
+      - ppt
+    emphasize_process: true
+    include_initial_data: true
+  software:
+    enabled: false
+    quality_target: "stable, engineered, polished, user-friendly"
+    user_free_form_expectations: ""
+    documentation_required: true
+    preserve_intermediate_artifacts: true
+evidence_requirements:
+  - "Every public claim must link to accepted evidence or be marked as unverified."
+intermediate_artifact_policy: "Preserve logs, raw outputs, validation reports, and reproducibility records by default."
+human_gates:
+  - "Public export"
+  - "Paper submission"
+  - "Software release"
+status: draft

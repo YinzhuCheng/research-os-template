@@ -1,17 +1,39 @@
 flow_id: RESEARCH-FLOW-0001
-version: research-os-v3.5
+version: research-os-v3.9
 language_mode: zh-first
+user_macro_phases:
+  - id: initialization
+    label_zh: "初始化阶段"
+    label_en: "Initialization"
+    internal_stages:
+      - initialization_intake
+    user_goal: "把材料、边界、问题、隐私、预算和启动包立住。"
+  - id: research_loop
+    label_zh: "半自动循环研究阶段"
+    label_en: "Semi-automated Loop Research"
+    internal_stages:
+      - loop_acceptance_gate
+      - loop_plan_alignment
+      - loop_user_decision
+      - loop_execute_analyze
+    user_goal: "每轮先验收，再对齐计划，再执行并分析。"
+  - id: final_product
+    label_zh: "最终产物阶段"
+    label_en: "Final Product"
+    internal_stages:
+      - final_product_selection
+      - final_product_production
+      - export_release_gate
+    user_goal: "把已验收研究资产转成论文、研究报告、软件或多产物组合。"
 canonical_sequence:
-  - material_intake
-  - targeted_questions
-  - initialization
-  - research_kernel
-  - domain_or_general_route
-  - feasibility_or_evidence
-  - execution_harness
-  - analysis
-  - acceptance_gate
-  - next_loop_or_export
+  - initialization_intake
+  - loop_acceptance_gate
+  - loop_plan_alignment
+  - loop_user_decision
+  - loop_execute_analyze
+  - final_product_selection
+  - final_product_production
+  - export_release_gate
 spec_priority:
   - latest_user_instruction
   - work_order_and_phase_gate
@@ -23,214 +45,275 @@ spec_priority:
 global_rules:
   - "Use repo skills before generic Codex execution."
   - "Do not use the retired fixed five-question intake."
-  - "Exactly three targeted questions are required after material profiling and before initialization."
-  - "Substantive research work must pass through research-os-research-kernel before domain-specific skills."
-  - "Execution, mutation, resource use, public export, and external writeback must pass through harness and human gates."
+  - "Initialization still requires exactly three targeted questions after material profiling unless the researcher explicitly bypasses intake."
+  - "Every user-facing choice must include a recommended option, concrete options, and a natural-language free-form path."
+  - "The loop cannot advance beyond loop_acceptance_gate until the researcher accepts the previous artifact or provides revision instructions."
+  - "Substantive research work must preserve candidate, evaluator_contract, belief_state, search_trace, negative_result, next_action_policy, and human_judgment_gate objects even when internal stages are consolidated."
+  - "Execution, mutation, real resource use, public export, and external writeback must pass through work order, phase gate, harness, privacy, manifest, and ledger controls."
   - "Failed, null, inconclusive, and partial outcomes must be preserved as search_trace or negative_result."
+choice_prompt_contract:
+  schema: config/schemas/choice_prompt.schema.json
+  required_fields:
+    - prompt_id
+    - question
+    - recommended_option
+    - options
+    - free_form_enabled
+    - free_form_label
+    - why_recommended
+  free_form_required: true
+  recommendation_required: true
+  applies_to:
+    - initialization targeted questions
+    - loop acceptance and plan alignment
+    - final product selection
+    - software product goal adjustment
+    - archive description
+    - export and external-write confirmation
 stages:
-  - id: material_intake
-    purpose: "Collect researcher text, links, and uploaded material into a private-first intake packet."
+  - id: initialization_intake
+    macro_phase: initialization
+    exposed_to_user: true
+    replaces:
+      - material_intake
+      - targeted_questions
+      - initialization
+    purpose: "Collect material, profile it, ask exactly three targeted questions, and produce the startup package without inventing budgets, datasets, baselines, venues, or models."
     inputs:
-      - "researcher free text"
-      - "source links"
-      - "uploaded material metadata"
+      - "researcher free text, source links, uploads metadata, or existing project notes"
+      - "three targeted answers with recommended options and Other/free-form path"
     outputs:
       - "copilot_intake packet"
+      - "copilot_questions packet"
+      - "initialization report"
       - "sanitized public copilot state"
     required_skill: research-os-copilot
     optional_skills:
+      - research-os-init
+      - research-os-alignment
+      - research-os-evidence
       - research-os-harness-audit
-    human_gate: "Required for reading private raw uploads or following external links."
+    human_gate: "Required before reading private raw uploads, following external links, setting budgets, enabling paper targets, enabling public export, or assuming external resources."
     prohibited:
       - "Do not execute uploaded zip/demo files."
       - "Do not move raw private material into PUBLIC/."
-    validation:
-      - scripts/check_copilot_intake_schema.ps1
-      - scripts/check_copilot_state.ps1
-  - id: targeted_questions
-    purpose: "Ask exactly three material-specific questions that change the initialization plan."
-    inputs:
-      - "copilot_intake packet"
-      - "material profile"
-    outputs:
-      - "copilot_questions packet"
-    required_skill: research-os-copilot
-    optional_skills:
-      - research-os-alignment
-    human_gate: "Researcher answers all three questions; each question must provide recommended answer, options, and Other/free-form path."
-    prohibited:
       - "Do not ask the retired fixed five-question intake."
       - "Do not initialize before the three-question packet exists unless the user explicitly bypasses intake."
-    validation:
-      - scripts/check_copilot_intake_schema.ps1
-  - id: initialization
-    purpose: "Create a structured startup package from material and three answers."
-    inputs:
-      - "copilot_intake packet"
-      - "copilot_questions answers"
-    outputs:
-      - "initialization report"
-      - "sanitized dashboard state"
-      - "repository links"
-    required_skill: research-os-init
-    optional_skills:
-      - research-os-copilot
-      - research-os-alignment
-      - research-os-evidence
-    human_gate: "Required if initialization would set budget, paper target, public export, or external resource assumptions."
-    prohibited:
       - "Do not invent budget, baseline, model, provider, dataset, venue, or paper goal."
     validation:
+      - scripts/check_copilot_intake_schema.ps1
       - scripts/check_copilot_state.ps1
       - scripts/check_dashboard.ps1
-  - id: research_kernel
-    purpose: "Normalize the active research object into candidate, evaluator, belief, trace, negative result, next action, and human gate."
+  - id: loop_acceptance_gate
+    macro_phase: research_loop
+    exposed_to_user: true
+    replaces:
+      - acceptance_gate
+    purpose: "Ask the researcher to accept, reject, or revise the previous artifact before any new step can begin."
     inputs:
-      - "initialization report"
-      - "research brief"
-      - "domain or general research object"
+      - "previous artifact summary"
+      - "analysis report or initialization report"
+      - "human_judgment_gate"
     outputs:
-      - "research kernel cycle"
-      - "evaluator contracts with computation checklist"
-    required_skill: research-os-research-kernel
+      - "accepted artifact decision"
+      - "revision instructions when not accepted"
+      - "blocked progression marker when acceptance is missing"
+    required_skill: research-os-alignment
     optional_skills:
-      - research-os-evidence
+      - research-os-harness-audit
       - research-os-resource-guard
-    human_gate: "Required before public claims, phase changes, real resources, privacy boundary changes, or external writeback."
+    human_gate: "Always required. A rejection or revision request blocks the next internal stage until resolved."
     prohibited:
-      - "Do not route directly to domain skills without a candidate and evaluator contract."
-      - "Do not discard failed or inconclusive candidates."
+      - "Do not advance to loop_plan_alignment before acceptance or explicit revision completion."
+      - "Do not treat silence as acceptance."
     validation:
-      - scripts/check_research_kernel.ps1
-      - scripts/check_domain_kernel_bindings.ps1
-  - id: domain_or_general_route
-    purpose: "Apply field-specific taste only after the shared kernel state exists."
+      - scripts/check_harness.ps1
+  - id: loop_plan_alignment
+    macro_phase: research_loop
+    exposed_to_user: true
+    replaces:
+      - next_loop_or_export
+    purpose: "Propose the next action plan and ask one to three high-impact alignment questions with recommended options and free-form input."
     inputs:
-      - "research kernel cycle"
-      - "domain profile when selected or clearly implied"
+      - "accepted artifact decision"
+      - "belief_state"
+      - "next_action_policy"
+      - "claim-evidence matrix"
     outputs:
-      - "domain artifact plan"
-      - "quality gates"
+      - "proposed next action plan"
+      - "choice_prompt packet"
+      - "alignment questions"
+    required_skill: research-os-alignment
+    optional_skills:
+      - research-os-orchestrator
+      - research-os-resource-guard
+      - research-os-live-evidence-refresh
+    human_gate: "Required for scope, budget, privacy boundary, dissemination, public claims, or external behavior changes."
+    prohibited:
+      - "Do not ask low-impact questions."
+      - "Do not omit recommended options or free-form input."
+    validation:
+      - scripts/check_research_flow.ps1
+  - id: loop_user_decision
+    macro_phase: research_loop
+    exposed_to_user: true
+    replaces:
+      - domain_or_general_route
+    purpose: "Record the researcher choice, natural-language adjustments, and resulting work-order or phase-gate update before execution."
+    inputs:
+      - "choice_prompt packet"
+      - "researcher selected options"
+      - "researcher free-form notes"
+    outputs:
+      - "decision record"
+      - "updated work order or phase gate when needed"
+      - "domain profile activation when selected or clearly implied"
     required_skill: research-os-orchestrator
     optional_skills:
+      - research-os-alignment
+      - research-os-resource-guard
+    human_gate: "Required when the decision changes scope, budget, privacy, dissemination, domain route, or external behavior."
+    prohibited:
+      - "Do not infer a domain, dataset, venue, baseline, or budget when the researcher has not selected or supplied one."
+    validation:
+      - scripts/check_harness.ps1
+      - scripts/check_domain_router.ps1
+  - id: loop_execute_analyze
+    macro_phase: research_loop
+    exposed_to_user: false
+    replaces:
+      - research_kernel
+      - domain_or_general_route
+      - feasibility_or_evidence
+      - execution_harness
+      - analysis
+    purpose: "Execute the accepted plan while preserving kernel, domain, feasibility, evidence, resource, harness, and analysis objects."
+    inputs:
+      - "accepted work order"
+      - "phase gate"
+      - "candidate"
+      - "evaluator_contract"
+      - "resource budget"
+    outputs:
+      - "research kernel cycle"
+      - "evaluation_result"
+      - "analysis report"
+      - "claim-evidence updates"
+      - "run manifest entry"
+      - "resource ledger entry"
+      - "negative_result or search_trace updates"
+    required_skill: research-os-research-kernel
+    optional_skills:
+      - research-os-execution-harness
+      - research-os-analysis
+      - research-os-evidence
+      - research-os-feasibility-probe
+      - research-os-resource-guard
+      - research-os-replay-eval-harness
+      - research-os-experiment-manager
       - research-os-math-discovery
       - research-os-applied-math-modeling
       - research-os-ml-research-protocol
       - research-os-cs-research-artifact
       - research-os-statistical-inference
-    human_gate: "Required if the domain is ambiguous or changes the research plan materially."
+    human_gate: "Required before public claims, real resources, privacy boundary changes, external writeback, budget overrun, or unsafe code execution."
     prohibited:
-      - "Do not let field routing bypass work order, kernel, resource guard, or execution harness."
-    validation:
-      - scripts/check_domain_router.ps1
-      - scripts/check_domain_profiles.ps1
-      - scripts/check_agent_capabilities.ps1
-      - scripts/check_domain_templates.ps1
-  - id: feasibility_or_evidence
-    purpose: "Choose the smallest useful validation path and link claims to evidence before execution or public assertion."
-    inputs:
-      - "candidate"
-      - "evaluator contracts"
-      - "claim-evidence matrix"
-    outputs:
-      - "feasibility probe"
-      - "claim-evidence updates"
-      - "live evidence refresh when needed"
-    required_skill: research-os-orchestrator
-    optional_skills:
-      - research-os-feasibility-probe
-      - research-os-evidence
-      - research-os-live-evidence-refresh
-      - research-os-resource-guard
-    human_gate: "Required for budget, real resource choices, time-sensitive unverified claims, and expanding beyond minimum validation."
-    prohibited:
-      - "Do not proceed to execution without budget/resource boundaries when resources are needed."
-    validation:
-      - scripts/check_research_kernel.ps1
-      - scripts/scan_privacy.ps1
-  - id: execution_harness
-    purpose: "Execute only approved work orders inside allowed paths and with audit records."
-    inputs:
-      - "work order"
-      - "phase gate"
-      - "resource budget"
-      - "approved evaluator or experiment plan"
-    outputs:
-      - "run manifest entry"
-      - "resource ledger entry"
-      - "result artifacts"
-    required_skill: research-os-execution-harness
-    optional_skills:
-      - research-os-experiment-manager
-      - research-os-resource-guard
-      - research-os-replay-eval-harness
-    human_gate: "Required for credentials, paid resources, cloud/lab/API use, external writeback, budget overrun, and unsafe code execution."
-    prohibited:
+      - "Do not bypass evaluator contracts before treating candidates as actionable."
+      - "Do not discard failed, null, or inconclusive results."
       - "Do not write forbidden paths."
       - "Do not infer success from output existence alone."
     validation:
+      - scripts/check_research_kernel.ps1
+      - scripts/check_domain_kernel_bindings.ps1
       - scripts/check_harness.ps1
       - scripts/validate_schemas.ps1
-  - id: analysis
-    purpose: "Interpret observed results without hiding null, failed, partial, or contradictory outcomes."
-    inputs:
-      - "run manifest"
-      - "resource ledger"
-      - "result artifacts"
-      - "claim-evidence matrix"
-    outputs:
-      - "analysis report"
-      - "claim-evidence updates"
-      - "negative_result or search_trace updates"
-    required_skill: research-os-analysis
-    optional_skills:
-      - research-os-evidence
-      - research-os-replay-eval-harness
-      - research-os-visual-communication
-    human_gate: "Required before upgrading claims to public-ready or changing the next action policy."
-    prohibited:
-      - "Do not smooth away failed or null results."
-    validation:
-      - scripts/check_research_kernel.ps1
       - scripts/scan_privacy.ps1
-  - id: acceptance_gate
-    purpose: "Align the next step with the researcher before continuing, stopping, exporting, or publishing."
+  - id: final_product_selection
+    macro_phase: final_product
+    exposed_to_user: true
+    replaces:
+      - next_loop_or_export
+    purpose: "Let the researcher select one or more final product tracks and provide natural-language target expectations."
     inputs:
-      - "analysis report"
-      - "next_action_policy"
-      - "human_judgment_gate"
+      - "accepted research artifacts"
+      - "claim-evidence matrix"
+      - "analysis reports"
+      - "researcher product goals"
     outputs:
-      - "accepted next action"
-      - "revised plan"
-      - "new work order when needed"
-    required_skill: research-os-alignment
+      - "final_product_plan"
+      - "selected tracks: paper, report, software, or any combination"
+      - "track-specific choice prompts"
+    required_skill: research-os-final-product
+    optional_skills:
+      - research-os-alignment
+      - research-os-public-export
+      - research-os-resource-guard
+    human_gate: "Required before enabling paper, public export, submission, software release, or external upload."
+    prohibited:
+      - "Do not enter paper, report, software, or export flows unless the researcher selects or explicitly asks for them."
+      - "Do not omit natural-language target adjustment."
+    validation:
+      - scripts/check_dashboard.ps1
+      - scripts/check_docs_links.ps1
+  - id: final_product_production
+    macro_phase: final_product
+    exposed_to_user: true
+    replaces:
+      - next_loop_or_export
+    purpose: "Generate and iterate selected final products while keeping evidence, intermediate artifacts, documentation, and review records."
+    inputs:
+      - "final_product_plan"
+      - "claim-evidence matrix"
+      - "accepted analysis reports"
+      - "figure plan"
+      - "target venue, report format, or software expectations"
+    outputs:
+      - "paper artifacts when selected"
+      - "research report artifacts when selected"
+      - "software artifacts and documentation when selected"
+      - "review/rebuttal or product QA records"
+    required_skill: research-os-final-product
+    optional_skills:
+      - research-os-paper-authoring
+      - research-os-report-authoring
+      - research-os-software-productization
+      - research-os-review-rebuttal
+      - research-os-visual-communication
+      - research-os-polish-factcheck
+      - research-os-public-export
+    human_gate: "Required for public claims, paper submission, public export, software release, external upload, or credential use."
+    prohibited:
+      - "Do not invent citations, results, templates, target venues, or software requirements."
+      - "Do not discard intermediate reports, logs, raw reproducibility records, or validation outputs."
+    validation:
+      - scripts/check_latex_sources.ps1
+      - scripts/check_docs_links.ps1
+      - scripts/scan_privacy.ps1
+  - id: export_release_gate
+    macro_phase: final_product
+    exposed_to_user: true
+    replaces:
+      - next_loop_or_export
+    purpose: "Gate public export, submission, external writeback, and software release with privacy, resource, and human confirmation."
+    inputs:
+      - "final product artifacts"
+      - "public export decision"
+      - "privacy scan"
+      - "resource ledger"
+    outputs:
+      - "public export package"
+      - "submission checklist when selected"
+      - "software release checklist when selected"
+      - "run manifest and resource ledger updates"
+    required_skill: research-os-public-export
     optional_skills:
       - research-os-harness-audit
       - research-os-resource-guard
-    human_gate: "Always required when next action changes scope, budget, privacy boundary, dissemination, or external behavior."
+      - research-os-replay-eval-harness
+    human_gate: "Always required for public export, submission, external upload, external writeback, credentials, or budget changes."
     prohibited:
-      - "Do not continue a new loop without a recorded acceptance or explicit low-risk work order allowance."
-    validation:
-      - scripts/check_harness.ps1
-  - id: next_loop_or_export
-    purpose: "Either start the next research loop or package sanitized public outputs."
-    inputs:
-      - "accepted next action"
-      - "public export decision"
-    outputs:
-      - "next cycle"
-      - "public export package"
-      - "paper/report artifacts when enabled"
-    required_skill: research-os-orchestrator
-    optional_skills:
-      - research-os-public-export
-      - research-os-paper-authoring
-      - research-os-polish-factcheck
-      - research-os-review-rebuttal
-      - research-os-visual-communication
-    human_gate: "Required for public export, paper submission, external upload, or writeback."
-    prohibited:
-      - "Do not enter paper/review/export flows unless explicitly enabled."
+      - "Do not export PRIVATE material."
+      - "Do not submit or write to external platforms without explicit approval."
     validation:
       - scripts/check_docs_links.ps1
       - scripts/check_dashboard.ps1

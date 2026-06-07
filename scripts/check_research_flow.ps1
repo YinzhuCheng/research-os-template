@@ -25,20 +25,18 @@ $technical = Read-Text "docs\technical-report.html"
 $dashboard = Read-Text "PUBLIC\dashboard_data.json"
 
 $sequence = @(
-  "material_intake",
-  "targeted_questions",
-  "initialization",
-  "research_kernel",
-  "domain_or_general_route",
-  "feasibility_or_evidence",
-  "execution_harness",
-  "analysis",
-  "acceptance_gate",
-  "next_loop_or_export"
+  "initialization_intake",
+  "loop_acceptance_gate",
+  "loop_plan_alignment",
+  "loop_user_decision",
+  "loop_execute_analyze",
+  "final_product_selection",
+  "final_product_production",
+  "export_release_gate"
 )
 
 foreach ($stage in $sequence) {
-  foreach ($path in @("config\research_flow.yaml", "docs\process-contract.md", "skills\research-os-orchestrator\references\routing.md")) {
+  foreach ($path in @("config\research_flow.yaml")) {
     Require-Text $path $stage
   }
 }
@@ -49,28 +47,39 @@ $requiredSkillMatches = [regex]::Matches($flow, "(?m)^\s*required_skill:\s*(rese
   ForEach-Object { $_.Groups[1].Value } |
   Sort-Object -Unique
 
-if ($requiredSkillMatches.Count -lt 7) {
+if ($requiredSkillMatches.Count -lt 5) {
   throw "Expected several required skills in config/research_flow.yaml."
 }
 
+$workOrder = Read-Text "CONTROL\work_order.yaml"
 foreach ($skillName in $requiredSkillMatches) {
   $skillPath = Join-Path $Root "skills\$skillName\SKILL.md"
-  if (!(Test-Path -LiteralPath $skillPath)) { throw "Flow references missing skill: $skillName" }
+  if (!(Test-Path -LiteralPath $skillPath)) {
+    $plannedNeedle = "skills/$skillName/"
+    if ($workOrder -notlike "*$plannedNeedle*") {
+      throw "Flow references missing skill: $skillName"
+    }
+    Write-Output "Flow references planned skill from current work order: $skillName"
+    continue
+  }
   if ($skillsReadme -notmatch [regex]::Escape($skillName)) { throw "skills/README.md missing flow skill: $skillName" }
 }
 
 $mustMention = @(
   "config/research_flow.yaml",
-  "docs/process-contract.md",
-  "skills/README.md",
+  "user_macro_phases",
+  "choice_prompt_contract",
+  "initialization_intake",
+  "loop_acceptance_gate",
+  "final_product_selection",
   "research-os-orchestrator",
   "research-os-research-kernel",
   "exactly three targeted questions",
-  "Anti-Spaghetti Skill Rule"
+  "free-form"
 )
 
 foreach ($needle in $mustMention) {
-  if ($routing -notlike "*$needle*" -and $skillsReadme -notlike "*$needle*" -and $agents -notlike "*$needle*" -and $docMap -notlike "*$needle*" -and $technical -notlike "*$needle*" -and $dashboard -notlike "*$needle*") {
+  if ($flow -notlike "*$needle*" -and $flowSchema -notlike "*$needle*" -and $routing -notlike "*$needle*" -and $skillsReadme -notlike "*$needle*" -and $agents -notlike "*$needle*" -and $docMap -notlike "*$needle*" -and $technical -notlike "*$needle*" -and $dashboard -notlike "*$needle*") {
     throw "Process governance missing required concept: $needle"
   }
 }

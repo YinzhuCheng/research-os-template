@@ -39,8 +39,8 @@
 
 | Step | 内容 | 状态 | 验证 | Commit/Push |
 | --- | --- | --- | --- | --- |
-| 1 | 落盘计划与 v3.9 工作单 | completed | passed: `scripts/validate_schemas.ps1`; `scripts/check_harness.ps1` | ready for step commit |
-| 2 | 流程契约与 schema | pending | schema/flow/strict checks | pending |
+| 1 | 落盘计划与 v3.9 工作单 | completed | passed: `scripts/validate_schemas.ps1`; `scripts/check_harness.ps1` | pushed: `78bc54b` |
+| 2 | 流程契约与 schema | completed | passed: schema, strict instance, flow checks | ready for step commit |
 | 3 | 最终产物 workflows 与 skills | pending | skill/mirror/integration checks | pending |
 | 4 | git-backed 存档功能 | pending | archive tests/privacy checks | pending |
 | 5 | UI/UX 重整 | pending | dashboard/copilot/html/link checks | pending |

@@ -1,6 +1,6 @@
 project_id: research-os-template
 title: "Untitled Codex Research Project"
-template_version: research-os-v3.8
+template_version: research-os-v3.9
 process_contract: config/research_flow.yaml
 language_mode: zh-first
 intervention_level: low
@@ -13,9 +13,34 @@ research_profile:
   validation_object: unspecified
 dissemination:
   target_type: undecided
+  target_types: []
   paper_enabled: false
   target_name: null
   output_format: null
+  final_product_enabled: false
+  final_product_tracks: []
+  product_expectations:
+    paper:
+      target_venue: null
+      venue_template_path: null
+      comparable_papers: []
+      default_language: English
+    report:
+      output_formats:
+        - html
+        - latex_pdf
+        - ppt
+      emphasize_process: true
+      include_initial_data: true
+    software:
+      default_quality_target: "stable, engineered, polished, user-friendly"
+      user_free_form_expectations: null
+      documentation_required: true
+      preserve_intermediate_artifacts: true
+choice_policy:
+  recommended_option_required: true
+  free_form_required: true
+  applies_to_all_user_choices: true
 resource_budget:
   currency: CNY
   total_limit: null
@@ -40,7 +65,8 @@ feasibility_probe:
 live_evidence:
   required_for_time_sensitive_claims: true
   last_refresh: null
-current_phase: copilot_intake
+current_macro_phase: initialization
+current_phase: initialization_intake
 current_phase_note: "Default runtime phase for a new project instance; CONTROL/phase_gate.yaml records the current template/work-order phase."
 phase_gate_required: true
 public_export_enabled: false

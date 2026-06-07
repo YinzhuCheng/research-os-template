@@ -1,0 +1,18 @@
+prompt_id: CP-0001
+stage: loop_plan_alignment
+question: "下一阶段应该优先做什么？"
+recommended_option: continue_minimal_validation
+why_recommended: "先完成最小可验证路径，能降低资源和方向风险。"
+options:
+  - id: continue_minimal_validation
+    label: "继续最小验证"
+    description: "沿着当前 evaluator contract 执行下一轮低成本验证。"
+    is_recommended: true
+  - id: revise_direction
+    label: "调整方向"
+    description: "根据用户反馈修改候选、评价指标或研究边界。"
+    is_recommended: false
+free_form_enabled: true
+free_form_label: "其他要求"
+free_form_placeholder: "用自然语言补充你的目标、限制或偏好。"
+requires_human_response: true
