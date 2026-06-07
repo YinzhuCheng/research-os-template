@@ -10,6 +10,7 @@
   },
   "status": [
     {"label": "Copilot", "value": "material-first intake"},
+    {"label": "Desktop App", "value": ".rosproj + Tauri + sidecar"},
     {"label": "Research Type", "value": "decided from material"},
     {"label": "Questions", "value": "exactly three targeted"},
     {"label": "Research Kernel", "value": "enabled"},
@@ -31,6 +32,10 @@
   ],
   "documents": [
     {"path": "copilot.html", "label": "Material-first Copilot"},
+    {"path": "../docs/desktop-app.md", "label": "Desktop App Guide"},
+    {"path": "../apps/research-os-desktop/package.json", "label": "Desktop App Package"},
+    {"path": "../apps/research-os-sidecar/README.md", "label": "Desktop Sidecar"},
+    {"path": "../scripts/check_desktop_app.ps1", "label": "Desktop App Check"},
     {"path": "copilot_state.json", "label": "Sanitized Copilot State"},
     {"path": "evidence_board.json", "label": "Sanitized Evidence Board"},
     {"path": "run_monitor.json", "label": "Sanitized Run Monitor"},
@@ -91,6 +96,7 @@
   ],
   "next_decisions": [
     "Run scripts/install_environment.ps1 or scripts/check_environment.ps1 before first use.",
+    "Use docs/desktop-app.md to create or open a .rosproj desktop project.",
     "Use docs/process-contract.md and skills/README.md to select the correct skill route.",
     "Open PUBLIC/copilot.html and provide material-first intake.",
     "After intake analysis, answer exactly three targeted Codex questions.",

@@ -1,4 +1,4 @@
-current_phase: research-os-v3.9
+current_phase: research-os-v4.0-desktop-app
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
@@ -18,3 +18,8 @@ confirmed_decisions:
   - "Every user-facing choice must include a recommended option, concrete options, and natural-language free-form input."
   - "Final product selection supports multiple tracks: paper, research report, and software."
   - "Software product output defaults to stable, engineered, polished, and user-friendly unless the researcher changes expectations in natural language."
+  - "Use Tauri + React + Python sidecar as the Research OS desktop app architecture."
+  - "Use .rosproj files and a sibling project directory as the project sandbox model."
+  - "Do not store API keys, tokens, cookies, passwords, or authorization headers in .rosproj or project git."
+  - "Use the official Codex app-server/SDK as the execution kernel without modifying or vendoring official Codex source."
+  - "Keep project-root writes high-freedom while gating sandbox-external access, external writeback, git push, release, credentials, and real resources."

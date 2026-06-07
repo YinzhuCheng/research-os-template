@@ -12,6 +12,9 @@ PRIVATE/**
 .cache/
 __pycache__/
 *.pyc
+node_modules/
+apps/research-os-desktop/src-tauri/target/
+apps/research-os-desktop/dist/
 
 # LaTeX/build outputs.
 build/

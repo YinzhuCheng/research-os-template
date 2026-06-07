@@ -1,6 +1,6 @@
-work_order_id: WO-0010
-phase: research-os-v3.9
-goal: "Implement the three-phase user-facing Research OS flow, loop acceptance protocol, final product workflows, git-backed archives, and cleaner Dashboard/Copilot UX."
+work_order_id: WO-0011
+phase: research-os-v4.0-desktop-app
+goal: "Implement a Research OS desktop shell using Tauri, React, a Python sidecar, and guarded Codex app-server/SDK integration."
 inputs:
   - "AGENTS.md"
   - "CONTROL/work_order.yaml"
@@ -8,15 +8,16 @@ inputs:
   - "config/research_project.yaml"
   - "config/research_flow.yaml"
   - "docs/doc_map.yaml"
-  - "PUBLIC/index.html"
-  - "PUBLIC/copilot.html"
-  - "PLAN/07_THREE_PHASE_FINAL_PRODUCT_PLAN.md"
+  - "PUBLIC/dashboard_data.json"
+  - "apps/research-os-sidecar/"
+  - "apps/research-os-desktop/"
 allowed_paths:
   - ".github/"
   - ".codex/"
   - ".agents/"
   - "adapters/"
   - "AGENTS.md"
+  - "apps/"
   - "config/"
   - "CONTROL/"
   - "docs/"
@@ -33,43 +34,16 @@ allowed_paths:
 forbidden_paths:
   - "PRIVATE/"
 outputs:
+  - "apps/research-os-desktop/"
+  - "apps/research-os-sidecar/"
+  - "scripts/check_desktop_app.ps1"
+  - "docs/desktop-app.md"
+  - "docs/doc_map.yaml"
+  - "PUBLIC/dashboard_data.json"
+  - "README.md"
   - "CONTROL/work_order.yaml"
   - "CONTROL/phase_gate.yaml"
   - "config/research_project.yaml"
-  - "config/research_flow.yaml"
-  - "config/schemas/choice_prompt.schema.json"
-  - "config/schemas/final_product_plan.schema.json"
-  - "config/schemas/archive_record.schema.json"
-  - "templates/yaml/choice_prompt.template.yaml"
-  - "templates/yaml/final_product_plan.template.yaml"
-  - "templates/yaml/archive_record.template.yaml"
-  - "skills/research-os-final-product/"
-  - "skills/research-os-report-authoring/"
-  - "skills/research-os-software-productization/"
-  - "PUBLIC/index.html"
-  - "PUBLIC/copilot.html"
-  - "PUBLIC/dashboard_data.json"
-  - "PUBLIC/archive_index.json"
-  - ".agents/plugins/plugins/research-os-copilot/scripts/research_os_copilot_server.py"
-  - "scripts/create_archive_snapshot.ps1"
-  - "scripts/check_archives.ps1"
-  - "scripts/check_dashboard.ps1"
-  - "scripts/check_copilot_resource_rendering.ps1"
-  - "scripts/check_research_flow.ps1"
-  - "docs/process-contract.md"
-  - "docs/start-here.html"
-  - "docs/technical-report.html"
-  - "docs/doc_map.yaml"
-  - "docs/ASSET_SOURCES.md"
-  - "docs/integrations/components.yaml"
-  - "README.md"
-  - "AGENTS.md"
-  - "tests/"
-  - "PLAN/07_THREE_PHASE_FINAL_PRODUCT_PLAN.md"
-  - "PLAN/05_IMPLEMENTATION_CHECKLIST.md"
-  - "PLAN/06_GAP_AUDIT.md"
-  - "PROVENANCE/archive_index.jsonl"
-  - "PROVENANCE/final_validation_report_v3_9.md"
   - "PROVENANCE/run_manifest.jsonl"
   - "PROVENANCE/resource_ledger.jsonl"
 resource_budget:
@@ -77,7 +51,7 @@ resource_budget:
   max_total_cost: 0
   categories:
     time: "local implementation session"
-    compute: "local validation and browser QA only"
+    compute: "local validation only"
     cloud: none
     lab: none
     material: none
@@ -89,16 +63,17 @@ resource_budget:
 stop_conditions:
   - "Need to read, inspect, or commit real PRIVATE intake material."
   - "Need paid API calls, cloud resources, GPU resources, lab resources, or external platform writeback."
-  - "Need to vendor, install, or execute third-party systems instead of registering metadata and adapter boundaries."
-  - "Need to remove run_manifest.jsonl, resource_ledger.jsonl, validation reports, logs, caches, or other preserved audit artifacts."
+  - "Need to store real API keys, account tokens, cookies, authorization headers, or provider secrets."
+  - "Need to modify or vendor the official Codex source code."
+  - "Need to run a real Codex model turn that consumes paid or account-limited resources."
 acceptance_criteria:
-  - "The public user model is initialization, semi-automated loop research, and final product."
-  - "Internal process stages are consolidated into clear responsibilities without bypassing kernel, resource, privacy, work-order, manifest, or ledger controls."
-  - "The research loop blocks progression until the user accepts the previous artifact or provides revision instructions."
-  - "Every user choice prompt provides a recommended option, default options, and a free-form natural-language path."
-  - "Final product tracks support paper, research report, and software, including multi-select."
-  - "Git-backed archives create a snapshot record with timestamp, phase, commit, and user description."
-  - "Dashboard and Copilot expose the three-phase flow, final-product entry, archive entry, and structured button groups."
-  - "Static validation, unit tests, privacy scan, and browser QA pass."
+  - "A Tauri + React desktop app skeleton exists under apps/research-os-desktop."
+  - "A Python sidecar exists under apps/research-os-sidecar and owns projects, profiles, state, permissions, archives, and Codex mediation."
+  - ".rosproj project creation creates a project-root sandbox, Research OS seed, PRIVATE/PROVENANCE/PUBLIC/CONTROL/config structure, and initial git commit."
+  - "Profile metadata never stores API keys, tokens, cookies, passwords, or authorization headers."
+  - "Codex SDK integration is optional at import time and fails safely when unavailable."
+  - "Codex command/file/permission approvals are routed through Research OS UI and are not auto-accepted."
+  - "UI exposes project center, three-phase workspace, choice prompts with recommended/options/free-form, final product selection, approvals, runtime events, and archives."
+  - "Static checks and sidecar unit tests pass without touching PRIVATE/ or real credentials."
 requires_confirmation: true
 privacy_level: public

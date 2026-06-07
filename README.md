@@ -6,6 +6,7 @@ It does not assume an LLM, machine learning task, dataset, baseline, paper, venu
 
 ## Main Entrypoints
 
+- [Desktop App](docs/desktop-app.md): Tauri + React + Python sidecar app for `.rosproj` projects.
 - [Material-first Copilot](PUBLIC/copilot.html): browser cockpit for initial material intake.
 - [Public Dashboard](PUBLIC/index.html): project navigation and document reader.
 - [Quick Start](docs/start-here.html): onboarding for general researchers and Codex beginners.
@@ -18,6 +19,25 @@ It does not assume an LLM, machine learning task, dataset, baseline, paper, venu
 - [Final Product Plan Template](templates/yaml/final_product_plan.template.yaml): paper/report/software output planning.
 - [Archive Record Template](templates/yaml/archive_record.template.yaml): git-backed archive metadata.
 - [Document Map](docs/doc_map.yaml): structured navigation.
+
+## Research OS v4.0 Desktop App
+
+v4.0 introduces an independent Windows-oriented desktop shell:
+
+- `apps/research-os-desktop/`: Tauri + React + TypeScript UI.
+- `apps/research-os-sidecar/`: Python sidecar that owns project files, profile metadata, permissions, archives, and guarded Codex app-server/SDK mediation.
+- `.rosproj` is the project entrypoint; the sibling directory is the default writable sandbox.
+- The UI does not talk directly to Codex app-server. It only talks to the sidecar.
+- Profile metadata stores provider/model preferences and secret references only; it must not store API keys, tokens, cookies, passwords, or authorization headers.
+
+Development commands:
+
+```powershell
+python .\apps\research-os-sidecar\sidecar_server.py --serve --template-root .
+cd .\apps\research-os-desktop
+npm install
+npm run dev
+```
 
 ## Research OS v3.9
 
@@ -103,6 +123,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_brid
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_intake_schema.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_state.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_resource_rendering.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_desktop_app.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_archives.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1

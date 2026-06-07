@@ -70,6 +70,14 @@ current_phase: initialization_intake
 current_phase_note: "Default runtime phase for a new project instance; CONTROL/phase_gate.yaml records the current template/work-order phase."
 phase_gate_required: true
 public_export_enabled: false
+desktop_app:
+  enabled: true
+  app_root: apps/research-os-desktop
+  sidecar_root: apps/research-os-sidecar
+  project_file_extension: ".rosproj"
+  sandbox_model: "sibling project directory is the only default writable root"
+  codex_runtime: "official Codex app-server/SDK, system-installed or user-installed"
+  secrets_policy: "profile metadata stores references only; no API keys, tokens, cookies, or authorization headers in project files"
 created_from:
   source_type: template
   source_paths: []

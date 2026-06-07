@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Research OS",
+  "version": "0.1.0",
+  "identifier": "local.research-os.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Research OS",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 980,
+        "minHeight": 680
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src http://127.0.0.1:8789; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "../../research-os-sidecar": "research-os-sidecar",
+      "../../../AGENTS.md": "research-os-template/AGENTS.md",
+      "../../../README.md": "research-os-template/README.md",
+      "../../../.gitattributes": "research-os-template/.gitattributes",
+      "../../../CONTROL": "research-os-template/CONTROL",
+      "../../../config": "research-os-template/config",
+      "../../../docs": "research-os-template/docs",
+      "../../../PUBLIC": "research-os-template/PUBLIC",
+      "../../../scripts": "research-os-template/scripts",
+      "../../../skills": "research-os-template/skills",
+      "../../../templates": "research-os-template/templates",
+      "../../../domain_profiles": "research-os-template/domain_profiles",
+      "../../../adapters": "research-os-template/adapters"
+    }
+  }
+}
