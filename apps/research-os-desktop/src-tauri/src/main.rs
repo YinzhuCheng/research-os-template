@@ -23,9 +23,9 @@ fn repo_root_from_manifest() -> Option<PathBuf> {
 fn sidecar_locations(app: &tauri::App) -> Option<(PathBuf, PathBuf)> {
     if let Ok(resource_dir) = app.path().resource_dir() {
         let packaged_sidecar = resource_dir.join("research-os-sidecar").join("sidecar_server.py");
-        let packaged_template = resource_dir.join("research-os-template");
-        if packaged_sidecar.exists() && packaged_template.exists() {
-            return Some((packaged_sidecar, packaged_template));
+        let packaged_seed = resource_dir.join("research-os-core");
+        if packaged_sidecar.exists() && packaged_seed.exists() {
+            return Some((packaged_sidecar, packaged_seed));
         }
     }
     let repo_root = repo_root_from_manifest()?;
@@ -36,7 +36,7 @@ fn sidecar_locations(app: &tauri::App) -> Option<(PathBuf, PathBuf)> {
 }
 
 fn spawn_sidecar(app: &tauri::App) -> Option<Child> {
-    let (sidecar, template_root) = sidecar_locations(app)?;
+    let (sidecar, seed_root) = sidecar_locations(app)?;
     if !sidecar.exists() {
         eprintln!("Research OS sidecar script not found: {}", sidecar.display());
         return None;
@@ -52,8 +52,8 @@ fn spawn_sidecar(app: &tauri::App) -> Option<Child> {
         match Command::new(&python)
             .arg(&sidecar)
             .arg("--serve")
-            .arg("--template-root")
-            .arg(&template_root)
+            .arg("--seed-root")
+            .arg(&seed_root)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

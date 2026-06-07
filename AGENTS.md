@@ -1,6 +1,6 @@
-# Codex Research OS Template Rules
+# Codex Research OS Desktop Rules
 
-These rules apply to this repository. They are written for Codex and later agents working in the template.
+These rules apply to this repository. They are written for Codex and later agents working on Research OS Desktop.
 
 ## Priority Order
 
@@ -11,7 +11,7 @@ When instructions conflict, use this order:
 3. This `AGENTS.md`.
 4. `config/research_flow.yaml` process contract.
 5. `config/research_project.yaml` and schemas.
-6. Current docs and dashboard.
+6. Current docs and dashboard data.
 7. Historical `PLAN/` and `PROVENANCE/` records.
 
 ## Use Repo Skills First
@@ -26,7 +26,7 @@ When instructions conflict, use this order:
 
 ## Canonical Flow
 
-The canonical flow is defined in `config/research_flow.yaml`:
+The canonical flow is defined in `config/research_flow.yaml`.
 
 User-facing macro phases:
 
@@ -37,7 +37,9 @@ Internal controlled stages:
 `initialization_intake -> loop_acceptance_gate -> loop_plan_alignment -> loop_user_decision -> loop_execute_analyze -> final_product_selection -> final_product_production -> export_release_gate`
 
 The main product surface is the Research OS Desktop app. The first workflow is desktop material intake in a `.rosproj` project. Do not ask the retired fixed five-question intake. After material profiling, ask exactly three targeted questions, each with a recommended answer, options, and an Other/free-form path.
+
 During the loop phase, do not advance past `loop_acceptance_gate` unless the researcher accepts the previous artifact. If the researcher rejects it or gives revision instructions, keep the loop in revision mode and update the current artifact before planning the next step.
+
 Every user-facing choice prompt, including final product selection and archive descriptions, must provide a recommended option, concrete defaults, and a natural-language free-form path.
 
 ## Research Neutrality
@@ -48,11 +50,12 @@ Every user-facing choice prompt, including final product selection and archive d
 
 ## Language And Outputs
 
-- Default language mode is `zh-first`: plans, logs, analysis, internal audit, and dashboard content use Chinese unless a work order says otherwise.
+- Repository documentation is English-first.
+- The desktop app UI may default to Chinese.
 - Final product flows run only after `final_product_selection` or an explicit researcher request.
 - Paper writing, LaTeX, visual paper polish, review/rebuttal, and submission flows run only when `dissemination.paper_enabled: true`, the paper track is selected, or the researcher explicitly asks for a paper/submission.
 - Report output may include more process, initial data, negative results, and reproducibility detail than a paper. Supported report targets are HTML, LaTeX/PDF, and PPT when enabled.
-- Software output defaults to stable, engineered, polished, user-friendly productization with documentation and preserved intermediate research artifacts, unless the researcher adjusts the target in natural language.
+- Software output defaults to stable, engineered, polished, user-friendly productization with documentation and preserved intermediate research artifacts unless the researcher adjusts the target in natural language.
 - Without a final product target, default outputs are research briefs, validation reports, audit packs, reproducibility packs, or decision memos.
 
 ## Control And Audit
@@ -78,7 +81,7 @@ Every user-facing choice prompt, including final product selection and archive d
 
 ## Git
 
-- This is an independent git repository for the template.
+- This is an independent git repository for Research OS Desktop.
 - Do not revert unrelated user or external changes.
 - Run relevant validation scripts before committing.
 - Report checks that could not be run.

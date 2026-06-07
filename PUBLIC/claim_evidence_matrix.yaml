@@ -1,29 +1,30 @@
 claims:
   - id: CLAIM-001
-    claim: "模板可以把研究对话、草稿或 demo 转换为可审计研究项目。"
+    claim: "Research OS Desktop can turn research conversations, draft plans, and demos into governed local .rosproj projects."
     status: supported
     evidence:
-      - "PLAN/00_MASTER_PLAN.md"
-      - "PLAN/01_ARCHITECTURE.md"
+      - "docs/desktop-app.md"
+      - "docs/architecture.md"
       - "skills/research-os-orchestrator/SKILL.md"
     counterevidence: []
     dissemination_targets:
       - "PUBLIC/research_brief.md"
+      - "docs/desktop-app.md"
     privacy_level: public
   - id: CLAIM-002
-    claim: "Human-in-loop stage gate 是自动研究系统的重要质量控制点。"
+    claim: "Human-in-loop stage gates are required quality controls for semi-automated research workflows."
     status: supported
     evidence:
       - "https://arxiv.org/abs/2501.04227"
       - "https://arxiv.org/abs/2502.18864"
       - "CONTROL/phase_gate.yaml"
+      - "docs/process-contract.md"
     counterevidence: []
     dissemination_targets:
-      - "docs/start-here.html"
-      - "docs/technical-report.html"
+      - "docs/process-contract.md"
     privacy_level: public
   - id: CLAIM-003
-    claim: "自动研究系统需要把假设、实验、分析、报告和审计产物串成可追踪数据流。"
+    claim: "Automated research systems need traceable records connecting hypotheses, experiments, analysis, outputs, and audit artifacts."
     status: supported
     evidence:
       - "https://arxiv.org/abs/2504.08066"
@@ -32,22 +33,24 @@ claims:
       - "PROVENANCE/resource_ledger.jsonl"
     counterevidence: []
     dissemination_targets:
-      - "docs/technical-report.html"
+      - "docs/architecture.md"
+      - "docs/process-contract.md"
     privacy_level: public
   - id: CLAIM-004
-    claim: "长时间自动实验需要资源上限、零成本监控或低成本监控、失败状态记录和可恢复运行。"
+    claim: "Long-running research workflows require resource limits, cost monitoring, failure records, and resumable state."
     status: supported
     evidence:
       - "https://arxiv.org/abs/2604.05854"
       - "skills/research-os-resource-guard/SKILL.md"
       - "config/schemas/resource_ledger.schema.json"
+      - "docs/security-risk.md"
     counterevidence: []
     dissemination_targets:
-      - "docs/technical-report.html"
-      - "docs/integrations/components.yaml"
+      - "docs/security-risk.md"
+      - "docs/testing.md"
     privacy_level: public
   - id: CLAIM-005
-    claim: "仓库级 AGENTS.md、skills、MCP、hooks、sandbox 和 approval policy 是 Codex harness engineering 的核心控制面。"
+    claim: "Research OS Desktop keeps Codex execution behind repository rules, skills, hooks, sandbox policy, approvals, and sidecar-mediated runtime boundaries."
     status: supported
     evidence:
       - "https://developers.openai.com/codex/guides/agents-md"
@@ -56,12 +59,13 @@ claims:
       - "https://developers.openai.com/codex/hooks"
       - "https://developers.openai.com/codex/agent-approvals-security"
       - ".codex/requirements.md"
+      - "docs/architecture.md"
     counterevidence: []
     dissemination_targets:
-      - "docs/technical-report.html"
+      - "docs/architecture.md"
     privacy_level: public
   - id: CLAIM-006
-    claim: "Research OS can deepen field-specific research behavior without losing harness control by representing domain knowledge as profiles, agent capability registries, templates, skills, and validation scripts."
+    claim: "Research OS can deepen field-specific research behavior without losing harness control by representing domain knowledge as profiles, agent capability registries, artifact templates, skills, and validation scripts."
     status: supported
     evidence:
       - "domain_profiles/README.md"
@@ -69,13 +73,13 @@ claims:
       - "config/schemas/agent_capability.schema.json"
       - "scripts/check_domain_profiles.ps1"
       - "scripts/check_agent_capabilities.ps1"
+      - "docs/domain-profiles.md"
     counterevidence: []
     dissemination_targets:
-      - "docs/domain-modes.html"
-      - "docs/technical-report.html"
+      - "docs/domain-profiles.md"
     privacy_level: public
   - id: CLAIM-007
-    claim: "The math discovery mode intentionally keeps formal proof assistants disabled by default and instead requires conjecture, example, counterexample, proof-strategy, proof-gap, and human-review states."
+    claim: "The mathematics route intentionally keeps formal proof assistants optional by default and requires conjecture, example, counterexample, proof-strategy, proof-gap, and human-review states."
     status: supported
     evidence:
       - "domain_profiles/fundamental-mathematics/profile.yaml"
@@ -85,11 +89,10 @@ claims:
       - "https://deepmind.google/blog/funsearch-making-new-discoveries-in-mathematical-sciences-using-large-language-models/"
     counterevidence: []
     dissemination_targets:
-      - "docs/domain-modes.html"
-      - "docs/technical-report.html"
+      - "docs/domain-profiles.md"
     privacy_level: public
   - id: CLAIM-008
-    claim: "Research OS v3.2 prevents the skill suite from becoming a loose toolbox by routing substantive research through a shared research kernel with candidate, evaluator, belief state, search trace, negative result, next-action policy, and human judgment gate objects."
+    claim: "Research OS prevents the skill suite from becoming a loose toolbox by routing substantive research through a shared research kernel with candidate, evaluator, belief state, search trace, negative result, next-action policy, and human judgment gate objects."
     status: supported
     evidence:
       - "config/schemas/research_kernel.schema.json"
@@ -100,7 +103,6 @@ claims:
       - "scripts/check_no_orphan_skills.ps1"
     counterevidence: []
     dissemination_targets:
-      - "docs/start-here.html"
-      - "docs/domain-modes.html"
-      - "docs/technical-report.html"
+      - "docs/architecture.md"
+      - "docs/process-contract.md"
     privacy_level: public

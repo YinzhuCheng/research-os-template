@@ -1,6 +1,6 @@
-project_id: research-os-template
-title: "Untitled Codex Research Project"
-template_version: research-os-v4.1
+project_id: research-os-desktop
+title: "Research OS Desktop Seed Project"
+template_version: research-os-v4.2
 process_contract: config/research_flow.yaml
 language_mode: zh-first
 intervention_level: low
@@ -67,7 +67,7 @@ live_evidence:
   last_refresh: null
 current_macro_phase: initialization
 current_phase: initialization_intake
-current_phase_note: "Default runtime phase for a new project instance; CONTROL/phase_gate.yaml records the current template/work-order phase."
+current_phase_note: "Default runtime phase for a new project instance; CONTROL/phase_gate.yaml records the current seed/work-order phase."
 phase_gate_required: true
 public_export_enabled: false
 desktop_app:
@@ -79,7 +79,7 @@ desktop_app:
   codex_runtime: "official Codex app-server/SDK, system-installed or user-installed"
   secrets_policy: "profile metadata stores references only; no API keys, tokens, cookies, or authorization headers in project files"
 created_from:
-  source_type: template
+  source_type: desktop_app_seed
   source_paths: []
 owners:
   decision_maker: TBD

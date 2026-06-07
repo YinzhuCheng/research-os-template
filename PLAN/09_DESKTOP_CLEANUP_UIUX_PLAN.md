@@ -47,7 +47,7 @@
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_environment_docs.ps1`
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_governance_text.ps1`
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_research_flow.ps1`
-- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_html_docs.ps1`
+- Static HTML documentation check retired in v4.2; use `scripts/check_dashboard.ps1` and `scripts/check_docs_links.ps1`.
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_archives.ps1`
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_environment.ps1`
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_private_intake_synthetic.ps1`

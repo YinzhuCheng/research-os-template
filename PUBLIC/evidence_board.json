@@ -1,6 +1,6 @@
 {
   "schema_version": "v1.0",
-  "updated_at": "2026-06-07T15:13:23+08:00",
+  "updated_at": "2026-06-07T22:43:26+08:00",
   "source_policy": "sanitized_public_summary_only",
   "source": "PUBLIC/claim_evidence_matrix.yaml",
   "summary": {
@@ -8,23 +8,23 @@
     "status_counts": {
       "supported": 8
     },
-    "repository_evidence_refs": 23,
+    "repository_evidence_refs": 27,
     "external_evidence_refs": 12
   },
   "rows": [
     {
       "claim_id": "CLAIM-001",
       "status": "supported",
-      "claim": "模板可以把研究对话、草稿或 demo 转换为可审计研究项目。",
+      "claim": "Research OS Desktop can turn research conversations, draft plans, and demos into governed local .rosproj projects.",
       "evidence_count": 3,
       "evidence": [
         {
           "kind": "repo_path",
-          "ref": "PLAN/00_MASTER_PLAN.md"
+          "ref": "docs/desktop-app.md"
         },
         {
           "kind": "repo_path",
-          "ref": "PLAN/01_ARCHITECTURE.md"
+          "ref": "docs/architecture.md"
         },
         {
           "kind": "repo_path",
@@ -34,15 +34,16 @@
       "counterevidence_count": 0,
       "counterevidence": [],
       "dissemination_targets": [
-        "PUBLIC/research_brief.md"
+        "PUBLIC/research_brief.md",
+        "docs/desktop-app.md"
       ],
       "privacy_level": "public"
     },
     {
       "claim_id": "CLAIM-002",
       "status": "supported",
-      "claim": "Human-in-loop stage gate 是自动研究系统的重要质量控制点。",
-      "evidence_count": 3,
+      "claim": "Human-in-loop stage gates are required quality controls for semi-automated research workflows.",
+      "evidence_count": 4,
       "evidence": [
         {
           "kind": "url",
@@ -55,20 +56,23 @@
         {
           "kind": "repo_path",
           "ref": "CONTROL/phase_gate.yaml"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "docs/process-contract.md"
         }
       ],
       "counterevidence_count": 0,
       "counterevidence": [],
       "dissemination_targets": [
-        "docs/start-here.html",
-        "docs/technical-report.html"
+        "docs/process-contract.md"
       ],
       "privacy_level": "public"
     },
     {
       "claim_id": "CLAIM-003",
       "status": "supported",
-      "claim": "自动研究系统需要把假设、实验、分析、报告和审计产物串成可追踪数据流。",
+      "claim": "Automated research systems need traceable records connecting hypotheses, experiments, analysis, outputs, and audit artifacts.",
       "evidence_count": 4,
       "evidence": [
         {
@@ -91,15 +95,16 @@
       "counterevidence_count": 0,
       "counterevidence": [],
       "dissemination_targets": [
-        "docs/technical-report.html"
+        "docs/architecture.md",
+        "docs/process-contract.md"
       ],
       "privacy_level": "public"
     },
     {
       "claim_id": "CLAIM-004",
       "status": "supported",
-      "claim": "长时间自动实验需要资源上限、零成本监控或低成本监控、失败状态记录和可恢复运行。",
-      "evidence_count": 3,
+      "claim": "Long-running research workflows require resource limits, cost monitoring, failure records, and resumable state.",
+      "evidence_count": 4,
       "evidence": [
         {
           "kind": "url",
@@ -112,21 +117,25 @@
         {
           "kind": "repo_path",
           "ref": "config/schemas/resource_ledger.schema.json"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "docs/security-risk.md"
         }
       ],
       "counterevidence_count": 0,
       "counterevidence": [],
       "dissemination_targets": [
-        "docs/technical-report.html",
-        "docs/integrations/components.yaml"
+        "docs/security-risk.md",
+        "docs/testing.md"
       ],
       "privacy_level": "public"
     },
     {
       "claim_id": "CLAIM-005",
       "status": "supported",
-      "claim": "仓库级 AGENTS.md、skills、MCP、hooks、sandbox 和 approval policy 是 Codex harness engineering 的核心控制面。",
-      "evidence_count": 6,
+      "claim": "Research OS Desktop keeps Codex execution behind repository rules, skills, hooks, sandbox policy, approvals, and sidecar-mediated runtime boundaries.",
+      "evidence_count": 7,
       "evidence": [
         {
           "kind": "url",
@@ -151,20 +160,24 @@
         {
           "kind": "repo_path",
           "ref": ".codex/requirements.md"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "docs/architecture.md"
         }
       ],
       "counterevidence_count": 0,
       "counterevidence": [],
       "dissemination_targets": [
-        "docs/technical-report.html"
+        "docs/architecture.md"
       ],
       "privacy_level": "public"
     },
     {
       "claim_id": "CLAIM-006",
       "status": "supported",
-      "claim": "Research OS can deepen field-specific research behavior without losing harness control by representing domain knowledge as profiles, agent capability registries, templates, skills, and validation scripts.",
-      "evidence_count": 5,
+      "claim": "Research OS can deepen field-specific research behavior without losing harness control by representing domain knowledge as profiles, agent capability registries, artifact templates, skills, and validation scripts.",
+      "evidence_count": 6,
       "evidence": [
         {
           "kind": "repo_path",
@@ -185,20 +198,23 @@
         {
           "kind": "repo_path",
           "ref": "scripts/check_agent_capabilities.ps1"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "docs/domain-profiles.md"
         }
       ],
       "counterevidence_count": 0,
       "counterevidence": [],
       "dissemination_targets": [
-        "docs/domain-modes.html",
-        "docs/technical-report.html"
+        "docs/domain-profiles.md"
       ],
       "privacy_level": "public"
     },
     {
       "claim_id": "CLAIM-007",
       "status": "supported",
-      "claim": "The math discovery mode intentionally keeps formal proof assistants disabled by default and instead requires conjecture, example, counterexample, proof-strategy, proof-gap, and human-review states.",
+      "claim": "The mathematics route intentionally keeps formal proof assistants optional by default and requires conjecture, example, counterexample, proof-strategy, proof-gap, and human-review states.",
       "evidence_count": 5,
       "evidence": [
         {
@@ -225,15 +241,14 @@
       "counterevidence_count": 0,
       "counterevidence": [],
       "dissemination_targets": [
-        "docs/domain-modes.html",
-        "docs/technical-report.html"
+        "docs/domain-profiles.md"
       ],
       "privacy_level": "public"
     },
     {
       "claim_id": "CLAIM-008",
       "status": "supported",
-      "claim": "Research OS v3.2 prevents the skill suite from becoming a loose toolbox by routing substantive research through a shared research kernel with candidate, evaluator, belief state, search trace, negative result, next-action policy, and human judgment gate objects.",
+      "claim": "Research OS prevents the skill suite from becoming a loose toolbox by routing substantive research through a shared research kernel with candidate, evaluator, belief state, search trace, negative result, next-action policy, and human judgment gate objects.",
       "evidence_count": 6,
       "evidence": [
         {
@@ -264,9 +279,8 @@
       "counterevidence_count": 0,
       "counterevidence": [],
       "dissemination_targets": [
-        "docs/start-here.html",
-        "docs/domain-modes.html",
-        "docs/technical-report.html"
+        "docs/architecture.md",
+        "docs/process-contract.md"
       ],
       "privacy_level": "public"
     }

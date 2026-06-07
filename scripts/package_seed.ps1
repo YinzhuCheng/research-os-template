@@ -32,13 +32,13 @@ $allowlist = @(
 )
 
 if (!$Name) {
-  $Name = "research_os_template_" + (Get-Date -Format "yyyyMMdd_HHmmss")
+  $Name = "research_os_desktop_seed_" + (Get-Date -Format "yyyyMMdd_HHmmss")
 }
 
 & "$PSScriptRoot\scan_privacy.ps1" -Paths @("PUBLIC", "PROVENANCE")
 & "$PSScriptRoot\check_strict_schema_instances.ps1"
 & "$PSScriptRoot\check_public_summaries.ps1"
-& "$PSScriptRoot\check_html_docs.ps1"
+& "$PSScriptRoot\check_dashboard.ps1"
 & "$PSScriptRoot\check_package_artifacts.ps1"
 
 $included = @()

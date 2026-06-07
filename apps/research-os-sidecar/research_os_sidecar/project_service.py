@@ -31,8 +31,8 @@ BLOCKED_SEED_NAMES = {
 
 
 class ProjectService:
-    def __init__(self, template_root: Path) -> None:
-        self.template_root = template_root.resolve()
+    def __init__(self, seed_root: Path) -> None:
+        self.seed_root = seed_root.resolve()
         self.current_project: dict[str, Any] | None = None
 
     def create_project(self, name: str, project_file: str | Path) -> dict[str, Any]:
@@ -111,15 +111,15 @@ class ProjectService:
 
     def _seed_project(self, project_root: Path) -> None:
         for file_name in SEED_FILES:
-            source = self.template_root / file_name
+            source = self.seed_root / file_name
             if source.exists():
                 shutil.copy2(source, project_root / file_name)
         for dir_name in SEED_DIRS:
-            source = self.template_root / dir_name
+            source = self.seed_root / dir_name
             target = project_root / dir_name
             if source.exists():
                 shutil.copytree(source, target, ignore=self._ignore_seed_items)
-        agents_skills = self.template_root / ".agents" / "skills"
+        agents_skills = self.seed_root / ".agents" / "skills"
         if agents_skills.exists():
             shutil.copytree(agents_skills, project_root / ".agents" / "skills", ignore=self._ignore_seed_items)
 

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-os-template.local/schemas/agent_capability.schema.json",
+  "$id": "https://research-os-desktop.local/schemas/agent_capability.schema.json",
   "title": "Research OS Agent Capability Registry",
   "type": "object",
   "required": [

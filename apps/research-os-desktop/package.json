@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "dev:sidecar": "python ../research-os-sidecar/sidecar_server.py --serve --template-root ../..",
+    "dev:sidecar": "python ../research-os-sidecar/sidecar_server.py --serve --seed-root ../..",
     "build": "tsc && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",

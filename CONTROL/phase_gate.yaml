@@ -1,27 +1,21 @@
-current_phase: research-os-v4.1-desktop-cleanup-uiux
+current_phase: research-os-v4.2-repository-cleanup
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "After v3.9, decide whether project instances should enable git-backed archive push by default or keep archives local-only until explicit confirmation."
+next_required_decision: "After v4.2, decide whether the GitHub remote repository itself should be renamed by the owner."
 confirmed_decisions:
-  - "Use the latest material-first copilot flow: no fixed five-question intake; exactly three targeted questions after material profiling."
-  - "Keep Research OS positioned as a researcher copilot for the initial release, not a fully autonomous research agent."
-  - "Chinese is the default interface language; final paper output remains English by default."
-  - "Do not touch PRIVATE/ or real uploaded materials during this pass."
-  - "Use only local validation, local browser QA, and zero-cost checks for this pass."
-  - "Expose three user-facing macro phases: initialization, semi-automated loop research, and final product."
-  - "Allow internal Research OS stages to be consolidated or removed when responsibilities become clearer."
-  - "Keep acceptance gating strict: if the user rejects the previous artifact, the loop stays in revision mode."
+  - "Research OS Desktop is the only primary user interface."
+  - "The old browser bridge is retired."
+  - "Static HTML documentation and dashboard surfaces are retired."
+  - "Repository documentation is English-first."
+  - "The desktop app UI may remain Chinese-first."
+  - "Desktop state uses PUBLIC/research_state.json and CONTROL/intake_queue."
   - "Every user-facing choice must include a recommended option, concrete options, and natural-language free-form input."
-  - "Final product selection supports multiple tracks: paper, research report, and software."
-  - "Software product output defaults to stable, engineered, polished, and user-friendly unless the researcher changes expectations in natural language."
-  - "Use Tauri + React + Python sidecar as the Research OS desktop app architecture."
+  - "Final product selection supports paper, research report, software, or a multi-track combination."
+  - "Use Tauri + React + Python sidecar as the Research OS Desktop architecture."
   - "Use .rosproj files and a sibling project directory as the project sandbox model."
   - "Do not store API keys, tokens, cookies, passwords, or authorization headers in .rosproj or project git."
-  - "Use the official Codex app-server/SDK as the execution kernel without modifying or vendoring official Codex source."
-  - "Keep project-root writes high-freedom while gating sandbox-external access, external writeback, git push, release, credentials, and real resources."
-  - "Research OS Desktop is the only primary user interface; the old browser bridge is retired."
-  - "Desktop state uses PUBLIC/research_state.json and CONTROL/intake_queue."
+  - "Do not touch PRIVATE/ or real uploaded materials during this pass."

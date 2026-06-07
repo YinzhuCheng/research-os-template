@@ -1,6 +1,6 @@
 {
   "schema_version": "v1.1",
-  "updated_at": "2026-06-07T15:13:23+08:00",
+  "updated_at": "2026-06-07T22:43:26+08:00",
   "source_policy": "sanitized_public_summary_only",
   "runs": [
     {
@@ -25,56 +25,6 @@
     }
   ],
   "audit_runs": [
-    {
-      "run_id": "RUN-0010",
-      "timestamp": "2026-06-06T12:36:20.4293277+08:00",
-      "work_order_id": "WO-0002",
-      "status": "succeeded",
-      "command_or_tool": "github-draft-pr-create",
-      "outputs_count": 1,
-      "privacy_level": "public",
-      "error_count": 0
-    },
-    {
-      "run_id": "RUN-0011",
-      "timestamp": "2026-06-06T18:45:00+08:00",
-      "work_order_id": "WO-0002",
-      "status": "succeeded",
-      "command_or_tool": "research-os-v3.1-domain-profile-implementation-and-validation",
-      "outputs_count": 16,
-      "privacy_level": "public",
-      "error_count": 0
-    },
-    {
-      "run_id": "RUN-0012",
-      "timestamp": "2026-06-06T17:34:00+08:00",
-      "work_order_id": "WO-0003",
-      "status": "succeeded",
-      "command_or_tool": "research-os-v3.2-research-kernel-implementation-and-validation",
-      "outputs_count": 18,
-      "privacy_level": "public",
-      "error_count": 0
-    },
-    {
-      "run_id": "RUN-0014",
-      "timestamp": "2026-06-06T20:56:35.1904750+08:00",
-      "work_order_id": "WO-0004",
-      "status": "succeeded",
-      "command_or_tool": "research-os-v3.3-final-validation-report",
-      "outputs_count": 1,
-      "privacy_level": "public",
-      "error_count": 0
-    },
-    {
-      "run_id": "RUN-0015",
-      "timestamp": "2026-06-06T21:15:45.7322586+08:00",
-      "work_order_id": "WO-0005",
-      "status": "succeeded",
-      "command_or_tool": "research-os-v3.4-environment-cleanup-validation",
-      "outputs_count": 1,
-      "privacy_level": "public",
-      "error_count": 0
-    },
     {
       "run_id": "RUN-0016",
       "timestamp": "2026-06-06T21:43:58.7501339+08:00",
@@ -104,13 +54,63 @@
       "outputs_count": 19,
       "privacy_level": "public",
       "error_count": 0
+    },
+    {
+      "run_id": "RUN-0020",
+      "timestamp": "2026-06-07T17:47:21.1042934+08:00",
+      "work_order_id": "WO-0009",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v3.8-ui-style-language-settings-validation",
+      "outputs_count": 12,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0021",
+      "timestamp": "2026-06-07T19:10:16.7290824+08:00",
+      "work_order_id": "WO-0010",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v3.9-three-phase-final-product-validation",
+      "outputs_count": 7,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0022",
+      "timestamp": "2026-06-07T20:55:30.0227459+08:00",
+      "work_order_id": "WO-0011",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v4.0-desktop-app-validation",
+      "outputs_count": 9,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0023",
+      "timestamp": "2026-06-07T21:24:55.7205259+08:00",
+      "work_order_id": "WO-0011",
+      "status": "succeeded",
+      "command_or_tool": "research-os-desktop-dependency-install-package-and-yunwu-smoke-test",
+      "outputs_count": 9,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0024",
+      "timestamp": "2026-06-07T22:19:40+08:00",
+      "work_order_id": "WO-0012",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v4.1-desktop-cleanup-uiux-validation",
+      "outputs_count": 16,
+      "privacy_level": "public",
+      "error_count": 0
     }
   ],
   "resource_summary": {
-    "ledger_entries": 13,
-    "total_recorded_amount": 0.0,
-    "currency_or_unit": "CNY",
-    "latest_entry_id": "RL-0013",
+    "ledger_entries": 18,
+    "total_recorded_amount": 0.000328,
+    "currency_or_unit": "USD",
+    "latest_entry_id": "RL-0018",
     "resource_policy": "local zero-cost validation unless a researcher-approved work order says otherwise"
   },
   "deferred_p2": [

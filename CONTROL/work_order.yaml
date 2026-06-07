@@ -1,14 +1,16 @@
-work_order_id: WO-0012
-phase: research-os-v4.1-desktop-cleanup-uiux
-goal: "Remove the retired browser bridge, normalize the desktop-first repository, improve desktop UI/UX, validate risks, and publish the cleanup."
+work_order_id: WO-0013
+phase: research-os-v4.2-repository-cleanup
+goal: "Make Research OS Desktop the clear repository identity, remove remaining static HTML legacy, and make durable repository documentation English-first."
 inputs:
   - "AGENTS.md"
   - "CONTROL/work_order.yaml"
   - "CONTROL/phase_gate.yaml"
   - "config/research_project.yaml"
-  - "config/research_flow.yaml"
-  - "apps/research-os-desktop/"
-  - "apps/research-os-sidecar/"
+  - "docs/"
+  - "PLAN/"
+  - "PUBLIC/"
+  - "scripts/"
+  - "apps/"
 allowed_paths:
   - ".agents/"
   - "adapters/"
@@ -30,35 +32,34 @@ allowed_paths:
 forbidden_paths:
   - "PRIVATE/"
 outputs:
-  - "apps/research-os-desktop/"
-  - "apps/research-os-sidecar/"
-  - "PUBLIC/research_state.json"
-  - "PUBLIC/dashboard_data.json"
+  - "README.md"
+  - "AGENTS.md"
   - "docs/"
+  - "PLAN/"
+  - "PUBLIC/"
   - "scripts/"
-  - "config/schemas/"
+  - "apps/"
+  - "config/"
   - "PROVENANCE/run_manifest.jsonl"
   - "PROVENANCE/resource_ledger.jsonl"
 resource_budget:
   currency: USD
-  max_total_cost: 1
+  max_total_cost: 0
   categories:
     time: "local implementation session"
     compute: "local validation and packaging"
-    api: "optional Yunwu UI heuristic review, low reasoning, target <= 0.05 USD"
-    model: "optional gpt-5.4 low reasoning"
+    api: "none"
   max_runtime_minutes: null
 stop_conditions:
   - "Need to read, inspect, or commit real PRIVATE intake material."
   - "Need to store real API keys, account tokens, cookies, authorization headers, or provider secrets."
   - "Need external writeback other than git push to the current branch."
-  - "Yunwu estimated or measured spend would exceed 1 USD."
 acceptance_criteria:
-  - "Previous v4.0 desktop app package commit is pushed before cleanup work."
-  - "Retired browser bridge files and active links are removed."
-  - "Desktop state uses PUBLIC/research_state.json and CONTROL/intake_queue."
-  - "Docs and dashboard are desktop-first."
-  - "UI click-path tests cover project creation, intake, final product modal, archive preview, and approval empty state."
-  - "Privacy scan, schema checks, sidecar tests, frontend tests, build, package, and relevant governance checks pass or failures are reported."
+  - "Product-facing names use Research OS Desktop rather than template branding."
+  - "Static HTML docs and dashboard files are removed."
+  - "Validation scripts no longer require HTML docs."
+  - "Durable repository docs are English-first."
+  - "App UI may remain Chinese-first."
+  - "Privacy, schema, docs, desktop, sidecar, frontend, and package checks pass or failures are reported."
 requires_confirmation: false
 privacy_level: public

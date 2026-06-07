@@ -6,4 +6,4 @@ Each adapter must declare capabilities, input/output shapes, side effects, cost,
 privacy class, human confirmation requirements, replay support, failure modes,
 license constraints, and safety review status before any real execution.
 
-No adapter in this template calls external services by default.
+No adapter in the Research OS Desktop seed calls external services by default.

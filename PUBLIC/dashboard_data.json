@@ -1,7 +1,7 @@
 {
   "project": {
     "title": "Research OS Desktop",
-    "phase": "research-os-v4.1",
+    "phase": "research-os-v4.2",
     "language_mode": "zh-first",
     "privacy_policy": "public_private_split",
     "research_type": "desktop-copilot-ready",
@@ -16,7 +16,7 @@
     {"label": "Final Products", "value": "paper + report + software"},
     {"label": "Archives", "value": "git-backed snapshots"},
     {"label": "Risk Register", "value": "security-risk.md"},
-    {"label": "Browser Bridge", "value": "removed"}
+    {"label": "Static HTML Legacy", "value": "removed"}
   ],
   "documents": [
     {"path": "../docs/desktop-app.md", "label": "Desktop App Guide"},
@@ -25,6 +25,7 @@
     {"path": "../docs/testing.md", "label": "Testing Guide"},
     {"path": "../docs/packaging.md", "label": "Packaging Guide"},
     {"path": "../docs/migration.md", "label": "Migration Notes"},
+    {"path": "../docs/domain-profiles.md", "label": "Domain Profiles"},
     {"path": "../docs/process-contract.md", "label": "Process Contract"},
     {"path": "../config/research_flow.yaml", "label": "Research Flow"},
     {"path": "../docs/environment.md", "label": "Environment Guide"},

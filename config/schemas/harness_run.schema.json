@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-os-template.local/schemas/harness_run.schema.json",
+  "$id": "https://research-os-desktop.local/schemas/harness_run.schema.json",
   "title": "Research OS Harness Run",
   "type": "object",
   "required": [

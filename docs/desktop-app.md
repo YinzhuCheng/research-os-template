@@ -1,16 +1,18 @@
-# Research OS Desktop App
+# Desktop App
 
-Research OS Desktop is the primary product surface. It uses `Tauri + React + Python sidecar` and opens local `.rosproj` projects.
+Research OS Desktop is the primary product surface. It uses Tauri, React, TypeScript, and a Python sidecar to run local `.rosproj` projects.
 
 ## User Flow
 
 1. Create or open a `.rosproj` file.
-2. The app creates or uses the sibling project directory as the sandbox.
-3. Submit material in the desktop intake panel.
+2. Let the app create or use the sibling project directory as the sandbox.
+3. Submit research material in the desktop intake panel.
 4. Answer choice prompts with a recommended option, default options, and natural-language free-form input.
 5. Approve or reject Codex commands in the approval queue.
 6. Create git-backed archives before risky transitions.
-7. Enter final product mode for paper, report, software, or multiple tracks.
+7. Enter final-product mode for paper, report, software, or multiple tracks.
+
+The app UI defaults to Chinese. Repository documentation defaults to English.
 
 ## Project Layout
 
@@ -27,6 +29,10 @@ The React UI calls only the Python sidecar. The sidecar owns filesystem writes, 
 
 Codex execution is optional. If Codex is unavailable, the runtime panel fails safely without changing project state.
 
+## Environment
+
+Use [environment.md](environment.md) and `scripts/install_environment.ps1` for local setup. Use [testing.md](testing.md) for validation commands.
+
 ## Removed Legacy Surface
 
-The browser bridge and static browser cockpit are retired. Use [migration.md](migration.md) for the replacement map.
+The static HTML dashboard, browser cockpit, and browser bridge are retired. See [migration.md](migration.md) for the replacement map.

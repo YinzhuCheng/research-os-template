@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-os-template.local/schemas/integration_component.schema.json",
+  "$id": "https://research-os-desktop.local/schemas/integration_component.schema.json",
   "title": "Research OS Integration Component",
   "type": "object",
   "required": [

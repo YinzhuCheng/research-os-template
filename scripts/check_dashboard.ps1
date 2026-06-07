@@ -1,32 +1,17 @@
 param(
-  [string]$Dashboard = "PUBLIC\index.html"
+  [string]$DashboardData = "PUBLIC\dashboard_data.json"
 )
 
 $ErrorActionPreference = "Stop"
 
-if (!(Test-Path -LiteralPath $Dashboard)) {
-  throw "Dashboard missing: $Dashboard"
+if (!(Test-Path -LiteralPath $DashboardData)) {
+  throw "Dashboard data missing: $DashboardData"
 }
 
-$html = Get-Content -Raw -Encoding UTF8 -LiteralPath $Dashboard
-$required = @(
-  "<!doctype html>",
-  "Research OS Desktop",
-  "dashboard_data.json",
-  "docs/desktop-app.md",
-  "research_state.json",
-  "Tauri",
-  "Python sidecar",
-  ".rosproj"
-)
+$data = Get-Content -Raw -Encoding UTF8 -LiteralPath $DashboardData | ConvertFrom-Json
+if ($data.project.title -ne "Research OS Desktop") { throw "Dashboard data has the wrong product title." }
+if ($data.project.primary_entrypoint -notlike "*Tauri*React*Python sidecar*") { throw "Dashboard data must be desktop-app first." }
 
-foreach ($item in $required) {
-  if ($html -notlike "*$item*") {
-    throw "Dashboard check failed: missing $item"
-  }
-}
-
-$data = Get-Content -Raw -Encoding UTF8 -LiteralPath "PUBLIC\dashboard_data.json" | ConvertFrom-Json
 foreach ($label in @("Desktop App", "Project Sandbox", "Approvals", "Final Products", "Archives", "Risk Register")) {
   if (!($data.status.label -contains $label)) {
     throw "Dashboard data missing status: $label"
@@ -52,4 +37,4 @@ foreach ($path in $requiredDocumentPaths) {
   }
 }
 
-Write-Output "Dashboard static check passed."
+Write-Output "Dashboard data check passed."

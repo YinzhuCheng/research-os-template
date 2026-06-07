@@ -17,4 +17,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_private_inta
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_archives.ps1
 ```
 
-The retired browser bridge scripts have been removed. Desktop app state now uses `PUBLIC/research_state.json` and `CONTROL/intake_queue/`.
+The retired browser bridge and static HTML dashboard scripts have been removed. Desktop app state now uses `PUBLIC/research_state.json` and `CONTROL/intake_queue/`.

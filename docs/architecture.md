@@ -1,11 +1,42 @@
-# Desktop Architecture
+# Architecture
 
-Research OS Desktop uses a governed local runtime:
+Research OS Desktop is a governed local application:
 
-`React UI -> Python sidecar -> optional Codex SDK/app-server -> project sandbox`
+`Tauri shell -> React workbench -> Python sidecar -> optional official Codex SDK/app-server -> project sandbox`
 
-The React UI never talks directly to Codex. It calls the sidecar over localhost for project management, state, approvals, archives, runtime events, and final product selection.
+The React UI never talks directly to Codex. It calls the sidecar over localhost for project creation, state, approvals, archives, runtime events, profile metadata, and final-product selection.
 
-The sidecar owns `.rosproj` files and creates a sibling project directory as the only default writable sandbox. It writes sanitized state to `PUBLIC/research_state.json`, intake packets to `CONTROL/intake_queue/`, and raw runtime intake under project-local `PRIVATE/intake/`.
+## Project Seed
 
-Codex integration is optional. When available, Codex runs with project-root `cwd`, workspace-write sandboxing, and a Research OS approval handler.
+The packaged application carries a `research-os-core` seed. When a user creates a `.rosproj` file, the sidecar copies the seed into the sibling project directory, initializes the Research OS control structure, and creates the first local git commit.
+
+The seed is not branded as a starter repository. The `templates/` directory remains because it contains reusable artifact scaffolds for papers, reports, domain records, adapter contracts, and Research OS state objects.
+
+## State
+
+- `.rosproj`: non-sensitive project metadata.
+- `CONTROL/intake_queue/`: sanitized material-intake packets.
+- `CONTROL/choice_responses/`: user selections and natural-language supplements.
+- `PUBLIC/research_state.json`: sanitized state rendered by the desktop UI.
+- `PRIVATE/intake/`: raw material captured at runtime.
+- `PROVENANCE/`: manifests, ledgers, and archive records.
+
+## Research Flow
+
+The machine-readable process contract is `config/research_flow.yaml`. The user-facing macro phases are initialization, semi-automated research loop, and final product.
+
+Internal stages are `initialization_intake`, `loop_acceptance_gate`, `loop_plan_alignment`, `loop_user_decision`, `loop_execute_analyze`, `final_product_selection`, `final_product_production`, and `export_release_gate`.
+
+Final Product Tracks support paper, research report, software, or a multi-track combination. Git-backed archives are local snapshots used before risky transitions, long-running work, or release gates.
+
+## Skills And Domains
+
+`research-os-orchestrator` routes the work. `research-os-research-kernel` owns generate/evaluate/update/human-gate state. Domain routes stay under `domain_profiles/` and the domain skills:
+
+- `research-os-math-discovery`
+- `research-os-applied-math-modeling`
+- `research-os-ml-research-protocol`
+- `research-os-cs-research-artifact`
+- `research-os-statistical-inference`
+
+No domain skill may bypass the research kernel, resource guard, execution harness, privacy policy, or approval gates.

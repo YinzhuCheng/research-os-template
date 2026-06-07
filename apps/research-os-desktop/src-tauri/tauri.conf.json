@@ -31,18 +31,18 @@
     ],
     "resources": {
       "../../research-os-sidecar": "research-os-sidecar",
-      "../../../AGENTS.md": "research-os-template/AGENTS.md",
-      "../../../README.md": "research-os-template/README.md",
-      "../../../.gitattributes": "research-os-template/.gitattributes",
-      "../../../CONTROL": "research-os-template/CONTROL",
-      "../../../config": "research-os-template/config",
-      "../../../docs": "research-os-template/docs",
-      "../../../PUBLIC": "research-os-template/PUBLIC",
-      "../../../scripts": "research-os-template/scripts",
-      "../../../skills": "research-os-template/skills",
-      "../../../templates": "research-os-template/templates",
-      "../../../domain_profiles": "research-os-template/domain_profiles",
-      "../../../adapters": "research-os-template/adapters"
+      "../../../AGENTS.md": "research-os-core/AGENTS.md",
+      "../../../README.md": "research-os-core/README.md",
+      "../../../.gitattributes": "research-os-core/.gitattributes",
+      "../../../CONTROL": "research-os-core/CONTROL",
+      "../../../config": "research-os-core/config",
+      "../../../docs": "research-os-core/docs",
+      "../../../PUBLIC": "research-os-core/PUBLIC",
+      "../../../scripts": "research-os-core/scripts",
+      "../../../skills": "research-os-core/skills",
+      "../../../templates": "research-os-core/templates",
+      "../../../domain_profiles": "research-os-core/domain_profiles",
+      "../../../adapters": "research-os-core/adapters"
     }
   }
 }

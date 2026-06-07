@@ -21,7 +21,7 @@ $skillsReadme = Read-Text "skills\README.md"
 $routing = Read-Text "skills\research-os-orchestrator\references\routing.md"
 $agents = Read-Text "AGENTS.md"
 $docMap = Read-Text "docs\doc_map.yaml"
-$technical = Read-Text "docs\technical-report.html"
+$architecture = Read-Text "docs\architecture.md"
 $dashboard = Read-Text "PUBLIC\dashboard_data.json"
 $processContract = Read-Text "docs\process-contract.md"
 
@@ -84,7 +84,7 @@ $mustMention = @(
 )
 
 foreach ($needle in $mustMention) {
-  if ($flow -notlike "*$needle*" -and $flowSchema -notlike "*$needle*" -and $routing -notlike "*$needle*" -and $skillsReadme -notlike "*$needle*" -and $agents -notlike "*$needle*" -and $docMap -notlike "*$needle*" -and $technical -notlike "*$needle*" -and $dashboard -notlike "*$needle*" -and $processContract -notlike "*$needle*") {
+  if ($flow -notlike "*$needle*" -and $flowSchema -notlike "*$needle*" -and $routing -notlike "*$needle*" -and $skillsReadme -notlike "*$needle*" -and $agents -notlike "*$needle*" -and $docMap -notlike "*$needle*" -and $architecture -notlike "*$needle*" -and $dashboard -notlike "*$needle*" -and $processContract -notlike "*$needle*") {
     throw "Process governance missing required concept: $needle"
   }
 }
@@ -93,9 +93,9 @@ Require-Text "docs\doc_map.yaml" "process_contract"
 Require-Text "docs\doc_map.yaml" "config/research_flow.yaml"
 Require-Text "PUBLIC\dashboard_data.json" "../docs/process-contract.md"
 Require-Text "PUBLIC\dashboard_data.json" "../config/research_flow.yaml"
-Require-Text "docs\technical-report.html" "config/research_flow.yaml"
-Require-Text "docs\technical-report.html" "Final Product Tracks"
-Require-Text "docs\technical-report.html" "Git-Backed Archives"
+Require-Text "docs\architecture.md" "config/research_flow.yaml"
+Require-Text "docs\architecture.md" "Final Product Tracks"
+Require-Text "docs\architecture.md" "Git-backed archives"
 Require-Text "AGENTS.md" "Use Repo Skills First"
 Require-Text "AGENTS.md" "Canonical Flow"
 Require-Text "docs\process-contract.md" "Choice Prompt Contract"

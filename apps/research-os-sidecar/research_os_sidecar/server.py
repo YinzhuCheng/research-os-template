@@ -27,8 +27,8 @@ ALLOWED_ORIGINS = {
 
 
 class AppContext:
-    def __init__(self, template_root: Path) -> None:
-        self.projects = ProjectService(template_root)
+    def __init__(self, seed_root: Path) -> None:
+        self.projects = ProjectService(seed_root)
         self.profiles = ProfileService()
         self.approvals = ApprovalService()
         self.runtime = RuntimeService(self.projects.require_project_root, self.approvals)
@@ -177,11 +177,11 @@ class Handler(BaseHTTPRequestHandler):
         print("research-os-sidecar: " + (format % args))
 
 
-def serve(port: int, template_root: Path) -> None:
-    Handler.context = AppContext(template_root)
+def serve(port: int, seed_root: Path) -> None:
+    Handler.context = AppContext(seed_root)
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     print(f"Research OS sidecar listening at http://127.0.0.1:{port}")
-    print(f"Template root: {template_root.resolve()}")
+    print(f"Seed root: {seed_root.resolve()}")
     server.serve_forever()
 
 
@@ -189,10 +189,10 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--serve", action="store_true")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
-    parser.add_argument("--template-root", default=str(Path.cwd()))
+    parser.add_argument("--seed-root", default=str(Path.cwd()))
     args = parser.parse_args()
     if args.serve:
-        serve(args.port, Path(args.template_root))
+        serve(args.port, Path(args.seed_root))
     else:
         parser.print_help()
 

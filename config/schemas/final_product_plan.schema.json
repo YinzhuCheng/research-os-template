@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-os-template.local/schemas/final_product_plan.schema.json",
+  "$id": "https://research-os-desktop.local/schemas/final_product_plan.schema.json",
   "title": "Research OS Final Product Plan",
   "type": "object",
   "required": [

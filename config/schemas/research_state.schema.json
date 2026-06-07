@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-os-template.local/schemas/research_state.schema.json",
+  "$id": "https://research-os-desktop.local/schemas/research_state.schema.json",
   "title": "Research OS Desktop Research State",
   "type": "object",
   "required": ["schema_version", "macro_phase", "internal_phase", "status", "pending_user_confirmation"],

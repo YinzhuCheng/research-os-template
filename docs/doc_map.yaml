@@ -1,17 +1,13 @@
 doc_map_id: DOCMAP-0001
 updated_at: "2026-06-07"
-language_mode: zh-first
+language_mode: en-only
 entrypoints:
   desktop_app:
     title: "Research OS Desktop App"
     path: "docs/desktop-app.md"
     audience: "Researchers using .rosproj desktop projects and maintainers packaging the app"
-  dashboard:
-    title: "Public Dashboard"
-    path: "PUBLIC/index.html"
-    audience: "Project participants and auditors reviewing sanitized public state"
   architecture:
-    title: "Desktop Architecture"
+    title: "Architecture"
     path: "docs/architecture.md"
     audience: "Maintainers and future agents"
   security_risk:
@@ -29,15 +25,11 @@ entrypoints:
   migration:
     title: "Migration Notes"
     path: "docs/migration.md"
-    audience: "Maintainers tracking removal of the old browser bridge"
-  novice:
-    title: "Quick Start"
-    path: "docs/start-here.html"
-    audience: "First-time Research OS users"
-  technical:
-    title: "Technical Route"
-    path: "docs/technical-report.html"
-    audience: "Future agents, maintainers, and advanced researchers"
+    audience: "Maintainers tracking removal of browser and HTML legacy"
+  domain_profiles:
+    title: "Domain Profiles"
+    path: "docs/domain-profiles.md"
+    audience: "Researchers and agents routing domain-specific work"
   process_contract:
     title: "Process Contract"
     path: "docs/process-contract.md"
@@ -94,10 +86,13 @@ skills:
 domains:
   domain_profiles: "domain_profiles/"
   profile_schema: "config/schemas/domain_profile.schema.json"
+  overview: "docs/domain-profiles.md"
 research_kernel:
   schema: "config/schemas/research_kernel.schema.json"
   template: "templates/yaml/research_kernel.template.yaml"
   cycle_template: "templates/research_kernel/research_cycle.template.yaml"
+  research_kernel_schema: "config/schemas/research_kernel.schema.json"
+  research_kernel_template: "templates/yaml/research_kernel.template.yaml"
 integrations:
   registry: "docs/integrations/components.yaml"
   adapter_template: "templates/yaml/integration_component.template.yaml"
@@ -114,6 +109,5 @@ validation:
   harness: "scripts/check_harness.ps1"
   dashboard: "scripts/check_dashboard.ps1"
   docs_links: "scripts/check_docs_links.ps1"
-  html_docs: "scripts/check_html_docs.ps1"
   archives: "scripts/check_archives.ps1"
   privacy: "scripts/scan_privacy.ps1"

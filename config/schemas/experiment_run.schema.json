@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-os-template.local/schemas/experiment_run.schema.json",
+  "$id": "https://research-os-desktop.local/schemas/experiment_run.schema.json",
   "title": "Research OS Experiment Run",
   "type": "object",
   "required": [

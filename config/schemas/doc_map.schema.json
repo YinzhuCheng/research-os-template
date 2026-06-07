@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-os-template.local/schemas/doc_map.schema.json",
+  "$id": "https://research-os-desktop.local/schemas/doc_map.schema.json",
   "title": "Research OS Document Map",
   "type": "object",
   "required": [

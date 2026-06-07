@@ -1,6 +1,6 @@
 # Migration Notes
 
-Research OS v4.1 removes the legacy browser bridge as an active product surface. The desktop app is now the only primary UI.
+Research OS v4.2 removes the remaining static HTML documentation and dashboard legacy. The desktop app is now the only primary UI.
 
 Removed active surfaces:
 
@@ -13,6 +13,11 @@ Removed active surfaces:
 - `PUBLIC/copilot_state.json`
 - `docs/codex-browser-copilot.html`
 - `CONTROL/copilot_inbox/`
+- `PUBLIC/index.html`
+- `docs/start-here.html`
+- `docs/domain-modes.html`
+- `docs/technical-report.html`
+- `scripts/check_html_docs.ps1`
 
 Current replacements:
 
@@ -21,5 +26,6 @@ Current replacements:
 - Public state: `PUBLIC/research_state.json`.
 - Intake queue: `CONTROL/intake_queue/`.
 - Choice responses: `CONTROL/choice_responses/`.
+- Documentation entry: `docs/desktop-app.md`, `docs/architecture.md`, and `docs/doc_map.yaml`.
 
 Historical plans and provenance may still mention the retired bridge for audit continuity.

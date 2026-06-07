@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-os-template.local/schemas/integration_registry.schema.json",
+  "$id": "https://research-os-desktop.local/schemas/integration_registry.schema.json",
   "title": "Research OS Integration Registry",
   "type": "object",
   "required": ["registry_id", "updated_at", "default_policy", "components"],

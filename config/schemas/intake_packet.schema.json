@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-os-template.local/schemas/intake_packet.schema.json",
+  "$id": "https://research-os-desktop.local/schemas/intake_packet.schema.json",
   "title": "Research OS Desktop Intake Packet",
   "type": "object",
   "required": ["schema_version", "session_id", "created_at", "free_text_present", "privacy_default", "status", "source"],

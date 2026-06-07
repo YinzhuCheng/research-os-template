@@ -4,7 +4,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$script = "scripts\package_template.ps1"
+$script = "scripts\package_seed.ps1"
 if (!(Test-Path -LiteralPath $script)) {
   throw "Missing package script: $script"
 }

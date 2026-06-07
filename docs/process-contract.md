@@ -68,4 +68,4 @@ Archives must not include `PRIVATE/`, real credentials, cookies, tokens, authori
 
 ## Phase Semantics
 
-`CONTROL/phase_gate.yaml` records the current template/work-order phase. `config/research_project.yaml.current_phase` records the default project runtime phase for a new instantiated project. The process contract links them by defining which stage should handle the next action.
+`CONTROL/phase_gate.yaml` records the current seed/work-order phase. `config/research_project.yaml.current_phase` records the default project runtime phase for a new instantiated project. The process contract links them by defining which stage should handle the next action.

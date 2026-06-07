@@ -32,8 +32,7 @@ foreach ($skill in $skills) {
   Require-Text "skills\$skill\SKILL.md" "domain_profiles"
 }
 
-Require-Text "docs\start-here.html" "domain-modes.html"
-Require-Text "docs\technical-report.html" "domain_profiles"
-Require-Text "docs\domain-modes.html" "research-os-math-discovery"
+Require-Text "docs\architecture.md" "domain_profiles"
+Require-Text "docs\architecture.md" "research-os-math-discovery"
 
 Write-Output "Domain router validation passed."

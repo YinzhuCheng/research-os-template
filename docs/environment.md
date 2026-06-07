@@ -20,4 +20,6 @@ Check the environment:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1
 ```
 
+Optional setup helper: `scripts/install_environment.ps1`.
+
 The old browser bridge is retired. The desktop app starts the Python sidecar automatically.

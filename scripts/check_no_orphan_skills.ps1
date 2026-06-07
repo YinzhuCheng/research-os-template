@@ -17,7 +17,7 @@ $skillsReadme = Read-Text "skills\README.md"
 $routing = Read-Text "skills\research-os-orchestrator\references\routing.md"
 $researchFlow = Read-Text "config\research_flow.yaml"
 $docMap = Read-Text "docs\doc_map.yaml"
-$technicalReport = Read-Text "docs\technical-report.html"
+$architecture = Read-Text "docs\architecture.md"
 
 $skills = Get-ChildItem -LiteralPath $skillsDir -Directory | Where-Object {
   Test-Path -LiteralPath (Join-Path $_.FullName "SKILL.md")
@@ -43,7 +43,7 @@ if ($routing -notmatch [regex]::Escape("research-os-research-kernel")) {
 
 foreach ($required in @("research-os-research-kernel", "research-os-orchestrator")) {
   if ($skillsReadme -notmatch [regex]::Escape($required)) { throw "skills/README.md missing required skill: $required" }
-  if ($technicalReport -notmatch [regex]::Escape($required)) { throw "Technical report missing required skill: $required" }
+  if ($architecture -notmatch [regex]::Escape($required)) { throw "Architecture doc missing required skill: $required" }
 }
 
 foreach ($docNeedle in @("research_kernel", "research_kernel_schema", "research_kernel_template")) {

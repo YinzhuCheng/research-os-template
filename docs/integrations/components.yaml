@@ -195,7 +195,7 @@ components:
       - "experiment logs"
       - "event stream"
     artifact_mapping:
-      dashboard: "PUBLIC/index.html design reference"
+      dashboard: "Research OS Desktop UI design reference"
       manifest: "PROVENANCE/run_manifest.jsonl"
       artifacts: "PUBLIC/ only after privacy scan"
     risks:
@@ -497,7 +497,7 @@ components:
       - "offline UI icons"
     artifact_mapping:
       asset_sources: "docs/ASSET_SOURCES.md"
-      dashboard: "PUBLIC/index.html"
+      dashboard: "Research OS Desktop UI"
       desktop_state: "PUBLIC/research_state.json"
     risks:
       sandbox: "No execution risk for inline SVG."

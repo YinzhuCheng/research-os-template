@@ -23,9 +23,8 @@ Require-Text "docs\README.md" "environment.md"
 Require-Text "docs\doc_map.yaml" "scripts/install_environment.ps1"
 Require-Text "docs\doc_map.yaml" "scripts/check_environment.ps1"
 Require-Text "PUBLIC\dashboard_data.json" "../docs/environment.md"
-Require-Text "PUBLIC\index.html" "../docs/environment.md"
-Require-Text "docs\technical-report.html" "scripts/install_environment.ps1"
-Require-Text "docs\start-here.html" "scripts\install_environment.ps1"
+Require-Text "docs\environment.md" "scripts/install_environment.ps1"
+Require-Text "docs\desktop-app.md" "scripts/install_environment.ps1"
 
 $dashboard = Get-Content -Raw -Encoding UTF8 -LiteralPath "PUBLIC\dashboard_data.json" | ConvertFrom-Json
 $requiredPaths = @(

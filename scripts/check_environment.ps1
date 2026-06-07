@@ -64,7 +64,7 @@ $results += [pscustomobject]@{ Check = "Python"; Status = "ok"; Detail = $python
 
 Require-File "apps\research-os-desktop\package.json"
 Require-File "apps\research-os-sidecar\sidecar_server.py"
-Require-File "PUBLIC\index.html"
+Require-File "PUBLIC\dashboard_data.json"
 Require-File "PUBLIC\research_state.json"
 Require-File "scripts\check_desktop_app.ps1"
 Require-File "scripts\validate_schemas.ps1"

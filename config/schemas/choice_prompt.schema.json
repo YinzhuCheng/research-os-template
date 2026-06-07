@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-os-template.local/schemas/choice_prompt.schema.json",
+  "$id": "https://research-os-desktop.local/schemas/choice_prompt.schema.json",
   "title": "Research OS Choice Prompt",
   "type": "object",
   "required": [

@@ -22,7 +22,7 @@ def main() -> int:
     root = Path(__file__).resolve().parents[1]
     scripts = [
         ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/check_strict_schema_instances.ps1"],
-        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/check_html_docs.ps1"],
+        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/check_dashboard.ps1"],
         ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/check_eval_fixtures.ps1"],
     ]
     for command in scripts:
