@@ -8,7 +8,7 @@
 | 2 | Run researcher-perspective Playwright walkthroughs and local screenshots | completed |
 | 3 | Fix desktop UI copy, mojibake guards, researcher workflow UX, and native dialogs | completed |
 | 4 | Run signal-first Yunwu UX review within USD 3 and apply high-impact findings | completed |
-| 5 | Run validation, record provenance/resource use, commit, and push each step | pending |
+| 5 | Run validation, record provenance/resource use, commit, and push each step | completed |
 
 ## Operating Rule
 
@@ -67,3 +67,14 @@ Before each implementation step, reread this plan, check for gaps, execute only 
 - Applied high-impact review findings to project center, runtime recovery, approval action labels, archive recovery copy, final product defaulting, and workspace action guidance.
 - TypeScript, `scripts/check_desktop_app.ps1`, Playwright, and Vite build passed after review-driven fixes.
 - Final screenshots were captured locally under ignored `apps/research-os-desktop/test-results/researcher-qa/after-yunwu-fix/`.
+
+## Step 5 Validation
+
+- Full static, schema, privacy, governance, desktop, docs, dashboard, domain, integration, archive, package, and skill checks passed.
+- Sidecar unit tests passed: 7 tests.
+- Frontend Vitest passed: 1 test.
+- TypeScript `tsc --noEmit` passed.
+- Playwright passed: 2 tests across desktop and narrow viewports.
+- Vite production build passed.
+- Tauri Windows package build passed and produced local MSI and NSIS bundles.
+- Final report recorded in `PROVENANCE/final_validation_report_v4_3.md`.
