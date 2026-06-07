@@ -1,11 +1,11 @@
-current_phase: research-os-v4.2-repository-cleanup
+current_phase: research-os-v4.3-researcher-qa-yunwu-uiux
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "After v4.2, decide whether the GitHub remote repository itself should be renamed by the owner."
+next_required_decision: "After v4.3 validation, decide whether to broaden the desktop app from mocked sidecar QA into live Codex runtime dogfooding."
 confirmed_decisions:
   - "Research OS Desktop is the only primary user interface."
   - "The old browser bridge is retired."
@@ -19,3 +19,6 @@ confirmed_decisions:
   - "Use .rosproj files and a sibling project directory as the project sandbox model."
   - "Do not store API keys, tokens, cookies, passwords, or authorization headers in .rosproj or project git."
   - "Do not touch PRIVATE/ or real uploaded materials during this pass."
+  - "Researcher QA screenshots are stored locally under ignored test artifact directories and are not committed."
+  - "Yunwu UI review may spend up to USD 3 using a signal-first policy."
+  - "Native Tauri file dialogs may be added if compatible with the current desktop stack."

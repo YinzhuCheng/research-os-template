@@ -1,6 +1,6 @@
 project_id: research-os-desktop
 title: "Research OS Desktop Seed Project"
-template_version: research-os-v4.2
+template_version: research-os-v4.3
 process_contract: config/research_flow.yaml
 language_mode: zh-first
 intervention_level: low

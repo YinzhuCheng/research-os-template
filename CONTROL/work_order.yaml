@@ -1,6 +1,6 @@
-work_order_id: WO-0013
-phase: research-os-v4.2-repository-cleanup
-goal: "Make Research OS Desktop the clear repository identity, remove remaining static HTML legacy, and make durable repository documentation English-first."
+work_order_id: WO-0014
+phase: research-os-v4.3-researcher-qa-yunwu-uiux
+goal: "Run researcher-perspective desktop app QA, use signal-first Yunwu UX review within USD 3, and fix high-impact bugs and user experience gaps."
 inputs:
   - "AGENTS.md"
   - "CONTROL/work_order.yaml"
@@ -11,6 +11,7 @@ inputs:
   - "PUBLIC/"
   - "scripts/"
   - "apps/"
+  - "local screenshots under ignored test-results directories"
 allowed_paths:
   - ".agents/"
   - "adapters/"
@@ -40,26 +41,29 @@ outputs:
   - "scripts/"
   - "apps/"
   - "config/"
+  - "tests/"
   - "PROVENANCE/run_manifest.jsonl"
   - "PROVENANCE/resource_ledger.jsonl"
 resource_budget:
   currency: USD
-  max_total_cost: 0
+  max_total_cost: 3
   categories:
     time: "local implementation session"
     compute: "local validation and packaging"
-    api: "none"
+    api: "Yunwu gpt-5.4 low-reasoning UI review, signal-first, hard cap USD 3"
   max_runtime_minutes: null
 stop_conditions:
   - "Need to read, inspect, or commit real PRIVATE intake material."
   - "Need to store real API keys, account tokens, cookies, authorization headers, or provider secrets."
   - "Need external writeback other than git push to the current branch."
+  - "Yunwu usage cannot be measured or estimated safely before paid review calls."
 acceptance_criteria:
-  - "Product-facing names use Research OS Desktop rather than template branding."
-  - "Static HTML docs and dashboard files are removed."
-  - "Validation scripts no longer require HTML docs."
-  - "Durable repository docs are English-first."
-  - "App UI may remain Chinese-first."
-  - "Privacy, schema, docs, desktop, sidecar, frontend, and package checks pass or failures are reported."
+  - "Researcher-perspective desktop and narrow viewport screenshots are captured locally and summarized."
+  - "Desktop UI source and tests no longer contain Chinese mojibake."
+  - "Validation fails if known mojibake markers reappear in desktop source or tests."
+  - "Project creation/open/import uses native Tauri dialogs when compatible, or an explicit validated fallback."
+  - "Yunwu UX review is sanitized, within USD 3, and actual or estimated cost is recorded."
+  - "High-impact researcher workflow bugs and UX gaps found in local/Yunwu review are fixed."
+  - "Privacy, schema, docs, desktop, sidecar, frontend, Playwright, and package checks pass or failures are reported."
 requires_confirmation: false
 privacy_level: public
