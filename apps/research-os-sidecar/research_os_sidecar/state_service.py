@@ -2,39 +2,97 @@ from __future__ import annotations
 
 from typing import Any
 
-from .common import append_jsonl, now_iso, read_json, write_json
+from .common import append_jsonl, new_id, now_iso, read_json, write_json
 
 
 DEFAULT_CHOICE_PROMPTS = [
     {
-        "prompt_id": "CP-INITIALIZATION-TRACK",
+        "prompt_id": "CP-INITIALIZATION-RESEARCH-CLAIM",
         "stage": "initialization_intake",
-        "question": "初始化时优先建立哪类研究启动包？",
-        "recommended_option": "balanced",
-        "why_recommended": "默认同时保留目标、证据和最小验证路径，适合多数早期研究。",
+        "question": "本轮初始化优先把研究主张定位成什么？",
+        "recommended_option": "theorem_first",
+        "why_recommended": "当前材料是理论初稿，先锁定可证明主张能降低后续写作和引用幻觉风险。",
         "options": [
             {
-                "id": "balanced",
-                "label": "均衡启动",
-                "description": "目标、证据、风险、最小验证同时建立。",
+                "id": "theorem_first",
+                "label": "定理主张优先",
+                "description": "先明确模型、定理、证明义务和反例风险。",
                 "is_recommended": True,
             },
             {
-                "id": "evidence_first",
-                "label": "证据优先",
-                "description": "先梳理文献、数据和可验证事实。",
+                "id": "venue_first",
+                "label": "期刊适配优先",
+                "description": "先判断 Neural Networks 的栏目、篇幅和写法是否匹配。",
             },
             {
-                "id": "prototype_first",
-                "label": "原型优先",
-                "description": "先让 demo 或实验 harness 跑起来。",
+                "id": "context_first",
+                "label": "相关工作优先",
+                "description": "先补算术电路、polynomial networks 和 approximation theory 语境。",
             },
         ],
         "free_form_enabled": True,
         "free_form_label": "自然语言补充",
-        "free_form_placeholder": "描述你的研究偏好、领域约束或已有材料。",
+        "free_form_placeholder": "补充你认为最重要的理论主张、风险或目标读者。",
         "requires_human_response": True,
-    }
+    },
+    {
+        "prompt_id": "CP-INITIALIZATION-EVIDENCE",
+        "stage": "initialization_intake",
+        "question": "来源真实性核查应采用哪种严格度？",
+        "recommended_option": "strict_online",
+        "why_recommended": "投稿论文不能依赖记忆引用；每条引用都应有 DOI、arXiv、publisher 或官方页面。",
+        "options": [
+            {
+                "id": "strict_online",
+                "label": "逐条联网核查",
+                "description": "所有投稿规则和引用都记录 URL、访问日期和可信来源。",
+                "is_recommended": True,
+            },
+            {
+                "id": "core_only",
+                "label": "先核核心来源",
+                "description": "先核期刊规则、模板和核心参考文献，次要文献后补。",
+            },
+            {
+                "id": "local_first",
+                "label": "先用本地材料",
+                "description": "先整理本地 PDF/BibTeX，再统一联网补证据。",
+            },
+        ],
+        "free_form_enabled": True,
+        "free_form_label": "自然语言补充",
+        "free_form_placeholder": "补充必须核查的网站、文献范围或不可接受来源。",
+        "requires_human_response": True,
+    },
+    {
+        "prompt_id": "CP-INITIALIZATION-FINAL-PACKAGE",
+        "stage": "initialization_intake",
+        "question": "最终投稿包默认应包含哪些交付物？",
+        "recommended_option": "full_submission",
+        "why_recommended": "Full Article 投稿需要正文、参考文献、声明、highlights、cover letter 和检查清单一起推进。",
+        "options": [
+            {
+                "id": "full_submission",
+                "label": "完整投稿包",
+                "description": "LaTeX/PDF、appendix、bib、highlights、cover letter、source/proof audit。",
+                "is_recommended": True,
+            },
+            {
+                "id": "manuscript_first",
+                "label": "正文优先",
+                "description": "先把 main.tex 和 references.bib 做到可读可编译。",
+            },
+            {
+                "id": "audit_first",
+                "label": "审计优先",
+                "description": "先完成证明审计和引用核查，再写完整正文。",
+            },
+        ],
+        "free_form_enabled": True,
+        "free_form_label": "自然语言补充",
+        "free_form_placeholder": "补充你对投稿包、附录、图表或 rebuttal 记录的要求。",
+        "requires_human_response": True,
+    },
 ]
 
 
@@ -123,7 +181,7 @@ class ResearchStateService:
 
     def submit_intake(self, payload: dict[str, Any]) -> dict[str, Any]:
         root = self._project_root_provider()
-        session_id = payload.get("session_id") or f"INTAKE-{now_iso().replace(':', '').replace('-', '').split('.')[0]}"
+        session_id = payload.get("session_id") or new_id("INTAKE")
         free_text = str(payload.get("free_text") or "")
         private_intake = root / "PRIVATE" / "intake" / session_id
         private_intake.mkdir(parents=True, exist_ok=True)
@@ -184,7 +242,7 @@ class ResearchStateService:
         if not selected:
             raise ValueError("At least one final product track is required.")
         plan = {
-            "product_plan_id": f"FP-{now_iso().replace(':', '').replace('-', '').split('.')[0]}",
+            "product_plan_id": new_id("FP"),
             "created_at": now_iso(),
             "phase": "final_product_selection",
             "selected_tracks": selected,
@@ -228,7 +286,7 @@ class ResearchStateService:
         if not prompt_id or not option_id:
             raise ValueError("prompt_id and option_id are required.")
         response = {
-            "response_id": f"CR-{now_iso().replace(':', '').replace('-', '').split('.')[0]}",
+            "response_id": new_id("CR"),
             "created_at": now_iso(),
             "prompt_id": prompt_id,
             "option_id": option_id,
@@ -257,7 +315,7 @@ class ResearchStateService:
         if not description:
             raise ValueError("Workflow gap description is required.")
         record = {
-            "gap_id": f"GAP-{now_iso().replace(':', '').replace('-', '').split('.')[0]}",
+            "gap_id": new_id("GAP"),
             "created_at": now_iso(),
             "severity": severity,
             "source": source,

@@ -14,7 +14,7 @@ from research_os_sidecar.approval_service import ApprovalService
 from research_os_sidecar.archive_service import ArchiveService
 from research_os_sidecar.profile_service import ProfileService
 from research_os_sidecar.project_service import ProjectService
-from research_os_sidecar.security import SecurityError, resolve_under
+from research_os_sidecar.security import SecurityError, import_directory_to_project, resolve_under
 from research_os_sidecar.state_service import ResearchStateService
 
 
@@ -87,6 +87,26 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertIn("submission_workflow", readback)
             self.assertNotIn("copilot" + "_state", readback)
 
+    def test_choice_response_ids_are_unique_inside_one_second(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            root = Path(project["project_root"])
+            state = ResearchStateService(projects.require_project_root)
+
+            responses = [
+                state.submit_choice_response({"prompt_id": f"CP-{index}", "option_id": "balanced", "free_form": ""})
+                for index in range(3)
+            ]
+            ids = [item["response_id"] for item in responses]
+            self.assertEqual(len(ids), len(set(ids)))
+            for response_id in ids:
+                self.assertTrue((root / "CONTROL" / "choice_responses" / f"{response_id}.json").exists())
+
     def test_workflow_gap_is_recorded_in_provenance_and_state(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
@@ -110,6 +130,37 @@ class SidecarServiceTests(unittest.TestCase):
             root = Path(temp)
             with self.assertRaises(SecurityError):
                 resolve_under(root, root.parent / "outside.txt")
+
+    def test_directory_import_preserves_relative_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            source = base / "source"
+            source.mkdir()
+            (source / "draft.tex").write_text("draft", encoding="utf-8")
+            (source / "nested").mkdir()
+            (source / "nested" / "refs.bib").write_text("@article{x}", encoding="utf-8")
+            project = base / "project"
+            project.mkdir()
+
+            result = import_directory_to_project(source, project, "PRIVATE/intake/source_materials")
+            targets = {item["target"] for item in result["imported_files"]}
+            self.assertIn("PRIVATE/intake/source_materials/draft.tex", targets)
+            self.assertIn("PRIVATE/intake/source_materials/nested/refs.bib", targets)
+
+    def test_directory_import_handles_long_relative_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            source = base / "source"
+            long_dir = source / "target_journal_templates_and_reference_papers" / "reference_papers"
+            long_dir.mkdir(parents=True)
+            long_name = "02_Embedding_and_approximation_theorems_for_echo_state_networks__Hart_Hook_Dawes_2020_arXiv.pdf"
+            (long_dir / long_name).write_bytes(b"%PDF-1.4 test")
+            project = base / "project"
+            project.mkdir()
+
+            result = import_directory_to_project(source, project, "PRIVATE/intake/source_materials_structured")
+            self.assertEqual(len(result["imported_files"]), 1)
+            self.assertTrue((project / result["imported_files"][0]["target"]).exists())
 
     def test_profile_rejects_secret_fields(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

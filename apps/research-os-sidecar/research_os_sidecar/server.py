@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
+import socket
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -14,7 +15,7 @@ from .common import DEFAULT_PORT, public_error
 from .profile_service import ProfileService
 from .project_service import ProjectService
 from .runtime_service import RuntimeService
-from .security import import_file_to_project
+from .security import import_directory_to_project, import_file_to_project
 from .state_service import ResearchStateService
 
 
@@ -158,6 +159,9 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/import-file":
                 root = self.context.projects.require_project_root()
                 self.send_json({"import": import_file_to_project(Path(str(payload.get("source_path") or "")), root, str(payload.get("target_subdir") or "INBOX/imports"))})
+            elif path == "/api/import-directory":
+                root = self.context.projects.require_project_root()
+                self.send_json({"import": import_directory_to_project(Path(str(payload.get("source_path") or "")), root, str(payload.get("target_subdir") or "INBOX/imports"))})
             elif path == "/api/archives/create":
                 self.send_json({"archive": self.context.archives.create(str(payload.get("description") or ""), str(payload.get("user_free_form") or ""), payload.get("macro_phase"))})
             else:
@@ -180,11 +184,19 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def serve(port: int, seed_root: Path) -> None:
+    if _port_in_use(port):
+        raise RuntimeError(f"Research OS sidecar port is already in use: 127.0.0.1:{port}")
     Handler.context = AppContext(seed_root)
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     print(f"Research OS sidecar listening at http://127.0.0.1:{port}")
     print(f"Seed root: {seed_root.resolve()}")
     server.serve_forever()
+
+
+def _port_in_use(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(0.25)
+        return sock.connect_ex(("127.0.0.1", port)) == 0
 
 
 def main() -> None:

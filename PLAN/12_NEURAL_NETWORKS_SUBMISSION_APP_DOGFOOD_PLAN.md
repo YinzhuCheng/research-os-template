@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | 1 | Land submission work order, phase gate, budget, and executable plan | completed |
 | 2 | Fix app blockers for real paper workflow dogfooding | completed |
-| 3 | Create `.rosproj` sandbox and import the neural-network materials through the app/sidecar path | pending |
+| 3 | Create `.rosproj` sandbox and import the neural-network materials through the app/sidecar path | completed |
 | 4 | Run initialization, evidence refresh, proof audit, and acceptance-gated research loops | pending |
 | 5 | Produce the Neural Networks Full Article package through the paper final-product track | pending |
 | 6 | Run paid Yunwu `gpt-5.5` `xhigh` review/rebuttal rounds within USD 90-105 target range | pending |
@@ -43,6 +43,9 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - The sidecar now exposes a submission workflow state object and app/workflow gap logging route, enough for the neural-network paper dogfooding pass.
 - The runtime adapter now instructs Codex to inspect relevant skills, verify venue rules and citations online, and record app/workflow gaps before bypassing them.
 - The manuscript draft currently proves exact polynomial representation for quadratic-activation networks, but venue fit, novelty framing, proof obligations, learning-theory context, and citation authenticity still need verification.
+- Real project intake exposed four reusable app gaps and fixes: directory-level source import, Windows long-path copy support, collision-free IDs for rapid choice responses, and single-sidecar port protection.
+- The private `.rosproj` sandbox was created under `PRIVATE/projects/neural-network-submission/`; raw inputs remain outside git and were imported through the app/sidecar path.
+- The initialization path now returns exactly three paper-oriented choice prompts, matching the Research OS rule for material analysis.
 
 ## Step 1 Validation
 
@@ -56,6 +59,21 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - TypeScript `tsc --noEmit` passed with bundled Node.
 - `scripts/check_desktop_app.ps1` passed with expanded mojibake guard.
 - Sidecar unit tests passed: 8 tests.
+- Vitest passed: 1 test.
+- Playwright passed: 2 tests across desktop and narrow viewports.
+- Vite production build passed.
+
+## Step 3 Validation
+
+- Created `neural-network-submission.rosproj` and initialized the private project sandbox through the sidecar.
+- Imported 32 source files from the local `neural network/` directory through app/sidecar import paths; the final directory import preserved relative paths.
+- Submitted the initialization intake and recorded three unique choice responses for research-claim framing, strict source verification, and full submission package scope.
+- `git diff --check` passed.
+- `scripts/validate_schemas.ps1` passed.
+- `scripts/scan_privacy.ps1` passed.
+- `scripts/check_desktop_app.ps1` passed.
+- Sidecar unit tests passed: 11 tests.
+- TypeScript `tsc --noEmit` passed with bundled Node.
 - Vitest passed: 1 test.
 - Playwright passed: 2 tests across desktop and narrow viewports.
 - Vite production build passed.

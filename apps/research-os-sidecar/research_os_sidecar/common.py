@@ -4,6 +4,7 @@ import datetime as dt
 import json
 import os
 import re
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,11 @@ DEFAULT_PORT = 8789
 
 def now_iso() -> str:
     return dt.datetime.now(dt.timezone.utc).astimezone().isoformat()
+
+
+def new_id(prefix: str) -> str:
+    stamp = dt.datetime.now(dt.timezone.utc).astimezone().strftime("%Y%m%dT%H%M%S%f")
+    return f"{prefix}-{stamp}-{uuid.uuid4().hex[:6]}"
 
 
 def app_data_dir() -> Path:

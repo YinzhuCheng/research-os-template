@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import shutil
 from pathlib import Path
@@ -76,8 +77,42 @@ def import_file_to_project(source: Path, project_root: Path, target_subdir: str 
     target_dir = resolve_under(project_root, target_subdir)
     target_dir.mkdir(parents=True, exist_ok=True)
     target = target_dir / source.name
-    shutil.copy2(source, target)
+    _copy2(source, target)
     return {"source_name": source.name, "target": relative_to_root(project_root, target)}
+
+
+def import_directory_to_project(source_dir: Path, project_root: Path, target_subdir: str = "INBOX/imports") -> dict[str, Any]:
+    source_dir = source_dir.expanduser().resolve()
+    if not source_dir.exists() or not source_dir.is_dir():
+        raise SecurityError(f"Import source is not a directory: {source_dir}")
+    assert_no_secret_path(source_dir)
+    target_root = resolve_under(project_root, target_subdir)
+    imported: list[dict[str, str]] = []
+    for source in sorted(path for path in source_dir.rglob("*") if path.is_file()):
+        assert_no_secret_path(source)
+        scan_text_for_secrets(source)
+        relative = source.relative_to(source_dir)
+        target = target_root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        _copy2(source, target)
+        imported.append({"source_name": relative.as_posix(), "target": relative_to_root(project_root, target)})
+    return {"source_name": source_dir.name, "target_root": relative_to_root(project_root, target_root), "imported_files": imported}
+
+
+def _copy2(source: Path, target: Path) -> None:
+    if os.name == "nt":
+        shutil.copy2(_windows_long_path(source), _windows_long_path(target))
+        return
+    shutil.copy2(source, target)
+
+
+def _windows_long_path(path: Path) -> str:
+    resolved = str(path.resolve())
+    if resolved.startswith("\\\\?\\"):
+        return resolved
+    if resolved.startswith("\\\\"):
+        return "\\\\?\\UNC\\" + resolved.lstrip("\\")
+    return "\\\\?\\" + resolved
 
 
 def classify_command(command: str, cwd: str | None = None) -> dict[str, Any]:

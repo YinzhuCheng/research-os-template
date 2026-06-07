@@ -47,6 +47,8 @@ export const api = {
     request<Record<string, unknown>>("/api/final-products", { method: "POST", body: JSON.stringify({ tracks, free_form }) }),
   recordWorkflowGap: (description: string, severity = "medium") =>
     request<Record<string, unknown>>("/api/workflow-gap", { method: "POST", body: JSON.stringify({ description, severity }) }),
+  importDirectory: (source_path: string, target_subdir = "INBOX/imports") =>
+    request<Record<string, unknown>>("/api/import-directory", { method: "POST", body: JSON.stringify({ source_path, target_subdir }) }),
   archivePreview: () => request<Record<string, unknown>>("/api/archive-preview"),
   archives: () => request<{ archives: unknown[] }>("/api/archives"),
   createArchive: (description: string, user_free_form = "") =>
