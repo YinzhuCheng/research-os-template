@@ -14,7 +14,10 @@ __pycache__/
 *.pyc
 node_modules/
 apps/research-os-desktop/src-tauri/target/
+apps/research-os-desktop/src-tauri/gen/
 apps/research-os-desktop/dist/
+apps/research-os-desktop/test-results/
+apps/research-os-desktop/playwright-report/
 
 # LaTeX/build outputs.
 build/

@@ -33,10 +33,9 @@ Require-File (Join-Path $Root "templates\yaml\harness_run.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\domain_profile.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\agent_capability.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\research_kernel.template.yaml")
-Require-File (Join-Path $Root "templates\yaml\copilot_intake.template.yaml")
-Require-File (Join-Path $Root "templates\yaml\copilot_questions.template.yaml")
-Require-File (Join-Path $Root "templates\yaml\copilot_initialization_report.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\intake_packet.template.yaml")
 Require-File (Join-Path $Root "templates\research_kernel\research_cycle.template.yaml")
+Require-File (Join-Path $Root "PUBLIC\research_state.json")
 Require-File (Join-Path $Root "RUNS\experiments\EXP-0001\run.yaml")
 Require-File (Join-Path $Root "PUBLIC\evidence_board.json")
 Require-File (Join-Path $Root "PUBLIC\run_monitor.json")
@@ -69,16 +68,13 @@ Require-Text (Join-Path $Root "PUBLIC\claim_evidence_matrix.yaml") "CLAIM-[0-9]{
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "doc_map_id:\s+DOCMAP-[0-9]{4}"
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "domain_profiles"
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "research_kernel"
-Require-Text (Join-Path $Root "docs\doc_map.yaml") "copilot"
+Require-Text (Join-Path $Root "docs\doc_map.yaml") "desktop_app"
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "process_contract"
 Require-Text (Join-Path $Root "docs\integrations\components.yaml") "registry_id:\s+INTEGRATIONS-[0-9]{4}"
-Require-Text (Join-Path $Root "config\schemas\copilot_intake.schema.json") "uploaded_files"
-Require-Text (Join-Path $Root "config\schemas\copilot_intake.schema.json") "free_text_sha256"
-Require-Text (Join-Path $Root "config\schemas\copilot_answers.schema.json") "answers_packet_id"
-Require-Text (Join-Path $Root "config\schemas\copilot_confirmation.schema.json") "confirmation_id"
-Require-Text (Join-Path $Root "config\schemas\copilot_questions.schema.json") "recommended_answer"
-Require-Text (Join-Path $Root "config\schemas\copilot_questions.schema.json") "free_text_other"
-Require-Text (Join-Path $Root "config\schemas\copilot_initialization_report.schema.json") "minimum_validation"
+Require-Text (Join-Path $Root "config\schemas\intake_packet.schema.json") "uploaded_files"
+Require-Text (Join-Path $Root "config\schemas\intake_packet.schema.json") "desktop-intake-v1"
+Require-Text (Join-Path $Root "config\schemas\research_state.schema.json") "pending_user_confirmation"
+Require-Text (Join-Path $Root "config\schemas\research_state.schema.json") "research-state-v1"
 Require-Text (Join-Path $Root "config\schemas\experiment_run.schema.json") "experiment_id"
 Require-Text (Join-Path $Root "config\schemas\adapter_contract.schema.json") "human_confirmation_required"
 

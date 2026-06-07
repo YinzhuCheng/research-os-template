@@ -1,0 +1,38 @@
+{
+  "schema_version": "research-state-v1",
+  "macro_phase": "initialization",
+  "internal_phase": "initialization_intake",
+  "status": "ready_for_intake",
+  "pending_user_confirmation": false,
+  "choice_prompts": [
+    {
+      "prompt_id": "CP-INITIALIZATION-TRACK",
+      "stage": "initialization_intake",
+      "question": "初始化时优先建立哪类研究启动包？",
+      "recommended_option": "balanced",
+      "why_recommended": "默认同时保留目标、证据和最小验证路径，适合多数早期研究。",
+      "options": [
+        {
+          "id": "balanced",
+          "label": "均衡启动",
+          "description": "目标、证据、风险、最小验证同时建立。",
+          "is_recommended": true
+        },
+        {
+          "id": "evidence_first",
+          "label": "证据优先",
+          "description": "先梳理文献、数据和可验证事实。"
+        },
+        {
+          "id": "prototype_first",
+          "label": "原型优先",
+          "description": "先让 demo 或实验 harness 跑起来。"
+        }
+      ],
+      "free_form_enabled": true,
+      "free_form_label": "自然语言补充",
+      "free_form_placeholder": "描述你的研究偏好、领域约束或已有材料。",
+      "requires_human_response": true
+    }
+  ]
+}

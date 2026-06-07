@@ -8,7 +8,7 @@ export function ApprovalPanel() {
   const decide = useMutation({
     mutationFn: ({ approvalId, decision }: { approvalId: string; decision: "accept" | "decline" | "cancel" }) =>
       api.decideApproval(approvalId, decision),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["approvals"] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["approvals"] }),
   });
 
   return (
@@ -16,11 +16,12 @@ export function ApprovalPanel() {
       <div className="section-heading">
         <ShieldCheck size={18} aria-hidden="true" />
         <div>
-          <h2>Approval 队列</h2>
-          <p>Codex 的命令、文件和权限请求必须在这里确认。</p>
+          <h2>审批队列</h2>
+          <p>Codex 的命令、文件和权限请求必须在这里确认；超时默认拒绝。</p>
         </div>
       </div>
-      {(approvals.data?.approvals ?? []).length === 0 ? <p className="muted">当前没有待确认请求。</p> : null}
+      {approvals.isLoading ? <p className="muted">正在读取审批队列...</p> : null}
+      {(approvals.data?.approvals ?? []).length === 0 ? <p className="empty-state">当前没有待确认请求。高风险命令、外部写回和凭据访问会出现在这里。</p> : null}
       <div className="approval-list">
         {(approvals.data?.approvals ?? []).map((approval) => (
           <article className="approval-row" key={approval.approval_id}>
@@ -41,6 +42,7 @@ export function ApprovalPanel() {
           </article>
         ))}
       </div>
+      {decide.error ? <p className="error-text">{decide.error.message}</p> : null}
     </section>
   );
 }

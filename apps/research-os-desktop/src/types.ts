@@ -54,7 +54,7 @@ export interface Approval {
 
 export interface SidecarState {
   project: RosProject | null;
-  copilot_state: Record<string, unknown>;
+  research_state: Record<string, unknown>;
   choice_prompts: ChoicePrompt[];
   run_monitor: Record<string, unknown>;
   archive_index: { archives: unknown[] };

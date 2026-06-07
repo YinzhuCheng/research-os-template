@@ -18,7 +18,7 @@ The macro phases are for the researcher and UI. The internal stages are for gove
 
 | Stage | Required skill | Output | Human gate |
 | --- | --- | --- | --- |
-| `initialization_intake` | `research-os-copilot` | intake packet, exactly three targeted questions, startup package | Reading private raw uploads, following external links, assuming budget, or assuming product targets. |
+| `initialization_intake` | `research-os-copilot` | desktop intake packet, exactly three targeted questions, startup package | Reading private raw uploads, following external links, assuming budget, or assuming product targets. |
 | `loop_acceptance_gate` | `research-os-alignment` | accepted artifact or revision request | The researcher must accept the previous artifact before the next step. Rejection blocks progression. |
 | `loop_plan_alignment` | `research-os-orchestrator` | next-stage action proposal plus 1-3 high-impact choice prompts | Scope, budget, privacy, dissemination, or resource assumptions. |
 | `loop_user_decision` | `research-os-alignment` | selected options, free-form notes, updated work order/phase gate | Ambiguous or conflicting researcher instructions. |
@@ -39,7 +39,7 @@ Final product selection supports paper, research report, software, or a multi-tr
 ## Skill Boundaries
 
 - `research-os-orchestrator` routes and coordinates. It does not produce domain conclusions by itself.
-- `research-os-copilot` manages material-first intake, the three-question protocol, and browser state. It does not authorize execution or final product release.
+- `research-os-copilot` manages desktop intake, the three-question protocol, and sanitized `PUBLIC/research_state.json`. It does not authorize execution or final product release.
 - `research-os-research-kernel` owns the shared generate/evaluate/update/human-gate state machine.
 - Domain skills provide field-specific taste, artifacts, and quality gates only after a kernel candidate and evaluator exist.
 - `research-os-experiment-manager` plans and supervises experiment loops; `research-os-execution-harness` enforces execution boundaries; `research-os-replay-eval-harness` handles reproducibility and post-run checks.

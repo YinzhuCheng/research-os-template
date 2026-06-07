@@ -36,7 +36,7 @@ Internal controlled stages:
 
 `initialization_intake -> loop_acceptance_gate -> loop_plan_alignment -> loop_user_decision -> loop_execute_analyze -> final_product_selection -> final_product_production -> export_release_gate`
 
-The first screen is material-first. Do not ask the retired fixed five-question intake. After material profiling, ask exactly three targeted questions, each with a recommended answer, options, and an Other/free-form path.
+The main product surface is the Research OS Desktop app. The first workflow is desktop material intake in a `.rosproj` project. Do not ask the retired fixed five-question intake. After material profiling, ask exactly three targeted questions, each with a recommended answer, options, and an Other/free-form path.
 During the loop phase, do not advance past `loop_acceptance_gate` unless the researcher accepts the previous artifact. If the researcher rejects it or gives revision instructions, keep the loop in revision mode and update the current artifact before planning the next step.
 Every user-facing choice prompt, including final product selection and archive descriptions, must provide a recommended option, concrete defaults, and a natural-language free-form path.
 

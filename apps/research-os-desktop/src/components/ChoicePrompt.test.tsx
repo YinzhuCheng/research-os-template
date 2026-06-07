@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { ChoicePrompt } from "./ChoicePrompt";
 import type { ChoicePrompt as ChoicePromptType } from "../types";
+import { ChoicePrompt } from "./ChoicePrompt";
 
 const prompt: ChoicePromptType = {
   prompt_id: "CP-TEST",
@@ -11,11 +11,11 @@ const prompt: ChoicePromptType = {
   why_recommended: "默认均衡路径风险较低。",
   options: [
     { id: "balanced", label: "均衡路径", description: "同时处理目标和证据。", is_recommended: true },
-    { id: "fast", label: "快速路径", description: "先跑通最小验证。" }
+    { id: "fast", label: "快速路径", description: "先跑通最小验证。" },
   ],
   free_form_enabled: true,
   free_form_label: "自然语言补充",
-  free_form_placeholder: "补充约束"
+  free_form_placeholder: "补充约束",
 };
 
 describe("ChoicePrompt", () => {

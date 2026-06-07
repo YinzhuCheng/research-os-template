@@ -1,5 +1,5 @@
 param(
-  [string]$ReferenceJson = "PUBLIC\copilot_state.json",
+  [string]$ReferenceJson = "PUBLIC\research_state.json",
   [string]$OutputDir = "PRIVATE\references",
   [switch]$DryRun
 )

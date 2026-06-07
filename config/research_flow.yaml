@@ -83,10 +83,10 @@ stages:
       - "researcher free text, source links, uploads metadata, or existing project notes"
       - "three targeted answers with recommended options and Other/free-form path"
     outputs:
-      - "copilot_intake packet"
-      - "copilot_questions packet"
+      - "desktop intake packet"
+      - "choice prompt packet"
       - "initialization report"
-      - "sanitized public copilot state"
+      - "sanitized public research state"
     required_skill: research-os-copilot
     optional_skills:
       - research-os-init
@@ -101,8 +101,8 @@ stages:
       - "Do not initialize before the three-question packet exists unless the user explicitly bypasses intake."
       - "Do not invent budget, baseline, model, provider, dataset, venue, or paper goal."
     validation:
-      - scripts/check_copilot_intake_schema.ps1
-      - scripts/check_copilot_state.ps1
+      - scripts/check_desktop_app.ps1
+      - scripts/validate_schemas.ps1
       - scripts/check_dashboard.ps1
   - id: loop_acceptance_gate
     macro_phase: research_loop

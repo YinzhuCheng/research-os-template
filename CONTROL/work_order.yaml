@@ -1,19 +1,15 @@
-work_order_id: WO-0011
-phase: research-os-v4.0-desktop-app
-goal: "Implement a Research OS desktop shell using Tauri, React, a Python sidecar, and guarded Codex app-server/SDK integration."
+work_order_id: WO-0012
+phase: research-os-v4.1-desktop-cleanup-uiux
+goal: "Remove the retired browser bridge, normalize the desktop-first repository, improve desktop UI/UX, validate risks, and publish the cleanup."
 inputs:
   - "AGENTS.md"
   - "CONTROL/work_order.yaml"
   - "CONTROL/phase_gate.yaml"
   - "config/research_project.yaml"
   - "config/research_flow.yaml"
-  - "docs/doc_map.yaml"
-  - "PUBLIC/dashboard_data.json"
-  - "apps/research-os-sidecar/"
   - "apps/research-os-desktop/"
+  - "apps/research-os-sidecar/"
 allowed_paths:
-  - ".github/"
-  - ".codex/"
   - ".agents/"
   - "adapters/"
   - "AGENTS.md"
@@ -36,44 +32,33 @@ forbidden_paths:
 outputs:
   - "apps/research-os-desktop/"
   - "apps/research-os-sidecar/"
-  - "scripts/check_desktop_app.ps1"
-  - "docs/desktop-app.md"
-  - "docs/doc_map.yaml"
+  - "PUBLIC/research_state.json"
   - "PUBLIC/dashboard_data.json"
-  - "README.md"
-  - "CONTROL/work_order.yaml"
-  - "CONTROL/phase_gate.yaml"
-  - "config/research_project.yaml"
+  - "docs/"
+  - "scripts/"
+  - "config/schemas/"
   - "PROVENANCE/run_manifest.jsonl"
   - "PROVENANCE/resource_ledger.jsonl"
 resource_budget:
-  currency: CNY
-  max_total_cost: 0
+  currency: USD
+  max_total_cost: 1
   categories:
     time: "local implementation session"
-    compute: "local validation only"
-    cloud: none
-    lab: none
-    material: none
-    api: none
-    model: none
-    human: "Codex local implementation only"
-    other: none
+    compute: "local validation and packaging"
+    api: "optional Yunwu UI heuristic review, low reasoning, target <= 0.05 USD"
+    model: "optional gpt-5.4 low reasoning"
   max_runtime_minutes: null
 stop_conditions:
   - "Need to read, inspect, or commit real PRIVATE intake material."
-  - "Need paid API calls, cloud resources, GPU resources, lab resources, or external platform writeback."
   - "Need to store real API keys, account tokens, cookies, authorization headers, or provider secrets."
-  - "Need to modify or vendor the official Codex source code."
-  - "Need to run a real Codex model turn that consumes paid or account-limited resources."
+  - "Need external writeback other than git push to the current branch."
+  - "Yunwu estimated or measured spend would exceed 1 USD."
 acceptance_criteria:
-  - "A Tauri + React desktop app skeleton exists under apps/research-os-desktop."
-  - "A Python sidecar exists under apps/research-os-sidecar and owns projects, profiles, state, permissions, archives, and Codex mediation."
-  - ".rosproj project creation creates a project-root sandbox, Research OS seed, PRIVATE/PROVENANCE/PUBLIC/CONTROL/config structure, and initial git commit."
-  - "Profile metadata never stores API keys, tokens, cookies, passwords, or authorization headers."
-  - "Codex SDK integration is optional at import time and fails safely when unavailable."
-  - "Codex command/file/permission approvals are routed through Research OS UI and are not auto-accepted."
-  - "UI exposes project center, three-phase workspace, choice prompts with recommended/options/free-form, final product selection, approvals, runtime events, and archives."
-  - "Static checks and sidecar unit tests pass without touching PRIVATE/ or real credentials."
-requires_confirmation: true
+  - "Previous v4.0 desktop app package commit is pushed before cleanup work."
+  - "Retired browser bridge files and active links are removed."
+  - "Desktop state uses PUBLIC/research_state.json and CONTROL/intake_queue."
+  - "Docs and dashboard are desktop-first."
+  - "UI click-path tests cover project creation, intake, final product modal, archive preview, and approval empty state."
+  - "Privacy scan, schema checks, sidecar tests, frontend tests, build, package, and relevant governance checks pass or failures are reported."
+requires_confirmation: false
 privacy_level: public

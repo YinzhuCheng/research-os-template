@@ -1,66 +1,32 @@
 # Research OS Desktop App
 
-Research OS Desktop is the primary product path for v4.0. It wraps the Research
-OS workflow in a Windows desktop app built with Tauri, React, and a Python
-sidecar. Codex remains the execution kernel through the official Codex
-app-server/SDK; the app owns project state, permissions, archives, provenance,
-and user-facing workflow.
+Research OS Desktop is the primary product surface. It uses `Tauri + React + Python sidecar` and opens local `.rosproj` projects.
 
-## Architecture
+## User Flow
 
-```text
-Tauri + React UI
-  -> Python sidecar on 127.0.0.1:8789
-  -> Research OS project sandbox
-  -> optional official Codex app-server/SDK
-```
+1. Create or open a `.rosproj` file.
+2. The app creates or uses the sibling project directory as the sandbox.
+3. Submit material in the desktop intake panel.
+4. Answer choice prompts with a recommended option, default options, and natural-language free-form input.
+5. Approve or reject Codex commands in the approval queue.
+6. Create git-backed archives before risky transitions.
+7. Enter final product mode for paper, report, software, or multiple tracks.
 
-The React UI never talks directly to Codex app-server. It talks to the sidecar,
-which validates paths, profile metadata, approval requests, archives, and
-Research OS state before any agent work can proceed.
+## Project Layout
 
-## Project Model
+- `CONTROL/intake_queue/`: sanitized desktop intake packets.
+- `CONTROL/choice_responses/`: user choices and natural-language supplements.
+- `PUBLIC/research_state.json`: sanitized UI state.
+- `PRIVATE/intake/`: raw material captured at runtime.
+- `PROVENANCE/`: run manifests, ledgers, and archive records.
+- `outputs/`: generated final products.
 
-- A `.rosproj` file is the project entrypoint.
-- The sibling directory without the extension is the project sandbox.
-- The project sandbox contains `CONTROL/`, `PUBLIC/`, `PRIVATE/`,
-  `PROVENANCE/`, `config/`, `INBOX/downloads/`, and `outputs/`.
-- `.rosproj` stores non-sensitive metadata only: project path, active phase,
-  default profile id, and Codex thread ids.
-- API keys, cookies, tokens, passwords, authorization headers, SSH keys, and
-  provider secrets must not be written to `.rosproj` or project git.
+## Runtime Boundary
 
-## Development
+The React UI calls only the Python sidecar. The sidecar owns filesystem writes, approval decisions, state files, archives, and Codex SDK/app-server mediation.
 
-Run the sidecar:
+Codex execution is optional. If Codex is unavailable, the runtime panel fails safely without changing project state.
 
-```powershell
-python .\apps\research-os-sidecar\sidecar_server.py --serve --template-root .
-```
+## Removed Legacy Surface
 
-Run the React UI:
-
-```powershell
-cd .\apps\research-os-desktop
-npm install
-npm run dev
-```
-
-Run the Tauri shell after installing Rust and Tauri prerequisites:
-
-```powershell
-cd .\apps\research-os-desktop
-npm run tauri dev
-```
-
-## Safety Defaults
-
-- Project-root writes are allowed only inside the project sandbox.
-- External files must be explicitly imported into `INBOX/` or `PRIVATE/intake/`.
-- Downloads must land inside `INBOX/downloads/` or another project path.
-- Git `status`, `diff`, `log`, `branch`, `add`, and `commit` are low risk
-  inside the sandbox.
-- Git push, release, external writeback, credential access, public export,
-  submission, and real resource use require explicit confirmation.
-- If Codex SDK is missing, runtime endpoints return `codex_unavailable` instead
-  of simulating execution.
+The browser bridge and static browser cockpit are retired. Use [migration.md](migration.md) for the replacement map.

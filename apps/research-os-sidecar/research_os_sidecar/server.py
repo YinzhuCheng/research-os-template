@@ -18,6 +18,14 @@ from .security import import_file_to_project
 from .state_service import ResearchStateService
 
 
+ALLOWED_ORIGINS = {
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://tauri.localhost",
+    "tauri://localhost",
+}
+
+
 class AppContext:
     def __init__(self, template_root: Path) -> None:
         self.projects = ProjectService(template_root)
@@ -34,7 +42,9 @@ class Handler(BaseHTTPRequestHandler):
     def _send(self, status: int, body: bytes, content_type: str = "application/json; charset=utf-8") -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
-        self.send_header("Access-Control-Allow-Origin", "*")
+        origin = self.headers.get("Origin")
+        if origin in ALLOWED_ORIGINS or (origin and origin.startswith(("http://127.0.0.1:", "http://localhost:"))):
+            self.send_header("Access-Control-Allow-Origin", origin)
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Cache-Control", "no-store")
@@ -139,6 +149,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"approval": self.context.approvals.decide(str(payload.get("approval_id") or ""), str(payload.get("decision") or ""), str(payload.get("notes") or ""))})
             elif path == "/api/intake":
                 self.send_json(self.context.state.submit_intake(payload))
+            elif path == "/api/choice-response":
+                self.send_json({"response": self.context.state.submit_choice_response(payload)})
             elif path == "/api/final-products":
                 self.send_json({"plan": self.context.state.select_final_products(list(payload.get("tracks") or []), str(payload.get("free_form") or ""))})
             elif path == "/api/import-file":

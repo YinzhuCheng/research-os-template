@@ -486,7 +486,7 @@ components:
     adapter_status: active_reference
     research_os_phases:
       - dashboard
-      - copilot_ui
+      - desktop_ui
       - software_documentation
     install_reference: "Use only inline SVG subsets copied with attribution; no CDN."
     credential_env_vars: []
@@ -498,7 +498,7 @@ components:
     artifact_mapping:
       asset_sources: "docs/ASSET_SOURCES.md"
       dashboard: "PUBLIC/index.html"
-      copilot: "PUBLIC/copilot.html"
+      desktop_state: "PUBLIC/research_state.json"
     risks:
       sandbox: "No execution risk for inline SVG."
       cost: "None."

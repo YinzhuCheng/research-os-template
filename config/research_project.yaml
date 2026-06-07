@@ -1,6 +1,6 @@
 project_id: research-os-template
 title: "Untitled Codex Research Project"
-template_version: research-os-v3.9
+template_version: research-os-v4.1
 process_contract: config/research_flow.yaml
 language_mode: zh-first
 intervention_level: low

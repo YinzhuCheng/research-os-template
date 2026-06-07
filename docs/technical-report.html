@@ -3,266 +3,45 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Research OS Technical Report</title>
+  <title>Research OS Desktop Technical Route</title>
   <style>
-    :root {
-      --bg: #f6f7f8;
-      --surface: #ffffff;
-      --soft: #eef3f1;
-      --text: #18212b;
-      --muted: #607080;
-      --border: #cfd8d5;
-      --accent: #176b57;
-      --blue: #255f99;
-      --radius: 8px;
-      --s2: 8px;
-      --s3: 12px;
-      --s4: 16px;
-      --s5: 24px;
-      --s6: 32px;
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.62; }
-    a { color: var(--blue); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .layout { min-height: 100vh; display: grid; grid-template-columns: 280px minmax(0, 1fr); }
-    aside { position: sticky; top: 0; height: 100vh; overflow: auto; border-right: 1px solid var(--border); background: #fbfcfc; padding: var(--s5); }
-    main { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: var(--s6) 0; }
-    h1, h2, h3 { line-height: 1.22; letter-spacing: 0; }
-    h1 { margin: 0 0 var(--s3); font-size: 32px; }
-    h2 { margin: 0 0 var(--s3); font-size: 22px; }
-    h3 { margin: 0 0 var(--s2); font-size: 16px; }
-    p { margin: 0 0 var(--s3); }
-    .brand { font-size: 18px; font-weight: 760; }
-    .muted { color: var(--muted); }
-    .lead { max-width: 880px; color: var(--muted); font-size: 17px; }
-    nav { display: grid; gap: var(--s2); margin-top: var(--s5); }
-    nav a { display: block; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 8px 10px; }
-    .section { border-top: 1px solid var(--border); padding: var(--s6) 0; }
-    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); }
-    .panel { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: var(--s5); margin-bottom: var(--s4); }
-    .flow { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s4); overflow: auto; }
-    table { width: 100%; border-collapse: collapse; background: var(--surface); }
-    th, td { border: 1px solid var(--border); padding: 10px 12px; vertical-align: top; text-align: left; }
-    th { background: var(--soft); }
-    code { background: var(--soft); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
-    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #16212b; color: #f8fbfd; border-radius: var(--radius); padding: var(--s4); overflow: auto; }
-    .callout { border-left: 4px solid var(--accent); background: #eef8f4; border-radius: 0 var(--radius) var(--radius) 0; padding: var(--s4); }
-    @media (max-width: 980px) {
-      .layout { grid-template-columns: 1fr; }
-      aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
-      .grid { grid-template-columns: 1fr; }
-      main { padding: var(--s5) 0; }
-      h1 { font-size: 28px; }
-      table { display: block; overflow-x: auto; }
-    }
+    body { margin: 0; padding: 24px; font-family: Inter, "Segoe UI", system-ui, sans-serif; background: #f4f6f5; color: #16201c; }
+    main { max-width: 1040px; margin: 0 auto; }
+    section, header { background: #fff; border: 1px solid #cad7d1; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+    h1 { margin: 0 0 8px; }
+    p, li, td { color: #60706a; line-height: 1.6; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border-top: 1px solid #d8e2dd; padding: 8px; text-align: left; }
+    a { color: #0f5f51; }
+    code { background: #edf2f0; border-radius: 4px; padding: 2px 5px; }
   </style>
 </head>
 <body>
-  <div class="layout">
-    <aside>
-      <div class="brand">Technical Route</div>
-      <p class="muted">For future agents and maintainers.</p>
-      <nav aria-label="Technical report navigation">
-        <a href="#architecture">Architecture</a>
-        <a href="#process">Process Contract</a>
-        <a href="#environment">Environment</a>
-        <a href="#copilot">Copilot</a>
-        <a href="#kernel">Research Kernel</a>
-        <a href="#domains">Domain Modes</a>
-        <a href="#final-products">Final Products</a>
-        <a href="#archives">Archives</a>
-        <a href="#harness">Harness</a>
-        <a href="#validation">Validation</a>
-        <a href="../PUBLIC/copilot.html">Copilot Page</a>
-        <a href="../PUBLIC/index.html">PUBLIC/index.html</a>
-        <a href="process-contract.md">process-contract.md</a>
-        <a href="environment.md">environment.md</a>
-        <a href="../README.md">README.md</a>
-        <a href="../CONTROL/work_order.yaml">work_order.yaml</a>
-        <a href="../CONTROL/phase_gate.yaml">phase_gate.yaml</a>
-      </nav>
-    </aside>
-    <main>
-      <header>
-        <h1>Research OS v3.9 Technical Report</h1>
-        <p class="lead">Research OS is a structured human-in-loop auto researcher. v3.9 presents a simple three-phase user model while keeping an auditable internal state machine for the browser cockpit, research kernel, final product tracks, work orders, phase gates, manifests, ledgers, archives, and privacy boundaries.</p>
-      </header>
-
-      <section class="section" id="architecture">
-        <h2>Architecture</h2>
-        <div class="flow" role="img" aria-label="Research OS v3.9 architecture">
-          <svg viewBox="0 0 1080 420" width="100%" height="100%" aria-hidden="true">
-            <defs>
-              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#176b57"></path>
-              </marker>
-            </defs>
-            <rect x="20" y="20" width="1040" height="380" rx="8" fill="#f6f7f8" stroke="#cfd8d5"></rect>
-            <g fill="#ffffff" stroke="#9fb5ad" stroke-width="2">
-              <rect x="60" y="70" width="180" height="82" rx="8"></rect>
-              <rect x="300" y="70" width="180" height="82" rx="8"></rect>
-              <rect x="540" y="70" width="180" height="82" rx="8"></rect>
-              <rect x="780" y="70" width="180" height="82" rx="8"></rect>
-              <rect x="180" y="235" width="180" height="82" rx="8"></rect>
-              <rect x="450" y="235" width="180" height="82" rx="8"></rect>
-              <rect x="720" y="235" width="180" height="82" rx="8"></rect>
-            </g>
-            <g fill="#18212b" font-size="18" font-weight="700">
-              <text x="150" y="106" text-anchor="middle">Browser Copilot</text>
-              <text x="390" y="106" text-anchor="middle">CONTROL</text>
-              <text x="630" y="106" text-anchor="middle">Loop Kernel</text>
-              <text x="870" y="106" text-anchor="middle">Final Product</text>
-              <text x="270" y="271" text-anchor="middle">Harness</text>
-              <text x="540" y="271" text-anchor="middle">PROVENANCE</text>
-              <text x="810" y="271" text-anchor="middle">PUBLIC</text>
-            </g>
-            <g fill="#607080" font-size="14">
-              <text x="150" y="130" text-anchor="middle">material-first intake</text>
-              <text x="390" y="130" text-anchor="middle">work order / gate</text>
-              <text x="630" y="130" text-anchor="middle">accept / plan / execute</text>
-              <text x="870" y="130" text-anchor="middle">paper / report / software</text>
-              <text x="270" y="295" text-anchor="middle">validation / privacy</text>
-              <text x="540" y="295" text-anchor="middle">manifest / ledger</text>
-              <text x="810" y="295" text-anchor="middle">dashboard / report</text>
-            </g>
-            <g stroke="#176b57" stroke-width="3" fill="none" marker-end="url(#arrow)">
-              <path d="M 240 111 H 290"></path>
-              <path d="M 480 111 H 530"></path>
-              <path d="M 720 111 H 770"></path>
-              <path d="M 870 154 C 870 205 270 195 270 225"></path>
-              <path d="M 360 276 H 440"></path>
-              <path d="M 630 276 H 710"></path>
-            </g>
-          </svg>
-        </div>
-      </section>
-
-      <section class="section" id="process">
-        <h2>Process Contract</h2>
-        <p>The canonical automation route is machine-readable in <a href="../config/research_flow.yaml">config/research_flow.yaml</a> and explained for humans in <a href="process-contract.md">docs/process-contract.md</a>. Skill selection is centralized in <a href="../skills/README.md">skills/README.md</a>.</p>
-        <pre>initialization
--> semi_automated_research_loop
--> final_product
-
-internal:
-initialization_intake
--> loop_acceptance_gate
--> loop_plan_alignment
--> loop_user_decision
--> loop_execute_analyze
--> final_product_selection
--> final_product_production
--> export_release_gate</pre>
-        <p>Every internal stage declares inputs, outputs, required skill, optional skills, human gate, prohibited actions, and validation checks. The retired user-facing names <code>domain_or_general_route</code>, <code>feasibility_or_evidence</code>, <code>acceptance_gate</code>, and <code>next_loop_or_export</code> now live only as internal objects or validations.</p>
-      </section>
-
-      <section class="section" id="environment">
-        <h2>Runtime Environment</h2>
-        <p>The repository has a documented environment contract. Required tools are Git, PowerShell, Python 3.10+, a modern browser, and the Codex desktop app for the full in-app browser workflow. LaTeX and Node.js remain optional.</p>
-        <table>
-          <thead><tr><th>Layer</th><th>Path</th><th>Responsibility</th></tr></thead>
-          <tbody>
-            <tr><td>Environment guide</td><td><a href="environment.md">docs/environment.md</a></td><td>Required tools, optional tools, and OS-specific caveats.</td></tr>
-            <tr><td>Installer/check runner</td><td><a href="../scripts/install_environment.ps1">scripts/install_environment.ps1</a></td><td>Checks the repo and can optionally try Windows Git/Python installation.</td></tr>
-            <tr><td>Environment check</td><td><a href="../scripts/check_environment.ps1">scripts/check_environment.ps1</a></td><td>Verifies PowerShell, Git, Python, key files, optional Codex bridge files, and optional LaTeX.</td></tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section class="section" id="copilot">
-        <h2>Material-first Copilot</h2>
-        <p>The first screen no longer asks five fixed questions. It accepts free text or uploaded material and recommends uploading drafts, chats, PDFs, zips, or demos. Codex routes the packet through <code>research-os-orchestrator</code>, then generates <strong>exactly three targeted questions</strong> before initialization.</p>
-        <table>
-          <thead><tr><th>Layer</th><th>Path</th><th>Responsibility</th></tr></thead>
-          <tbody>
-            <tr><td>Browser cockpit</td><td><a href="../PUBLIC/copilot.html">PUBLIC/copilot.html</a></td><td>Collect text and uploads, render structured startup state.</td></tr>
-            <tr><td>Public state</td><td><a href="../PUBLIC/copilot_state.json">PUBLIC/copilot_state.json</a></td><td>Sanitized status and report sections.</td></tr>
-            <tr><td>Bridge doc</td><td><a href="codex-browser-copilot.html">docs/codex-browser-copilot.html</a></td><td>State machine, tool boundary, validation rules.</td></tr>
-            <tr><td>Plugin</td><td><a href="../.agents/plugins/marketplace.json">.agents/plugins/marketplace.json</a></td><td>Repo-scoped installable unit for the local bridge.</td></tr>
-            <tr><td>Skill</td><td><a href="../skills/research-os-copilot/SKILL.md">research-os-copilot</a></td><td>Codex-side workflow policy and confirmation route.</td></tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section class="section" id="kernel">
-        <h2>Research Kernel</h2>
-        <p>All substantive loop execution must pass through <a href="../skills/research-os-research-kernel/SKILL.md">research-os-research-kernel</a> and the execution harness. This prevents the repository from becoming a toolbox of unrelated prompts.</p>
-        <pre>candidate
--> evaluator_contract
--> evaluation_result
--> belief_state
--> search_trace / negative_result
--> next_action_policy
--> human_judgment_gate</pre>
-        <p>Evaluator contracts must list metric or check, procedure, inputs, scale, acceptance threshold, resource estimate, failure mode, and replay note.</p>
-      </section>
-
-      <section class="section" id="final-products">
-        <h2>Final Product Tracks</h2>
-        <table>
-          <thead><tr><th>Track</th><th>Primary skill</th><th>Default output contract</th></tr></thead>
-          <tbody>
-            <tr><td>Paper</td><td><a href="../skills/research-os-paper-authoring/SKILL.md">research-os-paper-authoring</a></td><td>Target venue, template, optional comparable papers, English LaTeX/PDF, and review/rebuttal iteration.</td></tr>
-            <tr><td>Research report</td><td><a href="../skills/research-os-report-authoring/SKILL.md">research-os-report-authoring</a></td><td>Process-rich report with initial data, negative results, reproducibility detail, and HTML, LaTeX/PDF, or PPT targets.</td></tr>
-            <tr><td>Software</td><td><a href="../skills/research-os-software-productization/SKILL.md">research-os-software-productization</a></td><td>Stable, engineered, polished, user-friendly software with documentation and preserved intermediate artifacts.</td></tr>
-          </tbody>
-        </table>
-        <p><a href="../skills/research-os-final-product/SKILL.md">research-os-final-product</a> coordinates multi-track selection and writes a <a href="../templates/yaml/final_product_plan.template.yaml">final_product_plan</a>. Every selection provides recommended defaults and natural-language free-form expectations.</p>
-      </section>
-
-      <section class="section" id="archives">
-        <h2>Git-Backed Archives</h2>
-        <p>Archives are local git snapshots with timestamp, current phase, commit, and researcher description. The bridge exposes preview/create/list APIs, writes or appends <code>PROVENANCE/archive_index.jsonl</code> after the first real archive, and mirrors a sanitized public index to <a href="../PUBLIC/archive_index.json">PUBLIC/archive_index.json</a>.</p>
-        <p>Archive validation rejects <code>PRIVATE/</code> paths and secret-like material. Use <a href="../scripts/check_archives.ps1">scripts/check_archives.ps1</a> before committing archive-related changes.</p>
-      </section>
-
-      <section class="section" id="domains">
-        <h2>Domain Modes</h2>
-        <div class="grid">
-          <div class="panel"><h3>Fundamental Mathematics</h3><p>Definitions, examples, conjectures, counterexample search, lemma decomposition, proof strategy, proof-gap review.</p></div>
-          <div class="panel"><h3>Applied Mathematics</h3><p>Model assumptions, scaling, stability, error, numerical validation, sensitivity, interpretation limits.</p></div>
-          <div class="panel"><h3>Machine Learning</h3><p>Task cards, data license, baselines, ablations, leakage audit, reproducibility, cost-performance.</p></div>
-          <div class="panel"><h3>Computer Science</h3><p>Problem specs, invariants, complexity, system design, benchmarks, artifact evaluation, threat models.</p></div>
-          <div class="panel"><h3>Statistics</h3><p>Estimands, identification, sampling and power, diagnostics, uncertainty, causal diagrams, sensitivity.</p></div>
-        </div>
-        <p>See <a href="domain-modes.html">domain-modes.html</a> and <a href="../domain_profiles/README.md">domain_profiles/README.md</a>.</p>
-      </section>
-
-      <section class="section" id="harness">
-        <h2>Harness Engineering</h2>
-        <div class="callout">The browser can enqueue material; it cannot authorize execution. Codex still follows work orders, phase gates, path boundaries, manifests, ledgers, privacy scan, and budget confirmation.</div>
-        <ul>
-          <li>Raw uploads are runtime-private and excluded from git.</li>
-          <li>Reference downloads use open-access or landing-page attempts only.</li>
-          <li>Experiments require a researcher-provided budget before minimum validation.</li>
-          <li>External writeback, public export, and submission require confirmation.</li>
-        </ul>
-      </section>
-
-      <section class="section" id="validation">
-        <h2>Validation Commands</h2>
-        <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_environment_docs.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_flow.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_governance_text.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_research_kernel.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_no_orphan_skills.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_intake_schema.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_state.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_resource_rendering.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_bridge.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_archives.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_latex_sources.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</pre>
-      </section>
-    </main>
-  </div>
+  <main>
+    <header>
+      <h1>Research OS Desktop 技术路线</h1>
+      <p>桌面应用是唯一主入口。React UI 通过 Python sidecar 治理 `.rosproj` 项目、权限、归档和可选 Codex runtime。</p>
+    </header>
+    <section>
+      <h2>核心边界</h2>
+      <table>
+        <tr><th>层</th><th>职责</th></tr>
+        <tr><td>React UI</td><td>项目中心、三阶段工作台、选择控件、审批、存档和最终产物弹窗。</td></tr>
+        <tr><td>Python sidecar</td><td>项目文件、状态、沙箱路径、profile、approval、archive、runtime events。</td></tr>
+        <tr><td>Codex runtime</td><td>可选执行内核；所有命令与权限请求必须经过 sidecar 审批。</td></tr>
+      </table>
+    </section>
+    <section>
+      <h2>Process Contract</h2>
+      <p>机器可读流程在 <code>config/research_flow.yaml</code>。用户视角仍是 initialization、research loop、final product 三阶段。</p>
+      <p><strong>Final Product Tracks</strong> 支持 paper、research report 和 software 多选；导出、发布和外部写回都需要人工确认。</p>
+      <p><strong>Git-Backed Archives</strong> 用于长任务前、阶段切换前和风险操作前的本地 snapshot。</p>
+    </section>
+    <section>
+      <h2>关键文件</h2>
+      <p><a href="architecture.md">architecture.md</a> · <a href="security-risk.md">security-risk.md</a> · <a href="testing.md">testing.md</a> · <a href="environment.md">environment.md</a> · <a href="../scripts/install_environment.ps1">scripts/install_environment.ps1</a> · <code>scripts\install_environment.ps1</code> · <a href="../PUBLIC/index.html">PUBLIC/index.html</a></p>
+      <p><a href="../README.md">README.md</a> · <a href="../CONTROL/work_order.yaml">work_order.yaml</a> · <a href="../CONTROL/phase_gate.yaml">phase_gate.yaml</a></p>
+    </section>
+  </main>
 </body>
 </html>

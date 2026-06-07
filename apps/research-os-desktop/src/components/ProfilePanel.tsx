@@ -7,8 +7,8 @@ import type { Profile } from "../types";
 
 export function ProfilePanel() {
   const queryClient = useQueryClient();
-  const activeProfileId = useAppStore((state) => state.activeProfileId);
-  const setActiveProfileId = useAppStore((state) => state.setActiveProfileId);
+  const activeProfileId = useAppStore((store) => store.activeProfileId);
+  const setActiveProfileId = useAppStore((store) => store.setActiveProfileId);
   const profiles = useQuery({ queryKey: ["profiles"], queryFn: api.profiles });
   const [draft, setDraft] = useState<Profile>({
     profile_id: "custom-openai-compatible",
@@ -17,11 +17,11 @@ export function ProfilePanel() {
     provider_id: "custom",
     model: "",
     base_url: "",
-    secret_ref: "env:OPENAI_API_KEY"
+    secret_ref: "env:OPENAI_API_KEY",
   });
   const save = useMutation({
     mutationFn: () => api.saveProfile(draft),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profiles"] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profiles"] }),
   });
 
   return (
@@ -30,10 +30,11 @@ export function ProfilePanel() {
         <KeyRound size={18} aria-hidden="true" />
         <div>
           <h2>Profile 与模型</h2>
-          <p>Profile 只保存 provider 和模型偏好，不保存 API key、token 或密码。</p>
+          <p>Profile 只保存 provider、模型和 secret 引用；不要把 API key、token 或密码粘贴进项目。</p>
         </div>
       </div>
       <div className="profile-list">
+        {(profiles.data?.profiles ?? []).length === 0 ? <p className="empty-state">暂无 profile。可以先使用环境变量引用创建一个 OpenAI-compatible profile。</p> : null}
         {(profiles.data?.profiles ?? []).map((profile) => (
           <button
             className={`profile-button ${profile.profile_id === activeProfileId ? "active" : ""}`}
@@ -42,7 +43,7 @@ export function ProfilePanel() {
             onClick={() => setActiveProfileId(profile.profile_id)}
           >
             <strong>{profile.label}</strong>
-            <small>{profile.provider_id ?? profile.type}</small>
+            <small>{profile.provider_id ?? profile.type}{profile.model ? ` · ${profile.model}` : ""}</small>
           </button>
         ))}
       </div>
@@ -61,16 +62,16 @@ export function ProfilePanel() {
         </label>
         <label className="field">
           <span>默认模型</span>
-          <input value={draft.model ?? ""} onChange={(event) => setDraft({ ...draft, model: event.target.value })} />
+          <input value={draft.model ?? ""} onChange={(event) => setDraft({ ...draft, model: event.target.value })} placeholder="gpt-5.4" />
         </label>
         <label className="field">
           <span>Secret 引用</span>
           <input value={draft.secret_ref ?? ""} onChange={(event) => setDraft({ ...draft, secret_ref: event.target.value })} placeholder="env:OPENAI_API_KEY" />
         </label>
       </div>
-      <button className="secondary-action" type="button" onClick={() => save.mutate()}>
+      <button className="secondary-action" type="button" onClick={() => save.mutate()} disabled={save.isPending}>
         <Save size={16} aria-hidden="true" />
-        保存 Profile
+        {save.isPending ? "正在保存" : "保存 Profile"}
       </button>
       {save.error ? <p className="error-text">{save.error.message}</p> : null}
     </section>

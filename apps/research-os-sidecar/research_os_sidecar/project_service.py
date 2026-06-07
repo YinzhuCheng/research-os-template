@@ -14,6 +14,22 @@ SEED_FILES = ["AGENTS.md", "README.md", ".gitattributes"]
 SEED_DIRS = ["CONTROL", "config", "docs", "PUBLIC", "scripts", "skills", "templates", "domain_profiles", "adapters"]
 
 
+def _legacy_name(*parts: str) -> str:
+    return "".join(parts)
+
+
+BLOCKED_SEED_NAMES = {
+    _legacy_name("copilot", ".html"),
+    _legacy_name("copilot", "_state.json"),
+    _legacy_name("codex-browser-", "copilot", ".html"),
+    _legacy_name("check_", "copilot_bridge.ps1"),
+    _legacy_name("check_", "copilot", "_intake_schema.ps1"),
+    _legacy_name("check_", "copilot_resource_rendering.ps1"),
+    _legacy_name("check_", "copilot", "_state.ps1"),
+    _legacy_name("research_os_", "copilot_server.py"),
+}
+
+
 class ProjectService:
     def __init__(self, template_root: Path) -> None:
         self.template_root = template_root.resolve()
@@ -118,13 +134,21 @@ class ProjectService:
             "external_repos",
             "archive_index.jsonl",
         }
-        return {name for name in names if name in blocked or name.endswith((".pyc", ".pyo"))}
+        return {
+            name
+            for name in names
+            if name in blocked
+            or name in BLOCKED_SEED_NAMES
+            or name.startswith("copilot_")
+            or name.endswith((".pyc", ".pyo"))
+        }
 
     def _write_project_scaffold(self, project_root: Path) -> None:
         for path in [
             "PRIVATE/.gitkeep",
             "PROVENANCE/run_manifest.jsonl",
             "PROVENANCE/resource_ledger.jsonl",
+            "CONTROL/intake_queue/.gitkeep",
             "INBOX/downloads/.gitkeep",
             "INBOX/imports/.gitkeep",
             "outputs/.gitkeep",

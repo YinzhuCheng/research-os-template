@@ -117,3 +117,20 @@ def validate_changed_paths(project_root: Path, paths: list[str]) -> None:
         resolved = resolve_under(project_root, normalized)
         assert_no_secret_path(resolved)
         scan_text_for_secrets(resolved)
+
+
+def redact_sensitive(value: Any) -> Any:
+    if isinstance(value, dict):
+        redacted: dict[str, Any] = {}
+        for key, item in value.items():
+            lowered = str(key).lower()
+            if any(marker in lowered for marker in ("api_key", "apikey", "authorization", "cookie", "password", "secret", "token")):
+                redacted[key] = "[REDACTED]"
+            else:
+                redacted[key] = redact_sensitive(item)
+        return redacted
+    if isinstance(value, list):
+        return [redact_sensitive(item) for item in value]
+    if isinstance(value, str) and SECRET_RE.search(value):
+        return "[REDACTED]"
+    return value

@@ -15,9 +15,6 @@ function Resolve-Python([string]$Requested) {
   }
   $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
   if ($pythonCmd) { $candidates += $pythonCmd.Source }
-  $python3Cmd = Get-Command python3 -ErrorAction SilentlyContinue
-  if ($python3Cmd) { $candidates += $python3Cmd.Source }
-
   foreach ($candidate in $candidates) {
     if (!$candidate) { continue }
     try {
@@ -33,9 +30,9 @@ function Resolve-Python([string]$Requested) {
 }
 
 $pythonExe = Resolve-Python $PythonPath
-& $pythonExe (Join-Path $Root "tests\test_copilot_privacy.py")
+& $pythonExe -m unittest discover -s (Join-Path $Root "apps\research-os-sidecar\tests") -v
 if ($LASTEXITCODE -ne 0) {
-  throw "Synthetic private-intake privacy check failed."
+  throw "Synthetic desktop-intake privacy check failed."
 }
 
-Write-Output "Synthetic private-intake privacy check passed."
+Write-Output "Synthetic desktop-intake privacy check passed."

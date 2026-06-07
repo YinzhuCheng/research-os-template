@@ -10,7 +10,7 @@
 | 4 | Profile, approval, archive, state services | implemented |
 | 5 | Optional Codex app-server/SDK adapter | implemented |
 | 6 | Docs, dashboard, validation script | implemented |
-| 7 | Validation | pending |
+| 7 | Validation | completed |
 
 ## Decisions
 
@@ -25,3 +25,11 @@
 - `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_desktop_app.ps1`
 - `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1`
 - Frontend build/tests when Node dependencies are installed.
+
+## Validation Result
+
+Completed in v4.0/v4.1 follow-up:
+
+- Tauri build produced local MSI and NSIS bundles under ignored `apps/research-os-desktop/src-tauri/target/`.
+- Sidecar unit tests, frontend Vitest, Playwright desktop/narrow click paths, schema checks, dashboard checks, docs link checks, privacy scan, and desktop app checks passed.
+- Tauri packaging was hardened by changing `beforeBuildCommand` from `npm run build` to direct local `node` calls for TypeScript and Vite.

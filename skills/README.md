@@ -9,7 +9,7 @@ Use repo skills before generic Codex execution. The canonical process is defined
 | Situation | Required Skill | Inputs | Outputs | Boundary |
 | --- | --- | --- | --- | --- |
 | Route any Research OS task | `research-os-orchestrator` | work order, phase gate, project config, process contract | selected next skill and stage | Routes only; does not invent research conclusions. |
-| Browser material intake or pending copilot packet | `research-os-copilot` | free text, source links, upload metadata, sanitized inbox packet | intake packet, exactly three targeted questions, initialization state | Does not execute uploads or approve work. |
+| Desktop material intake or pending intake packet | `research-os-copilot` | free text, source links, upload metadata, sanitized desktop packet | intake packet, exactly three targeted questions, initialization state | Does not execute uploads or approve work. |
 | Import messy notes, plans, chats, PDFs, or demos | `research-os-init` | sanitized material summary and three answers | research brief, startup package, initial objects | Does not invent budget, venue, baseline, model, or dataset. |
 | Align goals or resolve phase-gate ambiguity | `research-os-alignment` | brief, phase gate, work order, gap audit | alignment dossier and next decision | Clarifies intent; does not execute. |
 | Normalize any substantive research loop | `research-os-research-kernel` | candidate idea or artifact, evidence, domain profile | candidate, evaluator contract, belief, trace, negative result, next action, human gate | Required before domain skill work. |

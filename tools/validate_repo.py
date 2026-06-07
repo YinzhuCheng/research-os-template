@@ -337,12 +337,8 @@ def instance_pairs(root: Path) -> list[tuple[str, str]]:
         ("docs/integrations/components.yaml", "config/schemas/integration_registry.schema.json"),
         ("templates/research_kernel/research_cycle.template.yaml", "config/schemas/research_kernel.schema.json"),
         ("templates/yaml/harness_run.template.yaml", "config/schemas/harness_run.schema.json"),
-        ("templates/yaml/copilot_intake.template.yaml", "config/schemas/copilot_intake.schema.json"),
-        ("templates/yaml/copilot_questions.template.yaml", "config/schemas/copilot_questions.schema.json"),
-        (
-            "templates/yaml/copilot_initialization_report.template.yaml",
-            "config/schemas/copilot_initialization_report.schema.json",
-        ),
+        ("templates/yaml/intake_packet.template.yaml", "config/schemas/intake_packet.schema.json"),
+        ("PUBLIC/research_state.json", "config/schemas/research_state.schema.json"),
         ("templates/adapters/adapter_contract.template.yaml", "config/schemas/adapter_contract.schema.json"),
         ("RUNS/experiments/EXP-0001/run.yaml", "config/schemas/experiment_run.schema.json"),
     ]

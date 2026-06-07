@@ -6,7 +6,7 @@ Key files:
 
 - `research_project.yaml`: project profile, language mode, privacy posture, dissemination settings, resource guard, and feasibility-probe defaults.
 - `research_flow.yaml`: canonical Research OS process contract and skill handoff sequence.
-- `schemas/`: structured contracts for project config, skills, domain profiles, agent capabilities, research-kernel objects, integrations, and copilot packets.
+- `schemas/`: structured contracts for project config, skills, domain profiles, agent capabilities, research-kernel objects, integrations, desktop intake packets, and public research state.
 
 Configuration rules:
 

@@ -1,7 +1,6 @@
 param(
   [string]$PythonPath = "",
-  [switch]$RequireCodexPluginFiles,
-  [switch]$RequireLatex
+  [switch]$RequireTauriBuild
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,13 +11,28 @@ function Find-CommandPath([string]$Name) {
   return $null
 }
 
-function Get-PythonCommand([string]$Preferred) {
-  if ($Preferred) { return $Preferred }
-  $python = Find-CommandPath "python"
-  if ($python) { return $python }
-  $python3 = Find-CommandPath "python3"
-  if ($python3) { return $python3 }
-  return $null
+function Get-PythonCandidates([string]$Preferred) {
+  $candidates = @()
+  if ($Preferred) { $candidates += [pscustomobject]@{ Exe = $Preferred; Args = @(); Label = $Preferred } }
+  if ($env:RESEARCH_OS_PYTHON) { $candidates += [pscustomobject]@{ Exe = $env:RESEARCH_OS_PYTHON; Args = @(); Label = $env:RESEARCH_OS_PYTHON } }
+
+  foreach ($name in @("python", "python3")) {
+    $path = Find-CommandPath $name
+    if ($path) { $candidates += [pscustomobject]@{ Exe = $path; Args = @(); Label = $path } }
+  }
+
+  $py = Find-CommandPath "py"
+  if ($py) { $candidates += [pscustomobject]@{ Exe = $py; Args = @("-3"); Label = "$py -3" } }
+
+  $codexPython = Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+  if (Test-Path -LiteralPath $codexPython) { $candidates += [pscustomobject]@{ Exe = $codexPython; Args = @(); Label = $codexPython } }
+
+  return $candidates
+}
+
+function Invoke-PythonVersion($Candidate) {
+  $args = @($Candidate.Args) + @("--version")
+  return (& $Candidate.Exe @args 2>&1) -join " "
 }
 
 function Require-File([string]$Path) {
@@ -26,50 +40,41 @@ function Require-File([string]$Path) {
 }
 
 $results = @()
-
-$results += [pscustomobject]@{
-  Check = "PowerShell"
-  Status = "ok"
-  Detail = $PSVersionTable.PSVersion.ToString()
-}
+$results += [pscustomobject]@{ Check = "PowerShell"; Status = "ok"; Detail = $PSVersionTable.PSVersion.ToString() }
 
 $git = Find-CommandPath "git"
 if (!$git) { throw "Git is required but was not found on PATH." }
-$gitVersion = (& git --version) -join " "
-$results += [pscustomobject]@{ Check = "Git"; Status = "ok"; Detail = $gitVersion }
+$results += [pscustomobject]@{ Check = "Git"; Status = "ok"; Detail = ((& git --version) -join " ") }
 
-$pythonCmd = Get-PythonCommand $PythonPath
-if (!$pythonCmd) { throw "Python 3.10+ is required but was not found on PATH. Pass -PythonPath if needed." }
-$pythonVersion = (& $pythonCmd --version 2>&1) -join " "
-if ($pythonVersion -notmatch "Python\s+([0-9]+)\.([0-9]+)") {
-  throw "Unable to parse Python version: $pythonVersion"
+$pythonCmd = $null
+$pythonVersion = $null
+foreach ($candidate in Get-PythonCandidates $PythonPath) {
+  $candidateVersion = Invoke-PythonVersion $candidate
+  if ($candidateVersion -match "Python\s+([0-9]+)\.([0-9]+)") {
+    $pythonCmd = $candidate.Label
+    $pythonVersion = $candidateVersion
+    break
+  }
 }
-$major = [int]$Matches[1]
-$minor = [int]$Matches[2]
-if ($major -lt 3 -or ($major -eq 3 -and $minor -lt 10)) {
+if (!$pythonCmd) { throw "Python 3.10+ is required but no usable Python command was found. Pass -PythonPath if needed." }
+if ([int]$Matches[1] -lt 3 -or ([int]$Matches[1] -eq 3 -and [int]$Matches[2] -lt 10)) {
   throw "Python 3.10+ is required; found $pythonVersion"
 }
 $results += [pscustomobject]@{ Check = "Python"; Status = "ok"; Detail = $pythonVersion }
 
-Require-File "PUBLIC\copilot.html"
+Require-File "apps\research-os-desktop\package.json"
+Require-File "apps\research-os-sidecar\sidecar_server.py"
 Require-File "PUBLIC\index.html"
-Require-File ".agents\plugins\plugins\research-os-copilot\scripts\research_os_copilot_server.py"
-Require-File "scripts\download_reference_links.ps1"
+Require-File "PUBLIC\research_state.json"
+Require-File "scripts\check_desktop_app.ps1"
 Require-File "scripts\validate_schemas.ps1"
 Require-File "scripts\validate_skills.ps1"
-$results += [pscustomobject]@{ Check = "Repository files"; Status = "ok"; Detail = "Copilot, dashboard, scripts present" }
+$results += [pscustomobject]@{ Check = "Repository files"; Status = "ok"; Detail = "Desktop app, sidecar, public state, scripts present" }
 
-if ($RequireCodexPluginFiles) {
-  Require-File ".agents\plugins\marketplace.json"
-  Require-File ".agents\plugins\plugins\research-os-copilot\.codex-plugin\plugin.json"
-  Require-File ".agents\plugins\plugins\research-os-copilot\.mcp.json"
-  $results += [pscustomobject]@{ Check = "Codex plugin files"; Status = "ok"; Detail = "Repo-scoped plugin scaffold present" }
-}
-
-if ($RequireLatex) {
-  $latex = Find-CommandPath "pdflatex"
-  if (!$latex) { throw "LaTeX requested but pdflatex was not found on PATH." }
-  $results += [pscustomobject]@{ Check = "LaTeX"; Status = "ok"; Detail = (& pdflatex --version | Select-Object -First 1) }
+if ($RequireTauriBuild) {
+  $cargo = Find-CommandPath "cargo"
+  if (!$cargo) { throw "Tauri build requested but cargo was not found on PATH." }
+  $results += [pscustomobject]@{ Check = "Cargo"; Status = "ok"; Detail = ((& cargo --version) -join " ") }
 }
 
 $results | Format-Table -AutoSize

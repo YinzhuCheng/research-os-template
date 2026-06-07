@@ -50,7 +50,7 @@ Field routing never bypasses the work order, phase gate, allowed paths, forbidde
 
 ## Browser Copilot Routing
 
-Use `research-os-copilot` when a researcher starts from `PUBLIC/copilot.html`, uploads material, pastes source links, or when `CONTROL/copilot_inbox/` contains a pending packet.
+Use `research-os-copilot` when a researcher starts from the desktop app, uploads or imports material, pastes source links, or when `CONTROL/intake_queue/` contains a pending packet.
 
 The route is:
 

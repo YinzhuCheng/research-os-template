@@ -54,7 +54,7 @@
 - 新增最终产物技能：`research-os-final-product`、`research-os-report-authoring`、`research-os-software-productization`，并接入 paper、review/rebuttal、visual communication 相关技能。
 - 注册 Quarto、Typst、Marp、MkDocs Material、Lucide、Hatch、PyInstaller、FastAPI 等 metadata-only 开源资源，不 vendoring、不执行第三方系统。
 - 新增 git-backed archive bridge API、PowerShell 创建脚本、archive validator、公开脱敏 archive index 和 archive 单测。
-- 重整 `PUBLIC/index.html` 和 `PUBLIC/copilot.html`：三阶段 phase bar、结构化按钮分组、最终产物弹窗、存档弹窗、自然语言 UI 目标输入和离线 inline SVG 图标。
+- 重整旧公开页面，并在 v4.1 将主入口迁移到 Research OS Desktop：三阶段 phase bar、结构化主操作、最终产物弹窗、存档面板和自然语言 UI 目标输入。
 - 更新 README、AGENTS、process contract、start-here、technical report、doc map、dashboard data、asset sources、implementation checklist、gap audit 和项目摘要。
 
 最终验证：

@@ -1,0 +1,10 @@
+schema_version: desktop-intake-v1
+session_id: INTAKE-YYYYMMDDTHHMMSS
+created_at: "YYYY-MM-DDTHH:MM:SS+08:00"
+free_text_present: true
+free_text_summary: "Raw free text is stored under PRIVATE/intake/<session_id>/free_text.md."
+source_links: []
+uploaded_files: []
+privacy_default: private
+status: pending_intake_analysis
+source: desktop_app

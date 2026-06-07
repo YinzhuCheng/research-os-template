@@ -1,38 +1,13 @@
-# Documentation Center
+# Research OS Docs
 
-Research OS documentation is layered so a researcher can start quickly while later agents can audit every path.
+- [Desktop App](desktop-app.md): user and maintainer entrypoint for `.rosproj` projects.
+- [Architecture](architecture.md): Tauri, React, Python sidecar, and Codex runtime boundaries.
+- [Security and Risk](security-risk.md): sandbox, approvals, secrets, CORS, and packaging risks.
+- [Environment](environment.md): local prerequisites and check scripts.
+- [Testing](testing.md): sidecar, frontend, package, repo, and privacy checks.
+- [Packaging](packaging.md): Windows bundle steps and local build artifacts.
+- [Migration](migration.md): removal of the old browser bridge and current desktop replacements.
+- [Process Contract](process-contract.md): three-phase Research OS workflow.
+- [Public Dashboard](../PUBLIC/index.html): sanitized public navigation.
 
-- [Material-first Copilot](../PUBLIC/copilot.html): browser cockpit for free text, links, and uploaded research material.
-- [Process Contract](process-contract.md): canonical Research OS flow and skill handoff rules.
-- [Environment Guide](environment.md): runtime requirements, optional tools, and installation notes.
-- [Copilot Bridge Technical Doc](codex-browser-copilot.html): browser-to-Codex state machine, schemas, plugin bridge, and safety rules.
-- [Start Here](start-here.html): quick start for general researchers and Codex beginners.
-- [Technical Report](technical-report.html): full repository route for maintainers and future agents.
-- [Domain Modes](domain-modes.html): five deep domain paradigms for mathematics, applied mathematics, machine learning, computer science, and statistics.
-- [Research Kernel Template](../templates/research_kernel/research_cycle.template.yaml): shared generate-evaluate-update-human gate program.
-- [Final Product Plan Template](../templates/yaml/final_product_plan.template.yaml): paper/report/software output planning.
-- [Archive Index](../PUBLIC/archive_index.json): sanitized git-backed archive index.
-- [v3.9 Plan](../PLAN/07_THREE_PHASE_FINAL_PRODUCT_PLAN.md): three-phase implementation plan and step status.
-- [v3.9 Final Validation](../PROVENANCE/final_validation_report_v3_9.md): validation, unit test, browser QA, and privacy summary.
-- [Document Map](doc_map.yaml): authoritative navigation map.
-
-Core controls:
-
-- [Work order](../CONTROL/work_order.yaml)
-- [Phase gate](../CONTROL/phase_gate.yaml)
-- [Project config](../config/research_project.yaml)
-- [Research flow](../config/research_flow.yaml)
-- [Repository rules](../AGENTS.md)
-- [Public dashboard](../PUBLIC/index.html)
-- [Environment check](../scripts/check_environment.ps1)
-- [Environment installer](../scripts/install_environment.ps1)
-- [Skills](../skills/README.md)
-- [Domain profiles](../domain_profiles/README.md)
-- [Live evidence](../PROVENANCE/live_evidence_snapshot.yaml)
-
-Maintenance rules:
-
-- Keep raw private material out of `docs/` and `PUBLIC/`.
-- Add every durable entrypoint to `doc_map.yaml` and `PUBLIC/dashboard_data.json`.
-- Main-route skills need schema/template/validator/doc coverage.
-- Offline HTML must use inline CSS/SVG and local repository links.
+Every durable entrypoint should be listed in [doc_map.yaml](doc_map.yaml) and [PUBLIC/dashboard_data.json](../PUBLIC/dashboard_data.json).

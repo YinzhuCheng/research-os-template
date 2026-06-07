@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build lightweight sanitized PUBLIC summaries for browser dashboards."""
+"""Build lightweight sanitized PUBLIC summaries for desktop/public dashboards."""
 
 from __future__ import annotations
 

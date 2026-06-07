@@ -7,6 +7,7 @@ from typing import Any
 
 from .approval_service import ApprovalService
 from .common import append_jsonl, now_iso
+from .security import redact_sensitive
 
 
 RESEARCH_OS_DEVELOPER_INSTRUCTIONS = """You are running inside a Research OS desktop project sandbox.
@@ -184,7 +185,7 @@ class RuntimeService:
         return self._client
 
     def _record_event(self, event: dict[str, Any]) -> None:
-        event = {"index": None, "timestamp": now_iso(), **event}
+        event = redact_sensitive({"index": None, "timestamp": now_iso(), **event})
         with self._lock:
             event["index"] = len(self._events)
             self._events.append(event)

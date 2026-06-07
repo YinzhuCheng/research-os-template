@@ -4,17 +4,18 @@ import type { ChoicePrompt as ChoicePromptType } from "../types";
 
 interface Props {
   prompt: ChoicePromptType;
+  pending?: boolean;
   onSubmit?: (selection: { optionId: string; freeForm: string }) => void;
 }
 
-export function ChoicePrompt({ prompt, onSubmit }: Props) {
+export function ChoicePrompt({ prompt, pending = false, onSubmit }: Props) {
   const recommended = prompt.options.find((option) => option.id === prompt.recommended_option) ?? prompt.options[0];
   const [optionId, setOptionId] = useState(recommended.id);
   const [freeForm, setFreeForm] = useState("");
 
   return (
     <section className="choice-prompt" aria-labelledby={`${prompt.prompt_id}-title`}>
-      <div className="section-heading">
+      <div className="section-heading compact-heading">
         <MessageSquareText size={18} aria-hidden="true" />
         <div>
           <h3 id={`${prompt.prompt_id}-title`}>{prompt.question}</h3>
@@ -45,13 +46,13 @@ export function ChoicePrompt({ prompt, onSubmit }: Props) {
         <textarea
           value={freeForm}
           onChange={(event) => setFreeForm(event.target.value)}
-          placeholder={prompt.free_form_placeholder ?? "用自然语言补充你的偏好或约束"}
+          placeholder={prompt.free_form_placeholder ?? "用自然语言补充你的偏好、限制或修改意见。"}
           rows={3}
         />
       </label>
-      <button className="primary-action" type="button" onClick={() => onSubmit?.({ optionId, freeForm })}>
+      <button className="primary-action" type="button" onClick={() => onSubmit?.({ optionId, freeForm })} disabled={pending}>
         <Check size={16} aria-hidden="true" />
-        保存选择
+        {pending ? "正在保存" : "保存选择"}
       </button>
     </section>
   );

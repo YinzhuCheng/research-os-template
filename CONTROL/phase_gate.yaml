@@ -1,4 +1,4 @@
-current_phase: research-os-v4.0-desktop-app
+current_phase: research-os-v4.1-desktop-cleanup-uiux
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
@@ -23,3 +23,5 @@ confirmed_decisions:
   - "Do not store API keys, tokens, cookies, passwords, or authorization headers in .rosproj or project git."
   - "Use the official Codex app-server/SDK as the execution kernel without modifying or vendoring official Codex source."
   - "Keep project-root writes high-freedom while gating sandbox-external access, external writeback, git push, release, credentials, and real resources."
+  - "Research OS Desktop is the only primary user interface; the old browser bridge is retired."
+  - "Desktop state uses PUBLIC/research_state.json and CONTROL/intake_queue."

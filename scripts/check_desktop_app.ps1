@@ -8,6 +8,10 @@ function Require-File([string]$Path) {
   if (!(Test-Path -LiteralPath $Path -PathType Leaf)) { throw "Missing required file: $Path" }
 }
 
+function Forbid-Path([string]$Path) {
+  if (Test-Path -LiteralPath $Path) { throw "Forbidden legacy path still exists: $Path" }
+}
+
 function Require-Text([string]$Path, [string]$Needle) {
   Require-File $Path
   $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $Path
@@ -23,18 +27,33 @@ Require-File "apps\research-os-sidecar\research_os_sidecar\server.py"
 Require-File "apps\research-os-sidecar\research_os_sidecar\project_service.py"
 Require-File "apps\research-os-sidecar\research_os_sidecar\runtime_service.py"
 Require-File "apps\research-os-sidecar\tests\test_sidecar_services.py"
+Require-File "PUBLIC\research_state.json"
+Require-File "config\schemas\research_state.schema.json"
+Require-File "config\schemas\intake_packet.schema.json"
+$legacyCopilot = "copilot"
+Forbid-Path "PUBLIC\$legacyCopilot.html"
+Forbid-Path "PUBLIC\$($legacyCopilot)_state.json"
+Forbid-Path "docs\codex-browser-$legacyCopilot.html"
+Forbid-Path ".agents\plugins\plugins\research-os-$legacyCopilot"
 
 Require-Text "apps\research-os-desktop\package.json" "@tauri-apps/cli"
 Require-Text "apps\research-os-desktop\package.json" "lucide-react"
+Require-Text "apps\research-os-desktop\src\App.tsx" "submitIntake"
 Require-Text "apps\research-os-desktop\src\App.tsx" "FinalProductModal"
 Require-Text "apps\research-os-desktop\src\App.tsx" "api.finalProducts"
 Require-Text "apps\research-os-desktop\src\components\ChoicePrompt.tsx" "recommended_option"
-Require-Text "apps\research-os-desktop\src\components\ChoicePrompt.tsx" "free_form"
+Require-Text "apps\research-os-desktop\src\components\ChoicePrompt.tsx" "freeForm"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\common.py" "research-os-project-v1"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\profile_service.py" "Profile metadata must not store secret"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\runtime_service.py" "approval_handler"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\runtime_service.py" "redact_sensitive"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\runtime_service.py" "codex_unavailable"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\security.py" "Path escapes project sandbox"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\server.py" "ALLOWED_ORIGINS"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "PUBLIC"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "research_state.json"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "CONTROL"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "intake_queue"
 Require-Text "docs\desktop-app.md" ".rosproj"
 Require-Text "PUBLIC\dashboard_data.json" "Desktop App"
 Require-Text "docs\doc_map.yaml" "desktop_app"
