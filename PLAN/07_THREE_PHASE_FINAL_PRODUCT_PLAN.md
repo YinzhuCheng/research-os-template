@@ -42,8 +42,8 @@
 | 1 | 落盘计划与 v3.9 工作单 | completed | passed: `scripts/validate_schemas.ps1`; `scripts/check_harness.ps1` | pushed: `78bc54b` |
 | 2 | 流程契约与 schema | completed | passed: schema, strict instance, flow checks | pushed: `4db723c` |
 | 3 | 最终产物 workflows 与 skills | completed | passed: skill, mirror, no-orphan, integration, flow checks | pushed: `8d7e372` |
-| 4 | git-backed 存档功能 | completed | passed: archive check, copilot bridge check, archive unit tests | ready for step commit |
-| 5 | UI/UX 重整 | pending | dashboard/copilot/html/link checks | pending |
+| 4 | git-backed 存档功能 | completed | passed: archive check, copilot bridge check, archive unit tests | pushed: `bb2e86d` |
+| 5 | UI/UX 重整 | completed | passed: dashboard, copilot resource rendering, HTML docs, docs links, archive checks | ready for step commit |
 | 6 | 文档、dashboard 数据与检查脚本 | pending | docs/governance checks | pending |
 | 7 | 完整验证与浏览器 QA | pending | full validation and browser QA | pending |
 

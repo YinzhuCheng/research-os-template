@@ -108,6 +108,9 @@
     a:hover { text-decoration: underline; }
     button { font: inherit; cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 8px 11px; overflow-wrap: anywhere; }
     button:hover { border-color: var(--accent); }
+    .primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .primary:hover { filter: brightness(.94); }
+    .icon { width: 16px; height: 16px; flex: 0 0 auto; }
     .layout { min-height: 100vh; display: grid; grid-template-columns: 300px minmax(0, 1fr); }
     aside { position: sticky; top: 0; height: 100vh; overflow: auto; border-right: 1px solid var(--border); background: var(--nav-bg); padding: var(--s5); }
     main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: var(--s6) 0; }
@@ -123,7 +126,16 @@
     .nav-list button.active { border-color: var(--accent); background: var(--accent-soft); }
     .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); min-width: 0; }
     .toolbar { display: flex; gap: var(--s2); flex-wrap: wrap; min-width: 0; }
-    .toolbar a, .toolbar button { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; max-width: 100%; white-space: normal; text-align: center; }
+    .toolbar a, .toolbar button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; max-width: 100%; white-space: normal; text-align: center; }
+    .toolbar a { border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 11px; background: var(--surface); }
+    .phasebar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); margin-bottom: var(--s5); }
+    .phase-step { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s4); background: var(--surface); min-height: 96px; }
+    .phase-step.active { border-color: var(--accent); background: var(--accent-soft); }
+    .phase-step strong { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+    .action-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); margin-bottom: var(--s5); }
+    .action-group { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s4); background: var(--surface); min-width: 0; }
+    .action-group h3 { margin-top: 0; }
+    .action-group .toolbar { margin-top: var(--s3); }
     .status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); margin-bottom: var(--s5); }
     .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s4); min-height: 82px; }
     .metric span { display: block; color: var(--muted); font-size: 13px; margin-bottom: var(--s2); }
@@ -182,6 +194,7 @@
     .setting-option span { min-width: 0; overflow-wrap: anywhere; }
     .setting-option strong { display: block; overflow-wrap: anywhere; }
     .setting-note { margin-top: var(--s4); padding: var(--s3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--soft); color: var(--muted); overflow-wrap: anywhere; }
+    textarea { width: 100%; min-height: 96px; resize: vertical; border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s3); background: var(--surface); color: var(--text); }
     body[data-theme="compact"] aside { padding: var(--s4); }
     body[data-theme="compact"] main { padding-top: var(--s5); }
     body[data-theme="compact"] .panel { padding: var(--s4); }
@@ -205,6 +218,7 @@
       .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .panel-grid { grid-template-columns: 1fr; }
       .settings-grid { grid-template-columns: 1fr; }
+      .phasebar, .action-groups { grid-template-columns: 1fr; }
     }
     @media (max-width: 560px) {
       main { width: calc(100% - 32px); max-width: none; }
@@ -243,6 +257,48 @@
           <a href="../README.md">README</a>
         </div>
       </div>
+
+      <section class="phasebar" aria-label="Research OS three-phase flow">
+        <article class="phase-step active">
+          <strong><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="phaseInitialization">初始化阶段</span></strong>
+          <p class="muted" data-i18n="phaseInitializationDesc">材料、边界、问题和启动包。</p>
+        </article>
+        <article class="phase-step">
+          <strong><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15-6.7"/><path d="M18 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7"/><path d="M6 21v-5h5"/></svg><span data-i18n="phaseLoop">半自动循环研究阶段</span></strong>
+          <p class="muted" data-i18n="phaseLoopDesc">验收、对齐、决策、执行分析。</p>
+        </article>
+        <article class="phase-step">
+          <strong><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg><span data-i18n="phaseFinal">最终产物阶段</span></strong>
+          <p class="muted" data-i18n="phaseFinalDesc">论文、研究报告、软件或多产物组合。</p>
+        </article>
+      </section>
+
+      <section class="action-groups" aria-label="Structured dashboard actions">
+        <article class="action-group">
+          <h3 data-i18n="mainlineActions">主线操作</h3>
+          <p class="muted" data-i18n="mainlineActionsDesc">按三阶段推进，第二阶段必须先验收再进入下一步。</p>
+          <div class="toolbar">
+            <a href="copilot.html" class="primary" data-i18n="continueResearch">继续研究</a>
+            <button type="button" id="finalProductBtn" data-i18n="enterFinalProduct">进入最终产物阶段</button>
+          </div>
+        </article>
+        <article class="action-group">
+          <h3 data-i18n="materialsEvidenceActions">材料与证据</h3>
+          <p class="muted" data-i18n="materialsEvidenceActionsDesc">查看脱敏 evidence、run monitor 和流程契约。</p>
+          <div class="toolbar">
+            <button type="button" data-load-doc="evidence_board.json" data-i18n="evidenceBoard">证据板</button>
+            <button type="button" data-load-doc="run_monitor.json" data-i18n="runMonitor">运行监控</button>
+          </div>
+        </article>
+        <article class="action-group">
+          <h3 data-i18n="projectActions">项目管理</h3>
+          <p class="muted" data-i18n="projectActionsDesc">创建 git-backed 存档，保留阶段、时间和描述。</p>
+          <div class="toolbar">
+            <button type="button" id="archiveBtn" data-i18n="createArchive">创建存档</button>
+            <button type="button" data-load-doc="archive_index.json" data-i18n="archiveIndex">存档索引</button>
+          </div>
+        </article>
+      </section>
 
       <section class="status-grid" id="statusGrid"></section>
 
@@ -285,7 +341,48 @@
       <div class="settings-grid" id="styleOptions"></div>
       <h3 data-i18n="languageSection">界面语言</h3>
       <div class="settings-grid" id="languageOptions"></div>
+      <h3 data-i18n="uiGoalSection">自然语言界面目标</h3>
+      <textarea id="uiGoal" data-i18n-placeholder="uiGoalPlaceholder" placeholder="例如：更接近正式科研软件，按钮更少，重点突出验收与下一步。"></textarea>
       <div class="setting-note" data-i18n="paperLanguageNote">论文输出：最终完成论文时默认使用英文；界面语言不改变论文输出策略。</div>
+    </section>
+  </div>
+
+  <div class="settings-panel" id="finalProductPanel" role="dialog" aria-modal="true" aria-labelledby="finalProductTitle" aria-hidden="true">
+    <section class="settings-card">
+      <div class="settings-head">
+        <div>
+          <h2 id="finalProductTitle" data-i18n="finalProductTitle">选择最终产物</h2>
+          <p class="muted" data-i18n="finalProductSubtitle">可多选；推荐先生成研究报告，再按需要派生论文或软件。</p>
+        </div>
+        <button type="button" id="finalProductCloseBtn" data-i18n="close">关闭</button>
+      </div>
+      <div class="settings-grid">
+        <label class="setting-option"><input type="checkbox" checked><span><strong data-i18n="reportTrack">研究报告（推荐）</strong><span data-i18n="reportTrackDesc">保留过程、初始数据、负结果和复现细节。</span></span></label>
+        <label class="setting-option"><input type="checkbox"><span><strong data-i18n="paperTrack">论文</strong><span data-i18n="paperTrackDesc">目标 venue、模板和同类论文可选；默认英文 LaTeX/PDF。</span></span></label>
+        <label class="setting-option"><input type="checkbox"><span><strong data-i18n="softwareTrack">软件</strong><span data-i18n="softwareTrackDesc">默认稳定、规范、美观、用户友好，并保留研究中间产物。</span></span></label>
+      </div>
+      <h3 data-i18n="freeFormNeeds">自然语言补充</h3>
+      <textarea id="finalProductFreeform" data-i18n-placeholder="finalProductPlaceholder" placeholder="补充目标期刊/会议、报告格式、软件用户、质量期望或其他限制。"></textarea>
+      <div class="setting-note" data-i18n="finalProductGate">进入最终产物阶段会先生成 final_product_plan；公开导出、提交或发布仍需单独确认。</div>
+    </section>
+  </div>
+
+  <div class="settings-panel" id="archivePanel" role="dialog" aria-modal="true" aria-labelledby="archiveTitle" aria-hidden="true">
+    <section class="settings-card">
+      <div class="settings-head">
+        <div>
+          <h2 id="archiveTitle" data-i18n="archiveTitle">创建存档</h2>
+          <p class="muted" data-i18n="archiveSubtitle">存档会记录当前阶段、时间、git commit 和你的描述。</p>
+        </div>
+        <button type="button" id="archiveCloseBtn" data-i18n="close">关闭</button>
+      </div>
+      <label for="archiveDescription" data-i18n="archiveDescriptionLabel">存档描述</label>
+      <textarea id="archiveDescription" data-i18n-placeholder="archiveDescriptionPlaceholder" placeholder="例如：完成初始化报告并准备进入第一轮验证。"></textarea>
+      <div class="toolbar" style="margin-top: 12px;">
+        <button type="button" id="archivePreviewBtn" data-i18n="archivePreview">预览存档状态</button>
+        <button type="button" id="archiveCreateBtn" class="primary" data-i18n="archiveCreate">创建 git 存档</button>
+      </div>
+      <div id="archiveResult" class="setting-note" data-i18n="archiveBridgeHint">需要通过本地 bridge 打开页面，才能调用 git-backed archive API。</div>
     </section>
   </div>
 
@@ -356,6 +453,8 @@
         close: "关闭",
         styleSection: "界面风格",
         languageSection: "界面语言",
+        uiGoalSection: "自然语言界面目标",
+        uiGoalPlaceholder: "例如：更接近正式科研软件，按钮更少，重点突出验收与下一步。",
         paperLanguageNote: "论文输出：最终完成论文时默认使用英文；界面语言不改变论文输出策略。",
         source: "源码",
         outline: "结构",
@@ -366,7 +465,46 @@
         itemCount: "项",
         recordCount: "条记录",
         lineCount: "行",
-        keyCount: "个键"
+        keyCount: "个键",
+        phaseInitialization: "初始化阶段",
+        phaseInitializationDesc: "材料、边界、问题和启动包。",
+        phaseLoop: "半自动循环研究阶段",
+        phaseLoopDesc: "验收、对齐、决策、执行分析。",
+        phaseFinal: "最终产物阶段",
+        phaseFinalDesc: "论文、研究报告、软件或多产物组合。",
+        mainlineActions: "主线操作",
+        mainlineActionsDesc: "按三阶段推进，第二阶段必须先验收再进入下一步。",
+        continueResearch: "继续研究",
+        enterFinalProduct: "进入最终产物阶段",
+        materialsEvidenceActions: "材料与证据",
+        materialsEvidenceActionsDesc: "查看脱敏 evidence、run monitor 和流程契约。",
+        evidenceBoard: "证据板",
+        runMonitor: "运行监控",
+        projectActions: "项目管理",
+        projectActionsDesc: "创建 git-backed 存档，保留阶段、时间和描述。",
+        createArchive: "创建存档",
+        archiveIndex: "存档索引",
+        finalProductTitle: "选择最终产物",
+        finalProductSubtitle: "可多选；推荐先生成研究报告，再按需要派生论文或软件。",
+        reportTrack: "研究报告（推荐）",
+        reportTrackDesc: "保留过程、初始数据、负结果和复现细节。",
+        paperTrack: "论文",
+        paperTrackDesc: "目标 venue、模板和同类论文可选；默认英文 LaTeX/PDF。",
+        softwareTrack: "软件",
+        softwareTrackDesc: "默认稳定、规范、美观、用户友好，并保留研究中间产物。",
+        freeFormNeeds: "自然语言补充",
+        finalProductPlaceholder: "补充目标期刊/会议、报告格式、软件用户、质量期望或其他限制。",
+        finalProductGate: "进入最终产物阶段会先生成 final_product_plan；公开导出、提交或发布仍需单独确认。",
+        archiveTitle: "创建存档",
+        archiveSubtitle: "存档会记录当前阶段、时间、git commit 和你的描述。",
+        archiveDescriptionLabel: "存档描述",
+        archiveDescriptionPlaceholder: "例如：完成初始化报告并准备进入第一轮验证。",
+        archivePreview: "预览存档状态",
+        archiveCreate: "创建 git 存档",
+        archiveBridgeHint: "需要通过本地 bridge 打开页面，才能调用 git-backed archive API。",
+        archiveDescriptionRequired: "请先填写存档描述。",
+        archiveCreated: "存档已创建",
+        archivePreviewReady: "存档预览"
       },
       en: {
         settingsButton: "Settings",
@@ -391,6 +529,8 @@
         close: "Close",
         styleSection: "Interface Style",
         languageSection: "Interface Language",
+        uiGoalSection: "Natural-Language UI Goal",
+        uiGoalPlaceholder: "Example: make this feel like polished research software with fewer buttons and clear acceptance/next-step focus.",
         paperLanguageNote: "Paper output: final papers default to English; interface language does not change the paper-output policy.",
         source: "Source",
         outline: "Outline",
@@ -401,7 +541,46 @@
         itemCount: "item(s)",
         recordCount: "record(s)",
         lineCount: "line(s)",
-        keyCount: "key(s)"
+        keyCount: "key(s)",
+        phaseInitialization: "Initialization",
+        phaseInitializationDesc: "Material, boundaries, questions, and startup package.",
+        phaseLoop: "Semi-automated Loop Research",
+        phaseLoopDesc: "Accept, align, decide, execute and analyze.",
+        phaseFinal: "Final Product",
+        phaseFinalDesc: "Paper, research report, software, or multi-track output.",
+        mainlineActions: "Mainline Actions",
+        mainlineActionsDesc: "Advance by the three phases; phase two must accept before the next step.",
+        continueResearch: "Continue Research",
+        enterFinalProduct: "Enter Final Product",
+        materialsEvidenceActions: "Materials And Evidence",
+        materialsEvidenceActionsDesc: "Review sanitized evidence, run monitor, and process contract.",
+        evidenceBoard: "Evidence Board",
+        runMonitor: "Run Monitor",
+        projectActions: "Project Management",
+        projectActionsDesc: "Create git-backed archives with phase, time, and description.",
+        createArchive: "Create Archive",
+        archiveIndex: "Archive Index",
+        finalProductTitle: "Choose Final Products",
+        finalProductSubtitle: "Multi-select is allowed; recommended default is a research report first.",
+        reportTrack: "Research Report (Recommended)",
+        reportTrackDesc: "Preserve process, initial data, negative results, and reproducibility details.",
+        paperTrack: "Paper",
+        paperTrackDesc: "Target venue, template, and comparable papers are optional; English LaTeX/PDF by default.",
+        softwareTrack: "Software",
+        softwareTrackDesc: "Stable, engineered, polished, user-friendly by default, with research artifacts preserved.",
+        freeFormNeeds: "Natural-language needs",
+        finalProductPlaceholder: "Add venue, report format, software users, quality goals, or constraints.",
+        finalProductGate: "Entering final product first creates a final_product_plan; export, submission, and release still need confirmation.",
+        archiveTitle: "Create Archive",
+        archiveSubtitle: "Archives record current phase, time, git commit, and your description.",
+        archiveDescriptionLabel: "Archive description",
+        archiveDescriptionPlaceholder: "Example: initialization report accepted and ready for the first validation loop.",
+        archivePreview: "Preview Archive State",
+        archiveCreate: "Create Git Archive",
+        archiveBridgeHint: "Open through the local bridge to call the git-backed archive API.",
+        archiveDescriptionRequired: "Add an archive description first.",
+        archiveCreated: "Archive created",
+        archivePreviewReady: "Archive preview"
       }
     };
     const labelMap = {
@@ -518,10 +697,11 @@
         const requestedLanguage = params.get("lang");
         return {
           theme: styles.some(style => style.id === requestedTheme) ? requestedTheme : (styles.some(style => style.id === saved.theme) ? saved.theme : "clean"),
-          language: requestedLanguage === "en" ? "en" : (requestedLanguage === "zh" ? "zh" : (saved.language === "en" ? "en" : "zh"))
+          language: requestedLanguage === "en" ? "en" : (requestedLanguage === "zh" ? "zh" : (saved.language === "en" ? "en" : "zh")),
+          uiGoal: typeof saved.uiGoal === "string" ? saved.uiGoal : ""
         };
       } catch (_) {
-        return {theme: "clean", language: "zh"};
+        return {theme: "clean", language: "zh", uiGoal: ""};
       }
     }
 
@@ -543,6 +723,9 @@
       document.querySelectorAll("[data-i18n]").forEach(node => {
         node.textContent = t(node.dataset.i18n);
       });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(node => {
+        node.setAttribute("placeholder", t(node.dataset.i18nPlaceholder));
+      });
       renderSettings();
     }
 
@@ -560,6 +743,8 @@
           <input type="radio" name="uiLanguage" value="${esc(language.id)}" ${preferences.language === language.id ? "checked" : ""}>
           <span><strong>${esc(preferences.language === "en" ? language.enLabel : language.label)}</strong>${esc(preferences.language === "en" ? (language.id === "zh" ? "Chinese interface" : "Full English interface") : (language.id === "zh" ? "中文界面" : "全英文界面"))}</span>
         </label>`).join("");
+      const uiGoal = document.getElementById("uiGoal");
+      if (uiGoal && uiGoal.value !== preferences.uiGoal) uiGoal.value = preferences.uiGoal || "";
       document.querySelectorAll("input[name='uiStyle']").forEach(input => {
         input.addEventListener("change", event => {
           preferences.theme = event.target.value;
@@ -576,6 +761,13 @@
           if (currentDoc) loadDoc(currentDoc);
         });
       });
+      if (uiGoal && !uiGoal.dataset.bound) {
+        uiGoal.dataset.bound = "true";
+        uiGoal.addEventListener("input", event => {
+          preferences.uiGoal = event.target.value;
+          savePreferences();
+        });
+      }
     }
 
     function openSettings() {
@@ -590,6 +782,20 @@
       panel.classList.remove("open");
       panel.setAttribute("aria-hidden", "true");
       document.getElementById("settingsBtn").focus();
+    }
+
+    function openModal(panelId, focusId) {
+      const panel = document.getElementById(panelId);
+      panel.classList.add("open");
+      panel.setAttribute("aria-hidden", "false");
+      document.getElementById(focusId).focus();
+    }
+
+    function closeModal(panelId, returnId) {
+      const panel = document.getElementById(panelId);
+      panel.classList.remove("open");
+      panel.setAttribute("aria-hidden", "true");
+      document.getElementById(returnId).focus();
     }
 
     const fallbackData = {
@@ -830,6 +1036,37 @@
       renderDashboard();
     }
 
+    async function previewArchive() {
+      try {
+        const response = await fetch("/api/archive-preview", {cache: "no-store"});
+        const payload = await response.json();
+        if (!response.ok || payload.ok === false) throw new Error(payload.error || response.statusText);
+        document.getElementById("archiveResult").innerHTML = `${t("archivePreviewReady")}: <code>${esc(payload.phase)}</code>, <code>${esc(payload.git_commit || "")}</code>, ${esc((payload.changed_paths || []).length)} changed path(s).`;
+      } catch (error) {
+        document.getElementById("archiveResult").innerHTML = `${t("archiveBridgeHint")}<br><code>${esc(error.message)}</code>`;
+      }
+    }
+
+    async function createArchive() {
+      const description = document.getElementById("archiveDescription").value.trim();
+      if (!description) {
+        document.getElementById("archiveResult").textContent = t("archiveDescriptionRequired");
+        return;
+      }
+      try {
+        const response = await fetch("/api/archive-snapshot", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({description, macro_phase: "research_loop"})
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || response.statusText);
+        document.getElementById("archiveResult").innerHTML = `${t("archiveCreated")}: <code>${esc(payload.archive.archive_id)}</code> <code>${esc(payload.archive.git_commit)}</code>`;
+      } catch (error) {
+        document.getElementById("archiveResult").innerHTML = `${t("archiveBridgeHint")}<br><code>${esc(error.message)}</code>`;
+      }
+    }
+
     document.getElementById("reloadBtn").addEventListener("click", () => {
       if (currentDoc) loadDoc(currentDoc);
       loadDashboardData();
@@ -839,9 +1076,30 @@
     document.getElementById("settingsPanel").addEventListener("click", event => {
       if (event.target.id === "settingsPanel") closeSettings();
     });
+    document.getElementById("finalProductBtn").addEventListener("click", () => openModal("finalProductPanel", "finalProductCloseBtn"));
+    document.getElementById("finalProductCloseBtn").addEventListener("click", () => closeModal("finalProductPanel", "finalProductBtn"));
+    document.getElementById("finalProductPanel").addEventListener("click", event => {
+      if (event.target.id === "finalProductPanel") closeModal("finalProductPanel", "finalProductBtn");
+    });
+    document.getElementById("archiveBtn").addEventListener("click", () => openModal("archivePanel", "archiveDescription"));
+    document.getElementById("archiveCloseBtn").addEventListener("click", () => closeModal("archivePanel", "archiveBtn"));
+    document.getElementById("archivePanel").addEventListener("click", event => {
+      if (event.target.id === "archivePanel") closeModal("archivePanel", "archiveBtn");
+    });
+    document.getElementById("archivePreviewBtn").addEventListener("click", previewArchive);
+    document.getElementById("archiveCreateBtn").addEventListener("click", createArchive);
+    document.querySelectorAll("[data-load-doc]").forEach(button => {
+      button.addEventListener("click", () => loadDoc(button.dataset.loadDoc));
+    });
     document.addEventListener("keydown", event => {
       if (event.key === "Escape" && document.getElementById("settingsPanel").classList.contains("open")) {
         closeSettings();
+      }
+      if (event.key === "Escape" && document.getElementById("finalProductPanel").classList.contains("open")) {
+        closeModal("finalProductPanel", "finalProductBtn");
+      }
+      if (event.key === "Escape" && document.getElementById("archivePanel").classList.contains("open")) {
+        closeModal("archivePanel", "archiveBtn");
       }
     });
     applyPreferences();

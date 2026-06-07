@@ -126,6 +126,7 @@
     button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
     button.primary:hover { background: var(--accent-strong); }
     button:disabled { opacity: .55; cursor: not-allowed; }
+    .icon { width: 16px; height: 16px; flex: 0 0 auto; }
     h1, h2, h3 { line-height: 1.22; letter-spacing: 0; overflow-wrap: anywhere; }
     h1 { margin: 0 0 8px; font-size: 30px; }
     h2 { margin: 0 0 12px; font-size: 20px; }
@@ -175,7 +176,8 @@
     }
     .topbar { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 24px; min-width: 0; }
     .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; min-width: 0; }
-    .toolbar a, .toolbar button { max-width: 100%; white-space: normal; text-align: center; justify-content: center; }
+    .toolbar a, .toolbar button { max-width: 100%; white-space: normal; text-align: center; justify-content: center; display: inline-flex; align-items: center; gap: 6px; }
+    .toolbar a { border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 12px; background: var(--surface); }
     .panel { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; min-width: 0; }
     .grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); gap: 16px; align-items: start; min-width: 0; }
     .section-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; min-width: 0; }
@@ -198,6 +200,13 @@
     .stepper { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; min-width: 0; }
     .step { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; background: var(--surface); font-size: 13px; min-height: 64px; }
     .step.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-strong); font-weight: 700; }
+    .phasebar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; min-width: 0; }
+    .phase-step { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background: var(--surface); min-height: 88px; }
+    .phase-step.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-strong); }
+    .phase-step strong { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+    .action-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; min-width: 0; }
+    .action-group { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background: var(--surface); min-width: 0; }
+    .action-group h3 { margin-top: 0; }
     .action-rail { border: 1px solid var(--accent); border-radius: var(--radius); padding: 12px; background: var(--accent-soft); min-width: 280px; max-width: 380px; }
     .drop { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 16px; }
     .question { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
@@ -271,7 +280,7 @@
       main { padding: 24px 0; }
       .topbar { display: block; }
       .toolbar { margin-top: 12px; }
-      .grid, .section-grid, .preview-grid, .stepper { grid-template-columns: 1fr; }
+      .grid, .section-grid, .preview-grid, .stepper, .phasebar, .action-groups { grid-template-columns: 1fr; }
       .settings-grid { grid-template-columns: 1fr; }
       .action-rail { max-width: none; margin-top: 12px; }
     }
@@ -315,6 +324,46 @@
       </div>
 
       <div class="stepper" id="stepper"></div>
+
+      <section class="phasebar" aria-label="Research OS three-phase flow">
+        <article class="phase-step active">
+          <strong><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="phaseInitialization">初始化阶段</span></strong>
+          <p class="muted" data-i18n="phaseInitializationDesc">材料、边界、问题和启动包。</p>
+        </article>
+        <article class="phase-step">
+          <strong><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15-6.7"/><path d="M18 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7"/><path d="M6 21v-5h5"/></svg><span data-i18n="phaseLoop">半自动循环研究阶段</span></strong>
+          <p class="muted" data-i18n="phaseLoopDesc">验收、对齐、决策、执行分析。</p>
+        </article>
+        <article class="phase-step">
+          <strong><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg><span data-i18n="phaseFinal">最终产物阶段</span></strong>
+          <p class="muted" data-i18n="phaseFinalDesc">论文、研究报告、软件或多产物组合。</p>
+        </article>
+      </section>
+
+      <section class="action-groups" aria-label="Structured main actions">
+        <article class="action-group">
+          <h3 data-i18n="loopActions">循环主线</h3>
+          <p class="muted" data-i18n="loopActionsDesc">先验收上阶段产物；未通过时继续修订。</p>
+          <div class="toolbar">
+            <button type="button" id="acceptArtifactBtn" class="primary" data-i18n="acceptArtifact">验收当前产物</button>
+            <button type="button" id="requestRevisionBtn" data-i18n="requestRevision">提出修订</button>
+          </div>
+        </article>
+        <article class="action-group">
+          <h3 data-i18n="productActions">产物输出</h3>
+          <p class="muted" data-i18n="productActionsDesc">随时可进入最终产物阶段；误触可关闭弹窗。</p>
+          <div class="toolbar">
+            <button type="button" id="finalProductBtn" data-i18n="enterFinalProduct">进入最终产物阶段</button>
+          </div>
+        </article>
+        <article class="action-group">
+          <h3 data-i18n="archiveActions">存档</h3>
+          <p class="muted" data-i18n="archiveActionsDesc">用 git snapshot 保存当前阶段和说明。</p>
+          <div class="toolbar">
+            <button type="button" id="archiveBtn" data-i18n="createArchive">创建存档</button>
+          </div>
+        </article>
+      </section>
 
       <div class="toolbar" style="margin-bottom: 16px;">
         <button type="button" id="settingsBtn" aria-haspopup="dialog" data-i18n="settingsButton">设置</button>
@@ -416,7 +465,48 @@
       <div class="settings-grid" id="styleOptions"></div>
       <h3 data-i18n="languageSection">界面语言</h3>
       <div class="settings-grid" id="languageOptions"></div>
+      <h3 data-i18n="uiGoalSection">自然语言界面目标</h3>
+      <textarea id="uiGoal" data-i18n-placeholder="uiGoalPlaceholder" placeholder="例如：更接近正式科研软件，按钮更少，重点突出验收与下一步。"></textarea>
       <div class="setting-note" data-i18n="paperLanguageNote">论文输出：最终完成论文时默认使用英文；界面语言不改变论文输出策略。</div>
+    </section>
+  </div>
+
+  <div class="settings-panel" id="finalProductPanel" role="dialog" aria-modal="true" aria-labelledby="finalProductTitle" aria-hidden="true">
+    <section class="settings-card">
+      <div class="settings-head">
+        <div>
+          <h2 id="finalProductTitle" data-i18n="finalProductTitle">选择最终产物</h2>
+          <p class="muted" data-i18n="finalProductSubtitle">可多选；推荐先生成研究报告，再按需要派生论文或软件。</p>
+        </div>
+        <button type="button" id="finalProductCloseBtn" data-i18n="close">关闭</button>
+      </div>
+      <div class="settings-grid">
+        <label class="setting-option"><input type="checkbox" checked><span><strong data-i18n="reportTrack">研究报告（推荐）</strong><span data-i18n="reportTrackDesc">保留过程、初始数据、负结果和复现细节。</span></span></label>
+        <label class="setting-option"><input type="checkbox"><span><strong data-i18n="paperTrack">论文</strong><span data-i18n="paperTrackDesc">目标 venue、模板和同类论文可选；默认英文 LaTeX/PDF。</span></span></label>
+        <label class="setting-option"><input type="checkbox"><span><strong data-i18n="softwareTrack">软件</strong><span data-i18n="softwareTrackDesc">默认稳定、规范、美观、用户友好，并保留研究中间产物。</span></span></label>
+      </div>
+      <h3 data-i18n="freeFormNeeds">自然语言补充</h3>
+      <textarea id="finalProductFreeform" data-i18n-placeholder="finalProductPlaceholder" placeholder="补充目标期刊/会议、报告格式、软件用户、质量期望或其他限制。"></textarea>
+      <div class="setting-note" data-i18n="finalProductGate">进入最终产物阶段会先生成 final_product_plan；公开导出、提交或发布仍需单独确认。</div>
+    </section>
+  </div>
+
+  <div class="settings-panel" id="archivePanel" role="dialog" aria-modal="true" aria-labelledby="archiveTitle" aria-hidden="true">
+    <section class="settings-card">
+      <div class="settings-head">
+        <div>
+          <h2 id="archiveTitle" data-i18n="archiveTitle">创建存档</h2>
+          <p class="muted" data-i18n="archiveSubtitle">存档会记录当前阶段、时间、git commit 和你的描述。</p>
+        </div>
+        <button type="button" id="archiveCloseBtn" data-i18n="close">关闭</button>
+      </div>
+      <label for="archiveDescription" data-i18n="archiveDescriptionLabel">存档描述</label>
+      <textarea id="archiveDescription" data-i18n-placeholder="archiveDescriptionPlaceholder" placeholder="例如：完成初始化报告并准备进入第一轮验证。"></textarea>
+      <div class="toolbar" style="margin-top: 12px;">
+        <button type="button" id="archivePreviewBtn" data-i18n="archivePreview">预览存档状态</button>
+        <button type="button" id="archiveCreateBtn" class="primary" data-i18n="archiveCreate">创建 git 存档</button>
+      </div>
+      <div id="archiveResult" class="setting-note" data-i18n="archiveBridgeHint">需要通过本地 bridge 打开页面，才能调用 git-backed archive API。</div>
     </section>
   </div>
 
@@ -461,6 +551,22 @@
         saveInitialMaterialButton: "保存初始材料",
         saveDraft: "保存脱敏 Draft JSON",
         noMaterialSaved: "当前浏览器 session 尚未保存材料。",
+        phaseInitialization: "初始化阶段",
+        phaseInitializationDesc: "材料、边界、问题和启动包。",
+        phaseLoop: "半自动循环研究阶段",
+        phaseLoopDesc: "验收、对齐、决策、执行分析。",
+        phaseFinal: "最终产物阶段",
+        phaseFinalDesc: "论文、研究报告、软件或多产物组合。",
+        loopActions: "循环主线",
+        loopActionsDesc: "先验收上阶段产物；未通过时继续修订。",
+        acceptArtifact: "验收当前产物",
+        requestRevision: "提出修订",
+        productActions: "产物输出",
+        productActionsDesc: "随时可进入最终产物阶段；误触可关闭弹窗。",
+        enterFinalProduct: "进入最终产物阶段",
+        archiveActions: "存档",
+        archiveActionsDesc: "用 git snapshot 保存当前阶段和说明。",
+        createArchive: "创建存档",
         threeQuestionsTitle: "2. 三个定向问题",
         waitingQuestions: "等待 Codex 分析 intake packet。",
         submitAnswers: "提交答案",
@@ -474,7 +580,32 @@
         close: "关闭",
         styleSection: "界面风格",
         languageSection: "界面语言",
+        uiGoalSection: "自然语言界面目标",
+        uiGoalPlaceholder: "例如：更接近正式科研软件，按钮更少，重点突出验收与下一步。",
         paperLanguageNote: "论文输出：最终完成论文时默认使用英文；界面语言不改变论文输出策略。",
+        finalProductTitle: "选择最终产物",
+        finalProductSubtitle: "可多选；推荐先生成研究报告，再按需要派生论文或软件。",
+        reportTrack: "研究报告（推荐）",
+        reportTrackDesc: "保留过程、初始数据、负结果和复现细节。",
+        paperTrack: "论文",
+        paperTrackDesc: "目标 venue、模板和同类论文可选；默认英文 LaTeX/PDF。",
+        softwareTrack: "软件",
+        softwareTrackDesc: "默认稳定、规范、美观、用户友好，并保留研究中间产物。",
+        freeFormNeeds: "自然语言补充",
+        finalProductPlaceholder: "补充目标期刊/会议、报告格式、软件用户、质量期望或其他限制。",
+        finalProductGate: "进入最终产物阶段会先生成 final_product_plan；公开导出、提交或发布仍需单独确认。",
+        archiveTitle: "创建存档",
+        archiveSubtitle: "存档会记录当前阶段、时间、git commit 和你的描述。",
+        archiveDescriptionLabel: "存档描述",
+        archiveDescriptionPlaceholder: "例如：完成初始化报告并准备进入第一轮验证。",
+        archivePreview: "预览存档状态",
+        archiveCreate: "创建 git 存档",
+        archiveBridgeHint: "需要通过本地 bridge 打开页面，才能调用 git-backed archive API。",
+        archiveDescriptionRequired: "请先填写存档描述。",
+        archiveCreated: "存档已创建",
+        archivePreviewReady: "存档预览",
+        currentArtifactAccepted: "当前产物已验收，下一步应进入 loop_plan_alignment。",
+        revisionRequest: "请在自然语言输入区写明修订意见；未验收通过时系统会停留在当前循环。",
         nextAction: "下一步",
         phase: "阶段",
         waiting: "等待",
@@ -599,6 +730,22 @@
         saveInitialMaterialButton: "Save Initial Material",
         saveDraft: "Save Sanitized Draft JSON",
         noMaterialSaved: "No material saved in this browser session yet.",
+        phaseInitialization: "Initialization",
+        phaseInitializationDesc: "Material, boundaries, questions, and launch pack.",
+        phaseLoop: "Semi-Automated Research Loop",
+        phaseLoopDesc: "Accept, align, decide, execute, and analyze.",
+        phaseFinal: "Final Product",
+        phaseFinalDesc: "Paper, research report, software, or multi-output package.",
+        loopActions: "Loop Mainline",
+        loopActionsDesc: "Accept the prior artifact first; revise when it is rejected.",
+        acceptArtifact: "Accept Current Artifact",
+        requestRevision: "Request Revision",
+        productActions: "Product Output",
+        productActionsDesc: "Enter final product anytime; close the dialog if opened by mistake.",
+        enterFinalProduct: "Enter Final Product",
+        archiveActions: "Archive",
+        archiveActionsDesc: "Save the current phase and description with a git snapshot.",
+        createArchive: "Create Archive",
         threeQuestionsTitle: "2. Three Targeted Questions",
         waitingQuestions: "Waiting for Codex to analyze the intake packet.",
         submitAnswers: "Submit Answers",
@@ -612,7 +759,32 @@
         close: "Close",
         styleSection: "Interface Style",
         languageSection: "Interface Language",
+        uiGoalSection: "Natural-Language UI Goal",
+        uiGoalPlaceholder: "Example: make this feel like polished research software with fewer buttons and clear acceptance/next-step focus.",
         paperLanguageNote: "Paper output: final papers default to English; interface language does not change the paper-output policy.",
+        finalProductTitle: "Choose Final Products",
+        finalProductSubtitle: "Multi-select is allowed; recommended default is a research report first.",
+        reportTrack: "Research Report (recommended)",
+        reportTrackDesc: "Preserve process, initial data, negative results, and reproduction detail.",
+        paperTrack: "Paper",
+        paperTrackDesc: "Venue, template, and exemplar papers are optional; default output is English LaTeX/PDF.",
+        softwareTrack: "Software",
+        softwareTrackDesc: "Default target is stable, engineered, polished, user-friendly software with research artifacts preserved.",
+        freeFormNeeds: "Natural-Language Notes",
+        finalProductPlaceholder: "Add venue, report format, software users, quality goals, or constraints.",
+        finalProductGate: "Entering final product first creates a final_product_plan; export, submission, and release still need confirmation.",
+        archiveTitle: "Create Archive",
+        archiveSubtitle: "Archives record current phase, time, git commit, and your description.",
+        archiveDescriptionLabel: "Archive description",
+        archiveDescriptionPlaceholder: "Example: initialization report accepted and ready for the first validation loop.",
+        archivePreview: "Preview Archive State",
+        archiveCreate: "Create Git Archive",
+        archiveBridgeHint: "Open through the local bridge to call the git-backed archive API.",
+        archiveDescriptionRequired: "Add an archive description first.",
+        archiveCreated: "Archive created",
+        archivePreviewReady: "Archive preview",
+        currentArtifactAccepted: "Current artifact accepted; the next step should enter loop_plan_alignment.",
+        revisionRequest: "Write revision instructions in the natural-language input area; the loop stays blocked until acceptance.",
         nextAction: "Next Action",
         phase: "phase",
         waiting: "Waiting",
@@ -721,10 +893,11 @@
         const requestedLanguage = params.get("lang");
         return {
           theme: styles.some(style => style.id === requestedTheme) ? requestedTheme : (styles.some(style => style.id === saved.theme) ? saved.theme : "clean"),
-          language: requestedLanguage === "en" ? "en" : (requestedLanguage === "zh" ? "zh" : (saved.language === "en" ? "en" : "zh"))
+          language: requestedLanguage === "en" ? "en" : (requestedLanguage === "zh" ? "zh" : (saved.language === "en" ? "en" : "zh")),
+          uiGoal: typeof saved.uiGoal === "string" ? saved.uiGoal : ""
         };
       } catch (_) {
-        return {theme: "clean", language: "zh"};
+        return {theme: "clean", language: "zh", uiGoal: ""};
       }
     }
 
@@ -762,6 +935,8 @@
           <input type="radio" name="uiLanguage" value="${esc(language.id)}" ${preferences.language === language.id ? "checked" : ""}>
           <span><strong>${esc(preferences.language === "en" ? language.enLabel : language.label)}</strong>${esc(preferences.language === "en" ? (language.id === "zh" ? "Chinese interface" : "Full English interface") : (language.id === "zh" ? "中文界面" : "全英文界面"))}</span>
         </label>`).join("");
+      const uiGoal = document.getElementById("uiGoal");
+      if (uiGoal && uiGoal.value !== preferences.uiGoal) uiGoal.value = preferences.uiGoal || "";
       document.querySelectorAll("input[name='uiStyle']").forEach(input => {
         input.addEventListener("change", event => {
           preferences.theme = event.target.value;
@@ -778,6 +953,13 @@
           renderState();
         });
       });
+      if (uiGoal && !uiGoal.dataset.bound) {
+        uiGoal.dataset.bound = "true";
+        uiGoal.addEventListener("input", event => {
+          preferences.uiGoal = event.target.value;
+          savePreferences();
+        });
+      }
     }
 
     function openSettings() {
@@ -794,6 +976,20 @@
       document.getElementById("settingsBtn").focus();
     }
 
+    function openModal(panelId, focusId) {
+      const panel = document.getElementById(panelId);
+      panel.classList.add("open");
+      panel.setAttribute("aria-hidden", "false");
+      document.getElementById(focusId).focus();
+    }
+
+    function closeModal(panelId, returnId) {
+      const panel = document.getElementById(panelId);
+      panel.classList.remove("open");
+      panel.setAttribute("aria-hidden", "true");
+      document.getElementById(returnId).focus();
+    }
+
     const stateUrl = "copilot_state.json";
     const runMonitorUrl = "run_monitor.json";
     const evidenceBoardUrl = "evidence_board.json";
@@ -802,6 +998,8 @@
     const apiAnswersUrl = "/api/question-answers";
     const apiConfirmUrl = "/api/confirm-next-action";
     const apiDownloadUrl = "/api/download-references";
+    const apiArchivePreviewUrl = "/api/archive-preview";
+    const apiArchiveSnapshotUrl = "/api/archive-snapshot";
 
     let copilotState = null;
     let runMonitor = {runs: []};
@@ -1176,6 +1374,34 @@
       }
     }
 
+    async function acceptCurrentArtifact() {
+      try {
+        const response = await fetch(apiConfirmUrl, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            session_id: copilotState?.active_session_id,
+            confirmed: true,
+            requires_work_order: true,
+            next_action: "Accept current artifact and enter loop_plan_alignment.",
+            notes: "Accepted from the three-phase loop UI."
+          })
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || response.statusText);
+        setResult(`${t("currentArtifactAccepted")} <code>${esc(payload.confirmation.confirmation_id)}</code>.`, "ok");
+        await loadState();
+      } catch (error) {
+        setResult(`${t("confirmationUnavailable")}: <code>${esc(error.message)}</code>`, "warn");
+      }
+    }
+
+    function requestRevision() {
+      setResult(t("revisionRequest"), "warn");
+      const target = document.getElementById("freeText");
+      if (target) target.focus();
+    }
+
     async function downloadReferences() {
       try {
         const response = await fetch(apiDownloadUrl, {method: "POST"});
@@ -1203,6 +1429,37 @@
       setResult(t("bridgeCommandCopied"), "ok");
     }
 
+    async function previewArchive() {
+      try {
+        const response = await fetch(apiArchivePreviewUrl, {cache: "no-store"});
+        const payload = await response.json();
+        if (!response.ok || payload.ok === false) throw new Error(payload.error || response.statusText);
+        document.getElementById("archiveResult").innerHTML = `${t("archivePreviewReady")}: <code>${esc(payload.phase)}</code>, <code>${esc(payload.git_commit || "")}</code>, ${esc((payload.changed_paths || []).length)} changed path(s).`;
+      } catch (error) {
+        document.getElementById("archiveResult").innerHTML = `${t("archiveBridgeHint")}<br><code>${esc(error.message)}</code>`;
+      }
+    }
+
+    async function createArchive() {
+      const description = document.getElementById("archiveDescription").value.trim();
+      if (!description) {
+        document.getElementById("archiveResult").textContent = t("archiveDescriptionRequired");
+        return;
+      }
+      try {
+        const response = await fetch(apiArchiveSnapshotUrl, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({description, macro_phase: "research_loop"})
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || response.statusText);
+        document.getElementById("archiveResult").innerHTML = `${t("archiveCreated")}: <code>${esc(payload.archive.archive_id)}</code> <code>${esc(payload.archive.git_commit)}</code>`;
+      } catch (error) {
+        document.getElementById("archiveResult").innerHTML = `${t("archiveBridgeHint")}<br><code>${esc(error.message)}</code>`;
+      }
+    }
+
     document.getElementById("intakeForm").addEventListener("submit", submitIntake);
     document.getElementById("questionForm").addEventListener("submit", submitAnswers);
     document.getElementById("saveDraftBtn").addEventListener("click", saveLocalDraft);
@@ -1216,9 +1473,29 @@
     document.getElementById("settingsPanel").addEventListener("click", event => {
       if (event.target.id === "settingsPanel") closeSettings();
     });
+    document.getElementById("acceptArtifactBtn").addEventListener("click", acceptCurrentArtifact);
+    document.getElementById("requestRevisionBtn").addEventListener("click", requestRevision);
+    document.getElementById("finalProductBtn").addEventListener("click", () => openModal("finalProductPanel", "finalProductCloseBtn"));
+    document.getElementById("finalProductCloseBtn").addEventListener("click", () => closeModal("finalProductPanel", "finalProductBtn"));
+    document.getElementById("finalProductPanel").addEventListener("click", event => {
+      if (event.target.id === "finalProductPanel") closeModal("finalProductPanel", "finalProductBtn");
+    });
+    document.getElementById("archiveBtn").addEventListener("click", () => openModal("archivePanel", "archiveDescription"));
+    document.getElementById("archiveCloseBtn").addEventListener("click", () => closeModal("archivePanel", "archiveBtn"));
+    document.getElementById("archivePanel").addEventListener("click", event => {
+      if (event.target.id === "archivePanel") closeModal("archivePanel", "archiveBtn");
+    });
+    document.getElementById("archivePreviewBtn").addEventListener("click", previewArchive);
+    document.getElementById("archiveCreateBtn").addEventListener("click", createArchive);
     document.addEventListener("keydown", event => {
       if (event.key === "Escape" && document.getElementById("settingsPanel").classList.contains("open")) {
         closeSettings();
+      }
+      if (event.key === "Escape" && document.getElementById("finalProductPanel").classList.contains("open")) {
+        closeModal("finalProductPanel", "finalProductBtn");
+      }
+      if (event.key === "Escape" && document.getElementById("archivePanel").classList.contains("open")) {
+        closeModal("archivePanel", "archiveBtn");
       }
     });
     document.getElementById("freeText").addEventListener("input", renderPrivacyPreview);
