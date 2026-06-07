@@ -16,7 +16,7 @@ Hooks are examples, not complete security boundaries.
 
 - `PreToolUse`: reject clearly dangerous commands, credential leakage, unconfirmed real resource calls, and external writeback.
 - `PostToolUse`: remind agents to record manifests, resource ledger entries, privacy scans, and failed/partial states.
-- `Stop`: remind agents to inspect `git status`, open audit gaps, and next phase gates.
+- `Stop`: run strict schema validation, HTML trailing-content checks, privacy scan, package-artifact policy checks, harness checks, and phase-gate consistency checks before final handoff.
 
 ## MCP And External Tools
 

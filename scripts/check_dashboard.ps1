@@ -13,6 +13,14 @@ $required = @(
   "<!doctype html>",
   "dashboard_data.json",
   "renderMarkdown",
+  "renderJsonDocument",
+  "renderYamlDocument",
+  "settingsPanel",
+  "researchOS.uiPreferences.v1",
+  "data-theme",
+  "Developer Dark",
+  "Editorial Report",
+  "final papers default to English",
   "Codex Research OS",
   "PUBLIC/index.html",
   "copilot.html",
@@ -31,10 +39,26 @@ foreach ($item in $required) {
 }
 
 $data = Get-Content -Raw -Encoding UTF8 -LiteralPath "PUBLIC\dashboard_data.json" | ConvertFrom-Json
+if (!($data.status.label -contains "P0/P1 Hardening")) {
+  throw "Dashboard data missing P0/P1 Hardening status."
+}
+if (!($data.status.label -contains "Copilot Usability")) {
+  throw "Dashboard data missing Copilot Usability status."
+}
+if (!($data.status.label -contains "UI Settings")) {
+  throw "Dashboard data missing UI Settings status."
+}
 $requiredDocumentPaths = @(
   "../docs/environment.md",
   "../docs/process-contract.md",
   "../config/research_flow.yaml",
+  "evidence_board.json",
+  "run_monitor.json",
+  "../config/schemas/copilot_answers.schema.json",
+  "../config/schemas/copilot_confirmation.schema.json",
+  "../config/schemas/experiment_run.schema.json",
+  "../config/schemas/adapter_contract.schema.json",
+  "../evals/README.md",
   "../scripts/install_environment.ps1",
   "../scripts/check_environment.ps1"
 )

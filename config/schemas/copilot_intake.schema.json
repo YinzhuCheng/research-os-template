@@ -1,13 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://research-os-template.local/schemas/copilot_intake.schema.json",
-  "title": "Research OS Copilot Intake Packet",
+  "title": "Research OS Copilot Sanitized Intake Packet",
   "type": "object",
   "required": [
     "schema_version",
     "session_id",
     "created_at",
-    "free_text",
+    "free_text_present",
+    "free_text_sha256",
+    "free_text_size_bytes",
+    "free_text_summary",
     "uploaded_files",
     "source_links",
     "privacy_default",
@@ -18,7 +21,10 @@
     "schema_version": { "type": "string", "pattern": "^v[0-9]+\\.[0-9]+$" },
     "session_id": { "type": "string", "pattern": "^INTAKE-[0-9A-Za-z_-]+$" },
     "created_at": { "type": "string" },
-    "free_text": { "type": "string" },
+    "free_text_present": { "type": "boolean" },
+    "free_text_sha256": { "type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$" },
+    "free_text_size_bytes": { "type": "integer", "minimum": 0 },
+    "free_text_summary": { "type": "string" },
     "uploaded_files": {
       "type": "array",
       "items": {
@@ -31,8 +37,7 @@
           "size_bytes": { "type": "integer", "minimum": 0 },
           "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
           "storage_policy": { "type": "string", "enum": ["private_runtime_only", "public_sanitized_summary_only"] },
-          "public_summary": { "type": "string" },
-          "private_runtime_path": { "type": ["string", "null"] }
+          "public_summary": { "type": "string" }
         }
       }
     },

@@ -24,4 +24,8 @@ if ($state.literature.download_script -ne "scripts/download_reference_links.ps1"
   throw "Copilot state must expose the reference download script path."
 }
 
+if (!($state.repository_links.path -contains "evidence_board.json")) {
+  throw "Copilot state must link PUBLIC/evidence_board.json."
+}
+
 Write-Output "Copilot public state validation passed."

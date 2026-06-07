@@ -1,11 +1,11 @@
-snapshot_id: LE-0001
-created_at: 2026-06-06
+﻿snapshot_id: LE-0001
+created_at: "2026-06-06"
 refresh_reason: "Research OS v2 harness design references"
 items:
   - topic: "Codex repository guidance"
     source_url: "https://developers.openai.com/codex/guides/agents-md"
     source_type: documentation
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "Codex reads AGENTS.md at global and project scopes and layers instructions from root to current directory."
     affects:
@@ -14,7 +14,7 @@ items:
   - topic: "Codex hooks and sandbox controls"
     source_url: "https://developers.openai.com/codex/hooks"
     source_type: documentation
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "PreToolUse, PostToolUse, PermissionRequest and Stop hooks can support policy checks around tools."
     affects:
@@ -23,7 +23,7 @@ items:
   - topic: "Codex sandbox and approval controls"
     source_url: "https://developers.openai.com/codex/concepts/sandboxing"
     source_type: documentation
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "Codex documents workspace-write/on-request as a lower-risk local automation preset and danger-full-access/never as full access."
     affects:
@@ -32,7 +32,7 @@ items:
   - topic: "Codex skill structure"
     source_url: "https://developers.openai.com/codex/skills"
     source_type: documentation
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "Skills are directories with SKILL.md plus optional scripts, references, assets and agents."
     affects:
@@ -40,7 +40,7 @@ items:
   - topic: "Codex MCP configuration"
     source_url: "https://developers.openai.com/codex/mcp"
     source_type: documentation
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "Project-scoped MCP configuration can live in .codex/config.toml and should reference credentials through environment variables."
     affects:
@@ -49,7 +49,7 @@ items:
   - topic: "Agent Laboratory"
     source_url: "https://arxiv.org/abs/2501.04227"
     source_type: paper
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "Agent Laboratory emphasizes staged literature review, experimentation, report writing and human feedback at each stage."
     affects:
@@ -58,7 +58,7 @@ items:
   - topic: "AI co-scientist"
     source_url: "https://arxiv.org/abs/2502.18864"
     source_type: paper
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "AI co-scientist frames agentic science around researcher-provided objectives, evidence-backed hypotheses and guidance."
     affects:
@@ -67,7 +67,7 @@ items:
   - topic: "AI Scientist-v2"
     source_url: "https://arxiv.org/abs/2504.08066"
     source_type: paper
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "AI Scientist-v2 highlights iterative hypothesis, experiment, analysis, visualization, writing, reviewer feedback and experiment-manager control."
     affects:
@@ -76,7 +76,7 @@ items:
   - topic: "Agentic task cost variability"
     source_url: "https://arxiv.org/abs/2604.22750"
     source_type: paper
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "Agentic task token usage can vary substantially, supporting hard resource caps and audit ledgers."
     affects:
@@ -84,7 +84,7 @@ items:
   - topic: "Agent Laboratory"
     source_url: "https://arxiv.org/abs/2501.04227"
     source_type: paper
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "Agent Laboratory uses a human-provided research idea, staged literature review, experimentation and report writing, with user feedback at each stage."
     affects:
@@ -94,7 +94,7 @@ items:
   - topic: "AI co-scientist"
     source_url: "https://arxiv.org/abs/2502.18864"
     source_type: paper
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "AI co-scientist emphasizes scientist-provided objectives, evidence-backed hypotheses, debate, evolution and guidance."
     affects:
@@ -103,7 +103,7 @@ items:
   - topic: "AI Scientist-v2"
     source_url: "https://arxiv.org/abs/2504.08066"
     source_type: paper_and_code
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "AI Scientist-v2 combines hypothesis generation, experiment execution, analysis, visualization, writing, reviewer feedback and an experiment manager over agentic tree search."
     affects:
@@ -113,7 +113,7 @@ items:
   - topic: "Agentic Science survey"
     source_url: "https://arxiv.org/abs/2508.14111"
     source_type: survey
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "The survey frames autonomous scientific discovery around capabilities, core processes and domain-specific workflows."
     affects:
@@ -122,7 +122,7 @@ items:
   - topic: "Deep Researcher Agent"
     source_url: "https://arxiv.org/abs/2604.05854"
     source_type: paper_and_code
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "Deep Researcher Agent highlights long-running experiment loops, zero-cost monitoring, constant-size memory, minimal toolsets, ledgers and truthful terminal states."
     affects:
@@ -132,7 +132,7 @@ items:
   - topic: "Claw AI Lab"
     source_url: "https://arxiv.org/abs/2605.22662"
     source_type: paper_and_code
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "Claw AI Lab presents an interactive multi-agent research lab with dashboard monitoring, artifact inspection, rollback/resume and code harness integration."
     affects:
@@ -142,7 +142,7 @@ items:
   - topic: "OpenAI skills catalog"
     source_url: "https://github.com/openai/skills"
     source_type: code_repository
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "The OpenAI skills catalog provides installable skill examples and reinforces skills as reusable workflow units for Codex."
     affects:
@@ -152,7 +152,7 @@ items:
   - topic: "MSC2020"
     source_url: "https://msc2020.org/"
     source_type: taxonomy
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: low
     summary: "MSC2020 is maintained by Mathematical Reviews and zbMATH as a classification scheme for mathematical sciences literature."
     affects:
@@ -162,7 +162,7 @@ items:
   - topic: "ACM Computing Classification System and artifact badges"
     source_url: "https://www.acm.org/publications/computing-classification-system/css"
     source_type: taxonomy
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "ACM provides computing classification guidance; ACM artifact review uses documented, consistent, complete and exercisable artifact expectations."
     affects:
@@ -172,7 +172,7 @@ items:
   - topic: "arXiv category taxonomy"
     source_url: "https://arxiv.org/category_taxonomy"
     source_type: taxonomy
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "arXiv taxonomy includes mathematics, computer science, stat.ML, and statistics categories that inform domain profile routing."
     affects:
@@ -181,7 +181,7 @@ items:
   - topic: "ASA Ethical Guidelines for Statistical Practice"
     source_url: "https://www.amstat.org/your-career/ethical-guidelines-for-statistical-practice"
     source_type: policy
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "ASA ethical guidance supports statistics profile gates around design, privacy, uncertainty communication and professional responsibility."
     affects:
@@ -190,7 +190,7 @@ items:
   - topic: "AlphaGeometry"
     source_url: "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/"
     source_type: research_system
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "AlphaGeometry illustrates neuro-symbolic geometry proof search with generated constructions and rule-bound deduction."
     affects:
@@ -199,7 +199,7 @@ items:
   - topic: "FunSearch"
     source_url: "https://deepmind.google/blog/funsearch-making-new-discoveries-in-mathematical-sciences-using-large-language-models/"
     source_type: research_system
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "FunSearch pairs LLM-generated code with evaluators for mathematical and computer-science discovery loops."
     affects:
@@ -209,7 +209,7 @@ items:
   - topic: "AlphaEvolve"
     source_url: "https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/"
     source_type: research_system
-    accessed_at: 2026-06-06
+    accessed_at: "2026-06-06"
     freshness_risk: medium
     summary: "AlphaEvolve is an evolutionary coding-agent pattern for algorithm discovery and optimization, useful as a reference-only integration."
     affects:

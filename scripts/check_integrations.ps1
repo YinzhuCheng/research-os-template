@@ -7,6 +7,11 @@ $ErrorActionPreference = "Stop"
 if (!(Test-Path -LiteralPath $Registry)) {
   throw "Integration registry missing: $Registry"
 }
+foreach ($required in @("config\schemas\adapter_contract.schema.json", "templates\adapters\adapter_contract.template.yaml", "adapters\README.md")) {
+  if (!(Test-Path -LiteralPath $required)) {
+    throw "Missing adapter contract artifact: $required"
+  }
+}
 
 $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $Registry
 $requiredTop = @("registry_id:", "updated_at:", "default_policy:", "components:")

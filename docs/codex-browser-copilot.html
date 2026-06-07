@@ -83,7 +83,7 @@
     </aside>
     <main>
       <header>
-        <h1>Research OS v3.4 Browser Copilot Bridge</h1>
+        <h1>Research OS v3.6 Browser Copilot Bridge</h1>
         <p class="lead">This page defines how the Codex in-app browser becomes a research cockpit without pretending that browser JavaScript can execute research work by itself. The browser collects material, Codex performs analysis and execution after confirmation.</p>
       </header>
 
@@ -144,7 +144,7 @@
           </article>
           <article class="panel">
             <h3>Bridge responsibility</h3>
-            <p>The plugin server writes sanitized packets to <code>CONTROL/copilot_inbox/</code>, private raw uploads to runtime-only intake storage, and public progress to <code>PUBLIC/copilot_state.json</code>.</p>
+            <p>The plugin server writes sanitized packets to <code>CONTROL/copilot_inbox/</code>, private raw text and uploads to runtime-only intake storage, and public progress to <code>PUBLIC/copilot_state.json</code>.</p>
           </article>
           <article class="panel">
             <h3>Codex responsibility</h3>
@@ -171,10 +171,13 @@ python .agents/plugins/plugins/research-os-copilot/scripts/research_os_copilot_s
             <tr><th>Object</th><th>Path</th><th>Purpose</th></tr>
           </thead>
           <tbody>
-            <tr><td>Intake packet</td><td><a href="../config/schemas/copilot_intake.schema.json">copilot_intake.schema.json</a></td><td>Free text, links, file names, hashes, privacy defaults, status.</td></tr>
+            <tr><td>Intake packet</td><td><a href="../config/schemas/copilot_intake.schema.json">copilot_intake.schema.json</a></td><td>Sanitized text hash/size/summary, links, file names, hashes, privacy defaults, status.</td></tr>
+            <tr><td>Question answers</td><td><a href="../config/schemas/copilot_answers.schema.json">copilot_answers.schema.json</a></td><td>Exactly three submitted answers from the browser cockpit.</td></tr>
+            <tr><td>Next action confirmation</td><td><a href="../config/schemas/copilot_confirmation.schema.json">copilot_confirmation.schema.json</a></td><td>Browser confirmation packet for the next Codex action.</td></tr>
             <tr><td>Targeted questions</td><td><a href="../config/schemas/copilot_questions.schema.json">copilot_questions.schema.json</a></td><td>Exactly three questions with recommended answers, options, Other path, and plan impact.</td></tr>
             <tr><td>Initialization report</td><td><a href="../config/schemas/copilot_initialization_report.schema.json">copilot_initialization_report.schema.json</a></td><td>Motivation, goals, contributions, related work, references, theory/experiment tracks, minimum validation, repository links.</td></tr>
             <tr><td>Public state</td><td><a href="../PUBLIC/copilot_state.json">PUBLIC/copilot_state.json</a></td><td>Sanitized browser-renderable state.</td></tr>
+            <tr><td>Run monitor</td><td><a href="../PUBLIC/run_monitor.json">PUBLIC/run_monitor.json</a></td><td>Sanitized run summaries only; raw logs stay out of the browser state.</td></tr>
             <tr><td>Research kernel</td><td><a href="../config/schemas/research_kernel.schema.json">research_kernel.schema.json</a></td><td>Candidate, evaluator, belief, trace, negative result, next action, and human gate.</td></tr>
           </tbody>
         </table>
@@ -216,6 +219,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_stat
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_resource_rendering.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_bridge.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_strict_schema_instances.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_eval_fixtures.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1</pre>
       </section>
     </main>

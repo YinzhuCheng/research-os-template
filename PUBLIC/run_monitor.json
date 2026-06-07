@@ -1,0 +1,123 @@
+{
+  "schema_version": "v1.1",
+  "updated_at": "2026-06-07T15:13:23+08:00",
+  "source_policy": "sanitized_public_summary_only",
+  "runs": [
+    {
+      "experiment_id": "EXP-0001",
+      "status": "planned",
+      "command_or_adapter": "local-static-fixture",
+      "inputs": [
+        "evals/fixtures/schema_regression_case/README.md"
+      ],
+      "outputs": [
+        "RUNS/experiments/EXP-0001/run.yaml",
+        "PUBLIC/run_monitor.json"
+      ],
+      "metrics": [
+        "schema validation outcome",
+        "artifact presence"
+      ],
+      "resource_use": "0 CNY; no network; no real experiment execution",
+      "failure_class": "not_run",
+      "replay_command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_eval_fixtures.ps1",
+      "human_decision_required": false
+    }
+  ],
+  "audit_runs": [
+    {
+      "run_id": "RUN-0010",
+      "timestamp": "2026-06-06T12:36:20.4293277+08:00",
+      "work_order_id": "WO-0002",
+      "status": "succeeded",
+      "command_or_tool": "github-draft-pr-create",
+      "outputs_count": 1,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0011",
+      "timestamp": "2026-06-06T18:45:00+08:00",
+      "work_order_id": "WO-0002",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v3.1-domain-profile-implementation-and-validation",
+      "outputs_count": 16,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0012",
+      "timestamp": "2026-06-06T17:34:00+08:00",
+      "work_order_id": "WO-0003",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v3.2-research-kernel-implementation-and-validation",
+      "outputs_count": 18,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0014",
+      "timestamp": "2026-06-06T20:56:35.1904750+08:00",
+      "work_order_id": "WO-0004",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v3.3-final-validation-report",
+      "outputs_count": 1,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0015",
+      "timestamp": "2026-06-06T21:15:45.7322586+08:00",
+      "work_order_id": "WO-0005",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v3.4-environment-cleanup-validation",
+      "outputs_count": 1,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0016",
+      "timestamp": "2026-06-06T21:43:58.7501339+08:00",
+      "work_order_id": "WO-0006",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v3.5-process-contract-skill-governance-validation",
+      "outputs_count": 1,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0017",
+      "timestamp": "2026-06-06T22:59:17.7829103+08:00",
+      "work_order_id": "WO-0007",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v3.6-p0-p1-audit-hardening-validation",
+      "outputs_count": 1,
+      "privacy_level": "public",
+      "error_count": 0
+    },
+    {
+      "run_id": "RUN-0018",
+      "timestamp": "2026-06-07T15:12:59.5733620+08:00",
+      "work_order_id": "WO-0008",
+      "status": "succeeded",
+      "command_or_tool": "research-os-v3.7-lightweight-copilot-usability-validation",
+      "outputs_count": 19,
+      "privacy_level": "public",
+      "error_count": 0
+    }
+  ],
+  "resource_summary": {
+    "ledger_entries": 13,
+    "total_recorded_amount": 0.0,
+    "currency_or_unit": "CNY",
+    "latest_entry_id": "RL-0013",
+    "resource_policy": "local zero-cost validation unless a researcher-approved work order says otherwise"
+  },
+  "deferred_p2": [
+    "hypothesis backlog",
+    "critic/evolution loops",
+    "knowledge graph",
+    "real experiment queue",
+    "external adapter execution"
+  ]
+}

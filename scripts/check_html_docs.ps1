@@ -15,6 +15,16 @@ foreach ($path in $HtmlDocs) {
       throw "HTML check failed for ${path}: missing $item"
     }
   }
+  $lastClose = $html.LastIndexOf("</html>", [System.StringComparison]::OrdinalIgnoreCase)
+  if ($lastClose -lt 0) {
+    throw "HTML check failed for ${path}: missing closing html tag."
+  }
+  $tail = $html.Substring($lastClose + 7)
+  if ($tail.Trim().Length -gt 0) {
+    $preview = $tail.Trim()
+    if ($preview.Length -gt 160) { $preview = $preview.Substring(0, 160) }
+    throw "HTML check failed for ${path}: non-whitespace content after </html>: $preview"
+  }
   if ($html -match "(?i)<script\s+[^>]*src\s*=") {
     throw "HTML check failed for ${path}: external script src is not allowed."
   }

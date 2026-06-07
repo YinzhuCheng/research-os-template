@@ -13,8 +13,12 @@
       --muted: #607080;
       --border: #cfd8d5;
       --accent: #176b57;
+      --accent-soft: #eef8f4;
       --blue: #255f99;
       --warn: #946200;
+      --nav-bg: #fbfcfc;
+      --code-bg: #16212b;
+      --code-text: #f8fbfd;
       --radius: 8px;
       --s2: 8px;
       --s3: 12px;
@@ -23,16 +27,91 @@
       --s6: 32px;
       font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
+    body[data-theme="clean"] {
+      --bg: #f5f7f8;
+      --surface: #ffffff;
+      --soft: #eef3f1;
+      --text: #18212b;
+      --muted: #607080;
+      --border: #cfd8d5;
+      --accent: #176b57;
+      --accent-soft: #eef8f4;
+      --blue: #255f99;
+      --warn: #946200;
+      --nav-bg: #fbfcfc;
+      --code-bg: #16212b;
+      --code-text: #f8fbfd;
+    }
+    body[data-theme="compact"] {
+      --bg: #f3f5f7;
+      --surface: #ffffff;
+      --soft: #edf1f5;
+      --text: #121820;
+      --muted: #536170;
+      --border: #c8d0d8;
+      --accent: #275d8c;
+      --accent-soft: #eaf3fb;
+      --blue: #174f86;
+      --warn: #835c00;
+      --nav-bg: #f8fafc;
+      --code-bg: #101923;
+      --code-text: #f6fbff;
+    }
+    body[data-theme="soft"] {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --soft: #eef2f8;
+      --text: #17202c;
+      --muted: #5d6b7a;
+      --border: #d3dbe6;
+      --accent: #2f5f9f;
+      --accent-soft: #edf4ff;
+      --blue: #245c9c;
+      --warn: #8a620c;
+      --nav-bg: rgba(255,255,255,.82);
+      --code-bg: #142033;
+      --code-text: #f7fbff;
+    }
+    body[data-theme="dark"] {
+      --bg: #101418;
+      --surface: #171d23;
+      --soft: #202a32;
+      --text: #eef4f8;
+      --muted: #a9b7c3;
+      --border: #32414d;
+      --accent: #59a98c;
+      --accent-soft: #183229;
+      --blue: #8fbeff;
+      --warn: #f1c76a;
+      --nav-bg: #141a20;
+      --code-bg: #080d12;
+      --code-text: #f4fbff;
+    }
+    body[data-theme="editorial"] {
+      --bg: #f7f6f3;
+      --surface: #fffefd;
+      --soft: #f0efea;
+      --text: #1d1d1b;
+      --muted: #696963;
+      --border: #d8d5cb;
+      --accent: #6f3d45;
+      --accent-soft: #f8eef0;
+      --blue: #4c5f86;
+      --warn: #7a5a16;
+      --nav-bg: #fbfaf7;
+      --code-bg: #191817;
+      --code-text: #fffdf8;
+    }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.56; }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.56; transition: background .18s ease, color .18s ease; overflow-x: hidden; }
     a { color: var(--blue); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    button { font: inherit; cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 8px 11px; }
+    button { font: inherit; cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 8px 11px; overflow-wrap: anywhere; }
     button:hover { border-color: var(--accent); }
     .layout { min-height: 100vh; display: grid; grid-template-columns: 300px minmax(0, 1fr); }
-    aside { position: sticky; top: 0; height: 100vh; overflow: auto; border-right: 1px solid var(--border); background: #fbfcfc; padding: var(--s5); }
+    aside { position: sticky; top: 0; height: 100vh; overflow: auto; border-right: 1px solid var(--border); background: var(--nav-bg); padding: var(--s5); }
     main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: var(--s6) 0; }
-    h1, h2, h3 { line-height: 1.22; letter-spacing: 0; }
+    h1, h2, h3 { line-height: 1.22; letter-spacing: 0; overflow-wrap: anywhere; }
     h1 { margin: 0 0 var(--s2); font-size: 30px; }
     h2 { margin: 0 0 var(--s3); font-size: 20px; }
     h3 { margin: var(--s4) 0 var(--s2); font-size: 16px; }
@@ -41,25 +120,82 @@
     .muted { color: var(--muted); }
     .nav-list { display: grid; gap: var(--s2); margin-top: var(--s5); }
     .nav-list button { text-align: left; width: 100%; overflow-wrap: anywhere; }
-    .nav-list button.active { border-color: var(--accent); background: var(--soft); }
-    .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); }
-    .toolbar { display: flex; gap: var(--s2); flex-wrap: wrap; }
-    .toolbar a, .toolbar button { display: inline-flex; align-items: center; min-height: 38px; }
+    .nav-list button.active { border-color: var(--accent); background: var(--accent-soft); }
+    .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); min-width: 0; }
+    .toolbar { display: flex; gap: var(--s2); flex-wrap: wrap; min-width: 0; }
+    .toolbar a, .toolbar button { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; max-width: 100%; white-space: normal; text-align: center; }
     .status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); margin-bottom: var(--s5); }
     .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s4); min-height: 82px; }
     .metric span { display: block; color: var(--muted); font-size: 13px; margin-bottom: var(--s2); }
-    .panel-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr); gap: var(--s4); align-items: start; }
+    .panel-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr); gap: var(--s4); align-items: start; min-width: 0; }
     .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--s5); margin-bottom: var(--s4); min-width: 0; }
     .pill-row { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
-    .pill { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; background: var(--soft); font-size: 13px; }
-    .pill.ok { color: #0f513f; border-color: #9bc7ba; background: #eef8f4; }
+    .pill { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; background: var(--soft); font-size: 13px; max-width: 100%; overflow-wrap: anywhere; }
+    .pill.ok { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
     .pill.warn { color: var(--warn); border-color: #dec078; background: #fff8e6; }
-    .reader pre, pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #16212b; color: #f8fbfd; border-radius: var(--radius); padding: var(--s4); overflow: auto; }
+    .reader pre, pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--code-bg); color: var(--code-text); border-radius: var(--radius); padding: var(--s4); overflow: auto; }
     .reader table { width: 100%; border-collapse: collapse; margin: var(--s4) 0; font-size: 14px; }
     .reader th, .reader td { border: 1px solid var(--border); padding: 8px 10px; vertical-align: top; }
     .reader th { background: var(--soft); }
     .reader code { background: var(--soft); border: 1px solid var(--border); border-radius: 4px; padding: 1px 4px; }
-    .empty { border: 1px dashed var(--border); border-radius: var(--radius); padding: var(--s5); color: var(--muted); background: #fffdf7; }
+    .reader details { margin-top: var(--s4); }
+    .reader summary { cursor: pointer; color: var(--blue); }
+    .kv-table { width: 100%; border-collapse: collapse; margin: var(--s3) 0; font-size: 14px; }
+    .kv-table th, .kv-table td { border: 1px solid var(--border); padding: 7px 9px; vertical-align: top; }
+    .kv-key { width: 180px; color: var(--muted); font-weight: 650; }
+    .viewer-summary { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s3); }
+    .empty { border: 1px dashed var(--border); border-radius: var(--radius); padding: var(--s5); color: var(--muted); background: var(--surface); }
+    .settings-panel {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: start center;
+      padding: 72px 16px 24px;
+      background: rgba(12, 18, 24, .38);
+      z-index: 20;
+    }
+    .settings-panel.open { display: grid; }
+    .settings-card {
+      width: min(720px, 100%);
+      max-height: calc(100vh - 96px);
+      overflow: auto;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--s5);
+      box-shadow: 0 20px 80px rgba(0,0,0,.18);
+    }
+    .settings-head { display: flex; justify-content: space-between; gap: var(--s4); align-items: flex-start; margin-bottom: var(--s4); }
+    .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+    .setting-option {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--s3);
+      background: var(--surface);
+      min-width: 0;
+    }
+    .setting-option span { min-width: 0; overflow-wrap: anywhere; }
+    .setting-option strong { display: block; overflow-wrap: anywhere; }
+    .setting-note { margin-top: var(--s4); padding: var(--s3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--soft); color: var(--muted); overflow-wrap: anywhere; }
+    body[data-theme="compact"] aside { padding: var(--s4); }
+    body[data-theme="compact"] main { padding-top: var(--s5); }
+    body[data-theme="compact"] .panel { padding: var(--s4); }
+    body[data-theme="compact"] .status-grid { gap: var(--s2); }
+    body[data-theme="compact"] .metric { min-height: 70px; padding: var(--s3); }
+    body[data-theme="soft"] .panel,
+    body[data-theme="soft"] .metric,
+    body[data-theme="soft"] button,
+    body[data-theme="soft"] .nav-list button { box-shadow: 0 8px 28px rgba(24, 38, 58, .06); }
+    body[data-theme="editorial"] h1,
+    body[data-theme="editorial"] h2,
+    body[data-theme="editorial"] h3,
+    body[data-theme="editorial"] .brand { font-family: Georgia, "Times New Roman", serif; }
+    body[data-theme="dark"] .pill.warn { background: #302711; }
     @media (max-width: 960px) {
       .layout { grid-template-columns: 1fr; }
       aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
@@ -68,6 +204,15 @@
       .toolbar { margin-top: var(--s3); }
       .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .panel-grid { grid-template-columns: 1fr; }
+      .settings-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      main { width: calc(100% - 32px); max-width: none; }
+      h1 { font-size: 22px; word-break: break-word; }
+      .status-grid { grid-template-columns: 1fr; }
+      .pill-row .pill { width: 100%; justify-content: flex-start; }
+      .settings-head { display: block; }
+      .settings-head button { margin-top: var(--s3); }
     }
   </style>
 </head>
@@ -75,25 +220,26 @@
   <div class="layout">
     <aside>
       <div class="brand">Codex Research OS</div>
-      <p class="muted">PUBLIC/index.html dashboard for material-first human-in-loop research.</p>
+      <p class="muted" data-i18n="sidebarSubtitle">PUBLIC/index.html：面向 material-first human-in-loop 研究的公开仪表盘。</p>
       <div class="nav-list" id="nav"></div>
     </aside>
     <main>
       <div class="topbar">
         <div>
           <h1 id="projectTitle">Codex Research OS Template</h1>
-          <p class="muted">Research cockpit, process contract, environment checks, feasibility, resource guard, live evidence, research kernel, and governance links.</p>
+          <p class="muted" data-i18n="heroSubtitle">研究 cockpit、流程契约、环境检查、可行性、资源守卫、实时证据、研究内核和治理链接。</p>
           <div class="pill-row" id="projectPills"></div>
         </div>
         <div class="toolbar">
-          <button type="button" id="reloadBtn">Refresh</button>
-          <a href="copilot.html">Copilot</a>
-          <a href="../docs/process-contract.md">Process Contract</a>
-          <a href="../docs/environment.md">Environment</a>
-          <a href="../docs/start-here.html">Start Here</a>
-          <a href="../docs/domain-modes.html">Domain Modes</a>
-          <a href="../templates/research_kernel/research_cycle.template.yaml">Research Kernel</a>
-          <a href="../docs/technical-report.html">Technical Route</a>
+          <button type="button" id="settingsBtn" aria-haspopup="dialog" data-i18n="settingsButton">设置</button>
+          <button type="button" id="reloadBtn" data-i18n="refresh">刷新</button>
+          <a href="copilot.html" data-i18n="copilotLink">Copilot</a>
+          <a href="../docs/process-contract.md" data-i18n="processContract">流程契约</a>
+          <a href="../docs/environment.md" data-i18n="environment">环境</a>
+          <a href="../docs/start-here.html" data-i18n="startHere">开始</a>
+          <a href="../docs/domain-modes.html" data-i18n="domainModes">领域模式</a>
+          <a href="../templates/research_kernel/research_cycle.template.yaml" data-i18n="researchKernel">研究内核</a>
+          <a href="../docs/technical-report.html" data-i18n="technicalRoute">技术路线</a>
           <a href="../README.md">README</a>
         </div>
       </div>
@@ -103,22 +249,22 @@
       <section class="panel-grid">
         <div>
           <section class="panel">
-            <h2>Current Document</h2>
+            <h2 data-i18n="currentDocument">当前文档</h2>
             <div class="reader" id="reader">
-              <div class="empty">Choose a document on the left. For full fetch support, open this page through a local HTTP server instead of file://.</div>
+              <div class="empty" data-i18n="chooseDocument">从左侧选择文档。完整 fetch 支持需要通过本地 HTTP server 打开，而不是 file://。</div>
             </div>
           </section>
         </div>
         <div>
           <section class="panel">
-            <h2>Next Decisions</h2>
+            <h2 data-i18n="nextDecisions">下一步决策</h2>
             <ul id="decisionList"></ul>
           </section>
           <section class="panel">
-            <h2>Audit Reminders</h2>
-            <p class="muted">Before public export:</p>
+            <h2 data-i18n="auditReminders">审计提醒</h2>
+            <p class="muted" data-i18n="beforePublicExport">公开导出前：</p>
             <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1</pre>
-            <p class="muted">Before real resource use:</p>
+            <p class="muted" data-i18n="beforeResourceUse">使用真实资源前：</p>
             <pre>powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_resource_guard.ps1</pre>
           </section>
         </div>
@@ -126,11 +272,330 @@
     </main>
   </div>
 
+  <div class="settings-panel" id="settingsPanel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" aria-hidden="true">
+    <section class="settings-card">
+      <div class="settings-head">
+        <div>
+          <h2 id="settingsTitle" data-i18n="settingsTitle">用户设置</h2>
+          <p class="muted" data-i18n="settingsSubtitle">设置只保存在当前浏览器，用于公开 UI 的风格和界面语言。</p>
+        </div>
+        <button type="button" id="settingsCloseBtn" data-i18n="close">关闭</button>
+      </div>
+      <h3 data-i18n="styleSection">界面风格</h3>
+      <div class="settings-grid" id="styleOptions"></div>
+      <h3 data-i18n="languageSection">界面语言</h3>
+      <div class="settings-grid" id="languageOptions"></div>
+      <div class="setting-note" data-i18n="paperLanguageNote">论文输出：最终完成论文时默认使用英文；界面语言不改变论文输出策略。</div>
+    </section>
+  </div>
+
   <script>
+    const preferenceKey = "researchOS.uiPreferences.v1";
+    const styles = [
+      {
+        id: "clean",
+        zh: "清爽专业",
+        en: "Clean SaaS",
+        zhDesc: "低噪声、清晰层级，适合默认工作流。",
+        enDesc: "Low-noise hierarchy for default work."
+      },
+      {
+        id: "compact",
+        zh: "信息密度",
+        en: "Compact Enterprise",
+        zhDesc: "更紧凑的间距，适合反复查看和对比。",
+        enDesc: "Tighter spacing for repeated scanning."
+      },
+      {
+        id: "soft",
+        zh: "柔和系统",
+        en: "Soft System",
+        zhDesc: "轻量阴影和系统蓝，接近桌面生产力工具。",
+        enDesc: "Subtle depth and system blue for productivity UI."
+      },
+      {
+        id: "dark",
+        zh: "深色开发者",
+        en: "Developer Dark",
+        zhDesc: "深色面板，适合长时间查看日志和代码。",
+        enDesc: "Dark panels for long code and log review."
+      },
+      {
+        id: "editorial",
+        zh: "研究报告",
+        en: "Editorial Report",
+        zhDesc: "更像研究报告的阅读质感。",
+        enDesc: "A report-like reading surface."
+      }
+    ];
+    const languages = [
+      { id: "zh", label: "中文（默认）", enLabel: "Chinese (default)" },
+      { id: "en", label: "English", enLabel: "English" }
+    ];
+    const text = {
+      zh: {
+        settingsButton: "设置",
+        refresh: "刷新",
+        copilotLink: "Copilot",
+        processContract: "流程契约",
+        environment: "环境",
+        startHere: "开始",
+        domainModes: "领域模式",
+        researchKernel: "研究内核",
+        technicalRoute: "技术路线",
+        sidebarSubtitle: "PUBLIC/index.html：面向 material-first human-in-loop 研究的公开仪表盘。",
+        heroSubtitle: "研究 cockpit、流程契约、环境检查、可行性、资源守卫、实时证据、研究内核和治理链接。",
+        currentDocument: "当前文档",
+        chooseDocument: "从左侧选择文档。完整 fetch 支持需要通过本地 HTTP server 打开，而不是 file://。",
+        nextDecisions: "下一步决策",
+        auditReminders: "审计提醒",
+        beforePublicExport: "公开导出前：",
+        beforeResourceUse: "使用真实资源前：",
+        settingsTitle: "用户设置",
+        settingsSubtitle: "设置只保存在当前浏览器，用于公开 UI 的风格和界面语言。",
+        close: "关闭",
+        styleSection: "界面风格",
+        languageSection: "界面语言",
+        paperLanguageNote: "论文输出：最终完成论文时默认使用英文；界面语言不改变论文输出策略。",
+        source: "源码",
+        outline: "结构",
+        detectedIds: "检测到的 ID",
+        noTopKeys: "未检测到顶层键。",
+        unableToRead: "无法读取",
+        structuredFailed: "结构化视图失败",
+        itemCount: "项",
+        recordCount: "条记录",
+        lineCount: "行",
+        keyCount: "个键"
+      },
+      en: {
+        settingsButton: "Settings",
+        refresh: "Refresh",
+        copilotLink: "Copilot",
+        processContract: "Process Contract",
+        environment: "Environment",
+        startHere: "Start Here",
+        domainModes: "Domain Modes",
+        researchKernel: "Research Kernel",
+        technicalRoute: "Technical Route",
+        sidebarSubtitle: "PUBLIC/index.html dashboard for material-first human-in-loop research.",
+        heroSubtitle: "Research cockpit, process contract, environment checks, feasibility, resource guard, live evidence, research kernel, and governance links.",
+        currentDocument: "Current Document",
+        chooseDocument: "Choose a document on the left. For full fetch support, open this page through a local HTTP server instead of file://.",
+        nextDecisions: "Next Decisions",
+        auditReminders: "Audit Reminders",
+        beforePublicExport: "Before public export:",
+        beforeResourceUse: "Before real resource use:",
+        settingsTitle: "User Settings",
+        settingsSubtitle: "Settings stay in this browser and control the public UI style and interface language.",
+        close: "Close",
+        styleSection: "Interface Style",
+        languageSection: "Interface Language",
+        paperLanguageNote: "Paper output: final papers default to English; interface language does not change the paper-output policy.",
+        source: "Source",
+        outline: "Outline",
+        detectedIds: "Detected IDs",
+        noTopKeys: "No top-level keys detected.",
+        unableToRead: "Unable to read",
+        structuredFailed: "Structured view failed",
+        itemCount: "item(s)",
+        recordCount: "record(s)",
+        lineCount: "line(s)",
+        keyCount: "key(s)"
+      }
+    };
+    const labelMap = {
+      zh: {
+        "Copilot": "Copilot",
+        "Research Type": "研究类型",
+        "Questions": "问题",
+        "Research Kernel": "研究内核",
+        "Process Contract": "流程契约",
+        "P0/P1 Hardening": "P0/P1 加固",
+        "Copilot Usability": "Copilot 可用性",
+        "UI Settings": "UI 设置",
+        "Domain Profiles": "领域画像",
+        "feasibility": "可行性",
+        "resource guard": "资源守卫",
+        "live evidence": "实时证据",
+        "Harness": "执行框架",
+        "Paper Output": "论文输出",
+        "Material-first Copilot": "Material-first Copilot",
+        "Sanitized Copilot State": "脱敏 Copilot 状态",
+        "Sanitized Evidence Board": "脱敏证据板",
+        "Sanitized Run Monitor": "脱敏运行监控",
+        "Environment Guide": "环境指南",
+        "Research Flow YAML": "研究流程 YAML",
+        "Environment Installer": "环境安装脚本",
+        "Environment Check": "环境检查",
+        "Copilot Bridge Technical Doc": "Copilot Bridge 技术文档",
+        "Start Here HTML": "开始 HTML",
+        "Domain Modes HTML": "领域模式 HTML",
+        "Research Kernel Template": "研究内核模板",
+        "Research Kernel Schema": "研究内核 Schema",
+        "Copilot Intake Schema": "Copilot Intake Schema",
+        "Copilot Answers Schema": "Copilot Answers Schema",
+        "Copilot Confirmation Schema": "Copilot Confirmation Schema",
+        "Copilot Questions Schema": "Copilot Questions Schema",
+        "Copilot Initialization Schema": "Copilot 初始化 Schema",
+        "Experiment Run Schema": "实验运行 Schema",
+        "Adapter Contract Schema": "Adapter Contract Schema",
+        "Technical Route HTML": "技术路线 HTML",
+        "Domain Profile Center": "领域画像中心",
+        "Skill Trigger Matrix": "Skill 触发矩阵",
+        "Documentation Center": "文档中心",
+        "Document Map": "文档地图",
+        "Open Component Registry": "开放组件注册表",
+        "Project Summary": "项目摘要",
+        "Public README": "Public README",
+        "Research Brief": "研究简报",
+        "Claim Evidence": "Claim Evidence",
+        "AGENTS Rules": "AGENTS 规则",
+        "Run Manifest": "运行 Manifest",
+        "Resource Ledger": "资源 Ledger",
+        "Live Evidence": "实时证据",
+        "Public Audit Summary": "公开审计摘要",
+        "Final Validation v3.8": "最终验证 v3.8",
+        "Final Validation v3.7": "最终验证 v3.7",
+        "Final Validation v3.5": "最终验证 v3.5",
+        "Final Validation v3.4": "最终验证 v3.4",
+        "Work Order": "Work Order",
+        "Phase Gate": "Phase Gate",
+        "Implementation Checklist": "实施清单",
+        "Gap Audit": "差距审计",
+        "Local Eval Fixtures": "本地 Eval Fixtures",
+        "Allowlist Package Script": "Allowlist 打包脚本"
+      },
+      en: {}
+    };
+    const valueMap = {
+      zh: {
+        "material-first intake": "material-first intake",
+        "decided from material": "由材料决定",
+        "exactly three targeted": "恰好三个定向问题",
+        "enabled": "已启用",
+        "v3.7 validated": "v3.7 已验证",
+        "v3.8 validated": "v3.8 已验证",
+        "v3.8 enforced": "v3.8 已执行",
+        "strict schema + privacy + package checks": "严格 schema + 隐私 + 打包检查",
+        "evidence board + readable summaries": "证据板 + 可读摘要",
+        "five styles + Chinese/English": "五种风格 + 中英文",
+        "five deep modes": "五个深度模式",
+        "budget-gated": "预算门控",
+        "required when time-sensitive": "时间敏感时必需",
+        "process and governance checks": "流程与治理检查",
+        "generated only when enabled": "仅启用时生成",
+        "material-first-copilot-ready": "material-first-copilot-ready",
+        "undecided": "未决定",
+        "low": "低",
+        "public_private_split": "public/private 分离",
+        "zh-first": "中文优先"
+      },
+      en: {}
+    };
+    const decisionText = {
+      zh: [
+        "首次使用前运行 scripts/install_environment.ps1 或 scripts/check_environment.ps1。",
+        "使用 docs/process-contract.md 和 skills/README.md 选择正确的 skill route。",
+        "打开 PUBLIC/copilot.html 并提交 material-first intake。",
+        "Codex 完成 intake 分析后，回答恰好三个定向问题。",
+        "先查看脱敏 Evidence Board，再把 claim 写入报告文本。",
+        "确认初始化是否需要 theory、experiment，或两者都需要。",
+        "执行任何最小实验验证前，先提供预算。",
+        "只在合法开放访问或落地页尝试范围内使用 scripts/download_reference_links.ps1。",
+        "执行或公开导出前，使用 work order、phase gate、manifest、ledger、public summary checks 和 privacy scan。",
+        "除非创建单独 opt-in work order，否则继续暂缓 P2 discovery-layer 功能。"
+      ],
+      en: null
+    };
+    let preferences = loadPreferences();
+
+    function loadPreferences() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(preferenceKey) || "{}");
+        const params = new URLSearchParams(window.location.search);
+        const requestedTheme = params.get("theme");
+        const requestedLanguage = params.get("lang");
+        return {
+          theme: styles.some(style => style.id === requestedTheme) ? requestedTheme : (styles.some(style => style.id === saved.theme) ? saved.theme : "clean"),
+          language: requestedLanguage === "en" ? "en" : (requestedLanguage === "zh" ? "zh" : (saved.language === "en" ? "en" : "zh"))
+        };
+      } catch (_) {
+        return {theme: "clean", language: "zh"};
+      }
+    }
+
+    function savePreferences() {
+      localStorage.setItem(preferenceKey, JSON.stringify(preferences));
+    }
+
+    function t(key) {
+      return text[preferences.language][key] || text.zh[key] || key;
+    }
+
+    function localizeValue(value, map = labelMap) {
+      return (map[preferences.language] && map[preferences.language][value]) || value;
+    }
+
+    function applyPreferences() {
+      document.body.dataset.theme = preferences.theme;
+      document.documentElement.lang = preferences.language === "en" ? "en" : "zh-CN";
+      document.querySelectorAll("[data-i18n]").forEach(node => {
+        node.textContent = t(node.dataset.i18n);
+      });
+      renderSettings();
+    }
+
+    function renderSettings() {
+      const styleRoot = document.getElementById("styleOptions");
+      const langRoot = document.getElementById("languageOptions");
+      if (!styleRoot || !langRoot) return;
+      styleRoot.innerHTML = styles.map(style => `
+        <label class="setting-option">
+          <input type="radio" name="uiStyle" value="${esc(style.id)}" ${preferences.theme === style.id ? "checked" : ""}>
+          <span><strong>${esc(preferences.language === "en" ? style.en : style.zh)}</strong>${esc(preferences.language === "en" ? style.enDesc : style.zhDesc)}</span>
+        </label>`).join("");
+      langRoot.innerHTML = languages.map(language => `
+        <label class="setting-option">
+          <input type="radio" name="uiLanguage" value="${esc(language.id)}" ${preferences.language === language.id ? "checked" : ""}>
+          <span><strong>${esc(preferences.language === "en" ? language.enLabel : language.label)}</strong>${esc(preferences.language === "en" ? (language.id === "zh" ? "Chinese interface" : "Full English interface") : (language.id === "zh" ? "中文界面" : "全英文界面"))}</span>
+        </label>`).join("");
+      document.querySelectorAll("input[name='uiStyle']").forEach(input => {
+        input.addEventListener("change", event => {
+          preferences.theme = event.target.value;
+          savePreferences();
+          applyPreferences();
+        });
+      });
+      document.querySelectorAll("input[name='uiLanguage']").forEach(input => {
+        input.addEventListener("change", event => {
+          preferences.language = event.target.value;
+          savePreferences();
+          applyPreferences();
+          renderDashboard();
+          if (currentDoc) loadDoc(currentDoc);
+        });
+      });
+    }
+
+    function openSettings() {
+      const panel = document.getElementById("settingsPanel");
+      panel.classList.add("open");
+      panel.setAttribute("aria-hidden", "false");
+      document.getElementById("settingsCloseBtn").focus();
+    }
+
+    function closeSettings() {
+      const panel = document.getElementById("settingsPanel");
+      panel.classList.remove("open");
+      panel.setAttribute("aria-hidden", "true");
+      document.getElementById("settingsBtn").focus();
+    }
+
     const fallbackData = {
       project: {
         title: "Codex Research OS Template",
-        phase: "research-os-v3.5",
+        phase: "research-os-v3.8",
         language_mode: "zh-first",
         intervention_level: "low",
         privacy_policy: "public_private_split",
@@ -141,7 +606,8 @@
         {label: "Copilot", value: "material-first intake"},
         {label: "Research Type", value: "decided from material"},
         {label: "Questions", value: "exactly three targeted"},
-        {label: "Process Contract", value: "v3.5 enforced"},
+        {label: "Process Contract", value: "v3.8 enforced"},
+        {label: "UI Settings", value: "five styles + Chinese/English"},
         {label: "Environment", value: "documented and checkable"},
         {label: "feasibility", value: "budget-gated"},
         {label: "resource guard", value: "enabled"},
@@ -149,6 +615,8 @@
       ],
       documents: [
         {path: "copilot.html", label: "Material-first Copilot"},
+        {path: "evidence_board.json", label: "Evidence Board"},
+        {path: "run_monitor.json", label: "Sanitized Run Monitor"},
         {path: "../docs/process-contract.md", label: "Process Contract"},
         {path: "../config/research_flow.yaml", label: "Research Flow YAML"},
         {path: "../docs/environment.md", label: "Environment Guide"},
@@ -223,10 +691,87 @@
       return html;
     }
 
+    function renderDataValue(value, depth = 0) {
+      if (value === null || value === undefined) return '<span class="muted">null</span>';
+      if (Array.isArray(value)) {
+        if (!value.length) return '<span class="muted">empty array</span>';
+        const objectRows = value.every(item => item && typeof item === "object" && !Array.isArray(item));
+        if (objectRows && depth < 2) {
+          const keys = Array.from(new Set(value.flatMap(item => Object.keys(item)))).slice(0, 6);
+          return `<table class="kv-table"><thead><tr>${keys.map(key => `<th>${esc(key)}</th>`).join("")}</tr></thead><tbody>${
+            value.map(item => `<tr>${keys.map(key => `<td>${renderDataValue(item[key], depth + 1)}</td>`).join("")}</tr>`).join("")
+          }</tbody></table>`;
+        }
+        return `<ul>${value.map(item => `<li>${renderDataValue(item, depth + 1)}</li>`).join("")}</ul>`;
+      }
+      if (typeof value === "object") {
+        return `<table class="kv-table"><tbody>${Object.entries(value).map(([key, child]) => `
+          <tr><td class="kv-key">${esc(key)}</td><td>${renderDataValue(child, depth + 1)}</td></tr>`).join("")}</tbody></table>`;
+      }
+      if (typeof value === "boolean") return esc(String(value));
+      return esc(value);
+    }
+
+    function renderJsonDocument(path, text) {
+      const payload = JSON.parse(text);
+      const summary = Array.isArray(payload)
+        ? [`array`, `${payload.length} ${t("itemCount")}`]
+        : [`object`, `${Object.keys(payload).length} ${t("keyCount")}`];
+      return `
+        <div class="viewer-summary">
+          <span class="pill ok">${esc(summary[0])}</span>
+          <span class="pill">${esc(summary[1])}</span>
+          <span class="pill">${esc(path)}</span>
+        </div>
+        ${renderDataValue(payload)}
+        <details><summary>${t("source")}</summary><pre><code>${esc(text)}</code></pre></details>`;
+    }
+
+    function renderJsonlDocument(path, text) {
+      const rows = text.split(/\r?\n/).filter(line => line.trim()).map(line => JSON.parse(line));
+      return `
+        <div class="viewer-summary">
+          <span class="pill ok">jsonl</span>
+          <span class="pill">${rows.length} ${t("recordCount")}</span>
+          <span class="pill">${esc(path)}</span>
+        </div>
+        ${renderDataValue(rows)}
+        <details><summary>${t("source")}</summary><pre><code>${esc(text)}</code></pre></details>`;
+    }
+
+    function renderYamlDocument(path, text) {
+      const topKeys = text.split(/\r?\n/)
+        .map(line => line.match(/^([A-Za-z0-9_-]+):/))
+        .filter(Boolean)
+        .map(match => match[1]);
+      const nestedIds = text.split(/\r?\n/)
+        .map(line => line.match(/^\s+-\s+id:\s+(.+)$/))
+        .filter(Boolean)
+        .map(match => match[1].replace(/^["']|["']$/g, ""));
+      return `
+        <div class="viewer-summary">
+          <span class="pill ok">yaml</span>
+          <span class="pill">${text.split(/\r?\n/).length} ${t("lineCount")}</span>
+          <span class="pill">${esc(path)}</span>
+        </div>
+        <h3>${t("outline")}</h3>
+        ${topKeys.length ? `<ul>${topKeys.map(key => `<li><code>${esc(key)}</code></li>`).join("")}</ul>` : `<div class="empty">${t("noTopKeys")}</div>`}
+        ${nestedIds.length ? `<h3>${t("detectedIds")}</h3><p>${nestedIds.slice(0, 20).map(id => `<code>${esc(id)}</code>`).join(" ")}</p>` : ""}
+        <details open><summary>${t("source")}</summary><pre><code>${esc(text)}</code></pre></details>`;
+    }
+
     function renderDocument(path, text) {
       const reader = document.getElementById("reader");
-      if (path.endsWith(".md")) reader.innerHTML = renderMarkdown(text);
-      else reader.innerHTML = `<pre><code>${esc(text)}</code></pre>`;
+      const lower = path.toLowerCase();
+      try {
+        if (lower.endsWith(".json")) reader.innerHTML = renderJsonDocument(path, text);
+        else if (lower.endsWith(".jsonl")) reader.innerHTML = renderJsonlDocument(path, text);
+        else if (lower.endsWith(".yaml") || lower.endsWith(".yml")) reader.innerHTML = renderYamlDocument(path, text);
+        else if (lower.endsWith(".md")) reader.innerHTML = renderMarkdown(text);
+        else reader.innerHTML = `<pre><code>${esc(text)}</code></pre>`;
+      } catch (error) {
+        reader.innerHTML = `<div class="empty">${t("structuredFailed")} <code>${esc(path)}</code>: ${esc(error.message)}</div><pre><code>${esc(text)}</code></pre>`;
+      }
     }
 
     async function loadDoc(path) {
@@ -239,7 +784,7 @@
         if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
         renderDocument(path, await response.text());
       } catch (error) {
-        document.getElementById("reader").innerHTML = `<div class="empty">Unable to read <code>${esc(path)}</code>. ${esc(error.message)}</div>`;
+        document.getElementById("reader").innerHTML = `<div class="empty">${t("unableToRead")} <code>${esc(path)}</code>. ${esc(error.message)}</div>`;
       }
     }
 
@@ -253,18 +798,19 @@
         ["privacy", project.privacy_policy, "ok"],
         ["research_type", project.research_type || "unspecified", ""],
         ["dissemination", project.dissemination || "undecided", ""]
-      ].map(([label, value, tone]) => `<span class="pill ${tone}">${label}: ${esc(value)}</span>`).join("");
+      ].map(([label, value, tone]) => `<span class="pill ${tone}">${label}: ${esc(localizeValue(value, valueMap))}</span>`).join("");
 
       document.getElementById("statusGrid").innerHTML = dashboardData.status.map(item => `
         <div class="metric">
-          <span>${esc(item.label)}</span>
-          <strong>${esc(item.value)}</strong>
+          <span>${esc(localizeValue(item.label))}</span>
+          <strong>${esc(localizeValue(item.value, valueMap))}</strong>
         </div>`).join("");
 
       document.getElementById("nav").innerHTML = dashboardData.documents.map(doc => `
-        <button type="button" data-path="${esc(doc.path)}">${esc(doc.label)}</button>`).join("");
+        <button type="button" data-path="${esc(doc.path)}">${esc(localizeValue(doc.label))}</button>`).join("");
 
-      document.getElementById("decisionList").innerHTML = dashboardData.next_decisions
+      const decisions = preferences.language === "zh" ? decisionText.zh : dashboardData.next_decisions;
+      document.getElementById("decisionList").innerHTML = decisions
         .map(item => `<li>${esc(item)}</li>`)
         .join("");
 
@@ -288,6 +834,17 @@
       if (currentDoc) loadDoc(currentDoc);
       loadDashboardData();
     });
+    document.getElementById("settingsBtn").addEventListener("click", openSettings);
+    document.getElementById("settingsCloseBtn").addEventListener("click", closeSettings);
+    document.getElementById("settingsPanel").addEventListener("click", event => {
+      if (event.target.id === "settingsPanel") closeSettings();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && document.getElementById("settingsPanel").classList.contains("open")) {
+        closeSettings();
+      }
+    });
+    applyPreferences();
     loadDashboardData();
   </script>
 </body>

@@ -25,11 +25,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1 
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_strict_schema_instances.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_skills.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_harness.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_html_docs.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_public_summaries.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_public_summaries.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_private_intake_synthetic.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1
 ```
 
@@ -53,7 +57,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_inta
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_state.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_copilot_resource_rendering.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_integrations.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_eval_fixtures.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_package_artifacts.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_public_summaries.ps1
+python .\evals\run_eval.py
 ```
+
+Use `scripts/package_template.ps1 -DryRun` to inspect the release allowlist.
+Actual packages reject `.git/`, `build/`, `exports/`, and `PRIVATE/`.
 
 ## Optional Paper Track
 

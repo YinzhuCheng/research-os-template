@@ -55,6 +55,7 @@ STATE_NAMES = {
     "executing",
     "acceptance",
 }
+SESSION_ID_RE = re.compile(r"^INTAKE-[0-9A-Za-z_-]+$")
 
 
 def utcish_now() -> str:
@@ -100,6 +101,19 @@ def sha256_bytes(data: bytes) -> str:
 def safe_name(name: str) -> str:
     cleaned = re.sub(r'[\\/:*?"<>|\x00-\x1f]+', "_", name).strip()
     return cleaned[:140] or "upload.bin"
+
+
+def safe_session_id(value: str) -> str:
+    session_id = value.strip()
+    if not SESSION_ID_RE.match(session_id):
+        raise ValueError("Invalid session_id.")
+    return session_id
+
+
+def private_text_summary(text: str) -> str:
+    if not text.strip():
+        return "No free text submitted."
+    return "Raw free text is stored only under PRIVATE/intake/<session_id>/free_text.md when the local bridge is active."
 
 
 def extract_links(text: str) -> list[dict[str, Any]]:
@@ -172,12 +186,16 @@ class CopilotStore:
     def event_log(self) -> Path:
         return self.root / "PROVENANCE" / "copilot_events.jsonl"
 
+    @property
+    def run_monitor_path(self) -> Path:
+        return self.root / "PUBLIC" / "run_monitor.json"
+
     def session_id(self) -> str:
         stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
         return f"INTAKE-{stamp}"
 
     def save_intake(self, fields: dict[str, str], files: list[dict[str, Any]]) -> dict[str, Any]:
-        session_id = fields.get("session_id") or self.session_id()
+        session_id = safe_session_id(fields.get("session_id") or self.session_id())
         free_text = fields.get("free_text", "")
         upload_dir = self.root / "PRIVATE" / "intake" / session_id
         upload_dir.mkdir(parents=True, exist_ok=True)
@@ -201,20 +219,25 @@ class CopilotStore:
                     "sha256": digest,
                     "storage_policy": "private_runtime_only",
                     "public_summary": "Private upload registered; raw content is not public.",
-                    "private_runtime_path": str(private_path),
                 }
             )
 
+        text_digest: str | None = None
+        text_size = len(free_text.encode("utf-8"))
         if free_text.strip():
+            (upload_dir / "free_text.md").write_text(free_text, encoding="utf-8")
             text_digest = sha256_bytes(free_text.encode("utf-8"))
             material_hashes.append(text_digest)
         source_links = extract_links(free_text)
 
         packet = {
-            "schema_version": "v1.0",
+            "schema_version": "v1.1",
             "session_id": session_id,
             "created_at": utcish_now(),
-            "free_text": free_text,
+            "free_text_present": bool(free_text.strip()),
+            "free_text_sha256": text_digest,
+            "free_text_size_bytes": text_size,
+            "free_text_summary": private_text_summary(free_text),
             "uploaded_files": uploaded_files,
             "source_links": source_links,
             "privacy_default": "private",
@@ -240,6 +263,7 @@ class CopilotStore:
 
     def sanitize_packet(self, packet: dict[str, Any]) -> dict[str, Any]:
         clean = dict(packet)
+        clean.pop("free_text", None)
         clean["uploaded_files"] = [
             {k: v for k, v in item.items() if k != "private_runtime_path"}
             for item in packet.get("uploaded_files", [])
@@ -257,7 +281,10 @@ class CopilotStore:
                 "research_type": "unclear",
                 "pending_confirmation": True,
                 "intake_summary": {
-                    "free_text_present": bool(packet.get("free_text", "").strip()),
+                    "free_text_present": bool(packet.get("free_text_present")),
+                    "free_text_sha256": packet.get("free_text_sha256"),
+                    "free_text_size_bytes": packet.get("free_text_size_bytes", 0),
+                    "free_text_summary": packet.get("free_text_summary", ""),
                     "uploaded_file_count": len(packet.get("uploaded_files", [])),
                     "source_link_count": len(packet.get("source_links", [])),
                     "material_hashes": packet.get("material_hashes", []),
@@ -265,6 +292,123 @@ class CopilotStore:
             }
         )
         write_json(self.public_state_path, state)
+
+    def save_answers(self, payload: dict[str, Any]) -> dict[str, Any]:
+        state = read_json(self.public_state_path, {})
+        session_id = safe_session_id(str(payload.get("session_id") or state.get("active_session_id") or ""))
+        answers = payload.get("answers", [])
+        if not isinstance(answers, list) or len(answers) != 3:
+            raise ValueError("Exactly three question answers are required.")
+
+        clean_answers = []
+        for index, answer in enumerate(answers, start=1):
+            if not isinstance(answer, dict):
+                raise ValueError("Each answer must be an object.")
+            question_id = str(answer.get("question_id") or f"Q-{index:02d}")
+            if not re.match(r"^Q-[0-9]{2}$", question_id):
+                raise ValueError(f"Invalid question_id: {question_id}")
+            clean_answers.append(
+                {
+                    "question_id": question_id,
+                    "selected_option": str(answer.get("selected_option") or ""),
+                    "free_text_other": str(answer.get("free_text_other") or ""),
+                }
+            )
+
+        stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+        packet = {
+            "schema_version": "v1.0",
+            "answers_packet_id": f"ANS-{stamp}",
+            "session_id": session_id,
+            "question_packet_id": payload.get("question_packet_id") or state.get("question_packet_id"),
+            "created_at": utcish_now(),
+            "answers": clean_answers,
+            "status": "answers_received",
+        }
+        self.inbox_dir.mkdir(parents=True, exist_ok=True)
+        write_json(self.inbox_dir / f"{session_id}.answers.json", packet)
+        state.update(
+            {
+                "updated_at": utcish_now(),
+                "state": "answers_received",
+                "active_session_id": session_id,
+                "pending_confirmation": True,
+                "answer_summary": {
+                    "answers_packet_id": packet["answers_packet_id"],
+                    "answer_count": len(clean_answers),
+                    "status": packet["status"],
+                },
+            }
+        )
+        write_json(self.public_state_path, state)
+        append_jsonl(
+            self.event_log,
+            {
+                "event": "answers_saved",
+                "timestamp": utcish_now(),
+                "session_id": session_id,
+                "answer_count": len(clean_answers),
+                "status": "answers_received",
+            },
+        )
+        return packet
+
+    def save_confirmation(self, payload: dict[str, Any]) -> dict[str, Any]:
+        state = read_json(self.public_state_path, {})
+        session_id = safe_session_id(str(payload.get("session_id") or state.get("active_session_id") or ""))
+        confirmed = bool(payload.get("confirmed", False))
+        stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+        packet = {
+            "schema_version": "v1.0",
+            "confirmation_id": f"CONF-{stamp}",
+            "session_id": session_id,
+            "created_at": utcish_now(),
+            "next_action": str(payload.get("next_action") or "Generate initialization report after Codex review."),
+            "confirmed": confirmed,
+            "requires_work_order": bool(payload.get("requires_work_order", True)),
+            "notes": str(payload.get("notes") or ""),
+            "status": "confirmed" if confirmed else "changes_requested",
+        }
+        self.inbox_dir.mkdir(parents=True, exist_ok=True)
+        write_json(self.inbox_dir / f"{session_id}.confirmation.json", packet)
+        state.update(
+            {
+                "updated_at": utcish_now(),
+                "state": "initialization_pending_confirmation" if confirmed else "plan_pending_confirmation",
+                "active_session_id": session_id,
+                "pending_confirmation": not confirmed,
+                "next_action": {
+                    "label": packet["next_action"],
+                    "requires_work_order": packet["requires_work_order"],
+                    "status": packet["status"],
+                },
+            }
+        )
+        write_json(self.public_state_path, state)
+        append_jsonl(
+            self.event_log,
+            {
+                "event": "next_action_confirmation_saved",
+                "timestamp": utcish_now(),
+                "session_id": session_id,
+                "confirmed": confirmed,
+                "status": packet["status"],
+            },
+        )
+        return packet
+
+    def session_state(self, session_id: str) -> dict[str, Any]:
+        safe_id = safe_session_id(session_id)
+        return {
+            "session_id": safe_id,
+            "public_state": read_json(self.public_state_path, {}),
+            "packets": {
+                "intake": (self.inbox_dir / f"{safe_id}.intake.json").exists(),
+                "answers": (self.inbox_dir / f"{safe_id}.answers.json").exists(),
+                "confirmation": (self.inbox_dir / f"{safe_id}.confirmation.json").exists(),
+            },
+            "run_monitor": read_json(self.run_monitor_path, {"runs": []}),
+        }
 
     def list_pending(self) -> list[dict[str, Any]]:
         if not self.inbox_dir.exists():
@@ -389,6 +533,16 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/dashboard_data.json":
             self.send_json(read_json(self.store.root / "PUBLIC" / "dashboard_data.json", {}))
             return
+        if parsed.path == "/run_monitor.json":
+            self.send_json(read_json(self.store.run_monitor_path, {"runs": []}))
+            return
+        session_match = re.match(r"^/api/session/([^/]+)/state$", parsed.path)
+        if session_match:
+            try:
+                self.send_json(self.store.session_state(urllib.parse.unquote(session_match.group(1))))
+            except Exception as exc:  # noqa: BLE001 - API returns validation failure.
+                self.send_json({"ok": False, "error": str(exc)}, status=400)
+            return
         if parsed.path == "/api/pending":
             self.send_json({"pending": self.store.list_pending()})
             return
@@ -401,15 +555,34 @@ class Handler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", "0"))
         body = self.rfile.read(length)
         if parsed.path == "/api/intake":
-            content_type = self.headers.get("Content-Type", "")
-            if content_type.startswith("multipart/form-data"):
-                fields, files = parse_multipart(body, content_type)
-            else:
+            try:
+                content_type = self.headers.get("Content-Type", "")
+                if content_type.startswith("multipart/form-data"):
+                    fields, files = parse_multipart(body, content_type)
+                else:
+                    payload = json.loads(body.decode("utf-8") or "{}")
+                    fields = {key: str(value) for key, value in payload.items() if isinstance(value, (str, int, float, bool))}
+                    files = []
+                packet = self.store.save_intake(fields, files)
+                self.send_json({"ok": True, "packet": packet})
+            except Exception as exc:  # noqa: BLE001 - API returns validation failure.
+                self.send_json({"ok": False, "error": str(exc)}, status=400)
+            return
+        if parsed.path == "/api/question-answers":
+            try:
                 payload = json.loads(body.decode("utf-8") or "{}")
-                fields = {key: str(value) for key, value in payload.items() if isinstance(value, (str, int, float, bool))}
-                files = []
-            packet = self.store.save_intake(fields, files)
-            self.send_json({"ok": True, "packet": packet})
+                packet = self.store.save_answers(payload)
+                self.send_json({"ok": True, "answers": packet})
+            except Exception as exc:  # noqa: BLE001
+                self.send_json({"ok": False, "error": str(exc)}, status=400)
+            return
+        if parsed.path == "/api/confirm-next-action":
+            try:
+                payload = json.loads(body.decode("utf-8") or "{}")
+                packet = self.store.save_confirmation(payload)
+                self.send_json({"ok": True, "confirmation": packet})
+            except Exception as exc:  # noqa: BLE001
+                self.send_json({"ok": False, "error": str(exc)}, status=400)
             return
         if parsed.path == "/api/download-references":
             self.send_json({"ok": True, "download": self.store.download_references()})
@@ -439,6 +612,9 @@ def mcp_stdio() -> None:
     tools = {
         "list_pending_intake": lambda _: {"pending": store.list_pending()},
         "read_public_state": lambda _: read_json(store.public_state_path, {}),
+        "read_session_state": lambda args: store.session_state(str(args.get("session_id", ""))),
+        "save_question_answers": lambda args: store.save_answers(args),
+        "confirm_next_action": lambda args: store.save_confirmation(args),
         "download_references": lambda _: store.download_references(),
     }
     for line in sys.stdin:

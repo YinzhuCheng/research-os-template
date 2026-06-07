@@ -28,7 +28,7 @@ Use this skill when the researcher wants to start or continue a Research OS proj
    - experiment track and minimum validation when the project has experiments
    - repository resource links
 6. Bind the initialization report to `research-os-research-kernel` before any substantive execution. Candidate claims, evaluation contracts, search traces, negative results, and human gates must remain first-class objects.
-7. Update only sanitized public state in `PUBLIC/copilot_state.json`; raw uploaded material remains private at runtime.
+7. Update only sanitized public state in `PUBLIC/copilot_state.json`; raw free text and uploaded material remain private at runtime.
 
 ## Guardrails
 
@@ -37,7 +37,7 @@ Use this skill when the researcher wants to start or continue a Research OS proj
 - Do not initialize an experiment plan with concrete spending until the researcher provides a budget.
 - Do not bypass paywalls or download restricted paper full text.
 - Do not external-write, publish, submit, or call paid resources without explicit confirmation.
-- Do not move raw upload content into `PUBLIC/`, `docs/`, or git-tracked provenance.
+- Do not move raw free text or upload content into `CONTROL/`, `PUBLIC/`, `docs/`, or git-tracked provenance.
 
 ## Outputs
 
@@ -45,6 +45,6 @@ Use this skill when the researcher wants to start or continue a Research OS proj
 - Question packet: `config/schemas/copilot_questions.schema.json`
 - Initialization report: `config/schemas/copilot_initialization_report.schema.json`
 - Browser state: `PUBLIC/copilot_state.json`
-- Runtime queue: `CONTROL/copilot_inbox/*.json`
+- Runtime queue: `CONTROL/copilot_inbox/*.json` with sanitized packets only
 
 See `references/copilot_workflow.md` for the full state machine and browser bridge contract.

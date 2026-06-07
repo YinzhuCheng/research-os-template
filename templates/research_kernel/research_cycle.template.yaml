@@ -12,38 +12,38 @@ loop:
     - apply_human_judgment_gate
 candidate:
   candidate_id: CAND-0000
-  candidate_type: null
-  summary: null
+  candidate_type: "TBD"
+  summary: "TBD"
   source_artifacts: []
   status: draft
 evaluator_contracts:
   - evaluator_id: EVAL-0000
     target_candidate_id: CAND-0000
-    metric_or_check: null
-    formula_or_procedure: null
+    metric_or_check: "TBD"
+    formula_or_procedure: "TBD"
     inputs: []
-    units_or_scale: null
-    acceptance_threshold: null
+    units_or_scale: "TBD"
+    acceptance_threshold: "TBD"
     resource_estimate: "time: TBD; compute: none unless approved; cost: 0 CNY by default"
-    failure_mode: null
-    replay_note: null
+    failure_mode: "TBD"
+    replay_note: "TBD"
 evaluation_results: []
 belief_state:
-  summary: null
+  summary: "TBD"
   assumptions: []
   uncertainty_register: []
   evidence_links: []
   confidence_level: unknown
 search_trace:
   - step_id: STEP-0000
-    action: null
-    result: null
+    action: "TBD"
+    result: "TBD"
     linked_artifacts: []
     negative_result_ref: null
 negative_results: []
 next_action_policy:
   decision: ask_human
-  rationale: null
+  rationale: "TBD"
   stop_conditions: []
   candidate_updates: []
 human_judgment_gate:

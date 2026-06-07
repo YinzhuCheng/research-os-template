@@ -1,5 +1,5 @@
 {
-  "schema_version": "v1.0",
+  "schema_version": "v1.1",
   "updated_at": "2026-06-06T00:00:00+08:00",
   "state": "material_input",
   "active_session_id": null,
@@ -7,6 +7,9 @@
   "pending_confirmation": false,
   "intake_summary": {
     "free_text_present": false,
+    "free_text_sha256": null,
+    "free_text_size_bytes": 0,
+    "free_text_summary": "No free text submitted.",
     "uploaded_file_count": 0,
     "source_link_count": 0,
     "material_hashes": []
@@ -78,6 +81,16 @@
       "label": "Intake schema",
       "path": "../config/schemas/copilot_intake.schema.json",
       "purpose": "Sanitized intake packet"
+    },
+    {
+      "label": "Run monitor",
+      "path": "run_monitor.json",
+      "purpose": "Sanitized run summaries"
+    },
+    {
+      "label": "Evidence Board",
+      "path": "evidence_board.json",
+      "purpose": "Sanitized claim/evidence summary"
     },
     {
       "label": "Question schema",

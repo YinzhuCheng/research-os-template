@@ -1,13 +1,15 @@
-current_phase: research-os-v3.5
+current_phase: research-os-v3.8
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "After process-contract hardening, decide whether to test synthetic PRIVATE intake handling or keep the template as documentation-first."
+next_required_decision: "After v3.8 UI personalization, decide whether project-instance defaults should be configured through a schema-backed user preferences file."
 confirmed_decisions:
   - "Use the latest material-first copilot flow: no fixed five-question intake; exactly three targeted questions after material profiling."
-  - "Keep current skills; clarify triggers and boundaries instead of splitting or merging skills in v3.5."
-  - "Make config/research_flow.yaml the canonical machine-readable process contract."
-  - "Do not touch PRIVATE/ or real uploaded materials during this governance pass."
+  - "Keep Research OS positioned as a researcher copilot for the initial release, not a fully autonomous research agent."
+  - "Add only local browser UI preferences: five visual styles and Chinese/English interface language."
+  - "Chinese is the default interface language; final paper output remains English by default."
+  - "Do not touch PRIVATE/ or real uploaded materials during this pass."
+  - "Use only local validation, local browser QA, and zero-cost checks for this pass."

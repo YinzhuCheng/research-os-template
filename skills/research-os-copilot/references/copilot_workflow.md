@@ -4,7 +4,7 @@
 
 `material_input -> save_intake -> pending_intake_analysis -> questions_ready -> answers_received -> initialization_pending_confirmation -> initializing -> review_ready -> loop_alignment -> plan_pending_confirmation -> executing -> acceptance`
 
-The browser can move data into `save_intake` and `answers_received`. Codex is responsible for analysis, planning, execution, and acceptance.
+The browser can move sanitized data into `save_intake` and `answers_received`. Raw free text and uploads belong under runtime `PRIVATE/intake/<session_id>/`. Codex is responsible for analysis, planning, execution, and acceptance.
 
 ## Material-first Intake
 
@@ -40,4 +40,4 @@ The report is a startup package, not a finished paper. It must include:
 
 ## Browser-to-Codex Bridge
 
-The local browser cockpit writes sanitized packets and state. Codex reads the queue through the MCP/server bridge, then asks for human confirmation before execution. Runtime raw files belong under `PRIVATE/intake/<session_id>/` and remain outside git.
+The local browser cockpit writes sanitized packets and state. Codex reads the queue through the MCP/server bridge, then asks for human confirmation before execution. Runtime raw text and files belong under `PRIVATE/intake/<session_id>/` and remain outside git.

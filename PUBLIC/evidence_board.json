@@ -1,0 +1,275 @@
+{
+  "schema_version": "v1.0",
+  "updated_at": "2026-06-07T15:13:23+08:00",
+  "source_policy": "sanitized_public_summary_only",
+  "source": "PUBLIC/claim_evidence_matrix.yaml",
+  "summary": {
+    "total_claims": 8,
+    "status_counts": {
+      "supported": 8
+    },
+    "repository_evidence_refs": 23,
+    "external_evidence_refs": 12
+  },
+  "rows": [
+    {
+      "claim_id": "CLAIM-001",
+      "status": "supported",
+      "claim": "模板可以把研究对话、草稿或 demo 转换为可审计研究项目。",
+      "evidence_count": 3,
+      "evidence": [
+        {
+          "kind": "repo_path",
+          "ref": "PLAN/00_MASTER_PLAN.md"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "PLAN/01_ARCHITECTURE.md"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "skills/research-os-orchestrator/SKILL.md"
+        }
+      ],
+      "counterevidence_count": 0,
+      "counterevidence": [],
+      "dissemination_targets": [
+        "PUBLIC/research_brief.md"
+      ],
+      "privacy_level": "public"
+    },
+    {
+      "claim_id": "CLAIM-002",
+      "status": "supported",
+      "claim": "Human-in-loop stage gate 是自动研究系统的重要质量控制点。",
+      "evidence_count": 3,
+      "evidence": [
+        {
+          "kind": "url",
+          "ref": "https://arxiv.org/abs/2501.04227"
+        },
+        {
+          "kind": "url",
+          "ref": "https://arxiv.org/abs/2502.18864"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "CONTROL/phase_gate.yaml"
+        }
+      ],
+      "counterevidence_count": 0,
+      "counterevidence": [],
+      "dissemination_targets": [
+        "docs/start-here.html",
+        "docs/technical-report.html"
+      ],
+      "privacy_level": "public"
+    },
+    {
+      "claim_id": "CLAIM-003",
+      "status": "supported",
+      "claim": "自动研究系统需要把假设、实验、分析、报告和审计产物串成可追踪数据流。",
+      "evidence_count": 4,
+      "evidence": [
+        {
+          "kind": "url",
+          "ref": "https://arxiv.org/abs/2504.08066"
+        },
+        {
+          "kind": "url",
+          "ref": "https://arxiv.org/abs/2508.14111"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "PROVENANCE/run_manifest.jsonl"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "PROVENANCE/resource_ledger.jsonl"
+        }
+      ],
+      "counterevidence_count": 0,
+      "counterevidence": [],
+      "dissemination_targets": [
+        "docs/technical-report.html"
+      ],
+      "privacy_level": "public"
+    },
+    {
+      "claim_id": "CLAIM-004",
+      "status": "supported",
+      "claim": "长时间自动实验需要资源上限、零成本监控或低成本监控、失败状态记录和可恢复运行。",
+      "evidence_count": 3,
+      "evidence": [
+        {
+          "kind": "url",
+          "ref": "https://arxiv.org/abs/2604.05854"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "skills/research-os-resource-guard/SKILL.md"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "config/schemas/resource_ledger.schema.json"
+        }
+      ],
+      "counterevidence_count": 0,
+      "counterevidence": [],
+      "dissemination_targets": [
+        "docs/technical-report.html",
+        "docs/integrations/components.yaml"
+      ],
+      "privacy_level": "public"
+    },
+    {
+      "claim_id": "CLAIM-005",
+      "status": "supported",
+      "claim": "仓库级 AGENTS.md、skills、MCP、hooks、sandbox 和 approval policy 是 Codex harness engineering 的核心控制面。",
+      "evidence_count": 6,
+      "evidence": [
+        {
+          "kind": "url",
+          "ref": "https://developers.openai.com/codex/guides/agents-md"
+        },
+        {
+          "kind": "url",
+          "ref": "https://developers.openai.com/codex/skills"
+        },
+        {
+          "kind": "url",
+          "ref": "https://developers.openai.com/codex/mcp"
+        },
+        {
+          "kind": "url",
+          "ref": "https://developers.openai.com/codex/hooks"
+        },
+        {
+          "kind": "url",
+          "ref": "https://developers.openai.com/codex/agent-approvals-security"
+        },
+        {
+          "kind": "repo_path",
+          "ref": ".codex/requirements.md"
+        }
+      ],
+      "counterevidence_count": 0,
+      "counterevidence": [],
+      "dissemination_targets": [
+        "docs/technical-report.html"
+      ],
+      "privacy_level": "public"
+    },
+    {
+      "claim_id": "CLAIM-006",
+      "status": "supported",
+      "claim": "Research OS can deepen field-specific research behavior without losing harness control by representing domain knowledge as profiles, agent capability registries, templates, skills, and validation scripts.",
+      "evidence_count": 5,
+      "evidence": [
+        {
+          "kind": "repo_path",
+          "ref": "domain_profiles/README.md"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "config/schemas/domain_profile.schema.json"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "config/schemas/agent_capability.schema.json"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "scripts/check_domain_profiles.ps1"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "scripts/check_agent_capabilities.ps1"
+        }
+      ],
+      "counterevidence_count": 0,
+      "counterevidence": [],
+      "dissemination_targets": [
+        "docs/domain-modes.html",
+        "docs/technical-report.html"
+      ],
+      "privacy_level": "public"
+    },
+    {
+      "claim_id": "CLAIM-007",
+      "status": "supported",
+      "claim": "The math discovery mode intentionally keeps formal proof assistants disabled by default and instead requires conjecture, example, counterexample, proof-strategy, proof-gap, and human-review states.",
+      "evidence_count": 5,
+      "evidence": [
+        {
+          "kind": "repo_path",
+          "ref": "domain_profiles/fundamental-mathematics/profile.yaml"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "skills/research-os-math-discovery/SKILL.md"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "templates/domain/fundamental-mathematics/math_discovery_case.template.yaml"
+        },
+        {
+          "kind": "url",
+          "ref": "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/"
+        },
+        {
+          "kind": "url",
+          "ref": "https://deepmind.google/blog/funsearch-making-new-discoveries-in-mathematical-sciences-using-large-language-models/"
+        }
+      ],
+      "counterevidence_count": 0,
+      "counterevidence": [],
+      "dissemination_targets": [
+        "docs/domain-modes.html",
+        "docs/technical-report.html"
+      ],
+      "privacy_level": "public"
+    },
+    {
+      "claim_id": "CLAIM-008",
+      "status": "supported",
+      "claim": "Research OS v3.2 prevents the skill suite from becoming a loose toolbox by routing substantive research through a shared research kernel with candidate, evaluator, belief state, search trace, negative result, next-action policy, and human judgment gate objects.",
+      "evidence_count": 6,
+      "evidence": [
+        {
+          "kind": "repo_path",
+          "ref": "config/schemas/research_kernel.schema.json"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "templates/research_kernel/research_cycle.template.yaml"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "skills/research-os-research-kernel/SKILL.md"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "scripts/check_research_kernel.ps1"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "scripts/check_domain_kernel_bindings.ps1"
+        },
+        {
+          "kind": "repo_path",
+          "ref": "scripts/check_no_orphan_skills.ps1"
+        }
+      ],
+      "counterevidence_count": 0,
+      "counterevidence": [],
+      "dissemination_targets": [
+        "docs/start-here.html",
+        "docs/domain-modes.html",
+        "docs/technical-report.html"
+      ],
+      "privacy_level": "public"
+    }
+  ],
+  "deferred_scope_note": "This is a readable claim/evidence board, not a knowledge graph or autonomous hypothesis backlog."
+}

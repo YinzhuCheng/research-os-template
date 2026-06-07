@@ -1,5 +1,5 @@
 doc_map_id: DOCMAP-0001
-updated_at: 2026-06-06
+updated_at: "2026-06-06"
 language_mode: zh-first
 entrypoints:
   copilot:
@@ -59,11 +59,15 @@ environment:
 copilot:
   cockpit: "PUBLIC/copilot.html"
   sanitized_state: "PUBLIC/copilot_state.json"
+  evidence_board: "PUBLIC/evidence_board.json"
+  run_monitor: "PUBLIC/run_monitor.json"
   plugin_marketplace: ".agents/plugins/marketplace.json"
   plugin_root: ".agents/plugins/plugins/research-os-copilot/"
   skill: "skills/research-os-copilot/SKILL.md"
   bridge_doc: "docs/codex-browser-copilot.html"
   intake_schema: "config/schemas/copilot_intake.schema.json"
+  answers_schema: "config/schemas/copilot_answers.schema.json"
+  confirmation_schema: "config/schemas/copilot_confirmation.schema.json"
   questions_schema: "config/schemas/copilot_questions.schema.json"
   initialization_report_schema: "config/schemas/copilot_initialization_report.schema.json"
   intake_template: "templates/yaml/copilot_intake.template.yaml"
@@ -75,6 +79,7 @@ audit:
   resource_ledger: "PROVENANCE/resource_ledger.jsonl"
   live_evidence: "PROVENANCE/live_evidence_snapshot.yaml"
   claim_evidence: "PUBLIC/claim_evidence_matrix.yaml"
+  evidence_board: "PUBLIC/evidence_board.json"
 skills:
   source: "skills/"
   repo_scoped_mirror: ".agents/skills/"
@@ -93,6 +98,18 @@ research_kernel:
 integrations:
   registry: "docs/integrations/components.yaml"
   adapter_template: "templates/yaml/integration_component.template.yaml"
+adapters:
+  guide: "adapters/README.md"
+  contract_schema: "config/schemas/adapter_contract.schema.json"
+  contract_template: "templates/adapters/adapter_contract.template.yaml"
+experiments:
+  run_schema: "config/schemas/experiment_run.schema.json"
+  sanitized_monitor: "PUBLIC/run_monitor.json"
+  example_run: "RUNS/experiments/EXP-0001/run.yaml"
+evals:
+  root: "evals/"
+  runner: "evals/run_eval.py"
+  package_script: "scripts/package_template.ps1"
 validation:
   environment: "scripts/check_environment.ps1"
   environment_install: "scripts/install_environment.ps1"
@@ -100,6 +117,9 @@ validation:
   research_flow: "scripts/check_research_flow.ps1"
   governance_text: "scripts/check_governance_text.ps1"
   schema: "scripts/validate_schemas.ps1"
+  strict_schema_instances: "scripts/check_strict_schema_instances.ps1"
+  public_summaries: "scripts/check_public_summaries.ps1"
+  synthetic_private_intake: "scripts/check_private_intake_synthetic.ps1"
   skill: "scripts/validate_skills.ps1"
   harness: "scripts/check_harness.ps1"
   dashboard: "scripts/check_dashboard.ps1"
@@ -117,4 +137,6 @@ validation:
   copilot_state: "scripts/check_copilot_state.ps1"
   copilot_resource_rendering: "scripts/check_copilot_resource_rendering.ps1"
   integrations: "scripts/check_integrations.ps1"
+  eval_fixtures: "scripts/check_eval_fixtures.ps1"
+  package_artifacts: "scripts/check_package_artifacts.ps1"
   privacy: "scripts/scan_privacy.ps1"

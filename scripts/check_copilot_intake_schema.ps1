@@ -32,9 +32,17 @@ Require-File "templates\yaml\copilot_intake.template.yaml"
 Require-File "templates\yaml\copilot_questions.template.yaml"
 Require-File "templates\yaml\copilot_initialization_report.template.yaml"
 
-foreach ($field in @("session_id", "free_text", "uploaded_files", "source_links", "privacy_default", "material_hashes", "status")) {
+foreach ($field in @("session_id", "free_text_present", "free_text_sha256", "free_text_size_bytes", "free_text_summary", "uploaded_files", "source_links", "privacy_default", "material_hashes", "status")) {
   Require-Text "config\schemas\copilot_intake.schema.json" $field
   Require-Text "templates\yaml\copilot_intake.template.yaml" $field
+}
+
+$intakeSchema = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $Root "config\schemas\copilot_intake.schema.json")
+if ($intakeSchema -match '"free_text"\s*:') {
+  throw "Copilot intake schema must not expose raw free_text."
+}
+if ($intakeSchema -match "private_runtime_path") {
+  throw "Copilot intake schema must not expose private_runtime_path."
 }
 
 foreach ($field in @("question_id", "reason_for_asking", "recommended_answer", "options", "free_text_other", "plan_impact")) {

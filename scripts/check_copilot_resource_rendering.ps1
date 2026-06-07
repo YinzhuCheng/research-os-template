@@ -12,6 +12,11 @@ function Require-Text([string]$Path, [string]$Pattern) {
 }
 
 Require-Text "PUBLIC\copilot.html" "Research OS Copilot"
+Require-Text "PUBLIC\copilot.html" "settingsPanel"
+Require-Text "PUBLIC\copilot.html" "researchOS.uiPreferences.v1"
+Require-Text "PUBLIC\copilot.html" "Developer Dark"
+Require-Text "PUBLIC\copilot.html" "Editorial Report"
+Require-Text "PUBLIC\copilot.html" "final papers default to English"
 Require-Text "PUBLIC\copilot.html" "api/intake"
 Require-Text "PUBLIC\copilot.html" "Other"
 Require-Text "PUBLIC\copilot.html" "download_reference_links.ps1"
@@ -19,8 +24,10 @@ Require-Text "PUBLIC\copilot.html" "Overview"
 Require-Text "PUBLIC\copilot.html" "Literature"
 Require-Text "PUBLIC\copilot.html" "Theory"
 Require-Text "PUBLIC\copilot.html" "Experiment"
+Require-Text "PUBLIC\copilot.html" "Evidence Board"
 Require-Text "PUBLIC\copilot.html" "Repository Links"
 Require-Text "PUBLIC\copilot.html" "copilot_state.json"
+Require-Text "PUBLIC\copilot.html" "evidence_board.json"
 
 Require-Text "docs\codex-browser-copilot.html" "material_input"
 Require-Text "docs\codex-browser-copilot.html" "pending_intake_analysis"

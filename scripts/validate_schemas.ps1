@@ -28,6 +28,7 @@ Require-File (Join-Path $Root "PROVENANCE\live_evidence_snapshot.yaml")
 Require-File (Join-Path $Root "docs\doc_map.yaml")
 Require-File (Join-Path $Root "docs\integrations\components.yaml")
 Require-File (Join-Path $Root "templates\yaml\integration_component.template.yaml")
+Require-File (Join-Path $Root "templates\adapters\adapter_contract.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\harness_run.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\domain_profile.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\agent_capability.template.yaml")
@@ -36,6 +37,10 @@ Require-File (Join-Path $Root "templates\yaml\copilot_intake.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\copilot_questions.template.yaml")
 Require-File (Join-Path $Root "templates\yaml\copilot_initialization_report.template.yaml")
 Require-File (Join-Path $Root "templates\research_kernel\research_cycle.template.yaml")
+Require-File (Join-Path $Root "RUNS\experiments\EXP-0001\run.yaml")
+Require-File (Join-Path $Root "PUBLIC\evidence_board.json")
+Require-File (Join-Path $Root "PUBLIC\run_monitor.json")
+Require-File (Join-Path $Root "evals\README.md")
 Require-File (Join-Path $Root "domain_profiles\README.md")
 Require-File (Join-Path $Root "domain_profiles\fundamental-mathematics\profile.yaml")
 Require-File (Join-Path $Root "domain_profiles\applied-mathematics\profile.yaml")
@@ -68,9 +73,14 @@ Require-Text (Join-Path $Root "docs\doc_map.yaml") "copilot"
 Require-Text (Join-Path $Root "docs\doc_map.yaml") "process_contract"
 Require-Text (Join-Path $Root "docs\integrations\components.yaml") "registry_id:\s+INTEGRATIONS-[0-9]{4}"
 Require-Text (Join-Path $Root "config\schemas\copilot_intake.schema.json") "uploaded_files"
+Require-Text (Join-Path $Root "config\schemas\copilot_intake.schema.json") "free_text_sha256"
+Require-Text (Join-Path $Root "config\schemas\copilot_answers.schema.json") "answers_packet_id"
+Require-Text (Join-Path $Root "config\schemas\copilot_confirmation.schema.json") "confirmation_id"
 Require-Text (Join-Path $Root "config\schemas\copilot_questions.schema.json") "recommended_answer"
 Require-Text (Join-Path $Root "config\schemas\copilot_questions.schema.json") "free_text_other"
 Require-Text (Join-Path $Root "config\schemas\copilot_initialization_report.schema.json") "minimum_validation"
+Require-Text (Join-Path $Root "config\schemas\experiment_run.schema.json") "experiment_id"
+Require-Text (Join-Path $Root "config\schemas\adapter_contract.schema.json") "human_confirmation_required"
 
 Get-Content -LiteralPath (Join-Path $Root "PROVENANCE\run_manifest.jsonl") | ForEach-Object {
   if ($_.Trim()) {
@@ -83,5 +93,8 @@ Get-Content -LiteralPath (Join-Path $Root "PROVENANCE\resource_ledger.jsonl") | 
     $_ | ConvertFrom-Json | Out-Null
   }
 }
+
+& "$PSScriptRoot\check_strict_schema_instances.ps1" -Root $Root
+& "$PSScriptRoot\check_public_summaries.ps1" -Root $Root
 
 Write-Output "Research OS schema smoke validation passed."

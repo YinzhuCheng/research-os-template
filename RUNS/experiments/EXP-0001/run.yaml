@@ -1,0 +1,23 @@
+experiment_id: EXP-0001
+work_order_id: WO-0007
+status: planned
+hypothesis_or_task: "Synthetic local validation fixture for Research OS run monitoring."
+environment:
+  kind: "local-static-fixture"
+  resource_policy: "0 CNY; no network; no real experiment execution"
+measurements:
+  - "schema validation outcome"
+  - "artifact presence"
+artifacts:
+  - "RUNS/experiments/EXP-0001/run.yaml"
+  - "PUBLIC/run_monitor.json"
+replay:
+  supported: true
+  command: "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_eval_fixtures.ps1"
+  inputs:
+    - "evals/fixtures/schema_regression_case/README.md"
+  notes: "Replay checks only local synthetic fixtures."
+failure:
+  class: "not_run"
+  notes: "Template placeholder; no real experiment has been executed."
+privacy_level: public

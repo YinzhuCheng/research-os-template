@@ -1,7 +1,7 @@
 {
   "project": {
     "title": "Codex Research OS Template",
-    "phase": "research-os-v3.5",
+    "phase": "research-os-v3.8",
     "language_mode": "zh-first",
     "intervention_level": "low",
     "privacy_policy": "public_private_split",
@@ -13,7 +13,10 @@
     {"label": "Research Type", "value": "decided from material"},
     {"label": "Questions", "value": "exactly three targeted"},
     {"label": "Research Kernel", "value": "enabled"},
-    {"label": "Process Contract", "value": "v3.5 enforced"},
+    {"label": "Process Contract", "value": "v3.8 validated"},
+    {"label": "P0/P1 Hardening", "value": "strict schema + privacy + package checks"},
+    {"label": "Copilot Usability", "value": "evidence board + readable summaries"},
+    {"label": "UI Settings", "value": "five styles + Chinese/English"},
     {"label": "Domain Profiles", "value": "five deep modes"},
     {"label": "feasibility", "value": "budget-gated"},
     {"label": "resource guard", "value": "enabled"},
@@ -24,6 +27,8 @@
   "documents": [
     {"path": "copilot.html", "label": "Material-first Copilot"},
     {"path": "copilot_state.json", "label": "Sanitized Copilot State"},
+    {"path": "evidence_board.json", "label": "Sanitized Evidence Board"},
+    {"path": "run_monitor.json", "label": "Sanitized Run Monitor"},
     {"path": "../docs/environment.md", "label": "Environment Guide"},
     {"path": "../docs/process-contract.md", "label": "Process Contract"},
     {"path": "../config/research_flow.yaml", "label": "Research Flow YAML"},
@@ -35,8 +40,12 @@
     {"path": "../templates/research_kernel/research_cycle.template.yaml", "label": "Research Kernel Template"},
     {"path": "../config/schemas/research_kernel.schema.json", "label": "Research Kernel Schema"},
     {"path": "../config/schemas/copilot_intake.schema.json", "label": "Copilot Intake Schema"},
+    {"path": "../config/schemas/copilot_answers.schema.json", "label": "Copilot Answers Schema"},
+    {"path": "../config/schemas/copilot_confirmation.schema.json", "label": "Copilot Confirmation Schema"},
     {"path": "../config/schemas/copilot_questions.schema.json", "label": "Copilot Questions Schema"},
     {"path": "../config/schemas/copilot_initialization_report.schema.json", "label": "Copilot Initialization Schema"},
+    {"path": "../config/schemas/experiment_run.schema.json", "label": "Experiment Run Schema"},
+    {"path": "../config/schemas/adapter_contract.schema.json", "label": "Adapter Contract Schema"},
     {"path": "../docs/technical-report.html", "label": "Technical Route HTML"},
     {"path": "../domain_profiles/README.md", "label": "Domain Profile Center"},
     {"path": "../skills/README.md", "label": "Skill Trigger Matrix"},
@@ -52,21 +61,27 @@
     {"path": "../PROVENANCE/resource_ledger.jsonl", "label": "Resource Ledger"},
     {"path": "../PROVENANCE/live_evidence_snapshot.yaml", "label": "Live Evidence"},
     {"path": "../PROVENANCE/public_audit_summary.md", "label": "Public Audit Summary"},
+    {"path": "../PROVENANCE/final_validation_report_v3_8.md", "label": "Final Validation v3.8"},
+    {"path": "../PROVENANCE/final_validation_report_v3_7.md", "label": "Final Validation v3.7"},
     {"path": "../PROVENANCE/final_validation_report_v3_5.md", "label": "Final Validation v3.5"},
     {"path": "../PROVENANCE/final_validation_report_v3_4.md", "label": "Final Validation v3.4"},
     {"path": "../CONTROL/work_order.yaml", "label": "Work Order"},
     {"path": "../CONTROL/phase_gate.yaml", "label": "Phase Gate"},
     {"path": "../PLAN/05_IMPLEMENTATION_CHECKLIST.md", "label": "Implementation Checklist"},
-    {"path": "../PLAN/06_GAP_AUDIT.md", "label": "Gap Audit"}
+    {"path": "../PLAN/06_GAP_AUDIT.md", "label": "Gap Audit"},
+    {"path": "../evals/README.md", "label": "Local Eval Fixtures"},
+    {"path": "../scripts/package_template.ps1", "label": "Allowlist Package Script"}
   ],
   "next_decisions": [
     "Run scripts/install_environment.ps1 or scripts/check_environment.ps1 before first use.",
     "Use docs/process-contract.md and skills/README.md to select the correct skill route.",
     "Open PUBLIC/copilot.html and provide material-first intake.",
     "After intake analysis, answer exactly three targeted Codex questions.",
+    "Review the sanitized Evidence Board before turning claims into report text.",
     "Confirm whether initialization should include theory, experiment, or both.",
     "Provide a budget before any minimum experimental validation is executed.",
     "Review reference links and use scripts/download_reference_links.ps1 only for lawful open-access or landing-page attempts.",
-    "Use work order, phase gate, manifest, ledger, and privacy scan before execution or public export."
+    "Use work order, phase gate, manifest, ledger, public summary checks, and privacy scan before execution or public export.",
+    "Keep P2 discovery-layer features deferred unless a separate opt-in work order is created."
   ]
 }

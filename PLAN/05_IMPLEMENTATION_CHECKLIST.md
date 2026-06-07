@@ -60,3 +60,34 @@ This checklist tracks the durable Research OS template state. Detailed historica
 - [x] Add `docs/process-contract.md`.
 - [x] Add `scripts/check_research_flow.ps1` and `scripts/check_governance_text.ps1`.
 - [x] Run the full v3.5 validation set and record `PROVENANCE/final_validation_report_v3_5.md`.
+
+## v3.6 P0/P1 Audit Hardening
+
+- [x] Add strict schema-instance validation with a dependency-free local validator.
+- [x] Fix YAML date/string and null/string template mismatches caught by strict validation.
+- [x] Remove `PUBLIC/copilot.html` trailing manifest JSON and reject trailing non-whitespace after `</html>`.
+- [x] Guard `scripts/write_manifest.ps1` so default writes target `PROVENANCE/run_manifest.jsonl`.
+- [x] Keep raw Copilot `free_text` out of `CONTROL/`, `PUBLIC/`, and API responses.
+- [x] Add Copilot answer and next-action confirmation APIs plus browser controls.
+- [x] Add cross-platform hook commands and stronger Stop-hook checks.
+- [x] Add local experiment/run monitor, eval fixtures, adapter contract, package allowlist, tests, and CI skeleton.
+
+## v3.7 Lightweight Copilot Usability
+
+- [x] Keep the initial product boundary as researcher copilot, not fully autonomous research agent.
+- [x] Generate `PUBLIC/evidence_board.json` from the public claim/evidence matrix for readable claim review.
+- [x] Generate `PUBLIC/run_monitor.json` from public experiment skeleton, manifest, and resource ledger summaries.
+- [x] Add lightweight JSON/JSONL/YAML rendering to `PUBLIC/index.html`.
+- [x] Add Evidence Board, audit run summary, resource summary, and bridge command copy affordance to `PUBLIC/copilot.html`.
+- [x] Add public summary checks and synthetic private-intake privacy checks to local validation, Stop hook, and CI skeleton.
+- [x] Keep P2 hypothesis backlog, critic/evolution loops, knowledge graph, real experiment queues, and external adapter execution deferred.
+
+## v3.8 UI Style And Language Settings
+
+- [x] Add a user settings button to `PUBLIC/index.html` and `PUBLIC/copilot.html`.
+- [x] Provide five suitable UI styles: clean SaaS, compact enterprise, soft system, developer dark, and editorial report.
+- [x] Default the interface language to Chinese.
+- [x] Provide a full English interface option.
+- [x] Show that final paper output defaults to English regardless of interface language.
+- [x] Persist UI style/language locally and support URL overrides for QA or direct links.
+- [x] Add responsive wrapping and narrow-screen constraints to avoid text overflow after language switching.

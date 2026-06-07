@@ -1,9 +1,9 @@
-id: example-component
+﻿id: example-component
 name: "Example Component"
 source_url: "https://example.com/repository"
 paper_url: "https://example.com/paper"
 license: "TBD"
-accessed_at: 2026-06-06
+accessed_at: "2026-06-06"
 adapter_status: planned
 research_os_phases:
   - alignment
