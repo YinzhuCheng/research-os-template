@@ -21,6 +21,7 @@ import json
 import mimetypes
 import os
 import re
+import subprocess
 import sys
 import urllib.parse
 import urllib.request
@@ -56,6 +57,8 @@ STATE_NAMES = {
     "acceptance",
 }
 SESSION_ID_RE = re.compile(r"^INTAKE-[0-9A-Za-z_-]+$")
+ARCHIVE_ID_RE = re.compile(r"^ARCH-[0-9A-Za-z_-]+$")
+SECRET_RE = re.compile(r"(?i)(authorization\s*:|bearer\s+[a-z0-9._-]{12,}|api[_-]?key|secret[_-]?key|cookie\s*:|token\s*[:=])")
 
 
 def utcish_now() -> str:
@@ -108,6 +111,28 @@ def safe_session_id(value: str) -> str:
     if not SESSION_ID_RE.match(session_id):
         raise ValueError("Invalid session_id.")
     return session_id
+
+
+def safe_archive_id(value: str) -> str:
+    archive_id = value.strip()
+    if not ARCHIVE_ID_RE.match(archive_id):
+        raise ValueError("Invalid archive_id.")
+    return archive_id
+
+
+def run_git(root: Path, args: list[str], check: bool = True) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if check and result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()
+        raise RuntimeError(f"git {' '.join(args)} failed: {detail}")
+    return result
 
 
 def private_text_summary(text: str) -> str:
@@ -189,6 +214,14 @@ class CopilotStore:
     @property
     def run_monitor_path(self) -> Path:
         return self.root / "PUBLIC" / "run_monitor.json"
+
+    @property
+    def archive_log_path(self) -> Path:
+        return self.root / "PROVENANCE" / "archive_index.jsonl"
+
+    @property
+    def public_archive_path(self) -> Path:
+        return self.root / "PUBLIC" / "archive_index.json"
 
     def session_id(self) -> str:
         stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -453,6 +486,160 @@ class CopilotStore:
         write_json(output_dir / "download_report.json", results)
         return {"output_dir": str(output_dir.relative_to(self.root)), "results": results}
 
+    def git_changed_paths(self) -> list[str]:
+        result = run_git(self.root, ["status", "--porcelain"], check=True)
+        paths: list[str] = []
+        for line in result.stdout.splitlines():
+            if not line.strip():
+                continue
+            path = line[3:].strip()
+            if " -> " in path:
+                path = path.split(" -> ", 1)[1]
+            paths.append(path.replace("\\", "/"))
+        return paths
+
+    def git_head(self) -> str:
+        return run_git(self.root, ["rev-parse", "HEAD"], check=True).stdout.strip()
+
+    def git_branch(self) -> str:
+        return run_git(self.root, ["rev-parse", "--abbrev-ref", "HEAD"], check=True).stdout.strip()
+
+    def current_phase_info(self) -> tuple[str, str]:
+        project_text = (self.root / "config" / "research_project.yaml").read_text(encoding="utf-8")
+        phase_text = (self.root / "CONTROL" / "phase_gate.yaml").read_text(encoding="utf-8")
+        phase = "unknown"
+        macro_phase = "unknown"
+        for line in project_text.splitlines():
+            if line.startswith("current_phase:"):
+                phase = line.split(":", 1)[1].strip().strip('"')
+            if line.startswith("current_macro_phase:"):
+                macro_phase = line.split(":", 1)[1].strip().strip('"')
+        if phase == "unknown":
+            for line in phase_text.splitlines():
+                if line.startswith("current_phase:"):
+                    phase = line.split(":", 1)[1].strip().strip('"')
+        return phase, macro_phase
+
+    def scan_archive_paths(self, paths: list[str]) -> None:
+        for path in paths:
+            parts = Path(path).parts
+            if path.startswith("PRIVATE/") or "PRIVATE" in parts:
+                raise ValueError(f"Archive refuses PRIVATE path: {path}")
+            target = (self.root / path).resolve()
+            if not str(target).startswith(str(self.root.resolve())):
+                raise ValueError(f"Archive path escapes repository: {path}")
+            if target.is_file():
+                try:
+                    text = target.read_text(encoding="utf-8")
+                except UnicodeDecodeError:
+                    continue
+                if SECRET_RE.search(text):
+                    raise ValueError(f"Archive secrets scan failed for changed path: {path}")
+
+    def archive_preview(self) -> dict[str, Any]:
+        phase, macro_phase = self.current_phase_info()
+        changed_paths = self.git_changed_paths()
+        self.scan_archive_paths(changed_paths)
+        return {
+            "ok": True,
+            "phase": phase,
+            "macro_phase": macro_phase,
+            "git_branch": self.git_branch(),
+            "git_commit": self.git_head(),
+            "dirty": bool(changed_paths),
+            "changed_paths": changed_paths,
+            "private_paths_included": False,
+            "secrets_scan": "passed",
+            "status": "preview",
+        }
+
+    def list_archives(self) -> dict[str, Any]:
+        archives = []
+        if self.archive_log_path.exists():
+            for line in self.archive_log_path.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    archives.append(json.loads(line))
+        return {"archives": archives}
+
+    def write_public_archive_index(self) -> None:
+        archives = self.list_archives()["archives"]
+        public_archives = [
+            {
+                "archive_id": item.get("archive_id"),
+                "created_at": item.get("created_at"),
+                "phase": item.get("phase"),
+                "macro_phase": item.get("macro_phase"),
+                "git_commit": item.get("git_commit"),
+                "git_branch": item.get("git_branch"),
+                "description": item.get("description"),
+                "changed_path_count": len(item.get("changed_paths", [])),
+                "status": item.get("status"),
+            }
+            for item in archives
+        ]
+        write_json(self.public_archive_path, {"archives": public_archives})
+
+    def create_archive(self, payload: dict[str, Any]) -> dict[str, Any]:
+        description = str(payload.get("description") or "").strip()
+        if not description:
+            raise ValueError("Archive description is required.")
+        stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+        archive_id = safe_archive_id(str(payload.get("archive_id") or f"ARCH-{stamp}"))
+        phase, default_macro_phase = self.current_phase_info()
+        macro_phase = str(payload.get("macro_phase") or default_macro_phase or "unknown")
+        if macro_phase not in {"initialization", "research_loop", "final_product", "unknown"}:
+            macro_phase = "unknown"
+
+        changed_paths = self.git_changed_paths()
+        self.scan_archive_paths(changed_paths)
+        if changed_paths:
+            run_git(self.root, ["add", "--all", "--", "."])
+            run_git(
+                self.root,
+                [
+                    "-c",
+                    "user.name=Research OS Archive",
+                    "-c",
+                    "user.email=research-os-archive@example.invalid",
+                    "commit",
+                    "-m",
+                    f"archive snapshot: {description[:72]}",
+                ],
+            )
+        snapshot_commit = self.git_head()
+        record = {
+            "archive_id": archive_id,
+            "created_at": utcish_now(),
+            "phase": phase,
+            "macro_phase": macro_phase,
+            "git_commit": snapshot_commit,
+            "git_branch": self.git_branch(),
+            "description": description,
+            "user_free_form": str(payload.get("user_free_form") or ""),
+            "changed_paths": changed_paths,
+            "public_index_path": "PUBLIC/archive_index.json",
+            "private_paths_included": False,
+            "secrets_scan": "passed",
+            "status": "created",
+        }
+        append_jsonl(self.archive_log_path, record)
+        self.write_public_archive_index()
+        run_git(self.root, ["add", "--", "PROVENANCE/archive_index.jsonl", "PUBLIC/archive_index.json"])
+        run_git(
+            self.root,
+            [
+                "-c",
+                "user.name=Research OS Archive",
+                "-c",
+                "user.email=research-os-archive@example.invalid",
+                "commit",
+                "-m",
+                f"archive index: {archive_id}",
+            ],
+        )
+        record["index_commit"] = self.git_head()
+        return record
+
 
 def open_reference_url(url: str, policy: str) -> str | None:
     if policy == "human_download_required":
@@ -536,6 +723,15 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/run_monitor.json":
             self.send_json(read_json(self.store.run_monitor_path, {"runs": []}))
             return
+        if parsed.path == "/api/archive-preview":
+            try:
+                self.send_json(self.store.archive_preview())
+            except Exception as exc:  # noqa: BLE001
+                self.send_json({"ok": False, "error": str(exc)}, status=400)
+            return
+        if parsed.path in {"/api/archives", "/archive_index.json"}:
+            self.send_json(self.store.list_archives())
+            return
         session_match = re.match(r"^/api/session/([^/]+)/state$", parsed.path)
         if session_match:
             try:
@@ -587,6 +783,13 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/download-references":
             self.send_json({"ok": True, "download": self.store.download_references()})
             return
+        if parsed.path == "/api/archive-snapshot":
+            try:
+                payload = json.loads(body.decode("utf-8") or "{}")
+                self.send_json({"ok": True, "archive": self.store.create_archive(payload)})
+            except Exception as exc:  # noqa: BLE001
+                self.send_json({"ok": False, "error": str(exc)}, status=400)
+            return
         self.send_error(404, "Not found")
 
     def log_message(self, format: str, *args: Any) -> None:  # noqa: A003
@@ -616,6 +819,9 @@ def mcp_stdio() -> None:
         "save_question_answers": lambda args: store.save_answers(args),
         "confirm_next_action": lambda args: store.save_confirmation(args),
         "download_references": lambda _: store.download_references(),
+        "archive_preview": lambda _: store.archive_preview(),
+        "create_archive": lambda args: store.create_archive(args),
+        "list_archives": lambda _: store.list_archives(),
     }
     for line in sys.stdin:
         line = line.strip()
