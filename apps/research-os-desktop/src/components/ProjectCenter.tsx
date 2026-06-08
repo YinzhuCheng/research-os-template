@@ -57,7 +57,7 @@ export function ProjectCenter() {
       const selected = await chooseRosprojSavePath(projectFile);
       if (selected) setProjectFile(selected);
     } catch {
-      setDialogNotice("当前不是 Tauri 桌面运行环境，无法打开系统文件选择器；请先手动输入 .rosproj 路径。");
+      setDialogNotice("当前不是 Tauri 桌面运行环境，无法打开系统文件选择器；请手动输入 .rosproj 路径。");
     }
   }
 
@@ -67,7 +67,7 @@ export function ProjectCenter() {
       const selected = await selectExistingRosproj();
       if (selected) setOpenPath(selected);
     } catch {
-      setDialogNotice("当前不是 Tauri 桌面运行环境，无法打开系统文件选择器；请先手动输入已有 .rosproj 路径。");
+      setDialogNotice("当前不是 Tauri 桌面运行环境，无法打开系统文件选择器；请手动输入已有 .rosproj 路径。");
     }
   }
 
@@ -83,7 +83,7 @@ export function ProjectCenter() {
           <Server size={18} aria-hidden="true" />
           <div>
             <strong>{health.isSuccess ? "Sidecar 已连接" : "等待 sidecar"}</strong>
-            <small>{health.isSuccess ? "本地运行时可用" : "如长时间未连接，请重启应用或检查 Python 环境。"}</small>
+            <small>{health.isSuccess ? "本地运行时可用" : "如果长时间未连接，请重启应用或检查 Python 环境。"}</small>
           </div>
           <button className="icon-button" type="button" aria-label="刷新 sidecar 状态" onClick={() => health.refetch()}>
             <RefreshCw size={16} />
@@ -112,7 +112,7 @@ export function ProjectCenter() {
             <FolderOpen size={16} aria-hidden="true" />
             选择保存位置
           </button>
-          {!createPathValid ? <p className="hint-text">路径应以 `.rosproj` 结尾，项目目录会使用同名文件夹。</p> : null}
+          {!createPathValid ? <p className="hint-text">路径应以 `.rosproj` 结尾；项目目录会使用同名文件夹。</p> : null}
           <button className="primary-action" type="button" onClick={() => create.mutate()} disabled={create.isPending || !createPathValid || !name.trim()}>
             <Plus size={16} aria-hidden="true" />
             {create.isPending ? "正在创建" : "创建项目"}

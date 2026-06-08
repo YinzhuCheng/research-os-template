@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Any
 
@@ -7,45 +7,45 @@ from .common import append_jsonl, new_id, now_iso, read_json, write_json
 
 DEFAULT_CHOICE_PROMPTS = [
     {
-        "prompt_id": "CP-INITIALIZATION-RESEARCH-CLAIM",
+        "prompt_id": "CP-INITIALIZATION-MATERIAL-SCOPE",
         "stage": "initialization_intake",
-        "question": "本轮初始化优先把研究主张定位成什么？",
-        "recommended_option": "theorem_first",
-        "why_recommended": "当前材料是理论初稿，先锁定可证明主张能降低后续写作和引用幻觉风险。",
+        "question": "本轮初始化应如何理解这批材料？",
+        "recommended_option": "whole_folder_research_plan",
+        "why_recommended": "当前输入包含草稿、投稿要求、模板和示例论文，应先作为完整材料包生成研究计划，而不是直接进入最终产物阶段。",
         "options": [
             {
-                "id": "theorem_first",
-                "label": "定理主张优先",
-                "description": "先明确模型、定理、证明义务和反例风险。",
+                "id": "whole_folder_research_plan",
+                "label": "完整材料包优先",
+                "description": "先识别全部文件角色、证据缺口、证明风险和期刊要求，再形成研究计划。",
                 "is_recommended": True,
             },
             {
-                "id": "venue_first",
-                "label": "期刊适配优先",
-                "description": "先判断 Neural Networks 的栏目、篇幅和写法是否匹配。",
+                "id": "draft_first",
+                "label": "草稿诊断优先",
+                "description": "先阅读主论文草稿，但仍保留模板、示例论文和附属文件作为上下文。",
             },
             {
-                "id": "context_first",
-                "label": "相关工作优先",
-                "description": "先补算术电路、polynomial networks 和 approximation theory 语境。",
+                "id": "venue_first",
+                "label": "期刊要求优先",
+                "description": "先核查 Neural Networks 投稿规则、模板和示例论文写法，再反推研究计划。",
             },
         ],
         "free_form_enabled": True,
         "free_form_label": "自然语言补充",
-        "free_form_placeholder": "补充你认为最重要的理论主张、风险或目标读者。",
+        "free_form_placeholder": "补充这批文件中最重要、最可信或最容易被忽略的材料。",
         "requires_human_response": True,
     },
     {
-        "prompt_id": "CP-INITIALIZATION-EVIDENCE",
+        "prompt_id": "CP-INITIALIZATION-SOURCE-VERIFICATION",
         "stage": "initialization_intake",
         "question": "来源真实性核查应采用哪种严格度？",
         "recommended_option": "strict_online",
-        "why_recommended": "投稿论文不能依赖记忆引用；每条引用都应有 DOI、arXiv、publisher 或官方页面。",
+        "why_recommended": "投稿论文不能依赖记忆引用；每条引用、期刊规则和模板来源都应有 DOI、arXiv、publisher 或官方页面证据。",
         "options": [
             {
                 "id": "strict_online",
                 "label": "逐条联网核查",
-                "description": "所有投稿规则和引用都记录 URL、访问日期和可信来源。",
+                "description": "所有投稿规则和引用都记录 URL、访问日期、来源类型和核查状态。",
                 "is_recommended": True,
             },
             {
@@ -55,42 +55,42 @@ DEFAULT_CHOICE_PROMPTS = [
             },
             {
                 "id": "local_first",
-                "label": "先用本地材料",
-                "description": "先整理本地 PDF/BibTeX，再统一联网补证据。",
+                "label": "先整理本地材料",
+                "description": "先整理本地 PDF/BibTeX 和示例论文，再统一联网补证据。",
             },
         ],
         "free_form_enabled": True,
         "free_form_label": "自然语言补充",
-        "free_form_placeholder": "补充必须核查的网站、文献范围或不可接受来源。",
+        "free_form_placeholder": "补充必须核查的网站、文献范围、不可接受来源或引用风格要求。",
         "requires_human_response": True,
     },
     {
-        "prompt_id": "CP-INITIALIZATION-FINAL-PACKAGE",
+        "prompt_id": "CP-INITIALIZATION-RESEARCH-PLAN",
         "stage": "initialization_intake",
-        "question": "最终投稿包默认应包含哪些交付物？",
-        "recommended_option": "full_submission",
-        "why_recommended": "Full Article 投稿需要正文、参考文献、声明、highlights、cover letter 和检查清单一起推进。",
+        "question": "进入研究循环前，优先产出哪类研究计划？",
+        "recommended_option": "proof_and_submission_plan",
+        "why_recommended": "理论论文需要同时锁定证明义务、相关工作定位、期刊适配和最终投稿包路径。",
         "options": [
             {
-                "id": "full_submission",
-                "label": "完整投稿包",
-                "description": "LaTeX/PDF、appendix、bib、highlights、cover letter、source/proof audit。",
+                "id": "proof_and_submission_plan",
+                "label": "证明与投稿计划",
+                "description": "同时规划模型定义、定理证明、引用核查、写作结构和最终投稿材料。",
                 "is_recommended": True,
             },
             {
-                "id": "manuscript_first",
-                "label": "正文优先",
-                "description": "先把 main.tex 和 references.bib 做到可读可编译。",
+                "id": "proof_first",
+                "label": "证明风险优先",
+                "description": "先审计模型假设、层数/宽度边界、构造细节和潜在反例。",
             },
             {
-                "id": "audit_first",
-                "label": "审计优先",
-                "description": "先完成证明审计和引用核查，再写完整正文。",
+                "id": "novelty_first",
+                "label": "创新定位优先",
+                "description": "先对照 arithmetic circuits、polynomial networks 和 approximation theory 梳理贡献边界。",
             },
         ],
         "free_form_enabled": True,
         "free_form_label": "自然语言补充",
-        "free_form_placeholder": "补充你对投稿包、附录、图表或 rebuttal 记录的要求。",
+        "free_form_placeholder": "补充你希望研究计划特别强调的证明、写作、投稿或审稿攻防目标。",
         "requires_human_response": True,
     },
 ]
@@ -168,6 +168,7 @@ class ResearchStateService:
         root = self._project_root_provider()
         research_state = read_json(root / "PUBLIC" / "research_state.json", self._default_research_state())
         project_state = read_json(root / ".research-os" / "project.json", {})
+        material_manifest = self._material_manifest_summary(root)
         prompts = research_state.get("choice_prompts") or research_state.get("questions") or DEFAULT_CHOICE_PROMPTS
         if "submission_workflow" not in research_state:
             research_state["submission_workflow"] = DEFAULT_SUBMISSION_WORKFLOW
@@ -176,6 +177,7 @@ class ResearchStateService:
             "research_state": research_state,
             "choice_prompts": prompts,
             "submission_workflow": research_state.get("submission_workflow", DEFAULT_SUBMISSION_WORKFLOW),
+            "material_manifest": material_manifest,
             "run_monitor": read_json(root / "PUBLIC" / "run_monitor.json", {"runs": []}),
             "archive_index": read_json(root / "PUBLIC" / "archive_index.json", {"archives": []}),
         }
@@ -204,6 +206,7 @@ class ResearchStateService:
         write_json(root / "CONTROL" / "intake_queue" / f"{session_id}.intake.json", packet)
 
         state = read_json(root / "PUBLIC" / "research_state.json", self._default_research_state())
+        material_manifest = self._material_manifest_summary(root)
         state.update(
             {
                 "schema_version": "research-state-v1",
@@ -220,6 +223,7 @@ class ResearchStateService:
                     "free_text_summary": "Raw free text is private; summarized metadata is safe to render.",
                     "uploaded_file_count": len(payload.get("uploaded_files", [])),
                     "source_link_count": len(payload.get("source_links", [])),
+                    "material_manifest": material_manifest,
                 },
             }
         )
@@ -341,6 +345,9 @@ class ResearchStateService:
         if not self._project_update:
             return
         self._project_update({"current_macro_phase": macro_phase, "current_phase": internal_phase})
+
+    def _material_manifest_summary(self, root) -> dict[str, Any] | None:
+        return read_json(root / "PUBLIC" / "material_manifest_summary.json", None)
 
     def _default_research_state(self) -> dict[str, Any]:
         return {

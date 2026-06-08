@@ -39,7 +39,7 @@ export function FinalProductModal({ open, onClose, onSubmit, pending = false, er
           <X size={18} />
         </button>
         <h2 id="final-product-title">进入最终产物阶段</h2>
-        <p className="muted">选择你要产出的成果类型，可多选。当前投稿任务推荐选择论文；关闭弹窗会继续停留在第二阶段。</p>
+        <p className="muted">选择要产出的成果类型，可多选。当前论文项目推荐选择论文；关闭弹窗会继续停留在第二阶段。</p>
         <div className="track-list">
           {tracks.map(({ id, label, description, Icon }) => (
             <label className={`track-row ${selected.includes(id) ? "selected" : ""}`} key={id}>

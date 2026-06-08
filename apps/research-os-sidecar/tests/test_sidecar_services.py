@@ -245,6 +245,8 @@ class SidecarServiceTests(unittest.TestCase):
             targets = {item["target"] for item in result["imported_files"]}
             self.assertIn("PRIVATE/intake/source_materials/draft.tex", targets)
             self.assertIn("PRIVATE/intake/source_materials/nested/refs.bib", targets)
+            self.assertTrue((project / "CONTROL" / "intake_queue" / f"{result['manifest_id']}.material_manifest.json").exists())
+            self.assertTrue((project / "PUBLIC" / "material_manifest_summary.json").exists())
 
     def test_directory_import_handles_long_relative_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -260,6 +262,47 @@ class SidecarServiceTests(unittest.TestCase):
             result = import_directory_to_project(source, project, "PRIVATE/intake/source_materials_structured")
             self.assertEqual(len(result["imported_files"]), 1)
             self.assertTrue((project / result["imported_files"][0]["target"]).exists())
+
+    def test_directory_import_builds_folder_manifest_roles_and_state_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            root = Path(project["project_root"])
+            source = base / "source"
+            (source / "templates").mkdir(parents=True)
+            (source / "reference_papers").mkdir(parents=True)
+            (source / "notes").mkdir(parents=True)
+            (source / "main.tex").write_text("\\section{Draft}", encoding="utf-8")
+            (source / "references.bib").write_text("@article{x}", encoding="utf-8")
+            (source / "templates" / "elsarticle.cls").write_text("class", encoding="utf-8")
+            (source / "reference_papers" / "example.pdf").write_bytes(b"%PDF-1.4")
+            (source / "slides.pptx").write_bytes(b"ppt")
+            (source / "notes" / "proof_audit.md").write_text("proof notes", encoding="utf-8")
+            (source / "secrets").mkdir()
+            (source / "secrets" / "key.txt").write_text("api_key=secret", encoding="utf-8")
+
+            result = import_directory_to_project(source, root, "PRIVATE/intake/source_materials")
+            roles = {item["role"] for item in result["imported_files"]}
+
+            self.assertIn("manuscript_draft", roles)
+            self.assertIn("bibliography", roles)
+            self.assertIn("venue_template", roles)
+            self.assertIn("example_paper", roles)
+            self.assertIn("slide_deck", roles)
+            self.assertIn("proof_audit", roles)
+            self.assertEqual(result["excluded_count"], 1)
+            self.assertIn("sensitive or secret-like", " ".join(result["warnings"]))
+
+            state = ResearchStateService(projects.require_project_root).read_state()
+            manifest = state["material_manifest"]
+            self.assertEqual(manifest["file_count"], 6)
+            self.assertEqual(manifest["excluded_count"], 1)
+            self.assertEqual(manifest["role_counts"]["manuscript_draft"], 1)
+            self.assertNotIn("api_key", json.dumps(manifest, ensure_ascii=False).lower())
 
     def test_profile_rejects_secret_fields(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

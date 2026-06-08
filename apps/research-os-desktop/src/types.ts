@@ -80,11 +80,24 @@ export interface SubmissionWorkflow {
   workflow_gaps?: Array<Record<string, unknown>>;
 }
 
+export interface MaterialManifestSummary {
+  schema_version?: string;
+  manifest_id?: string;
+  created_at?: string;
+  source_name?: string;
+  target_root?: string;
+  file_count?: number;
+  excluded_count?: number;
+  role_counts?: Record<string, number>;
+  warnings?: string[];
+}
+
 export interface SidecarState {
   project: RosProject | null;
   research_state: Record<string, unknown>;
   choice_prompts: ChoicePrompt[];
   submission_workflow?: SubmissionWorkflow;
+  material_manifest?: MaterialManifestSummary | null;
   run_monitor: Record<string, unknown>;
   archive_index: { archives: unknown[] };
 }

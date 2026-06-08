@@ -4,12 +4,14 @@ import { useState } from "react";
 import { api } from "../api";
 import { useAppStore } from "../store";
 
-const DEFAULT_PAPER_TURN = `请按 Research OS app-first 工作流继续本论文项目：
-1. 先读取并遵守相关仓库 skills：research-os-execution-harness、research-os-live-evidence-refresh、research-os-paper-authoring、research-os-review-rebuttal，以及需要时的 research-os-visual-communication。
-2. 对 Neural Networks 投稿规则、Elsevier 模板、每条引用和 DOI/arXiv/publisher 来源进行联网核查；不要凭记忆引用，不要编造引用。
-3. 审计平方激活函数神经网络稿件中的模型定义、identity/addition/multiplication gates、深度/宽度界和 novelty framing。
-4. 如果 app 或工作流阻碍了可复用推进，先记录缺口并建议修 app，再继续论文。
-5. 本轮只产出可验收的下一步结果和结构化记录，不绕过 Research OS 阶段门。`;
+const DEFAULT_PAPER_TURN = `请按 Research OS app-first 工作流继续本项目。
+
+1. 先读取并遵守相关仓库 skills：research-os-orchestrator、research-os-execution-harness、research-os-resource-guard、research-os-live-evidence-refresh、research-os-paper-authoring、research-os-review-rebuttal，以及需要时的 research-os-visual-communication。
+2. 把当前论文、PDF、PPT、模板、示例论文、笔记、证明审计和先前 review 记录都视为初始化材料；不要把旧草稿直接当成最终产物。
+3. 基于材料 manifest 生成或更新研究计划，明确证明义务、来源核查、相关工作定位、期刊适配、rebuttal 攻防和最终投稿包路径。
+4. 对 Neural Networks 投稿规则、Elsevier 模板、每条引用和 DOI/arXiv/publisher 来源进行联网核查；不要凭记忆引用，不要编造引用。
+5. 如果 app 或工作流阻碍了可复用推进，先记录缺口并建议修 app，再继续论文。
+6. 本轮只产出可验收的下一步结果和结构化记录，不绕过 Research OS 阶段门。`;
 
 function eventTitle(event: Record<string, unknown>) {
   const type = String(event.type ?? "runtime_event");

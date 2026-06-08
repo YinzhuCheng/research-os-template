@@ -286,6 +286,10 @@ button:disabled {
   padding: 10px;
 }
 
+.compact-empty {
+  margin-bottom: 12px;
+}
+
 .notice {
   align-items: center;
   border-radius: 6px;
@@ -305,6 +309,44 @@ button:disabled {
   background: #eef6ff;
   border: 1px solid #bfd7f2;
   color: #194b78;
+}
+
+.notice.warning {
+  align-items: flex-start;
+  background: #fff8e6;
+  border: 1px solid #e7cf8c;
+  color: #654a00;
+}
+
+.notice.warning ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.material-summary {
+  background: #f8faf9;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 12px;
+}
+
+.role-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.role-chip {
+  background: #edf2f0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: #33433d;
+  font-size: 12px;
+  padding: 4px 8px;
 }
 
 .phase-bar {

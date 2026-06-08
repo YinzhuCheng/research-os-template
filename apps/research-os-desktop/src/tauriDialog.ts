@@ -35,3 +35,12 @@ export async function chooseRosprojSavePath(defaultPath: string): Promise<string
   const normalized = normalizeDialogPath(selected);
   return normalized ? ensureRosproj(normalized) : null;
 }
+
+export async function selectMaterialDirectory(): Promise<string | null> {
+  const selected = await invokeDialog<DialogPath>("plugin:dialog|open", {
+    title: "选择研究材料文件夹",
+    multiple: false,
+    directory: true,
+  });
+  return normalizeDialogPath(selected);
+}
