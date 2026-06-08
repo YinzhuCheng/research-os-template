@@ -695,8 +695,12 @@ class SidecarServiceTests(unittest.TestCase):
                 calls: list[dict[str, object]] = []
 
                 class FakeClient:
+                    def thread_start(self, params: dict[str, object]) -> dict[str, object]:
+                        calls.append({"method": "thread_start", "params": params})
+                        return {"thread": {"id": "thread_test"}}
+
                     def turn_start(self, thread_id: str, text: str, params: dict[str, object]) -> dict[str, object]:
-                        calls.append({"thread_id": thread_id, "text": text, "params": params})
+                        calls.append({"method": "turn_start", "thread_id": thread_id, "text": text, "params": params})
                         return {"turn": {"id": "turn_test"}}
 
                     def register_turn_notifications(self, turn_id: str) -> None:
@@ -722,12 +726,19 @@ class SidecarServiceTests(unittest.TestCase):
                     "secret_ref": "env:YUNWU_API_KEY",
                 }
 
+                thread = service.start_thread(profile, ephemeral=True)
                 result = service.start_turn("thread_test", "Return a JSON status artifact.", profile)
 
+                self.assertEqual(thread["thread"]["id"], "thread_test")
                 self.assertEqual(result["turn"]["id"], "turn_test")
-                params = calls[0]["params"]
-                self.assertEqual(params["model"], "gpt-5.5")
-                self.assertEqual(params["modelProvider"], "yunwu")
+                thread_params = calls[0]["params"]
+                turn_params = calls[1]["params"]
+                self.assertEqual(thread_params["sandbox"], "workspace-write")
+                self.assertEqual(thread_params["model"], "gpt-5.5")
+                self.assertEqual(thread_params["modelProvider"], "yunwu")
+                self.assertEqual(turn_params["sandboxPolicy"], {"type": "workspace-write", "writableRoots": [str(root)], "networkAccess": True})
+                self.assertEqual(turn_params["model"], "gpt-5.5")
+                self.assertEqual(turn_params["modelProvider"], "yunwu")
         finally:
             if old_value is None:
                 os.environ.pop("YUNWU_API_KEY", None)

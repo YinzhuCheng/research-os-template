@@ -80,7 +80,7 @@ class RuntimeService:
         client = self._ensure_client()
         params: dict[str, Any] = {
             "cwd": str(root),
-            "sandbox": "workspaceWrite",
+            "sandbox": "workspace-write",
             "approvalPolicy": "unlessTrusted",
             "approvalsReviewer": "user",
             "developerInstructions": RESEARCH_OS_DEVELOPER_INSTRUCTIONS,
@@ -103,7 +103,7 @@ class RuntimeService:
         client = self._ensure_client()
         params: dict[str, Any] = {
             "cwd": str(root),
-            "sandbox": "workspaceWrite",
+            "sandbox": "workspace-write",
             "approvalPolicy": "unlessTrusted",
             "approvalsReviewer": "user",
             "developerInstructions": RESEARCH_OS_DEVELOPER_INSTRUCTIONS,
@@ -128,7 +128,7 @@ class RuntimeService:
             "cwd": str(root),
             "approvalPolicy": "unlessTrusted",
             "approvalsReviewer": "user",
-            "sandboxPolicy": {"type": "workspaceWrite", "writableRoots": [str(root)], "networkAccess": True},
+            "sandboxPolicy": {"type": "workspace-write", "writableRoots": [str(root)], "networkAccess": True},
             "serviceName": "research_os_desktop",
         }
         chosen_model = model or profile.get("model")
