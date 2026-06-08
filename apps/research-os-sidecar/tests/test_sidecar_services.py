@@ -548,6 +548,21 @@ class SidecarServiceTests(unittest.TestCase):
                 )
             with self.assertRaises(ValueError):
                 service.write_artifacts({"files": [{"path": "PUBLIC/paper/main.tex", "content_base64": "not-base64!"}]})
+            with self.assertRaises(ValueError):
+                service.write_artifacts({"files": [{"path": "PUBLIC/paper/main.tex", "content": ""}]})
+            with self.assertRaises(ValueError):
+                service.write_artifacts({"files": [{"path": "PUBLIC/paper/main.tex", "content_base64": ""}]})
+            with self.assertRaises(ValueError):
+                service.write_artifacts(
+                    {
+                        "files": [
+                            {
+                                "path": "PUBLIC/paper/main.tex",
+                                "content_base64": base64.b64encode(b"").decode("ascii"),
+                            }
+                        ]
+                    }
+                )
             with self.assertRaises(SecurityError):
                 service.write_artifacts(
                     {
@@ -559,6 +574,18 @@ class SidecarServiceTests(unittest.TestCase):
                         ]
                     }
                 )
+            result = service.write_artifacts(
+                {
+                    "files": [
+                        {
+                            "path": "PUBLIC/paper/empty.txt",
+                            "content": "",
+                            "allow_empty_content": True,
+                        }
+                    ]
+                }
+            )
+            self.assertEqual(result["written"][0]["bytes"], 0)
 
     def test_project_path_escape_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
