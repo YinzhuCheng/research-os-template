@@ -81,7 +81,7 @@ class RuntimeService:
         params: dict[str, Any] = {
             "cwd": str(root),
             "sandbox": "workspace-write",
-            "approvalPolicy": "unlessTrusted",
+            "approvalPolicy": "on-request",
             "approvalsReviewer": "user",
             "developerInstructions": RESEARCH_OS_DEVELOPER_INSTRUCTIONS,
             "ephemeral": ephemeral,
@@ -104,7 +104,7 @@ class RuntimeService:
         params: dict[str, Any] = {
             "cwd": str(root),
             "sandbox": "workspace-write",
-            "approvalPolicy": "unlessTrusted",
+            "approvalPolicy": "on-request",
             "approvalsReviewer": "user",
             "developerInstructions": RESEARCH_OS_DEVELOPER_INSTRUCTIONS,
         }
@@ -126,7 +126,7 @@ class RuntimeService:
         client = self._ensure_client()
         params: dict[str, Any] = {
             "cwd": str(root),
-            "approvalPolicy": "unlessTrusted",
+            "approvalPolicy": "on-request",
             "approvalsReviewer": "user",
             "sandboxPolicy": {"type": "workspace-write", "writableRoots": [str(root)], "networkAccess": True},
             "serviceName": "research_os_desktop",
