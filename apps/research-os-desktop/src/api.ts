@@ -1,4 +1,4 @@
-import type { Approval, Profile, RosProject, SidecarState } from "./types";
+import type { Approval, Profile, RosProject, RuntimeConfigStatus, SidecarState } from "./types";
 
 const SIDECAR_URL = import.meta.env.VITE_SIDECAR_URL ?? "http://127.0.0.1:8789";
 
@@ -31,7 +31,9 @@ export const api = {
   approvals: () => request<{ approvals: Approval[] }>("/api/approvals"),
   decideApproval: (approval_id: string, decision: "accept" | "decline" | "cancel", notes = "") =>
     request<{ approval: Approval }>("/api/approvals/decide", { method: "POST", body: JSON.stringify({ approval_id, decision, notes }) }),
-  environment: () => request<{ codex_cli: string | null; codex_sdk_available: boolean; adapter: string }>("/api/runtime/environment"),
+  environment: () => request<{ codex_cli: string | null; codex_sdk_available: boolean; adapter: string; runtime_config?: RuntimeConfigStatus }>("/api/runtime/environment"),
+  loadRuntimeSecret: (profile_id: string | undefined, key_file_path: string) =>
+    request<{ runtime_config: RuntimeConfigStatus }>("/api/runtime/load-secret", { method: "POST", body: JSON.stringify({ profile_id, key_file_path }) }),
   runtimeEvents: (after = 0) => request<{ cursor: number; events: Array<Record<string, unknown>> }>(`/api/runtime/events?after=${after}`),
   models: () => request<Record<string, unknown>>("/api/models"),
   startThread: (profile_id?: string, model?: string) =>

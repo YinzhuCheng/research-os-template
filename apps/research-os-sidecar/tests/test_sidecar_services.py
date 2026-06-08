@@ -18,6 +18,8 @@ from research_os_sidecar.paper_artifact_service import PaperArtifactService
 from research_os_sidecar.profile_service import ProfileService
 from research_os_sidecar.project_service import ProjectService
 from research_os_sidecar.research_loop_artifact_service import ResearchLoopArtifactService
+from research_os_sidecar.runtime_config_service import RuntimeConfigService
+from research_os_sidecar.runtime_service import RuntimeService
 from research_os_sidecar.security import SecurityError, import_directory_to_project, resolve_under
 from research_os_sidecar.state_service import ResearchStateService
 
@@ -547,6 +549,10 @@ class SidecarServiceTests(unittest.TestCase):
     def test_profile_rejects_secret_fields(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             profiles = ProfileService(Path(temp) / "profiles.json")
+            seeded = profiles.list_profiles()["profiles"]
+            yunwu = next(item for item in seeded if item["profile_id"] == "yunwu-gpt-55-xhigh")
+            self.assertEqual(yunwu["provider_id"], "yunwu")
+            self.assertEqual(yunwu["secret_ref"], "env:YUNWU_API_KEY")
             with self.assertRaises(ValueError):
                 profiles.upsert_profile(
                     {
@@ -556,6 +562,144 @@ class SidecarServiceTests(unittest.TestCase):
                         "api_key": "sk-test",
                     }
                 )
+            saved = profiles.upsert_profile(
+                {
+                    "profile_id": "yunwu-test",
+                    "label": "Yunwu Test",
+                    "type": "custom_provider",
+                    "provider_id": "yunwu",
+                    "model": "gpt-5.5",
+                    "base_url": "https://yunwu.ai/v1",
+                    "wire_api": "responses",
+                    "reasoning_effort": "xhigh",
+                    "env_key": "YUNWU_API_KEY",
+                    "secret_ref": "env:YUNWU_API_KEY",
+                }
+            )
+            self.assertEqual(saved["secret_ref"], "env:YUNWU_API_KEY")
+            with self.assertRaises(ValueError):
+                profiles.upsert_profile(
+                    {
+                        "profile_id": "bad-ref",
+                        "label": "Bad ref",
+                        "type": "custom_provider",
+                        "provider_id": "yunwu",
+                        "secret_ref": "sk-not-a-reference",
+                    }
+                )
+
+    def test_runtime_config_writes_isolated_codex_home_without_secret(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            codex_home = Path(temp) / "codex_home"
+            service = RuntimeConfigService(codex_home)
+            profile = {
+                "profile_id": "yunwu-test",
+                "label": "Yunwu Test",
+                "type": "custom_provider",
+                "provider_id": "yunwu",
+                "model": "gpt-5.5",
+                "base_url": "https://yunwu.ai/v1",
+                "wire_api": "responses",
+                "reasoning_effort": "xhigh",
+                "env_key": "YUNWU_API_KEY",
+                "secret_ref": "env:YUNWU_API_KEY",
+            }
+
+            status = service.prepare_profile(profile, require_secret=False)
+
+            config_text = (codex_home / "config.toml").read_text(encoding="utf-8")
+            profile_text = (codex_home / "yunwu.config.toml").read_text(encoding="utf-8")
+            self.assertIn('model_provider = "yunwu"', config_text)
+            self.assertIn('model_reasoning_effort = "xhigh"', config_text)
+            self.assertIn('wire_api = "responses"', config_text)
+            self.assertIn('env_key = "YUNWU_API_KEY"', config_text)
+            self.assertIn('model = "gpt-5.5"', profile_text)
+            self.assertNotIn("sk-", config_text)
+            self.assertEqual(status["codex_home"], str(codex_home))
+            self.assertFalse(status["secret_loaded"])
+
+    def test_runtime_config_loads_secret_only_to_environment(self) -> None:
+        old_value = os.environ.pop("YUNWU_API_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                key_file = root / "gptimg2.txt"
+                key_file.write_text("test-yunwu-value-12345\n", encoding="utf-8")
+                service = RuntimeConfigService(root / "codex_home")
+                profile = {
+                    "profile_id": "yunwu-test",
+                    "label": "Yunwu Test",
+                    "type": "custom_provider",
+                    "provider_id": "yunwu",
+                    "model": "gpt-5.5",
+                    "base_url": "https://yunwu.ai/v1",
+                    "wire_api": "responses",
+                    "reasoning_effort": "xhigh",
+                    "env_key": "YUNWU_API_KEY",
+                    "secret_ref": "env:YUNWU_API_KEY",
+                }
+
+                status = service.load_secret_from_file(profile, str(key_file))
+
+                self.assertTrue(status["secret_loaded"])
+                self.assertEqual(os.environ["YUNWU_API_KEY"], "test-yunwu-value-12345")
+                config_text = (root / "codex_home" / "config.toml").read_text(encoding="utf-8")
+                self.assertNotIn("test-yunwu-value-12345", config_text)
+        finally:
+            if old_value is not None:
+                os.environ["YUNWU_API_KEY"] = old_value
+            else:
+                os.environ.pop("YUNWU_API_KEY", None)
+
+    def test_runtime_service_passes_yunwu_provider_to_turn(self) -> None:
+        old_value = os.environ.get("YUNWU_API_KEY")
+        os.environ["YUNWU_API_KEY"] = "test-yunwu-value-12345"
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                approvals = ApprovalService(timeout_seconds=0.01)
+                service = RuntimeService(lambda: root, approvals)
+                calls: list[dict[str, object]] = []
+
+                class FakeClient:
+                    def turn_start(self, thread_id: str, text: str, params: dict[str, object]) -> dict[str, object]:
+                        calls.append({"thread_id": thread_id, "text": text, "params": params})
+                        return {"turn": {"id": "turn_test"}}
+
+                    def register_turn_notifications(self, turn_id: str) -> None:
+                        return None
+
+                    def next_turn_notification(self, turn_id: str):
+                        raise RuntimeError("stop fake drain")
+
+                    def unregister_turn_notifications(self, turn_id: str) -> None:
+                        return None
+
+                service._client = FakeClient()  # type: ignore[attr-defined]
+                profile = {
+                    "profile_id": "yunwu-test",
+                    "label": "Yunwu Test",
+                    "type": "custom_provider",
+                    "provider_id": "yunwu",
+                    "model": "gpt-5.5",
+                    "base_url": "https://yunwu.ai/v1",
+                    "wire_api": "responses",
+                    "reasoning_effort": "xhigh",
+                    "env_key": "YUNWU_API_KEY",
+                    "secret_ref": "env:YUNWU_API_KEY",
+                }
+
+                result = service.start_turn("thread_test", "Return a JSON status artifact.", profile)
+
+                self.assertEqual(result["turn"]["id"], "turn_test")
+                params = calls[0]["params"]
+                self.assertEqual(params["model"], "gpt-5.5")
+                self.assertEqual(params["modelProvider"], "yunwu")
+        finally:
+            if old_value is None:
+                os.environ.pop("YUNWU_API_KEY", None)
+            else:
+                os.environ["YUNWU_API_KEY"] = old_value
 
     def test_approval_times_out_to_decline(self) -> None:
         approvals = ApprovalService(timeout_seconds=0.01)

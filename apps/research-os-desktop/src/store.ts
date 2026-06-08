@@ -11,6 +11,6 @@ interface AppStore {
 export const useAppStore = create<AppStore>((set) => ({
   project: null,
   setProject: (project) => set({ project }),
-  activeProfileId: "openai-account",
+  activeProfileId: "yunwu-gpt-55-xhigh",
   setActiveProfileId: (activeProfileId) => set({ activeProfileId })
 }));

@@ -28,7 +28,7 @@ Codex must do the intelligent research and manuscript repair work through the ap
 
 ### Step 1 - Land Real Yunwu-Codex Governance
 
-Status: in_progress
+Status: completed
 
 - Add this plan and mark v4.7 / `WO-0018` as the active route.
 - Update work order, phase gate, and project metadata so the baseline paper package is entry material.
@@ -37,7 +37,7 @@ Status: in_progress
 
 ### Step 2 - Implement Isolated Yunwu Codex Runtime
 
-Status: pending
+Status: completed
 
 - Add sidecar support for app-owned isolated `CODEX_HOME` and profile files.
 - Add a Yunwu provider profile with model `gpt-5.5`, provider `yunwu`, `model_reasoning_effort = "xhigh"`, `wire_api = "responses"`, and environment auth through `YUNWU_API_KEY`.
@@ -105,8 +105,10 @@ Status: pending
 - Existing runtime code has a Codex SDK/app-server adapter shell, but it lacks isolated `CODEX_HOME`, durable provider config generation, Yunwu env-key injection, xhigh reasoning propagation, and reliable cost instrumentation.
 - Existing profile metadata supports `custom_provider` but not enough validated fields for safe provider config generation.
 - Previous Yunwu spending records include direct model calls, not proof that Research OS Desktop drove Codex through Yunwu.
-- The next engineering blocker is runtime/provider integration, not manuscript writing.
+- Step 2 added isolated app-owned `CODEX_HOME` config generation, a seeded Yunwu `gpt-5.5` xhigh profile, `wire_api = "responses"`, `env_key = "YUNWU_API_KEY"`, in-memory local key loading, runtime proof status in the UI, and tests proving no key is written to config files.
+- Runtime can now prepare and display the intended Yunwu/Codex configuration, but the real paid app-server turn is still unproven until Step 3.
 
 ## Validation Log
 
-- 2026-06-08T11:15:00+08:00: Step 1 started. No Yunwu call, paid API, key read, raw private material commit, public export, submission, or external writeback was used.
+- 2026-06-08T11:15:00+08:00: Step 1 completed. Added v4.7 / `WO-0018` governance and reclassified the current operator-assisted paper package as entry material. Validation passed: `git diff --check`, schema validation, resource guard, privacy scan, and desktop app checks. No Yunwu call, paid API, key read, raw private material commit, public export, submission, or external writeback was used.
+- 2026-06-08T11:20:00+08:00: Step 2 completed. Implemented isolated Research OS owned Codex runtime configuration, seeded Yunwu provider profile metadata, sidecar local-key loading into process memory, runtime parameter propagation, and UI runtime proof display. Validation passed: sidecar unittest (27 tests), Python `py_compile`, desktop app check, TypeScript, Vitest, and Vite build. No Yunwu call, paid API, key read, raw private material commit, public export, submission, or external writeback was used.

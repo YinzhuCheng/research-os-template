@@ -83,6 +83,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(self.context.profiles.list_profiles())
             elif path == "/api/runtime/environment":
                 self.send_json(self.context.runtime.environment())
+            elif path == "/api/runtime/load-secret":
+                self.send_json({"ok": False, "error": "Use POST for runtime secret loading."}, status=405)
             elif path == "/api/runtime/events":
                 after = int(query.get("after", ["0"])[0])
                 self.send_json(self.context.runtime.list_events(after=after))
@@ -127,6 +129,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"login": self.context.runtime.login_chatgpt(device_code=True)})
             elif path == "/api/logout":
                 self.send_json({"logout": self.context.runtime.logout()})
+            elif path == "/api/runtime/load-secret":
+                profile = self.context.profiles.get_profile(payload.get("profile_id"))
+                self.send_json({"runtime_config": self.context.runtime.load_provider_secret(profile, str(payload.get("key_file_path") or ""))})
             elif path == "/api/runtime/start-thread":
                 profile = self.context.profiles.get_profile(payload.get("profile_id"))
                 result = self.context.runtime.start_thread(profile, model=payload.get("model"), ephemeral=bool(payload.get("ephemeral", False)))

@@ -37,9 +37,15 @@ export function RuntimePanel() {
   const project = useAppStore((store) => store.project);
   const activeProfileId = useAppStore((store) => store.activeProfileId);
   const [turnText, setTurnText] = useState(DEFAULT_PAPER_TURN);
+  const [keyFilePath, setKeyFilePath] = useState("");
   const events = useQuery({ queryKey: ["runtime-events"], queryFn: () => api.runtimeEvents(0), refetchInterval: 2500 });
   const environment = useQuery({ queryKey: ["runtime-environment"], queryFn: api.environment, retry: false });
-  const runtimeReady = Boolean(environment.data?.codex_sdk_available);
+  const runtimeConfig = environment.data?.runtime_config;
+  const runtimeReady = Boolean(environment.data?.codex_sdk_available && runtimeConfig?.secret_loaded);
+  const loadSecret = useMutation({
+    mutationFn: () => api.loadRuntimeSecret(activeProfileId, keyFilePath),
+    onSuccess: () => environment.refetch(),
+  });
   const startThread = useMutation({ mutationFn: () => api.startThread(activeProfileId) });
   const startTurn = useMutation({
     mutationFn: () => {
@@ -61,19 +67,34 @@ export function RuntimePanel() {
           <p>{runtimeReady ? "Codex SDK is available. Execution still goes through Research OS approvals." : "Codex SDK is missing or unavailable. Configure the runtime before starting real execution."}</p>
         </div>
       </div>
+      <div className="runtime-proof">
+        <span>Provider: <strong>{runtimeConfig?.provider_id ?? "not configured"}</strong></span>
+        <span>Model: <strong>{runtimeConfig?.model ?? "not configured"}</strong></span>
+        <span>Reasoning: <strong>{runtimeConfig?.reasoning_effort ?? "not configured"}</strong></span>
+        <span>Secret: <strong>{runtimeConfig?.secret_loaded ? "loaded in sidecar memory" : "not loaded"}</strong></span>
+      </div>
       {!runtimeReady ? (
         <div className="empty-state action-state">
           <strong>Research engine is not ready</strong>
-          <p>You can still organize materials, answer alignment questions, and create archives. Real Codex execution needs an installed or configured runtime.</p>
+          <p>You can still organize materials, answer alignment questions, and create archives. Real Codex execution needs the Codex SDK plus a loaded provider key.</p>
+          <label className="field">
+            <span>Local key file path (not saved)</span>
+            <input value={keyFilePath} onChange={(event) => setKeyFilePath(event.target.value)} placeholder="Select or paste a local key file path" />
+          </label>
           <div className="inline-actions">
+            <button className="secondary-action" type="button" onClick={() => loadSecret.mutate()} disabled={!keyFilePath.trim() || loadSecret.isPending}>
+              <RefreshCw size={16} aria-hidden="true" />
+              {loadSecret.isPending ? "Loading key" : "Load key into sidecar"}
+            </button>
             <button className="secondary-action" type="button" onClick={() => environment.refetch()} disabled={environment.isFetching}>
               <RefreshCw size={16} aria-hidden="true" />
               {environment.isFetching ? "Checking" : "Retry check"}
             </button>
           </div>
+          {loadSecret.error ? <p className="error-text">{loadSecret.error.message}</p> : null}
           <details>
             <summary>Configuration notes</summary>
-            <p>Install the Codex runtime or Python SDK, then select an available profile and model. If the sidecar crashes, restart the app and resume from the `.rosproj` file.</p>
+            <p>Research OS writes provider settings to an isolated app-owned CODEX_HOME. Keys are loaded into the sidecar process environment only and are not saved to the project.</p>
           </details>
         </div>
       ) : null}

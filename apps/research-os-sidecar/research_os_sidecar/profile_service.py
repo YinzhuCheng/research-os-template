@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -8,6 +9,8 @@ from .common import app_data_dir, now_iso, read_json, write_json
 
 PROFILE_TYPES = {"openai_account", "openai_api_key", "custom_provider"}
 SECRET_FIELDS = {"api_key", "token", "secret", "password", "authorization"}
+REFERENCE_FIELDS = {"secret_ref", "env_key", "env_key_instructions"}
+ENV_KEY_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
 
 
 class ProfileService:
@@ -25,6 +28,20 @@ class ProfileService:
                     "provider_id": "openai",
                     "model": None,
                     "secret_ref": "codex_managed_auth",
+                    "created_at": now_iso(),
+                    "updated_at": now_iso(),
+                },
+                {
+                    "profile_id": "yunwu-gpt-55-xhigh",
+                    "label": "Yunwu GPT-5.5 xhigh",
+                    "type": "custom_provider",
+                    "provider_id": "yunwu",
+                    "model": "gpt-5.5",
+                    "base_url": "https://yunwu.ai/v1",
+                    "wire_api": "responses",
+                    "reasoning_effort": "xhigh",
+                    "env_key": "YUNWU_API_KEY",
+                    "secret_ref": "env:YUNWU_API_KEY",
                     "created_at": now_iso(),
                     "updated_at": now_iso(),
                 }
@@ -74,9 +91,19 @@ class ProfileService:
         if isinstance(value, dict):
             for key, nested in value.items():
                 lowered = str(key).lower()
+                if lowered in REFERENCE_FIELDS:
+                    self._assert_safe_reference(lowered, nested)
+                    continue
                 if lowered in SECRET_FIELDS or any(part in lowered for part in SECRET_FIELDS):
                     raise ValueError(f"Profile metadata must not store secret field: {key}")
                 self._assert_no_secret(nested)
         elif isinstance(value, list):
             for item in value:
                 self._assert_no_secret(item)
+
+    def _assert_safe_reference(self, key: str, value: Any) -> None:
+        text = str(value or "")
+        if key == "env_key" and text and not ENV_KEY_RE.match(text):
+            raise ValueError("env_key must be an environment variable name, not a secret value.")
+        if key == "secret_ref" and text and not (text.startswith("env:") or text == "codex_managed_auth"):
+            raise ValueError("secret_ref must be an environment-variable reference or codex_managed_auth.")

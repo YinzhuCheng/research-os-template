@@ -17,6 +17,9 @@ export function ProfilePanel() {
     provider_id: "yunwu",
     model: "gpt-5.5",
     base_url: "https://yunwu.ai/v1",
+    wire_api: "responses",
+    reasoning_effort: "xhigh",
+    env_key: "YUNWU_API_KEY",
     secret_ref: "env:YUNWU_API_KEY",
   });
   const save = useMutation({
@@ -73,6 +76,22 @@ export function ProfilePanel() {
           <label className="field">
             <span>Default model</span>
             <input value={draft.model ?? ""} onChange={(event) => setDraft({ ...draft, model: event.target.value })} placeholder="gpt-5.5" />
+          </label>
+          <label className="field">
+            <span>Base URL</span>
+            <input value={draft.base_url ?? ""} onChange={(event) => setDraft({ ...draft, base_url: event.target.value })} placeholder="https://yunwu.ai/v1" />
+          </label>
+          <label className="field">
+            <span>Wire API</span>
+            <input value={draft.wire_api ?? ""} onChange={(event) => setDraft({ ...draft, wire_api: event.target.value })} placeholder="responses" />
+          </label>
+          <label className="field">
+            <span>Reasoning effort</span>
+            <input value={draft.reasoning_effort ?? ""} onChange={(event) => setDraft({ ...draft, reasoning_effort: event.target.value })} placeholder="xhigh" />
+          </label>
+          <label className="field">
+            <span>Environment variable</span>
+            <input value={draft.env_key ?? ""} onChange={(event) => setDraft({ ...draft, env_key: event.target.value })} placeholder="YUNWU_API_KEY" />
           </label>
           <label className="field">
             <span>Secret reference</span>

@@ -652,6 +652,29 @@ em {
   text-align: left;
 }
 
+.runtime-proof {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 12px 0;
+}
+
+.runtime-proof span {
+  background: #f6f8f7;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: #53645d;
+  font-size: 12px;
+  min-width: 0;
+  padding: 8px 10px;
+}
+
+.runtime-proof strong {
+  color: #22302b;
+  display: block;
+  overflow-wrap: anywhere;
+}
+
 .event-log {
   background: #101917;
   border-radius: 6px;
@@ -743,6 +766,7 @@ em {
   .workspace-grid,
   .phase-bar,
   .profile-form,
+  .runtime-proof,
   .workflow-summary {
     grid-template-columns: 1fr;
   }

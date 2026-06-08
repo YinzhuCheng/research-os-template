@@ -23,7 +23,24 @@ export interface Profile {
   provider_id?: string;
   model?: string | null;
   base_url?: string;
+  wire_api?: string;
+  reasoning_effort?: string;
+  env_key?: string;
   secret_ref?: string;
+}
+
+export interface RuntimeConfigStatus {
+  configured?: boolean;
+  codex_home?: string;
+  codex_profile?: string;
+  provider_id?: string | null;
+  provider_name?: string | null;
+  base_url?: string | null;
+  wire_api?: string | null;
+  env_key?: string | null;
+  model?: string | null;
+  reasoning_effort?: string | null;
+  secret_loaded?: boolean;
 }
 
 export interface ChoicePrompt {

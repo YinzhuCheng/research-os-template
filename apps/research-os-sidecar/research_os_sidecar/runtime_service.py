@@ -7,6 +7,7 @@ from typing import Any
 
 from .approval_service import ApprovalService
 from .common import append_jsonl, now_iso
+from .runtime_config_service import RuntimeConfigService
 from .security import redact_sensitive
 
 
@@ -29,6 +30,7 @@ class RuntimeService:
     def __init__(self, project_root_provider, approval_service: ApprovalService) -> None:
         self._project_root_provider = project_root_provider
         self._approval_service = approval_service
+        self._runtime_config = RuntimeConfigService()
         self._client: Any | None = None
         self._events: list[dict[str, Any]] = []
         self._lock = threading.Lock()
@@ -38,7 +40,13 @@ class RuntimeService:
             "codex_cli": shutil.which("codex"),
             "codex_sdk_available": self._sdk_available(),
             "adapter": "openai_codex.client.CodexClient",
+            "runtime_config": self._runtime_config.status(),
         }
+
+    def load_provider_secret(self, profile: dict[str, Any], key_file_path: str) -> dict[str, Any]:
+        status = self._runtime_config.load_secret_from_file(profile, key_file_path)
+        self._record_event({"type": "runtime_secret_loaded", "payload": status})
+        return status
 
     def account(self) -> dict[str, Any]:
         client = self._ensure_client()
@@ -68,6 +76,7 @@ class RuntimeService:
 
     def start_thread(self, profile: dict[str, Any], model: str | None = None, ephemeral: bool = False) -> dict[str, Any]:
         root = self._project_root_provider()
+        runtime_status = self._runtime_config.prepare_profile(profile, require_secret=profile.get("provider_id") == "yunwu")
         client = self._ensure_client()
         params: dict[str, Any] = {
             "cwd": str(root),
@@ -85,11 +94,12 @@ class RuntimeService:
             params["modelProvider"] = profile["provider_id"]
         started = client.thread_start(params)
         payload = self._model_to_dict(started)
-        self._record_event({"type": "thread_started", "payload": payload})
+        self._record_event({"type": "thread_started", "payload": payload, "runtime_config": runtime_status})
         return payload
 
     def resume_thread(self, thread_id: str, profile: dict[str, Any], model: str | None = None) -> dict[str, Any]:
         root = self._project_root_provider()
+        runtime_status = self._runtime_config.prepare_profile(profile, require_secret=profile.get("provider_id") == "yunwu")
         client = self._ensure_client()
         params: dict[str, Any] = {
             "cwd": str(root),
@@ -105,13 +115,14 @@ class RuntimeService:
             params["modelProvider"] = profile["provider_id"]
         resumed = client.thread_resume(thread_id, params)
         payload = self._model_to_dict(resumed)
-        self._record_event({"type": "thread_resumed", "payload": payload})
+        self._record_event({"type": "thread_resumed", "payload": payload, "runtime_config": runtime_status})
         return payload
 
     def start_turn(self, thread_id: str, text: str, profile: dict[str, Any], model: str | None = None) -> dict[str, Any]:
         if not text.strip():
             raise ValueError("Turn text is required.")
         root = self._project_root_provider()
+        runtime_status = self._runtime_config.prepare_profile(profile, require_secret=profile.get("provider_id") == "yunwu")
         client = self._ensure_client()
         params: dict[str, Any] = {
             "cwd": str(root),
@@ -123,12 +134,14 @@ class RuntimeService:
         chosen_model = model or profile.get("model")
         if chosen_model:
             params["model"] = chosen_model
+        if profile.get("provider_id"):
+            params["modelProvider"] = profile["provider_id"]
         started = client.turn_start(thread_id, text, params)
         payload = self._model_to_dict(started)
         turn_id = payload.get("turn", {}).get("id")
         if turn_id:
             threading.Thread(target=self._drain_turn, args=(turn_id,), daemon=True).start()
-        self._record_event({"type": "turn_started", "payload": payload})
+        self._record_event({"type": "turn_started", "payload": payload, "runtime_config": runtime_status})
         return payload
 
     def steer(self, thread_id: str, turn_id: str, text: str) -> dict[str, Any]:
