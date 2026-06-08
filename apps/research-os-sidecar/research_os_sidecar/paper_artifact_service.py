@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,7 @@ ALLOWED_ARTIFACT_PREFIXES = (
     "PUBLIC/submission/",
     "PROVENANCE/paper/",
 )
+CONTROL_CHAR_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
 class PaperArtifactService:
@@ -33,6 +35,8 @@ class PaperArtifactService:
             content = str(item.get("content") or "")
             if SECRET_RE.search(content):
                 raise SecurityError(f"Secret-like content detected in paper artifact: {relative_path}")
+            if CONTROL_CHAR_RE.search(content):
+                raise SecurityError(f"Control character detected in paper artifact: {relative_path}")
             target = resolve_under(root, relative_path)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8", newline="\n")

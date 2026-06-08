@@ -221,6 +221,8 @@ class SidecarServiceTests(unittest.TestCase):
                 service.write_artifacts({"files": [{"path": "PRIVATE/paper/main.tex", "content": "x"}]})
             with self.assertRaises(SecurityError):
                 service.write_artifacts({"files": [{"path": "PUBLIC/paper/main.tex", "content": "api_key=secret"}]})
+            with self.assertRaises(SecurityError):
+                service.write_artifacts({"files": [{"path": "PUBLIC/paper/main.tex", "content": "x\x08eta"}]})
 
     def test_project_path_escape_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -9,7 +9,7 @@
 | 3 | Create `.rosproj` sandbox and import the neural-network materials through the app/sidecar path | completed |
 | 4 | Run initialization, evidence refresh, proof audit, and acceptance-gated research loops | completed |
 | 5 | Produce the Neural Networks Full Article package through the paper final-product track | in_progress |
-| 6 | Run paid Yunwu `gpt-5.5` `xhigh` review/rebuttal rounds within USD 90-105 target range | pending |
+| 6 | Run paid Yunwu `gpt-5.5` `xhigh` review/rebuttal rounds within USD 90-105 target range | in_progress |
 | 7 | Validate, archive, package, record screenshots/provenance, commit, and push | pending |
 
 ## Operating Rule
@@ -51,6 +51,9 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - Real app dogfooding exposed a phase metadata drift: `PUBLIC/research_state.json` had reached `final_product`, but `.rosproj` and `.research-os/project.json` still showed `initialization`. The sidecar now synchronizes project phase metadata when final-product selection or paper artifact writes update the research state.
 - PowerShell `Invoke-RestMethod`/`Invoke-WebRequest` showed unreliable POST behavior in this Windows session after the sidecar restart. The Python urllib client remained stable for app API dogfooding, so future sidecar QA should include a native app client path rather than relying only on PowerShell.
 - Inspecting the paid-review profile UI exposed another reusable quality gap: the profile settings component could render mojibake if Chinese text is read or edited through the wrong encoding path. The profile component text was normalized and the desktop validation script now includes ASCII-only fallback-pattern checks so the guard itself cannot be corrupted by non-ASCII sequence literals.
+- The v0.2 manuscript revision exposed a paper-artifact safety gap: generated LaTeX can contain invisible control characters when string escapes are mishandled. `PaperArtifactService` now rejects control characters other than tab, newline, and carriage return before writing paper artifacts.
+- Yunwu `gpt-5.5` with `reasoning_effort: xhigh` is available. The documented web query tool measured the first batch at USD 0.527344. Programmatic dashboard billing endpoints now return Cloudflare 1010 from this environment, so spend measurement uses the documented query web app instead.
+- The first paid batch showed that reaching USD 90-105 by useful manuscript review alone would require many rounds because `gpt-5.5` text review calls are inexpensive. Continue with signal-first revision/re-review loops and record the shortfall rather than artificially wasting budget.
 
 ## Step 1 Validation
 
@@ -86,6 +89,9 @@ The implementation must stay app-first. If the paper cannot be improved comforta
 - Created a private project archive `ARCH-20260608T073545`; archive preview and creation both reported `private_paths_included: false` and `secrets_scan: passed`.
 - Fixed and verified app phase synchronization; the repaired app screenshot shows `final_product / final_product_production` instead of the stale initialization phase.
 - Fixed the profile/model settings panel copy and rebuilt the mojibake guard using ASCII-only regexes. `scripts/check_desktop_app.ps1`, TypeScript, Vitest, and `git diff --check` passed after this UI quality repair.
+- Ran the first Yunwu paid review batch: one `gpt-5.5` `xhigh` probe and four `gpt-5.5` `xhigh` manuscript review calls covering proof correctness, venue/novelty/source risk, manuscript structure, and review/rebuttal simulation. Measured batch cost was USD 0.527344.
+- Applied the first review batch through the sidecar paper artifact endpoint. v0.2 now formalizes layer-zero affine availability, adds a consuming-affine-readouts lemma, clarifies conservative depth/width bounds, handles constants separately, removes internal source-verification prose from the manuscript, and softens overbroad novelty claims.
+- After an initial LaTeX escape failure was found and repaired, v0.2 compiled to a 12-page PDF with no fatal errors, undefined citations, undefined references, overfull boxes, or underfull boxes in the final log scan.
 
 ## Step 3 Validation
 
