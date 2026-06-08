@@ -738,7 +738,7 @@ class SidecarServiceTests(unittest.TestCase):
                 self.assertEqual(thread_params["model"], "gpt-5.5")
                 self.assertEqual(thread_params["modelProvider"], "yunwu")
                 self.assertEqual(turn_params["approvalPolicy"], "on-request")
-                self.assertEqual(turn_params["sandboxPolicy"], {"type": "workspace-write", "writableRoots": [str(root)], "networkAccess": True})
+                self.assertEqual(turn_params["sandboxPolicy"], {"type": "workspaceWrite", "writableRoots": [str(root)], "networkAccess": True})
                 self.assertEqual(turn_params["model"], "gpt-5.5")
                 self.assertEqual(turn_params["modelProvider"], "yunwu")
         finally:

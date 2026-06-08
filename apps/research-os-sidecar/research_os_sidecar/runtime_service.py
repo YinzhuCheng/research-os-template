@@ -128,7 +128,7 @@ class RuntimeService:
             "cwd": str(root),
             "approvalPolicy": "on-request",
             "approvalsReviewer": "user",
-            "sandboxPolicy": {"type": "workspace-write", "writableRoots": [str(root)], "networkAccess": True},
+            "sandboxPolicy": {"type": "workspaceWrite", "writableRoots": [str(root)], "networkAccess": True},
             "serviceName": "research_os_desktop",
         }
         chosen_model = model or profile.get("model")
