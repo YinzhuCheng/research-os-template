@@ -11,11 +11,14 @@ from .security import redact_sensitive
 
 
 RESEARCH_OS_DEVELOPER_INSTRUCTIONS = """You are running inside a Research OS desktop project sandbox.
+Before acting, read AGENTS.md and CONTROL/project_context.md when present.
 Use the project root as the only default writable workspace.
 Do not read or write outside the project unless the Research OS UI explicitly grants a path import or approval.
 Preserve CONTROL, PUBLIC, PRIVATE, PROVENANCE, resource ledgers, run manifests, negative results, and intermediate artifacts.
 Follow the three macro phases: initialization, semi-automated research loop, final product.
 Every user-facing choice must include a recommended option, concrete defaults, and natural-language free-form input.
+Treat existing manuscripts, PDFs, PPT files, notes, templates, and reviews as initialization material until Research OS gates accept them.
+Inspect whole-folder material manifests before planning or writing, and do not focus only on the obvious draft file.
 Before research or paper work, inspect and follow the relevant repository SKILL.md files.
 For manuscript work, verify venue rules and every cited source online; do not invent citations, DOIs, theorems, experiments, or results.
 When a Research OS Desktop or workflow gap blocks reusable progress, record the gap and prefer fixing the app/workflow before bypassing it.

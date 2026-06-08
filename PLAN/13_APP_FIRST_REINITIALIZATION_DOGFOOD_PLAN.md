@@ -52,7 +52,7 @@ Status: completed
 
 ### Step 3 - Generate Strong Project Context Automatically
 
-Status: pending
+Status: completed
 
 - Improve project creation so each `.rosproj` sandbox receives an app-generated `AGENTS.md` or equivalent context pack.
 - Include mandatory skill routing, source verification, whole-folder intake, stage gates, privacy, resource guard, hallucinated-citation prevention, reviewer-loop expectations, and app-gap logging.
@@ -121,7 +121,7 @@ Status: pending
 
 - The previous v4.4 workflow incorrectly treated an improved manuscript package as if it were already a final-product artifact.
 - The app now has a folder manifest path: directory import records roles, hashes, target paths, exclusions, role counts, and warnings; `/api/state` exposes a public summary and the UI renders it in the materials panel.
-- The app needs stronger generated context engineering so users do not need to manually ask Codex to use skills, verify sources, preserve provenance, or run rebuttal loops.
+- New projects now receive generated `AGENTS.md` and `CONTROL/project_context.md` context packs that instruct Codex to use skills, inspect whole-folder manifests, verify sources, avoid hallucinated citations, preserve provenance, respect gates, and record app/workflow gaps.
 - The app must expose a clearer distinction between "draft material", "accepted research artifact", and "final product".
 - The app and governance should keep the successful v4.4 fixes: controlled paper artifact writes, control-character guard, phase synchronization, profile UI text guard, screenshots, private archives, and redacted Yunwu records.
 
@@ -129,3 +129,4 @@ Status: pending
 
 - 2026-06-08T08:26:41+08:00: Step 1 completed. `git diff --check`, `scripts/validate_schemas.ps1`, `scripts/check_resource_guard.ps1`, `scripts/scan_privacy.ps1`, `scripts/check_desktop_app.ps1`, and `scripts/check_research_flow.ps1` passed. No raw private paper material, API key, Authorization header, cookie, or external writeback was introduced.
 - 2026-06-08T08:47:51+08:00: Step 2 completed. Added sidecar whole-folder material manifests, public manifest summaries, state exposure, app material-import UI, readable Chinese app copy, manifest role/warning UI, and regression checks. Validation passed: `git diff --check`, `scripts/validate_schemas.ps1`, `scripts/scan_privacy.ps1`, `scripts/check_desktop_app.ps1`, sidecar unittest (16 tests), TypeScript `tsc --noEmit`, Vitest, Vite production build, and an HTTP sidecar endpoint smoke test that created a temporary project, imported a multi-file material folder, and read manifest roles through `/api/state`.
+- 2026-06-08T08:54:51+08:00: Step 3 completed. Project creation now overwrites generated project `AGENTS.md` and writes `CONTROL/project_context.md`; runtime developer instructions now tell Codex to read both context files and inspect whole-folder material manifests. Validation passed: sidecar unittest (16 tests), `scripts/check_desktop_app.ps1`, `scripts/validate_schemas.ps1`, `scripts/scan_privacy.ps1`, `py_compile`, and `git diff --check`.
