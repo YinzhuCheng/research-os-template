@@ -19,33 +19,16 @@ class ProfileService:
 
     def list_profiles(self) -> dict[str, Any]:
         payload = read_json(self.store_path, {"profiles": []})
-        if not payload.get("profiles"):
-            payload["profiles"] = [
-                {
-                    "profile_id": "openai-account",
-                    "label": "OpenAI Account",
-                    "type": "openai_account",
-                    "provider_id": "openai",
-                    "model": None,
-                    "secret_ref": "codex_managed_auth",
-                    "created_at": now_iso(),
-                    "updated_at": now_iso(),
-                },
-                {
-                    "profile_id": "yunwu-gpt-55-xhigh",
-                    "label": "Yunwu GPT-5.5 xhigh",
-                    "type": "custom_provider",
-                    "provider_id": "yunwu",
-                    "model": "gpt-5.5",
-                    "base_url": "https://yunwu.ai/v1",
-                    "wire_api": "responses",
-                    "reasoning_effort": "xhigh",
-                    "env_key": "YUNWU_API_KEY",
-                    "secret_ref": "env:YUNWU_API_KEY",
-                    "created_at": now_iso(),
-                    "updated_at": now_iso(),
-                }
-            ]
+        profiles = [item for item in payload.get("profiles") or [] if isinstance(item, dict)]
+        existing = {str(item.get("profile_id")): item for item in profiles}
+        changed = False
+        for profile in self._default_profiles():
+            profile_id = str(profile["profile_id"])
+            if profile_id not in existing:
+                existing[profile_id] = profile
+                changed = True
+        if changed or profiles != list(existing.values()):
+            payload["profiles"] = sorted(existing.values(), key=lambda item: str(item.get("profile_id")))
             write_json(self.store_path, payload)
         return payload
 
@@ -107,3 +90,32 @@ class ProfileService:
             raise ValueError("env_key must be an environment variable name, not a secret value.")
         if key == "secret_ref" and text and not (text.startswith("env:") or text == "codex_managed_auth"):
             raise ValueError("secret_ref must be an environment-variable reference or codex_managed_auth.")
+
+    def _default_profiles(self) -> list[dict[str, Any]]:
+        created_at = now_iso()
+        return [
+            {
+                "profile_id": "openai-account",
+                "label": "OpenAI Account",
+                "type": "openai_account",
+                "provider_id": "openai",
+                "model": None,
+                "secret_ref": "codex_managed_auth",
+                "created_at": created_at,
+                "updated_at": created_at,
+            },
+            {
+                "profile_id": "yunwu-gpt-55-xhigh",
+                "label": "Yunwu GPT-5.5 xhigh",
+                "type": "custom_provider",
+                "provider_id": "yunwu",
+                "model": "gpt-5.5",
+                "base_url": "https://yunwu.ai/v1",
+                "wire_api": "responses",
+                "reasoning_effort": "xhigh",
+                "env_key": "YUNWU_API_KEY",
+                "secret_ref": "env:YUNWU_API_KEY",
+                "created_at": created_at,
+                "updated_at": created_at,
+            },
+        ]

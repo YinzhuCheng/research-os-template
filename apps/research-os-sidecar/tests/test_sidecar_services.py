@@ -588,6 +588,39 @@ class SidecarServiceTests(unittest.TestCase):
                     }
                 )
 
+    def test_profile_seeds_missing_yunwu_profile_for_existing_store(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            store = Path(temp) / "profiles.json"
+            store.write_text(
+                json.dumps(
+                    {
+                        "profiles": [
+                            {
+                                "profile_id": "openai-account",
+                                "label": "OpenAI Account",
+                                "type": "openai_account",
+                                "provider_id": "openai",
+                                "model": None,
+                                "secret_ref": "codex_managed_auth",
+                                "created_at": "2026-01-01T00:00:00+00:00",
+                                "updated_at": "2026-01-01T00:00:00+00:00",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            listed = ProfileService(store).list_profiles()["profiles"]
+
+            profile_ids = {item["profile_id"] for item in listed}
+            self.assertIn("openai-account", profile_ids)
+            self.assertIn("yunwu-gpt-55-xhigh", profile_ids)
+            yunwu = next(item for item in listed if item["profile_id"] == "yunwu-gpt-55-xhigh")
+            self.assertEqual(yunwu["model"], "gpt-5.5")
+            self.assertEqual(yunwu["reasoning_effort"], "xhigh")
+            self.assertEqual(yunwu["secret_ref"], "env:YUNWU_API_KEY")
+
     def test_runtime_config_writes_isolated_codex_home_without_secret(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             codex_home = Path(temp) / "codex_home"
