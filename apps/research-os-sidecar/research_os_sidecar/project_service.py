@@ -127,7 +127,7 @@ class ProjectService:
     def _recover_codex_status_from_runtime_events(self, project_root: Path, data: dict[str, Any]) -> dict[str, Any]:
         codex = dict(data.get("codex") or {})
         turn_id = codex.get("last_turn_id")
-        if not turn_id or codex.get("last_status") != "turn_started":
+        if not turn_id or codex.get("last_status") not in {"turn_started", "turn_completed"}:
             return data
         runtime_events = project_root / ".research-os" / "runtime_events.jsonl"
         if not runtime_events.exists():

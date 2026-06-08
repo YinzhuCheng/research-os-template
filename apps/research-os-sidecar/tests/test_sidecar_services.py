@@ -92,7 +92,7 @@ class SidecarServiceTests(unittest.TestCase):
             data["codex"] = {
                 "thread_id": "thread_test",
                 "last_turn_id": "turn_test",
-                "last_status": "turn_started",
+                "last_status": "turn_completed",
             }
             project_file.write_text(json.dumps(data), encoding="utf-8")
             (project_root / ".research-os" / "runtime_events.jsonl").write_text(
@@ -125,7 +125,7 @@ class SidecarServiceTests(unittest.TestCase):
             data["codex"] = {
                 "thread_id": "thread_test",
                 "last_turn_id": "turn_test",
-                "last_status": "turn_started",
+                "last_status": "turn_completed",
             }
             project_file.write_text(json.dumps(data), encoding="utf-8")
             (project_root / ".research-os" / "runtime_events.jsonl").write_text(
