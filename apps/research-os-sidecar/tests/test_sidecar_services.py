@@ -948,6 +948,51 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertEqual([event["type"] for event in tail["events"]], ["event_3", "event_4"])
             self.assertEqual([event["type"] for event in window["events"]], ["event_2", "event_3"])
 
+    def test_runtime_events_are_summarized_for_ui_response(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            service = RuntimeService(lambda: root, ApprovalService(timeout_seconds=0.01))
+            service._record_event(  # type: ignore[attr-defined]
+                {
+                    "type": "codex_notification",
+                    "payload": {
+                        "item": {
+                            "aggregatedOutput": "x" * 5000,
+                            "files": [{"path": f"file_{index}.txt"} for index in range(40)],
+                        }
+                    },
+                }
+            )
+
+            event = service.list_events(limit=1)["events"][0]
+            output = event["payload"]["item"]["aggregatedOutput"]
+            files = event["payload"]["item"]["files"]
+
+            self.assertLess(len(output), 2300)
+            self.assertIn("full redacted event is preserved", output)
+            self.assertEqual(len(files), 31)
+            self.assertIn("additional list items truncated", files[-1]["summary"])
+            persisted = (root / ".research-os" / "runtime_events.jsonl").read_text(encoding="utf-8")
+            self.assertIn("x" * 3000, persisted)
+
+    def test_runtime_service_can_mark_turn_needs_repair(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            statuses: list[tuple[str, str]] = []
+            service = RuntimeService(
+                lambda: root,
+                ApprovalService(timeout_seconds=0.01),
+                on_turn_status=lambda turn_id, status: statuses.append((turn_id, status)),
+            )
+
+            result = service.mark_turn_needs_repair("thread_test", "turn_test", "No terminal event after provider reconnect.")
+
+            self.assertEqual(result["status"], "needs_repair")
+            self.assertEqual(statuses, [("turn_test", "needs_repair")])
+            event = service.list_events(limit=1)["events"][0]
+            self.assertEqual(event["type"], "runtime_turn_marked_needs_repair")
+            self.assertEqual(event["payload"]["turn_id"], "turn_test")
+
     def test_runtime_service_reports_completed_turn_status(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

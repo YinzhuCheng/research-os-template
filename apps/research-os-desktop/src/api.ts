@@ -42,6 +42,11 @@ export const api = {
     request<Record<string, unknown>>("/api/runtime/start-turn", { method: "POST", body: JSON.stringify({ thread_id, text, profile_id, model }) }),
   interrupt: (thread_id: string, turn_id: string) =>
     request<Record<string, unknown>>("/api/runtime/interrupt", { method: "POST", body: JSON.stringify({ thread_id, turn_id }) }),
+  markTurnNeedsRepair: (thread_id: string, turn_id: string, reason: string) =>
+    request<Record<string, unknown>>("/api/runtime/mark-turn-needs-repair", {
+      method: "POST",
+      body: JSON.stringify({ thread_id, turn_id, reason })
+    }),
   submitIntake: (free_text: string) => request<Record<string, unknown>>("/api/intake", { method: "POST", body: JSON.stringify({ free_text }) }),
   saveChoiceResponse: (prompt_id: string, option_id: string, free_form = "") =>
     request<Record<string, unknown>>("/api/choice-response", { method: "POST", body: JSON.stringify({ prompt_id, option_id, free_form }) }),

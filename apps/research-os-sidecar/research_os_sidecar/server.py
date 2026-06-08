@@ -167,6 +167,16 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"steer": self.context.runtime.steer(str(payload.get("thread_id") or ""), str(payload.get("turn_id") or ""), str(payload.get("text") or ""))})
             elif path == "/api/runtime/interrupt":
                 self.send_json({"interrupt": self.context.runtime.interrupt(str(payload.get("thread_id") or ""), str(payload.get("turn_id") or ""))})
+            elif path == "/api/runtime/mark-turn-needs-repair":
+                self.send_json(
+                    {
+                        "repair": self.context.runtime.mark_turn_needs_repair(
+                            str(payload.get("thread_id") or ""),
+                            str(payload.get("turn_id") or ""),
+                            str(payload.get("reason") or ""),
+                        )
+                    }
+                )
             elif path == "/api/approvals/decide":
                 self.send_json({"approval": self.context.approvals.decide(str(payload.get("approval_id") or ""), str(payload.get("decision") or ""), str(payload.get("notes") or ""))})
             elif path == "/api/intake":

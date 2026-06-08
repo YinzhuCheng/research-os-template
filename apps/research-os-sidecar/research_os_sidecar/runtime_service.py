@@ -25,6 +25,10 @@ For manuscript work, verify venue rules and every cited source online; do not in
 When a Research OS Desktop or workflow gap blocks reusable progress, record the gap and prefer fixing the app/workflow before bypassing it.
 """
 
+EVENT_RESPONSE_STRING_LIMIT = 2000
+EVENT_RESPONSE_LIST_LIMIT = 30
+EVENT_RESPONSE_DEPTH_LIMIT = 6
+
 
 class RuntimeService:
     def __init__(
@@ -171,6 +175,23 @@ class RuntimeService:
         self._record_event({"type": "turn_interrupted", "payload": payload})
         return payload
 
+    def mark_turn_needs_repair(self, thread_id: str, turn_id: str, reason: str) -> dict[str, Any]:
+        if not thread_id.strip():
+            raise ValueError("thread_id is required.")
+        if not turn_id.strip():
+            raise ValueError("turn_id is required.")
+        clean_reason = reason.strip() or "The turn did not produce an app-readable terminal state."
+        payload = {
+            "thread_id": thread_id,
+            "turn_id": turn_id,
+            "status": "needs_repair",
+            "reason": clean_reason,
+            "next_action": "Start a bounded continuation turn from saved project state instead of restarting the project.",
+        }
+        self._record_event({"type": "runtime_turn_marked_needs_repair", "payload": payload})
+        self._update_turn_status(turn_id, "needs_repair")
+        return payload
+
     def list_events(self, after: int = 0, limit: int | None = None) -> dict[str, Any]:
         with self._lock:
             if limit is not None and limit > 0 and after <= 0:
@@ -181,7 +202,7 @@ class RuntimeService:
                 if limit is not None and limit > 0:
                     events = events[:limit]
             cursor = len(self._events)
-        return {"cursor": cursor, "events": events}
+        return {"cursor": cursor, "events": [self._event_for_response(event) for event in events]}
 
     def _drain_turn(self, turn_id: str) -> None:
         client = self._ensure_client()
@@ -233,6 +254,36 @@ class RuntimeService:
             append_jsonl(self._project_root_provider() / ".research-os" / "runtime_events.jsonl", event)
         except Exception:
             pass
+
+    def _event_for_response(self, event: dict[str, Any]) -> dict[str, Any]:
+        return self._summarize_response_value(event, depth=0)
+
+    def _summarize_response_value(self, value: Any, depth: int) -> Any:
+        if depth > EVENT_RESPONSE_DEPTH_LIMIT:
+            return {"summary": "Nested event details truncated for UI response."}
+        if isinstance(value, str):
+            if len(value) <= EVENT_RESPONSE_STRING_LIMIT:
+                return value
+            omitted = len(value) - EVENT_RESPONSE_STRING_LIMIT
+            return (
+                value[:EVENT_RESPONSE_STRING_LIMIT]
+                + f"\n...[truncated {omitted} chars; full redacted event is preserved in project runtime_events.jsonl]"
+            )
+        if isinstance(value, list):
+            summarized = [self._summarize_response_value(item, depth + 1) for item in value[:EVENT_RESPONSE_LIST_LIMIT]]
+            if len(value) > EVENT_RESPONSE_LIST_LIMIT:
+                summarized.append(
+                    {
+                        "summary": (
+                            f"{len(value) - EVENT_RESPONSE_LIST_LIMIT} additional list items truncated for UI response; "
+                            "full redacted event is preserved in project runtime_events.jsonl."
+                        )
+                    }
+                )
+            return summarized
+        if isinstance(value, dict):
+            return {key: self._summarize_response_value(item, depth + 1) for key, item in value.items()}
+        return value
 
     def _update_turn_status(self, turn_id: str, status: str) -> None:
         if self._on_turn_status is None:
