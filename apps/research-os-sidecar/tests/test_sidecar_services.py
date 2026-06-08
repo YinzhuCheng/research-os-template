@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import os
 import queue
@@ -329,6 +330,34 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertEqual(readback["current_macro_phase"], "final_product")
             self.assertEqual(readback["current_phase"], "final_product_production")
 
+    def test_paper_artifact_service_accepts_base64_content(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            root = Path(project["project_root"])
+            service = PaperArtifactService(projects.require_project_root)
+            tex = "\\section{Exact representation}\n\\beta + \\gamma\n"
+
+            result = service.write_artifacts(
+                {
+                    "summary": "base64 latex artifact",
+                    "files": [
+                        {
+                            "path": "PUBLIC/paper/main.tex",
+                            "content_base64": base64.b64encode(tex.encode("utf-8")).decode("ascii"),
+                            "role": "manuscript",
+                        }
+                    ],
+                }
+            )
+
+            self.assertEqual(result["written"][0]["bytes"], len(tex.encode("utf-8")))
+            self.assertEqual((root / "PUBLIC" / "paper" / "main.tex").read_text(encoding="utf-8"), tex)
+
     def test_research_loop_artifact_service_preserves_loop_phase(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
@@ -373,6 +402,34 @@ class SidecarServiceTests(unittest.TestCase):
             project_readback = json.loads(Path(project["project_file"]).read_text(encoding="utf-8"))
             self.assertEqual(project_readback["current_macro_phase"], "research_loop")
             self.assertEqual(project_readback["current_phase"], "loop_acceptance_gate")
+
+    def test_research_loop_artifact_service_accepts_base64_content(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            root = Path(project["project_root"])
+            service = ResearchLoopArtifactService(projects.require_project_root, projects.update_project)
+            content = "# Audit\n\nUse exact source URLs and proof obligations.\n"
+
+            result = service.write_artifacts(
+                {
+                    "summary": "base64 audit",
+                    "files": [
+                        {
+                            "path": "PUBLIC/research_loop/audit.md",
+                            "content_base64": base64.b64encode(content.encode("utf-8")).decode("ascii"),
+                            "role": "audit",
+                        }
+                    ],
+                }
+            )
+
+            self.assertEqual(result["written"][0]["bytes"], len(content.encode("utf-8")))
+            self.assertEqual((root / "PUBLIC" / "research_loop" / "audit.md").read_text(encoding="utf-8"), content)
 
     def test_research_loop_artifact_acceptance_returns_to_alignment(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -477,6 +534,31 @@ class SidecarServiceTests(unittest.TestCase):
                 service.write_artifacts({"files": [{"path": "PUBLIC/paper/main.tex", "content": "api_key=secret"}]})
             with self.assertRaises(SecurityError):
                 service.write_artifacts({"files": [{"path": "PUBLIC/paper/main.tex", "content": "x\x08eta"}]})
+            with self.assertRaises(ValueError):
+                service.write_artifacts(
+                    {
+                        "files": [
+                            {
+                                "path": "PUBLIC/paper/main.tex",
+                                "content": "x",
+                                "content_base64": base64.b64encode(b"x").decode("ascii"),
+                            }
+                        ]
+                    }
+                )
+            with self.assertRaises(ValueError):
+                service.write_artifacts({"files": [{"path": "PUBLIC/paper/main.tex", "content_base64": "not-base64!"}]})
+            with self.assertRaises(SecurityError):
+                service.write_artifacts(
+                    {
+                        "files": [
+                            {
+                                "path": "PUBLIC/paper/main.tex",
+                                "content_base64": base64.b64encode(b"api_key=secret").decode("ascii"),
+                            }
+                        ]
+                    }
+                )
 
     def test_project_path_escape_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

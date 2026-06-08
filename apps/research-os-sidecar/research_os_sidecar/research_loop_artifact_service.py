@@ -5,6 +5,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
+from .artifact_content import decode_artifact_content
 from .common import append_jsonl, new_id, now_iso, read_json, write_json
 from .security import SECRET_RE, SecurityError, resolve_under
 from .state_service import DEFAULT_SUBMISSION_WORKFLOW
@@ -34,7 +35,7 @@ class ResearchLoopArtifactService:
             if not isinstance(item, dict):
                 raise ValueError("Each research loop artifact must be an object.")
             relative_path = self._validate_relative_path(str(item.get("path") or ""))
-            content = str(item.get("content") or "")
+            content = decode_artifact_content(item, "Research loop artifact")
             if SECRET_RE.search(content):
                 raise SecurityError(f"Secret-like content detected in research loop artifact: {relative_path}")
             if CONTROL_CHAR_RE.search(content):

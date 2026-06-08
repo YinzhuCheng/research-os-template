@@ -12,7 +12,8 @@ const DEFAULT_PAPER_TURN = `Continue this project through the Research OS app-fi
 4. Use PUBLIC/material_manifest_summary.json first. Do not print or echo full material manifests, full file lists, or raw private paths into the runtime stream; if more detail is needed, read only targeted representative files.
 5. Verify Neural Networks submission rules, Elsevier template requirements, every citation, DOI, arXiv page, and publisher source online. Do not cite from memory and do not invent sources.
 6. If the app or workflow blocks reusable progress, record the gap and propose or implement the app fix before bypassing it manually.
-7. Produce only the next acceptance-ready artifact and structured records for this turn; do not bypass Research OS stage gates.`;
+7. Produce only the next acceptance-ready artifact and structured records for this turn; do not bypass Research OS stage gates.
+8. When writing LaTeX, BibTeX, or other backslash-heavy artifacts through /api/paper-artifacts/write or /api/research-loop-artifacts/write, use each file object's content_base64 field instead of raw content. The sidecar decodes UTF-8 base64 and still scans for secrets and invalid control characters.`;
 
 function eventTitle(event: Record<string, unknown>) {
   const type = String(event.type ?? "runtime_event");

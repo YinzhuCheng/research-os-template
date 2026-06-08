@@ -29,6 +29,10 @@ Internal stages are `initialization_intake`, `loop_acceptance_gate`, `loop_plan_
 
 Final Product Tracks support paper, research report, software, or a multi-track combination. Git-backed archives are local snapshots used before risky transitions, long-running work, or release gates.
 
+## Artifact Routes
+
+The sidecar owns app-readable artifact writes. Research-loop outputs use `/api/research-loop-artifacts/write`; paper and submission outputs use `/api/paper-artifacts/write`. Each file entry may provide either `content` or `content_base64`, never both. `content_base64` is preferred for LaTeX, BibTeX, and other backslash-heavy text because it avoids JSON escape corruption while preserving the same UTF-8 decode, path-boundary, secret-scan, and control-character checks.
+
 ## Skills And Domains
 
 `research-os-orchestrator` routes the work. `research-os-research-kernel` owns generate/evaluate/update/human-gate state. Domain routes stay under `domain_profiles/` and the domain skills:
