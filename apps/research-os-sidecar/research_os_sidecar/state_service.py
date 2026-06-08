@@ -345,6 +345,13 @@ class ResearchStateService:
                 state["pending_user_confirmation"] = True
                 state["choice_prompts"] = [self._research_loop_artifact_acceptance_prompt()]
                 self._sync_project_phase("research_loop", "loop_acceptance_gate")
+        elif prompt_id in {"CP-FIRST-RESEARCH-LOOP", "CP-NEXT-RESEARCH-LOOP"}:
+            state["macro_phase"] = "research_loop"
+            state["internal_phase"] = "loop_execute_analyze"
+            state["status"] = f"research_loop_execution_requested:{option_id}"
+            state["pending_user_confirmation"] = False
+            state["choice_prompts"] = []
+            self._sync_project_phase("research_loop", "loop_execute_analyze")
         else:
             state["pending_user_confirmation"] = False
         write_json(root / "PUBLIC" / "research_state.json", state)

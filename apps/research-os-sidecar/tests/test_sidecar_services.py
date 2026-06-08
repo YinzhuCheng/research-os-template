@@ -367,6 +367,30 @@ class SidecarServiceTests(unittest.TestCase):
             prompt = state.read_state()["research_state"]["choice_prompts"][0]
             self.assertEqual(prompt["recommended_option"], "repair_blocking_gaps")
 
+    def test_research_loop_decision_moves_to_execute_analyze(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            state = ResearchStateService(projects.require_project_root, projects.update_project)
+
+            state.submit_choice_response(
+                {
+                    "prompt_id": "CP-NEXT-RESEARCH-LOOP",
+                    "option_id": "repair_blocking_gaps",
+                    "free_form": "Repair proof and source blockers.",
+                }
+            )
+
+            readback = state.read_state()["research_state"]
+            self.assertEqual(readback["internal_phase"], "loop_execute_analyze")
+            self.assertEqual(readback["choice_prompts"], [])
+            project_readback = json.loads(Path(project["project_file"]).read_text(encoding="utf-8"))
+            self.assertEqual(project_readback["current_phase"], "loop_execute_analyze")
+
     def test_paper_artifact_service_rejects_private_escape_and_secret_content(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)

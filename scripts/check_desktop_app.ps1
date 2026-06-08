@@ -93,6 +93,7 @@ Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "Do
 Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "CP-FIRST-RESEARCH-LOOP"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "CP-RESEARCH-LOOP-ARTIFACT-ACCEPTANCE"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "repair_blocking_gaps"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "loop_execute_analyze"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\research_loop_artifact_service.py" "PUBLIC/research_loop/"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\research_loop_artifact_service.py" "research_loop_artifacts_ready_for_acceptance"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\archive_service.py" ".research-os"
