@@ -192,7 +192,7 @@ class RuntimeService:
                 payload = self._model_to_dict(notification.payload)
                 self._record_event({"type": "codex_notification", "method": notification.method, "payload": payload})
                 if notification.method == "turn/completed":
-                    self._update_turn_status(turn_id, "turn_completed")
+                    self._update_turn_status(turn_id, self._terminal_turn_status(payload))
                     break
         except Exception as exc:  # noqa: BLE001
             self._record_event({"type": "runtime_error", "error": str(exc), "turn_id": turn_id, "status": "needs_repair"})
@@ -248,6 +248,19 @@ class RuntimeService:
                     "error": str(exc),
                 }
             )
+
+    def _terminal_turn_status(self, payload: Any) -> str:
+        if isinstance(payload, dict):
+            turn = payload.get("turn")
+            if isinstance(turn, dict):
+                status = str(turn.get("status") or "").strip().lower()
+                if status == "interrupted":
+                    return "turn_interrupted"
+                if status in {"failed", "error"}:
+                    return "needs_repair"
+                if status and status != "completed":
+                    return f"turn_{status}"
+        return "turn_completed"
 
     def _sdk_available(self) -> bool:
         try:

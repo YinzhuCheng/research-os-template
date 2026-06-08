@@ -31,6 +31,16 @@ BLOCKED_SEED_NAMES = {
 }
 
 
+def _codex_terminal_status(status: str) -> str:
+    if status == "interrupted":
+        return "turn_interrupted"
+    if status in {"failed", "error"}:
+        return "needs_repair"
+    if status and status != "completed":
+        return f"turn_{status}"
+    return "turn_completed"
+
+
 class ProjectService:
     def __init__(self, seed_root: Path) -> None:
         self.seed_root = seed_root.resolve()
@@ -133,7 +143,8 @@ class ProjectService:
                 elif event.get("type") == "codex_notification" and event.get("method") == "turn/completed":
                     payload_turn = ((event.get("payload") or {}).get("turn") or {})
                     if payload_turn.get("id") == turn_id:
-                        recovered_status = "turn_completed"
+                        terminal_status = str(payload_turn.get("status") or "").strip().lower()
+                        recovered_status = _codex_terminal_status(terminal_status)
         except (OSError, json.JSONDecodeError):
             return data
         if recovered_status:

@@ -111,6 +111,39 @@ class SidecarServiceTests(unittest.TestCase):
 
             self.assertEqual(reopened["codex"]["last_status"], "turn_completed")
 
+    def test_project_open_recovers_interrupted_runtime_status(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            service = ProjectService(template)
+            project = service.create_project("Demo", base / "demo.rosproj")
+            project_file = Path(project["project_file"])
+            project_root = Path(project["project_root"])
+            data = json.loads(project_file.read_text(encoding="utf-8"))
+            data["codex"] = {
+                "thread_id": "thread_test",
+                "last_turn_id": "turn_test",
+                "last_status": "turn_started",
+            }
+            project_file.write_text(json.dumps(data), encoding="utf-8")
+            (project_root / ".research-os" / "runtime_events.jsonl").write_text(
+                json.dumps(
+                    {
+                        "type": "codex_notification",
+                        "method": "turn/completed",
+                        "payload": {"turn": {"id": "turn_test", "status": "interrupted"}},
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            reopened = service.open_project(project_file)
+
+            self.assertEqual(reopened["codex"]["last_status"], "turn_interrupted")
+
     def test_desktop_intake_and_choice_response_use_new_state_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
@@ -944,6 +977,36 @@ class SidecarServiceTests(unittest.TestCase):
             service._drain_turn("turn_test")  # type: ignore[attr-defined]
 
             self.assertEqual(statuses, [("turn_test", "turn_completed")])
+
+    def test_runtime_service_reports_interrupted_turn_status(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            statuses: list[tuple[str, str]] = []
+
+            class Notification:
+                method = "turn/completed"
+                payload = {"turn": {"id": "turn_test", "status": "interrupted"}}
+
+            class FakeClient:
+                def register_turn_notifications(self, turn_id: str) -> None:
+                    return None
+
+                def next_turn_notification(self, turn_id: str) -> Notification:
+                    return Notification()
+
+                def unregister_turn_notifications(self, turn_id: str) -> None:
+                    return None
+
+            service = RuntimeService(
+                lambda: root,
+                ApprovalService(timeout_seconds=0.01),
+                on_turn_status=lambda turn_id, status: statuses.append((turn_id, status)),
+            )
+            service._client = FakeClient()  # type: ignore[attr-defined]
+
+            service._drain_turn("turn_test")  # type: ignore[attr-defined]
+
+            self.assertEqual(statuses, [("turn_test", "turn_interrupted")])
 
     def test_approval_times_out_to_decline(self) -> None:
         approvals = ApprovalService(timeout_seconds=0.01)
