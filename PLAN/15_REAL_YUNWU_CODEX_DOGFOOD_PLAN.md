@@ -71,7 +71,7 @@ Status: completed
 
 ### Step 5 - App-Driven Research Loops
 
-Status: pending
+Status: completed
 
 - Run Codex-driven source verification, proof audit, novelty positioning, theorem repair, citation audit, and venue-fit loops.
 - Require online source verification for venue rules, AI policies, DOI/proceedings metadata, and cited claims.
@@ -81,7 +81,7 @@ Status: pending
 
 ### Step 6 - App-Driven Paper Production And Yunwu Review
 
-Status: pending
+Status: completed
 
 - Select the paper final-product track through the app.
 - Use Codex/Yunwu turns for paper production, proof review, adversarial reviewer simulation, rebuttal planning, and editorial polish.
@@ -92,7 +92,7 @@ Status: pending
 
 ### Step 7 - Final Validation And Handoff
 
-Status: pending
+Status: completed
 
 - Run local sidecar, frontend, schema, privacy, resource, desktop, LaTeX, citation, and source-verification checks.
 - Create a private archive through the app.
@@ -130,6 +130,7 @@ Status: pending
 - Step 6 first paper-production turn exposed an app artifact protocol gap: large LaTeX/BibTeX strings can contain invalid JSON escape sequences when Codex returns raw `content`. Artifact writers now accept exactly one of `content` or `content_base64`; `content_base64` is decoded as UTF-8 and still passes path-boundary, secret, and control-character validation. The desktop runtime prompt now instructs Codex to use `content_base64` for LaTeX, BibTeX, and backslash-heavy artifacts.
 - Step 6 adversarial review round 1 marked the package `BLOCKED_FOR_REVISION` for bibliography metadata, proof invariant wording, vector-output notation, and LaTeX warnings. A follow-up app-driven revision round updated the private paper package and `latexmk` compiled a 10-page PDF with no final undefined citations, BibTeX warnings, overfull boxes, or hyperref warnings; remaining log messages are underfull bibliography paragraphs caused by long URLs.
 - Step 6 revision round 1 exposed a process-refresh and empty-artifact safety gap: an old sidecar process ignored `content_base64` and wrote zero-byte files. The files were restored through the app route from the Codex-produced base64 payload, the stale sidecar was force-stopped and restarted from current source, a private base64 writer probe succeeded, and artifact writers now reject empty content by default unless `allow_empty_content: true` is explicit.
+- Step 7 completed the local submission gate. Independent source verification, final app-driven gate review, PDF visual QA, nonblank page sampling, handoff report, and private archives are recorded. The package is `READY_FOR_SUBMISSION_WITH_HUMAN_PORTAL_CHECK`; external upload still requires the researcher's live portal check and explicit confirmation.
 
 ## Validation Log
 
@@ -149,3 +150,4 @@ Status: pending
 - 2026-06-08T15:00:47+08:00: Step 5 network-route checkpoint. Verified local proxy port `127.0.0.1:7897`, verified Yunwu `/v1/models` through `http://127.0.0.1:7897` with HTTP 200, and added Research OS Desktop profile/runtime/UI support for routing only the app-owned Codex/Yunwu runtime through a custom local proxy. Validation passed: sidecar unittest (40 tests), Python `py_compile`, TypeScript `tsc --noEmit`, Vitest, Vite build, `git diff --check`, and manual Playwright screenshot check of the proxy UI. The Playwright test runner itself timed out without output, so the focused proxy UI check was run through a direct Playwright script. No model inference, paid API usage, raw private material commit, public export, submission, external writeback, or credential persistence was used.
 - 2026-06-08T15:52:16+08:00: Step 5/6 checkpoint. Continued through the app-controlled Yunwu/Codex route using `modelProvider=yunwu`, `model=gpt-5.5`, `reasoningEffort=xhigh`, and `proxy_url=http://127.0.0.1:7897`. A blocker-repair artifact batch was written through `/api/research-loop-artifacts/write` and accepted through the app gate; the paper final-product track was selected; a first submission package was written through `/api/paper-artifacts/write`; `latexmk` compiled `PUBLIC/paper/main.pdf` to 9 pages. Measured Yunwu cost was approximately USD `0.00020206` for blocker repair and USD `0.000325628` for first paper production. App gap fixed: artifact routes now accept `content_base64` to avoid JSON escape corruption for LaTeX/BibTeX while preserving privacy validation. Validation passed: sidecar unittest (42 tests), Python `compileall`, desktop app check, TypeScript `tsc --noEmit`, Vitest, Vite build, and `git diff --check`. Pending before final submission: adversarial proof review, citation/venue final source refresh, LaTeX warning cleanup, and final submission artifacts.
 - 2026-06-08T16:36:40+08:00: Step 6 checkpoint. Ran a real app-driven Yunwu/Codex adversarial review round and wrote review artifacts through `/api/paper-artifacts/write`; the gate was `BLOCKED_FOR_REVISION`. Ran a focused app-driven revision round that returned eight `content_base64` artifacts, restored a temporary zero-byte write through the app route, restarted the sidecar from current source, and verified base64 writing with a private probe. Revised paper compiled with `latexmk` to a 10-page PDF. Final log scan found no undefined citations, BibTeX warnings, overfull boxes, hyperref warnings, fatal errors, or rerun requirements; only underfull bibliography paragraphs remain. Measured Yunwu cost was approximately USD `0.0001894904` for review and USD `0.0005684648` for revision. Validation passed: sidecar unittest (42 tests), Python `compileall`, base64 writer probe, `latexmk`, and final log scan. Pending before handoff: independent final source/venue verification snapshot, visual PDF QA, final reviewer gate, private archive, and commit/push of the app safety fix.
+- 2026-06-08T16:53:07+08:00: Step 7 completed. Wrote an independent final source snapshot, ran a final app-driven Yunwu/Codex gate review, updated `submission_readiness_gate.md` to `READY_FOR_SUBMISSION_WITH_HUMAN_PORTAL_CHECK`, refreshed PDF page renders, visually inspected key pages, sampled all 10 rendered pages as nonblank, wrote `final_handoff_report_20260608.md`, and created private archives `ARCH-20260608T165149` and `ARCH-20260608T165307`. Measured final gate cost was approximately USD `0.0003121452`. The package is locally submission-ready, but external upload remains blocked until the researcher checks the live Neural Networks / Editorial Manager portal and explicitly confirms submission.
