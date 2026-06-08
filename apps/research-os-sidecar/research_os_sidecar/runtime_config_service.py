@@ -14,7 +14,11 @@ DEFAULT_YUNWU_ENV_KEY = "YUNWU_API_KEY"
 DEFAULT_YUNWU_BASE_URL = "https://yunwu.ai/v1"
 ALLOWED_WIRE_APIS = {"responses", "chat"}
 ALLOWED_REASONING_EFFORTS = {"minimal", "low", "medium", "high", "xhigh"}
+ALLOWED_PROXY_MODES = {"direct", "system", "custom"}
 ENV_KEY_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
+PROXY_URL_RE = re.compile(r"^(https?|socks5)://(127\.0\.0\.1|localhost):([1-9][0-9]{0,4})$")
+PROXY_ENV_KEYS = ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy")
+LOCAL_NO_PROXY = "127.0.0.1,localhost,::1"
 
 
 class RuntimeConfigService:
@@ -32,6 +36,7 @@ class RuntimeConfigService:
             newline="\n",
         )
         os.environ["CODEX_HOME"] = str(self.codex_home)
+        self._apply_proxy_environment(runtime)
         secret_loaded = bool(os.environ.get(runtime["env_key"]))
         if require_secret and not secret_loaded:
             raise RuntimeError(
@@ -71,6 +76,8 @@ class RuntimeConfigService:
             "provider_id": None,
             "model": None,
             "reasoning_effort": None,
+            "proxy_mode": "direct",
+            "proxy_url": "",
         }
 
     def redacted(self, runtime: dict[str, Any]) -> dict[str, Any]:
@@ -86,6 +93,8 @@ class RuntimeConfigService:
             "model": runtime.get("model"),
             "reasoning_effort": runtime.get("reasoning_effort"),
             "secret_loaded": bool(runtime.get("secret_loaded")),
+            "proxy_mode": runtime.get("proxy_mode") or "direct",
+            "proxy_url": runtime.get("proxy_url") or "",
         }
 
     def _status_from_existing_config(self) -> dict[str, Any] | None:
@@ -130,10 +139,13 @@ class RuntimeConfigService:
             "model": model,
             "reasoning_effort": values.get("model_reasoning_effort"),
             "secret_loaded": bool(os.environ.get(env_key)),
+            "proxy_mode": "direct",
+            "proxy_url": "",
         }
 
     def _normalize_profile(self, profile: dict[str, Any]) -> dict[str, Any]:
         provider_id = str(profile.get("provider_id") or "").strip() or "openai"
+        proxy_mode, proxy_url = self._normalize_proxy(profile)
         if provider_id != "yunwu":
             return {
                 "profile_id": str(profile.get("profile_id") or "openai-account"),
@@ -145,6 +157,8 @@ class RuntimeConfigService:
                 "env_key": str(profile.get("env_key") or "OPENAI_API_KEY"),
                 "model": str(profile.get("model") or "gpt-5.5"),
                 "reasoning_effort": str(profile.get("reasoning_effort") or "high"),
+                "proxy_mode": proxy_mode,
+                "proxy_url": proxy_url,
             }
 
         env_key = str(profile.get("env_key") or "").strip()
@@ -179,7 +193,47 @@ class RuntimeConfigService:
             "env_key": env_key,
             "model": str(profile.get("model") or "gpt-5.5").strip(),
             "reasoning_effort": reasoning_effort,
+            "proxy_mode": proxy_mode,
+            "proxy_url": proxy_url,
         }
+
+    def _normalize_proxy(self, profile: dict[str, Any]) -> tuple[str, str]:
+        mode = str(profile.get("proxy_mode") or "direct").strip().lower()
+        if mode not in ALLOWED_PROXY_MODES:
+            raise SecurityError(f"Unsupported proxy mode: {mode}")
+        raw_url = str(profile.get("proxy_url") or "").strip()
+        if not raw_url:
+            return mode, ""
+        if "@" in raw_url or SECRET_RE.search(raw_url):
+            raise SecurityError("Proxy URL must not contain credentials or secret-like content.")
+        match = PROXY_URL_RE.match(raw_url)
+        if not match:
+            raise SecurityError("Proxy URL must be a local HTTP(S) or SOCKS5 proxy such as http://127.0.0.1:7897.")
+        port = int(match.group(3))
+        if port > 65535:
+            raise SecurityError("Proxy URL port is out of range.")
+        if mode != "custom":
+            return mode, ""
+        return mode, raw_url
+
+    def _apply_proxy_environment(self, runtime: dict[str, Any]) -> None:
+        mode = str(runtime.get("proxy_mode") or "direct")
+        if mode == "system":
+            return
+        if mode == "direct":
+            for key in PROXY_ENV_KEYS:
+                os.environ.pop(key, None)
+            os.environ["NO_PROXY"] = LOCAL_NO_PROXY
+            os.environ["no_proxy"] = LOCAL_NO_PROXY
+            return
+        if mode == "custom":
+            proxy_url = str(runtime.get("proxy_url") or "").strip()
+            if not proxy_url:
+                raise SecurityError("Custom proxy mode requires proxy_url.")
+            for key in PROXY_ENV_KEYS:
+                os.environ[key] = proxy_url
+            os.environ["NO_PROXY"] = LOCAL_NO_PROXY
+            os.environ["no_proxy"] = LOCAL_NO_PROXY
 
     def _base_config_toml(self, runtime: dict[str, Any]) -> str:
         return "\n".join(

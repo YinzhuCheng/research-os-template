@@ -42,6 +42,7 @@ class RuntimeService:
         self._on_turn_status = on_turn_status
         self._runtime_config = RuntimeConfigService()
         self._client: Any | None = None
+        self._runtime_signature: tuple[Any, ...] | None = None
         self._events: list[dict[str, Any]] = []
         self._lock = threading.Lock()
 
@@ -55,6 +56,8 @@ class RuntimeService:
 
     def load_provider_secret(self, profile: dict[str, Any], key_file_path: str) -> dict[str, Any]:
         status = self._runtime_config.load_secret_from_file(profile, key_file_path)
+        self._close_client("runtime_secret_or_route_reloaded")
+        self._runtime_signature = self._runtime_signature_from_status(status)
         self._record_event({"type": "runtime_secret_loaded", "payload": status})
         return status
 
@@ -87,6 +90,7 @@ class RuntimeService:
     def start_thread(self, profile: dict[str, Any], model: str | None = None, ephemeral: bool = False) -> dict[str, Any]:
         root = self._project_root_provider()
         runtime_status = self._runtime_config.prepare_profile(profile, require_secret=profile.get("provider_id") == "yunwu")
+        self._refresh_client_if_runtime_changed(runtime_status)
         client = self._ensure_client()
         params: dict[str, Any] = {
             "cwd": str(root),
@@ -110,6 +114,7 @@ class RuntimeService:
     def resume_thread(self, thread_id: str, profile: dict[str, Any], model: str | None = None) -> dict[str, Any]:
         root = self._project_root_provider()
         runtime_status = self._runtime_config.prepare_profile(profile, require_secret=profile.get("provider_id") == "yunwu")
+        self._refresh_client_if_runtime_changed(runtime_status)
         client = self._ensure_client()
         params: dict[str, Any] = {
             "cwd": str(root),
@@ -133,6 +138,7 @@ class RuntimeService:
             raise ValueError("Turn text is required.")
         root = self._project_root_provider()
         runtime_status = self._runtime_config.prepare_profile(profile, require_secret=profile.get("provider_id") == "yunwu")
+        self._refresh_client_if_runtime_changed(runtime_status)
         client = self._ensure_client()
         params: dict[str, Any] = {
             "cwd": str(root),
@@ -244,6 +250,37 @@ class RuntimeService:
         self._client.initialize()
         self._record_event({"type": "codex_initialized", "payload": self.environment()})
         return self._client
+
+    def _refresh_client_if_runtime_changed(self, runtime_status: dict[str, Any]) -> None:
+        signature = self._runtime_signature_from_status(runtime_status)
+        if self._client is not None and self._runtime_signature is not None and signature != self._runtime_signature:
+            self._close_client("runtime_configuration_changed")
+        self._runtime_signature = signature
+
+    def _runtime_signature_from_status(self, runtime_status: dict[str, Any]) -> tuple[Any, ...]:
+        return (
+            runtime_status.get("codex_home"),
+            runtime_status.get("provider_id"),
+            runtime_status.get("base_url"),
+            runtime_status.get("wire_api"),
+            runtime_status.get("env_key"),
+            runtime_status.get("model"),
+            runtime_status.get("reasoning_effort"),
+            bool(runtime_status.get("secret_loaded")),
+            runtime_status.get("proxy_mode"),
+            runtime_status.get("proxy_url"),
+        )
+
+    def _close_client(self, reason: str) -> None:
+        client = self._client
+        if client is None:
+            return
+        self._client = None
+        try:
+            client.close()
+            self._record_event({"type": "codex_runtime_restarted", "reason": reason})
+        except Exception as exc:  # noqa: BLE001
+            self._record_event({"type": "codex_runtime_restart_warning", "reason": reason, "error": str(exc)})
 
     def _record_event(self, event: dict[str, Any]) -> None:
         event = redact_sensitive({"index": None, "timestamp": now_iso(), **event})

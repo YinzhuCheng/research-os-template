@@ -1,6 +1,6 @@
-import { KeyRound, Save } from "lucide-react";
+import { KeyRound, Network, Save } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useAppStore } from "../store";
 import type { Profile } from "../types";
@@ -21,12 +21,20 @@ export function ProfilePanel() {
     reasoning_effort: "xhigh",
     env_key: "YUNWU_API_KEY",
     secret_ref: "env:YUNWU_API_KEY",
+    proxy_mode: "direct",
+    proxy_url: "",
   });
   const save = useMutation({
     mutationFn: () => api.saveProfile(draft),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profiles"] }),
   });
   const activeProfile = (profiles.data?.profiles ?? []).find((profile) => profile.profile_id === activeProfileId);
+
+  useEffect(() => {
+    if (activeProfile) {
+      setDraft({ proxy_mode: "direct", proxy_url: "", ...activeProfile });
+    }
+  }, [activeProfile?.profile_id]);
 
   return (
     <section className="panel profile-panel compact-panel">
@@ -39,7 +47,7 @@ export function ProfilePanel() {
           <small>{activeProfile ? `${activeProfile.label}${activeProfile.model ? ` / ${activeProfile.model}` : ""}` : "No profile selected"}</small>
         </summary>
         <p className="hint-text">
-          Normal research flow does not require editing this first. Profiles store provider, model, and secret references only. Do not paste API keys, tokens, or passwords into a project.
+          Normal research flow does not require editing this first. Profiles store provider, model, network route, and secret references only. Do not paste API keys, tokens, proxy passwords, or cookies into a project.
         </p>
         <div className="profile-list">
           {(profiles.data?.profiles ?? []).length === 0 ? (
@@ -56,6 +64,7 @@ export function ProfilePanel() {
               <small>
                 {profile.provider_id ?? profile.type}
                 {profile.model ? ` / ${profile.model}` : ""}
+                {profile.proxy_mode === "custom" ? " / custom proxy" : ""}
               </small>
             </button>
           ))}
@@ -97,6 +106,32 @@ export function ProfilePanel() {
             <span>Secret reference</span>
             <input value={draft.secret_ref ?? ""} onChange={(event) => setDraft({ ...draft, secret_ref: event.target.value })} placeholder="env:YUNWU_API_KEY" />
           </label>
+          <label className="field">
+            <span>Network route</span>
+            <select
+              value={draft.proxy_mode ?? "direct"}
+              onChange={(event) => setDraft({ ...draft, proxy_mode: event.target.value as Profile["proxy_mode"], proxy_url: event.target.value === "custom" ? draft.proxy_url : "" })}
+            >
+              <option value="direct">Direct connection for Codex runtime</option>
+              <option value="system">Use inherited system proxy</option>
+              <option value="custom">Use custom local VPN/proxy</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Custom proxy URL</span>
+            <input
+              value={draft.proxy_url ?? ""}
+              onChange={(event) => setDraft({ ...draft, proxy_url: event.target.value })}
+              placeholder="http://127.0.0.1:7897"
+              disabled={(draft.proxy_mode ?? "direct") !== "custom"}
+            />
+          </label>
+          <div className="notice subtle inline-notice">
+            <Network size={16} aria-hidden="true" />
+            <p>
+              Custom proxy is applied only to the app-owned Codex/Yunwu runtime process. Localhost app traffic stays direct through NO_PROXY.
+            </p>
+          </div>
         </div>
         <button className="secondary-action" type="button" onClick={() => save.mutate()} disabled={save.isPending}>
           <Save size={16} aria-hidden="true" />

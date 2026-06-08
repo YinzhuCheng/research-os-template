@@ -8,6 +8,7 @@ import { ChoicePrompt } from "./components/ChoicePrompt";
 import { FinalProductModal } from "./components/FinalProductModal";
 import { PaperWorkflowPanel } from "./components/PaperWorkflowPanel";
 import { PhaseBar } from "./components/PhaseBar";
+import { ProfilePanel } from "./components/ProfilePanel";
 import { ProjectCenter } from "./components/ProjectCenter";
 import { RuntimePanel } from "./components/RuntimePanel";
 import { internalPhaseLabel, macroPhaseLabel, normalizeMacroPhase } from "./labels";
@@ -272,6 +273,7 @@ function Workspace() {
         </section>
 
         <PaperWorkflowPanel workflow={state.data?.submission_workflow} />
+        <ProfilePanel />
         <RuntimePanel />
         <ApprovalPanel />
         <ArchivePanel />

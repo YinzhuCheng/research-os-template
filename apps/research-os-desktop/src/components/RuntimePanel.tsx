@@ -115,6 +115,7 @@ export function RuntimePanel() {
         <span>Model: <strong>{runtimeConfig?.model ?? "not configured"}</strong></span>
         <span>Reasoning: <strong>{runtimeConfig?.reasoning_effort ?? "not configured"}</strong></span>
         <span>Secret: <strong>{runtimeConfig?.secret_loaded ? "loaded in sidecar memory" : "not loaded"}</strong></span>
+        <span>Route: <strong>{runtimeConfig?.proxy_mode === "custom" ? runtimeConfig.proxy_url : runtimeConfig?.proxy_mode ?? "direct"}</strong></span>
         <span>Turn: <strong>{turnStatus}</strong></span>
       </div>
       {showRecovery ? (

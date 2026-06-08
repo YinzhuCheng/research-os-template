@@ -11,6 +11,8 @@ PROFILE_TYPES = {"openai_account", "openai_api_key", "custom_provider"}
 SECRET_FIELDS = {"api_key", "token", "secret", "password", "authorization"}
 REFERENCE_FIELDS = {"secret_ref", "env_key", "env_key_instructions"}
 ENV_KEY_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
+ALLOWED_PROXY_MODES = {"direct", "system", "custom"}
+PROXY_URL_RE = re.compile(r"^(https?|socks5)://(127\.0\.0\.1|localhost):([1-9][0-9]{0,4})$")
 
 
 class ProfileService:
@@ -74,6 +76,12 @@ class ProfileService:
         if isinstance(value, dict):
             for key, nested in value.items():
                 lowered = str(key).lower()
+                if lowered == "proxy_mode":
+                    self._assert_safe_proxy_mode(nested)
+                    continue
+                if lowered == "proxy_url":
+                    self._assert_safe_proxy_url(nested)
+                    continue
                 if lowered in REFERENCE_FIELDS:
                     self._assert_safe_reference(lowered, nested)
                     continue
@@ -91,6 +99,23 @@ class ProfileService:
         if key == "secret_ref" and text and not (text.startswith("env:") or text == "codex_managed_auth"):
             raise ValueError("secret_ref must be an environment-variable reference or codex_managed_auth.")
 
+    def _assert_safe_proxy_mode(self, value: Any) -> None:
+        mode = str(value or "").strip().lower()
+        if mode and mode not in ALLOWED_PROXY_MODES:
+            raise ValueError("proxy_mode must be direct, system, or custom.")
+
+    def _assert_safe_proxy_url(self, value: Any) -> None:
+        text = str(value or "").strip()
+        if not text:
+            return
+        if "@" in text:
+            raise ValueError("proxy_url must not contain credentials.")
+        match = PROXY_URL_RE.match(text)
+        if not match:
+            raise ValueError("proxy_url must be a local HTTP(S) or SOCKS5 proxy, such as http://127.0.0.1:7897.")
+        if int(match.group(3)) > 65535:
+            raise ValueError("proxy_url port is out of range.")
+
     def _default_profiles(self) -> list[dict[str, Any]]:
         created_at = now_iso()
         return [
@@ -101,6 +126,8 @@ class ProfileService:
                 "provider_id": "openai",
                 "model": None,
                 "secret_ref": "codex_managed_auth",
+                "proxy_mode": "direct",
+                "proxy_url": "",
                 "created_at": created_at,
                 "updated_at": created_at,
             },
@@ -115,6 +142,8 @@ class ProfileService:
                 "reasoning_effort": "xhigh",
                 "env_key": "YUNWU_API_KEY",
                 "secret_ref": "env:YUNWU_API_KEY",
+                "proxy_mode": "direct",
+                "proxy_url": "",
                 "created_at": created_at,
                 "updated_at": created_at,
             },

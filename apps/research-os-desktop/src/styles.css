@@ -205,7 +205,8 @@ button {
 }
 
 input,
-textarea {
+textarea,
+select {
   background: #fbfcfc;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -221,6 +222,7 @@ textarea {
 
 input:focus,
 textarea:focus,
+select:focus,
 button:focus-visible {
   outline: 3px solid #9fd1c3;
   outline-offset: 2px;
@@ -311,6 +313,13 @@ button:disabled {
   color: #194b78;
 }
 
+.notice.subtle {
+  align-items: flex-start;
+  background: #f6f8f7;
+  border: 1px solid var(--border);
+  color: #33433d;
+}
+
 .notice.warning {
   align-items: flex-start;
   background: #fff8e6;
@@ -321,6 +330,16 @@ button:disabled {
 .notice.warning ul {
   margin: 6px 0 0;
   padding-left: 18px;
+}
+
+.inline-notice {
+  grid-column: 1 / -1;
+  margin: 0 0 12px;
+}
+
+.inline-notice p {
+  font-size: 13px;
+  margin: 0;
 }
 
 .material-summary {
@@ -655,7 +674,7 @@ em {
 .runtime-proof {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   margin: 12px 0;
 }
 

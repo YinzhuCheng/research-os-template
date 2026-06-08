@@ -678,6 +678,17 @@ class SidecarServiceTests(unittest.TestCase):
                         "secret_ref": "sk-not-a-reference",
                     }
                 )
+            with self.assertRaises(ValueError):
+                profiles.upsert_profile(
+                    {
+                        "profile_id": "bad-proxy",
+                        "label": "Bad proxy",
+                        "type": "custom_provider",
+                        "provider_id": "yunwu",
+                        "proxy_mode": "custom",
+                        "proxy_url": "http://user:pass@127.0.0.1:7897",
+                    }
+                )
 
     def test_profile_seeds_missing_yunwu_profile_for_existing_store(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -741,6 +752,83 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertNotIn("sk-", config_text)
             self.assertEqual(status["codex_home"], str(codex_home))
             self.assertFalse(status["secret_loaded"])
+            self.assertEqual(status["proxy_mode"], "direct")
+            self.assertEqual(status["proxy_url"], "")
+
+    def test_runtime_config_applies_custom_local_proxy_environment(self) -> None:
+        keys = ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy", "NO_PROXY", "no_proxy"]
+        old_values = {key: os.environ.get(key) for key in keys}
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                codex_home = Path(temp) / "codex_home"
+                service = RuntimeConfigService(codex_home)
+                status = service.prepare_profile(
+                    {
+                        "profile_id": "yunwu-test",
+                        "label": "Yunwu Test",
+                        "type": "custom_provider",
+                        "provider_id": "yunwu",
+                        "model": "gpt-5.5",
+                        "base_url": "https://yunwu.ai/v1",
+                        "wire_api": "responses",
+                        "reasoning_effort": "xhigh",
+                        "env_key": "YUNWU_API_KEY",
+                        "secret_ref": "env:YUNWU_API_KEY",
+                        "proxy_mode": "custom",
+                        "proxy_url": "http://127.0.0.1:7897",
+                    },
+                    require_secret=False,
+                )
+
+                self.assertEqual(status["proxy_mode"], "custom")
+                self.assertEqual(status["proxy_url"], "http://127.0.0.1:7897")
+                self.assertEqual(os.environ["HTTPS_PROXY"], "http://127.0.0.1:7897")
+                self.assertEqual(os.environ["HTTP_PROXY"], "http://127.0.0.1:7897")
+                self.assertEqual(os.environ["ALL_PROXY"], "http://127.0.0.1:7897")
+                self.assertIn("127.0.0.1", os.environ["NO_PROXY"])
+        finally:
+            for key, value in old_values.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+
+    def test_runtime_config_direct_mode_clears_proxy_environment(self) -> None:
+        keys = ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy", "NO_PROXY", "no_proxy"]
+        old_values = {key: os.environ.get(key) for key in keys}
+        try:
+            os.environ["HTTPS_PROXY"] = "http://127.0.0.1:7897"
+            os.environ["HTTP_PROXY"] = "http://127.0.0.1:7897"
+            os.environ["ALL_PROXY"] = "http://127.0.0.1:7897"
+            with tempfile.TemporaryDirectory() as temp:
+                RuntimeConfigService(Path(temp) / "codex_home").prepare_profile(
+                    {
+                        "profile_id": "yunwu-test",
+                        "label": "Yunwu Test",
+                        "type": "custom_provider",
+                        "provider_id": "yunwu",
+                        "model": "gpt-5.5",
+                        "base_url": "https://yunwu.ai/v1",
+                        "wire_api": "responses",
+                        "reasoning_effort": "xhigh",
+                        "env_key": "YUNWU_API_KEY",
+                        "secret_ref": "env:YUNWU_API_KEY",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    },
+                    require_secret=False,
+                )
+
+                self.assertNotIn("HTTPS_PROXY", os.environ)
+                self.assertNotIn("HTTP_PROXY", os.environ)
+                self.assertNotIn("ALL_PROXY", os.environ)
+                self.assertIn("localhost", os.environ["NO_PROXY"])
+        finally:
+            for key, value in old_values.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
 
     def test_runtime_config_status_recovers_existing_provider_without_secret(self) -> None:
         old_value = os.environ.pop("YUNWU_API_KEY", None)

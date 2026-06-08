@@ -41,6 +41,21 @@ const submissionWorkflow = {
   workflow_gaps: [],
 };
 
+const yunwuProfile = {
+  profile_id: "yunwu-gpt-55-xhigh",
+  label: "Yunwu GPT-5.5 xhigh",
+  type: "custom_provider",
+  provider_id: "yunwu",
+  model: "gpt-5.5",
+  base_url: "https://yunwu.ai/v1",
+  wire_api: "responses",
+  reasoning_effort: "xhigh",
+  env_key: "YUNWU_API_KEY",
+  secret_ref: "env:YUNWU_API_KEY",
+  proxy_mode: "direct",
+  proxy_url: "",
+};
+
 test.beforeEach(async ({ page }) => {
   await page.route("http://127.0.0.1:8789/**", async (route) => {
     const url = new URL(route.request().url());
@@ -49,8 +64,15 @@ test.beforeEach(async ({ page }) => {
     if (path === "/health") return json({ ok: true, service: "research-os-sidecar", runtime: { codex_sdk_available: false } });
     if (path === "/api/projects/current") return json({ project: null });
     if (path === "/api/projects/create") return json({ project });
-    if (path === "/api/profiles") return json({ profiles: [] });
-    if (path === "/api/runtime/environment") return json({ codex_cli: null, codex_sdk_available: false, adapter: "mock" });
+    if (path === "/api/profiles") return json({ profiles: [yunwuProfile] });
+    if (path === "/api/runtime/environment") {
+      return json({
+        codex_cli: null,
+        codex_sdk_available: false,
+        adapter: "mock",
+        runtime_config: { provider_id: "yunwu", model: "gpt-5.5", reasoning_effort: "xhigh", secret_loaded: false, proxy_mode: "direct", proxy_url: "" },
+      });
+    }
     if (path === "/api/runtime/events") {
       return json({ cursor: 1, events: [{ event_id: "ev-1", type: "assistant_message", message: "Evidence sketch completed; waiting for researcher acceptance." }] });
     }
@@ -97,6 +119,10 @@ test("desktop project workflow is clickable and readable in English", async ({ p
   await expect(page.getByRole("heading", { name: "Materials and Goal" })).toBeVisible();
   await expect(page.getByText("Phase: Research Loop")).toBeVisible();
   await expect(page.getByText("Internal: Acceptance gate")).toBeVisible();
+  await page.getByText("Advanced Settings: model and secret reference").click();
+  await page.getByLabel("Network route").selectOption("custom");
+  await page.getByLabel("Custom proxy URL").fill("http://127.0.0.1:7897");
+  await expect(page.getByText(/Custom proxy is applied only to the app-owned Codex/)).toBeVisible();
 
   await page.getByLabel("Research objective, constraints, venue rules, or free-form notes").fill("This is a desktop-side research material note.");
   await page.getByRole("button", { name: /Save goal and initialize/ }).click();

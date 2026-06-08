@@ -27,6 +27,8 @@ export interface Profile {
   reasoning_effort?: string;
   env_key?: string;
   secret_ref?: string;
+  proxy_mode?: "direct" | "system" | "custom";
+  proxy_url?: string;
 }
 
 export interface RuntimeConfigStatus {
@@ -41,6 +43,8 @@ export interface RuntimeConfigStatus {
   model?: string | null;
   reasoning_effort?: string | null;
   secret_loaded?: boolean;
+  proxy_mode?: "direct" | "system" | "custom" | string | null;
+  proxy_url?: string | null;
 }
 
 export interface ChoicePrompt {
