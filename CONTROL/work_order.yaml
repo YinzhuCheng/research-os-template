@@ -1,6 +1,6 @@
-work_order_id: WO-0015
-phase: research-os-v4.4-neural-networks-submission
-goal: "Use Research OS Desktop app-first dogfooding to turn the local quadratic-activation neural-network draft into a Neural Networks Full Article submission package."
+work_order_id: WO-0016
+phase: research-os-v4.5-app-first-reinitialization-dogfooding
+goal: "Use Research OS Desktop to treat the neural-network manuscript folder as initial material, generate a research plan through the app, improve the app where the workflow is weak, and then bring the paper to Neural Networks submission readiness."
 inputs:
   - "AGENTS.md"
   - "CONTROL/work_order.yaml"
@@ -11,7 +11,8 @@ inputs:
   - "PUBLIC/"
   - "scripts/"
   - "apps/"
-  - "neural network/ (local untracked source material; do not commit raw inputs)"
+  - "neural network/ (local untracked source material; full-folder intake required; do not commit raw inputs)"
+  - "PRIVATE/projects/neural-network-submission/ (prior private draft package; treat as source material, not a completed final product)"
   - "local screenshots under ignored test-results directories"
 allowed_paths:
   - ".agents/"
@@ -50,11 +51,11 @@ outputs:
   - "PROVENANCE/resource_ledger.jsonl"
 resource_budget:
   currency: USD
-  max_total_cost: 105
+  max_total_cost: 200
   categories:
     time: "local implementation session"
     compute: "local validation and packaging"
-    api: "Yunwu gpt-5.5 xhigh paper review/rebuttal rounds, target USD 90-105, hard cap USD 105"
+    api: "Yunwu gpt-5.5 xhigh paper review/rebuttal rounds and source-aware critique, hard cap USD 200"
   max_runtime_minutes: null
 stop_conditions:
   - "Need to commit real PRIVATE intake material."
@@ -63,12 +64,15 @@ stop_conditions:
   - "Yunwu usage cannot be measured or estimated safely before paid review calls."
   - "gpt-5.5 or xhigh reasoning is unavailable and no user-approved fallback exists."
 acceptance_criteria:
+  - "Research OS Desktop treats the previous manuscript/PDF/PPT/notes/templates/examples as initialization material, not as an already accepted final product."
+  - "Research OS Desktop can ingest and reason over the full neural-network folder, including templates, example papers, venue rules, prior proof audits, screenshots, and notes."
+  - "Generated project context and app instructions automatically tell Codex to use repo skills, verify sources online, avoid hallucinated citations, preserve provenance, and record workflow gaps."
   - "Research OS Desktop can drive a real paper workflow for the neural-network materials without relying on manual manuscript bypasses."
   - "Desktop UI source and tests no longer contain Chinese mojibake; validation fails if it reappears."
   - "The local neural-network materials are imported into a project sandbox without committing raw input files."
   - "Official venue rules and citation metadata are refreshed online with recorded sources."
   - "The final paper package compiles and includes manuscript, appendix or supplement if needed, references, highlights, cover letter, checklist, source verification, proof audit, and required declarations."
-  - "Yunwu review/rebuttal calls use gpt-5.5 xhigh if available, are redacted, measured, and stay within the hard USD 105 ceiling."
+  - "Yunwu review/rebuttal calls use gpt-5.5 xhigh if available, are redacted, measured, and stay within the hard USD 200 ceiling."
   - "App interaction records, app/workflow gap records, screenshots, run manifests, resource ledger entries, and archive records are preserved."
 requires_confirmation: false
 privacy_level: mixed

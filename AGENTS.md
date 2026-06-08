@@ -42,6 +42,14 @@ During the loop phase, do not advance past `loop_acceptance_gate` unless the res
 
 Every user-facing choice prompt, including final product selection and archive descriptions, must provide a recommended option, concrete defaults, and a natural-language free-form path.
 
+## App-First Dogfooding Rules
+
+- When an existing manuscript, PDF, PPT, notes directory, venue template, or example-paper bundle is supplied to Research OS Desktop, treat it as initialization material unless the researcher explicitly accepts it as a final-product artifact through the app.
+- Desktop initialization must reason over the whole supplied folder. Do not silently choose only the most obvious draft file when templates, venue instructions, example papers, screenshots, proof audits, reviews, notebooks, data, or notes are present.
+- Project creation should generate durable project context for Codex. Routine instructions such as "use repo skills first", "verify sources online", "avoid hallucinated citations", "preserve provenance", "record app/workflow gaps", and "respect stage gates" belong in generated project context, work orders, phase gates, skills, or harness rules instead of relying on the user to write expert prompts.
+- A paper draft becomes a final paper artifact only after the initialization and research-loop gates have produced an accepted research plan, source-verification record, proof/evidence audit, and final-product selection.
+- App/workflow shortcomings discovered while dogfooding must be recorded and, when broadly useful, fixed in the app before bypassing the app manually.
+
 ## Research Neutrality
 
 - Do not assume an LLM, machine learning task, software project, dataset, baseline, paper, venue, or budget by default.

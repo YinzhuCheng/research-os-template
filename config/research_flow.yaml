@@ -1,4 +1,4 @@
-flow_id: RESEARCH-FLOW-0001
+﻿flow_id: RESEARCH-FLOW-0001
 version: research-os-v3.9
 language_mode: zh-first
 user_macro_phases:
@@ -7,7 +7,7 @@ user_macro_phases:
     label_en: "Initialization"
     internal_stages:
       - initialization_intake
-    user_goal: "把材料、边界、问题、隐私、预算和启动包立住。"
+    user_goal: "Establish materials, boundaries, questions, privacy, budget, and the startup package."
   - id: research_loop
     label_zh: "半自动循环研究阶段"
     label_en: "Semi-automated Loop Research"
@@ -16,7 +16,7 @@ user_macro_phases:
       - loop_plan_alignment
       - loop_user_decision
       - loop_execute_analyze
-    user_goal: "每轮先验收，再对齐计划，再执行并分析。"
+    user_goal: "In each cycle, accept or revise the previous artifact, align on the next plan, execute, and analyze."
   - id: final_product
     label_zh: "最终产物阶段"
     label_en: "Final Product"
@@ -24,7 +24,7 @@ user_macro_phases:
       - final_product_selection
       - final_product_production
       - export_release_gate
-    user_goal: "把已验收研究资产转成论文、研究报告、软件或多产物组合。"
+    user_goal: "Turn accepted research assets into a paper, research report, software artifact, or multi-track product."
 canonical_sequence:
   - initialization_intake
   - loop_acceptance_gate

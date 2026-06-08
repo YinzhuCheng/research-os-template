@@ -1,11 +1,11 @@
-current_phase: research-os-v4.4-neural-networks-submission
+current_phase: research-os-v4.5-app-first-reinitialization-dogfooding
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "Dogfood Research OS Desktop on the neural-network paper: fix app blockers first, then use the app to produce a Neural Networks Full Article submission package."
+next_required_decision: "Restart the dogfooding workflow from initialization: treat the existing neural-network manuscript package as source material, force whole-folder app intake and research planning, then use the improved app to reach submission readiness."
 confirmed_decisions:
   - "Research OS Desktop is the only primary user interface."
   - "The old browser bridge is retired."
@@ -26,6 +26,9 @@ confirmed_decisions:
   - "Author and corresponding author are Cheng Yinzhu."
   - "Affiliations are Renmin University of China and Beijing Institute of Mathematical Sciences and Applications (BIMSA)."
   - "Funding and competing interests are none."
-  - "Yunwu gpt-5.5 xhigh may be used up to USD 105 hard cap after availability and usage measurement are verified."
+  - "Existing neural-network manuscript, PDF, PPT, notes, templates, example papers, reviews, and proof-audit records are initialization inputs until the app advances through acceptance-gated research planning."
+  - "The app must consider whole folders, not only the obvious manuscript draft."
+  - "Reusable prompts and workflow rules must be encoded in app-generated project context, AGENTS.md, skills, work orders, or harness rules rather than relying on advanced user prompting."
+  - "Yunwu gpt-5.5 xhigh may be used up to USD 200 hard cap after availability and usage measurement are verified."
   - "All source authenticity, venue rules, references, and AI declaration requirements must be checked online before finalizing the paper."
   - "The local untracked neural network directory is source material, not a git deliverable."
