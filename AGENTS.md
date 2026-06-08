@@ -49,6 +49,8 @@ Every user-facing choice prompt, including final product selection and archive d
 - Project creation should generate durable project context for Codex. Routine instructions such as "use repo skills first", "verify sources online", "avoid hallucinated citations", "preserve provenance", "record app/workflow gaps", and "respect stage gates" belong in generated project context, work orders, phase gates, skills, or harness rules instead of relying on the user to write expert prompts.
 - A paper draft becomes a final paper artifact only after the initialization and research-loop gates have produced an accepted research plan, source-verification record, proof/evidence audit, and final-product selection.
 - App/workflow shortcomings discovered while dogfooding must be recorded and, when broadly useful, fixed in the app before bypassing the app manually.
+- For the active neural-network submission workflow, use English-mode app surfaces first. Do not spend this work order restoring Chinese UI copy unless a narrow issue blocks the English paper workflow.
+- A good app-generated research plan for a theoretical paper must cover research content, motivation, expected contributions, related literature and differences, theoretical setup, proof route, optional experiments or computational checks, source verification, risks, and acceptance criteria.
 
 ## Research Neutrality
 
@@ -60,6 +62,7 @@ Every user-facing choice prompt, including final product selection and archive d
 
 - Repository documentation is English-first.
 - The desktop app UI may default to Chinese.
+- The active neural-network submission dogfooding workflow should run in English-mode app UI and English generated project context.
 - Final product flows run only after `final_product_selection` or an explicit researcher request.
 - Paper writing, LaTeX, visual paper polish, review/rebuttal, and submission flows run only when `dissemination.paper_enabled: true`, the paper track is selected, or the researcher explicitly asks for a paper/submission.
 - Report output may include more process, initial data, negative results, and reproducibility detail than a paper. Supported report targets are HTML, LaTeX/PDF, and PPT when enabled.

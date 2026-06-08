@@ -1,8 +1,8 @@
 project_id: research-os-desktop
 title: "Research OS Desktop Seed Project"
-template_version: research-os-v4.5
+template_version: research-os-v4.6
 process_contract: config/research_flow.yaml
-language_mode: zh-first
+language_mode: en-only
 intervention_level: low
 privacy_policy: public_private_split
 research_profile:
@@ -76,13 +76,14 @@ live_evidence:
   last_refresh: null
 current_macro_phase: initialization
 current_phase: initialization_intake
-current_phase_note: "The existing neural-network manuscript package is being reclassified as initial source material so Research OS Desktop can generate a research plan before final-product production."
+current_phase_note: "The existing neural-network manuscript package is being reclassified as initial source material so English-mode Research OS Desktop can generate a structured research plan before final-product production."
 phase_gate_required: true
 public_export_enabled: false
 desktop_app:
   enabled: true
   app_root: apps/research-os-desktop
   sidecar_root: apps/research-os-sidecar
+  active_ui_language: English
   project_file_extension: ".rosproj"
   sandbox_model: "sibling project directory is the only default writable root"
   codex_runtime: "official Codex app-server/SDK, system-installed or user-installed"
@@ -94,9 +95,24 @@ dogfooding_policy:
   treat_existing_manuscript_as: initial_material
   require_whole_folder_intake: true
   require_generated_project_context: true
+  require_english_mode_for_current_workflow: true
   require_online_source_verification: true
   require_app_gap_logging: true
   private_project_root: "PRIVATE/projects/neural-network-submission/"
+research_plan_contract:
+  required: true
+  language: English
+  sections:
+    - research_content_and_problem_statement
+    - research_motivation_and_venue_fit
+    - expected_results_and_contributions
+    - related_literature_and_differences
+    - theoretical_setup_definitions_assumptions
+    - proof_route_for_main_claims
+    - experiment_or_computational_design_if_applicable
+    - evidence_and_source_verification_plan
+    - risk_register
+    - acceptance_criteria_for_final_paper_track
 owners:
   decision_maker: Cheng Yinzhu
   codex_operator: Codex

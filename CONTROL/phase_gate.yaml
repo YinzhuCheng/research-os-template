@@ -1,11 +1,11 @@
-current_phase: research-os-v4.5-app-first-reinitialization-dogfooding
+current_phase: research-os-v4.6-english-app-neural-networks-submission
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "Restart the dogfooding workflow from initialization: treat the existing neural-network manuscript package as source material, force whole-folder app intake and research planning, then use the improved app to reach submission readiness."
+next_required_decision: "Run the neural-network workflow in English-mode Research OS Desktop: treat the existing manuscript package as source material, force whole-folder app intake, generate a structured research plan, accept it through the loop gate, then use the improved app to reach submission readiness."
 confirmed_decisions:
   - "Research OS Desktop is the only primary user interface."
   - "The old browser bridge is retired."
@@ -32,3 +32,5 @@ confirmed_decisions:
   - "Yunwu gpt-5.5 xhigh may be used up to USD 200 hard cap after availability and usage measurement are verified."
   - "All source authenticity, venue rules, references, and AI declaration requirements must be checked online before finalizing the paper."
   - "The local untracked neural network directory is source material, not a git deliverable."
+  - "For this workflow, use English-mode app surfaces first; Chinese UI restoration is deferred unless it blocks the English paper workflow."
+  - "A valid research plan must cover research content, motivation, expected contributions, related literature, theoretical setup, proof route, optional experiments, source verification, risks, and acceptance criteria."

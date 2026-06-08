@@ -1,0 +1,131 @@
+# Research OS v4.6 English-App Neural Networks Submission Plan
+
+## Summary
+
+This plan supersedes `PLAN/13_APP_FIRST_REINITIALIZATION_DOGFOOD_PLAN.md` for the active neural-network paper workflow.
+
+The current manuscript package is treated as an initial draft material bundle, not as an accepted final product. Research OS Desktop must run in English mode for this work so Chinese UI mojibake does not block the paper. The app must ingest the complete `neural network/` folder and the prior private draft-project artifacts, generate a structured research plan, run acceptance-gated research loops, and then produce a submission-ready paper package for *Neural Networks*.
+
+The work has two equally important outcomes:
+
+1. Bring the paper to a submission-ready state.
+2. Improve Research OS Desktop so ordinary researchers can reproduce this path through app affordances, generated context, harness rules, structured research planning, source verification, screenshot/audit capture, and review/rebuttal loops instead of expert prompt craft.
+
+## Hard Rules
+
+- Re-read this plan, `CONTROL/work_order.yaml`, `CONTROL/phase_gate.yaml`, and `config/research_project.yaml` before each work step.
+- After each completed step: update this plan's status/gap audit, validate the touched surface, inspect `git status`, commit, and push.
+- Use English-mode app UI and English generated project context for this workflow. Chinese UI restoration is deferred unless a narrow issue blocks the English workflow.
+- Treat previous manuscript, PDF, PPT, notes, BibTeX, templates, venue instructions, screenshots, reviews, and proof-audit files as initialization inputs until the app advances through gates.
+- The app must reason over whole folders and preserve material manifests with file roles, hashes, exclusions, warnings, and provenance.
+- Do not hand-edit the paper as the normal path. If paper content must change, improve or use the app/sidecar artifact route first.
+- Common high-value prompts must be encoded in generated `AGENTS.md`, `CONTROL/project_context.md`, work orders, skills, or harness rules.
+- Verify venue rules, AI disclosure requirements, source authenticity, and citation metadata online before finalizing.
+- Do not invent citations, DOIs, theorem dependencies, proof claims, experiments, or venue policies.
+- Yunwu API use is authorized up to USD 200 for this work order. Use `gpt-5.5` with `reasoning_effort: xhigh` for high-value proof review, novelty review, venue-fit review, rebuttal simulation, and polishing. Spend for signal; do not spend just to spend.
+- Store only redacted API call records. Never store API keys, Authorization headers, cookies, account tokens, or real credentials.
+- Keep screenshots and app interaction records in ignored/private artifact paths unless sanitized for public provenance.
+- Do not commit raw `neural network/` materials or `PRIVATE/` project contents.
+
+## Structured Research Plan Contract
+
+The app-generated research plan must be visible to the researcher and include these sections:
+
+- Research content and problem statement.
+- Research motivation and venue fit.
+- Expected results and contributions.
+- Related literature and how the planned result differs from each source.
+- Theoretical setup, definitions, assumptions, and conventions.
+- Proof route for each main theoretical claim.
+- Experiment or computational design if applicable, including expected small-scale preliminary results.
+- Evidence and source-verification plan.
+- Risk register covering proof gaps, novelty risk, citation risk, venue-fit risk, and app/workflow risk.
+- Acceptance criteria for entering the final paper track.
+
+Every plan question must use the Research OS choice-prompt contract: recommended option, concrete defaults, why recommended, and free-form input.
+
+## Workflow
+
+### Step 1 - Land v4.6 English-App Rules
+
+Status: completed
+
+- Add this plan and mark v4.6 as the active governance path.
+- Update `CONTROL/work_order.yaml`, `CONTROL/phase_gate.yaml`, `config/research_project.yaml`, and `AGENTS.md`.
+- Keep existing v4.5 useful implementation work, but do not mix unfinished app-code changes into this governance commit.
+- Validate schemas/resource guard/privacy where practical.
+- Commit and push.
+
+### Step 2 - Finish English-Mode Research Planning App Support
+
+Status: pending
+
+- Convert the active desktop paper workflow surfaces needed for this run to readable English.
+- Finish the sidecar research-plan endpoint so the app can write `PUBLIC/research_plan.md/json` and move to `loop_acceptance_gate`.
+- Ensure existing projects are upgraded with generated `AGENTS.md` and `CONTROL/project_context.md` on open, not only on creation.
+- Ensure material import skips operational/build directories such as `.git`, `node_modules`, `dist`, `target`, and caches.
+- Add tests and screenshots for the English research-plan workflow.
+- Commit and push.
+
+### Step 3 - Reinitialize The Neural-Network Project Through The App
+
+Status: pending
+
+- Create a fresh v4.6 `.rosproj` sandbox under `PRIVATE/projects/neural-network-submission/`.
+- Import the full `neural network/` folder and the prior private draft project as initialization material.
+- Submit intake through the app/sidecar path with the user's objective.
+- Answer exactly three initialization questions as the researcher/operator.
+- Generate and accept a structured research plan before paper rewriting.
+- Capture app screenshots and interaction records.
+- Commit and push only public app/provenance changes.
+
+### Step 4 - Research Loop Before Final Product
+
+Status: pending
+
+- Use acceptance-gated loops for source verification, proof audit, novelty/venue-fit analysis, and claim-evidence matrix construction.
+- Browse current official venue pages and source metadata where freshness matters.
+- Record uncertain or negative findings rather than hiding them.
+- Improve app/workflow gaps discovered during the run.
+- Commit and push app/provenance changes.
+
+### Step 5 - Final Paper Production Through App Routes
+
+Status: pending
+
+- Enter final paper track only after the research plan and analysis artifacts are accepted.
+- Produce the English LaTeX manuscript, appendix/supplement if needed, references, highlights, cover letter, declarations, checklist, source verification report, and proof audit report through sidecar artifact routes.
+- Compile PDF, inspect logs, render screenshots, and run visual QA.
+- Commit and push app/provenance changes, not private raw material.
+
+### Step 6 - Yunwu High-Reasoning Review And Rebuttal Loops
+
+Status: pending
+
+- Measure available usage/cost before spending where possible.
+- Use Yunwu `gpt-5.5` xhigh for proof review, venue novelty review, adversarial review, rebuttal planning, and editorial polish.
+- Save redacted request/response records in private provenance.
+- Apply justified changes through app/sidecar routes.
+- Stop when feedback saturates or budget risk appears.
+- Commit and push records and app fixes after meaningful rounds.
+
+### Step 7 - Final Validation, Archive, And Handoff
+
+Status: pending
+
+- Run sidecar tests, desktop tests, schema checks, privacy scan, resource guard, LaTeX compile, citation/source verification, and UI screenshot walkthrough.
+- Create a private git-backed archive through the app.
+- Produce a handoff report listing final paper files, remaining non-technical submission gates, verified sources, Yunwu spend, app bugs fixed, and workflow gaps still open.
+- Commit and push final public app/provenance updates.
+
+## Current Gap Audit
+
+- v4.5 correctly added whole-folder manifests and generated project context, and those should be kept.
+- The active app workflow still needs an English-first research-plan surface so paper work is not slowed by Chinese mojibake.
+- The app needs a structured research-plan contract that covers theoretical-paper needs, not only generic intake summaries.
+- Existing projects may not receive upgraded generated context on open; this should be fixed before reusing older private project material.
+- Research-plan writing and acceptance-gate transition should be a first-class sidecar route rather than a manual file edit.
+
+## Validation Log
+
+- 2026-06-08T09:08:01+08:00: Step 1 completed. Added the v4.6 English-app submission plan and updated AGENTS, work order, phase gate, and project metadata to use `en-only` for this workflow. Validation passed: `git diff --check` for touched governance files, `scripts/validate_schemas.ps1`, `scripts/check_resource_guard.ps1`, and `scripts/scan_privacy.ps1`. No Yunwu call, paid API, credential access, raw private material commit, public export, submission, or external writeback was used.

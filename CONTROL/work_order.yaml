@@ -1,6 +1,6 @@
-work_order_id: WO-0016
-phase: research-os-v4.5-app-first-reinitialization-dogfooding
-goal: "Use Research OS Desktop to treat the neural-network manuscript folder as initial material, generate a research plan through the app, improve the app where the workflow is weak, and then bring the paper to Neural Networks submission readiness."
+work_order_id: WO-0017
+phase: research-os-v4.6-english-app-neural-networks-submission
+goal: "Use English-mode Research OS Desktop to treat the neural-network manuscript folder and prior draft package as initial material, generate and accept a structured research plan through the app, improve the app where the workflow is weak, and then bring the paper to Neural Networks submission readiness."
 inputs:
   - "AGENTS.md"
   - "CONTROL/work_order.yaml"
@@ -68,7 +68,8 @@ acceptance_criteria:
   - "Research OS Desktop can ingest and reason over the full neural-network folder, including templates, example papers, venue rules, prior proof audits, screenshots, and notes."
   - "Generated project context and app instructions automatically tell Codex to use repo skills, verify sources online, avoid hallucinated citations, preserve provenance, and record workflow gaps."
   - "Research OS Desktop can drive a real paper workflow for the neural-network materials without relying on manual manuscript bypasses."
-  - "Desktop UI source and tests no longer contain Chinese mojibake; validation fails if it reappears."
+  - "The active app workflow for this paper can run in readable English mode without Chinese mojibake blocking progress."
+  - "The generated research plan includes research content, motivation, expected contributions, related literature, theoretical setup, proof route, optional experiments, source verification, risks, and acceptance criteria."
   - "The local neural-network materials are imported into a project sandbox without committing raw input files."
   - "Official venue rules and citation metadata are refreshed online with recorded sources."
   - "The final paper package compiles and includes manuscript, appendix or supplement if needed, references, highlights, cover letter, checklist, source verification, proof audit, and required declarations."
