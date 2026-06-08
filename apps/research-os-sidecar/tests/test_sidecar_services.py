@@ -20,7 +20,7 @@ from research_os_sidecar.project_service import ProjectService
 from research_os_sidecar.research_loop_artifact_service import ResearchLoopArtifactService
 from research_os_sidecar.runtime_config_service import RuntimeConfigService
 from research_os_sidecar.runtime_service import RuntimeService
-from research_os_sidecar.security import SecurityError, import_directory_to_project, resolve_under
+from research_os_sidecar.security import SecurityError, import_directory_to_project, redact_sensitive, resolve_under
 from research_os_sidecar.state_service import ResearchStateService
 
 
@@ -417,6 +417,31 @@ class SidecarServiceTests(unittest.TestCase):
             root = Path(temp)
             with self.assertRaises(SecurityError):
                 resolve_under(root, root.parent / "outside.txt")
+
+    def test_redaction_preserves_usage_telemetry_but_not_secrets(self) -> None:
+        payload = {
+            "tokenUsage": {
+                "inputTokens": 12,
+                "outputTokens": 3,
+                "totalTokens": 15,
+            },
+            "authorization": "Bearer should-not-survive-12345",
+            "nested": {
+                "api_key": "sk-should-not-survive",
+                "completion_tokens": 4,
+                "token": "real-token-like-value",
+            },
+        }
+
+        redacted = redact_sensitive(payload)
+
+        self.assertEqual(redacted["tokenUsage"]["inputTokens"], 12)
+        self.assertEqual(redacted["tokenUsage"]["outputTokens"], 3)
+        self.assertEqual(redacted["tokenUsage"]["totalTokens"], 15)
+        self.assertEqual(redacted["nested"]["completion_tokens"], 4)
+        self.assertEqual(redacted["authorization"], "[REDACTED]")
+        self.assertEqual(redacted["nested"]["api_key"], "[REDACTED]")
+        self.assertEqual(redacted["nested"]["token"], "[REDACTED]")
 
     def test_directory_import_preserves_relative_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

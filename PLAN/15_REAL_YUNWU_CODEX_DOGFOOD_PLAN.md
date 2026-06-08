@@ -48,7 +48,7 @@ Status: completed
 
 ### Step 3 - Prove Real Yunwu-Codex Turn
 
-Status: pending
+Status: completed
 
 - Use the app runtime endpoint to start a Codex thread with Yunwu provider.
 - Run one small proof turn that returns a structured status artifact through the app route.
@@ -111,6 +111,8 @@ Status: pending
 - Step 3 then found a runtime adapter compatibility gap: Codex app-server rejects the old camelCase sandbox enum `workspaceWrite` and expects `workspace-write`. The sidecar now uses app-server enum values for both thread and turn sandbox configuration, with regression coverage.
 - Step 3 also found the matching approval-policy enum gap: Codex app-server rejects `unlessTrusted` and expects values such as `on-request`. The sidecar now uses `on-request` so approval requests still flow through the Research OS UI.
 - Step 3 further found that Codex app-server uses different sandbox enum shapes for thread start versus turn start: `thread_start.sandbox` expects `workspace-write`, while `turn_start.sandboxPolicy.type` expects `workspaceWrite`. The adapter now handles this split explicitly.
+- Step 3 proved the real app-driven route with a completed Codex turn through `modelProvider=yunwu`, `model=gpt-5.5`, `reasoningEffort=xhigh`; measured Yunwu cost was approximately USD `0.0000114232`.
+- Step 3 found and fixed a telemetry redaction gap: numeric `tokenUsage` was being redacted because its field name contains `token`. Runtime redaction now preserves numeric usage telemetry while still redacting real Authorization headers, API keys, cookies, passwords, secrets, and token strings.
 
 ## Validation Log
 
@@ -120,3 +122,4 @@ Status: pending
 - 2026-06-08T11:41:00+08:00: Step 3 checkpoint. Fixed the Codex app-server sandbox enum mismatch by switching sidecar runtime parameters from `workspaceWrite` to `workspace-write`. Validation passed: sidecar unittest (28 tests), Python `py_compile`, and `git diff --check`. The failed `thread_start` was rejected during app-server request validation; no model turn, paid API usage, raw private material commit, public export, submission, or external writeback was used.
 - 2026-06-08T11:46:00+08:00: Step 3 checkpoint. Fixed the Codex app-server approval-policy enum mismatch by switching runtime parameters from `unlessTrusted` to `on-request`. Validation passed: sidecar unittest (28 tests), Python `py_compile`, and `git diff --check`. The failed `thread_start` was rejected during app-server request validation; no model turn, paid API usage, raw private material commit, public export, submission, or external writeback was used.
 - 2026-06-08T11:50:00+08:00: Step 3 checkpoint. Fixed the Codex app-server turn sandboxPolicy enum mismatch by using `workspaceWrite` for `turn_start.sandboxPolicy.type` while retaining `workspace-write` for `thread_start.sandbox`. Validation passed: sidecar unittest (28 tests), Python `py_compile`, and `git diff --check`. The failed `turn_start` was rejected during app-server request validation; no model turn, paid API usage, raw private material commit, public export, submission, or external writeback was used.
+- 2026-06-08T11:59:00+08:00: Step 3 completed. Started a Research OS Desktop private proof project, loaded the Yunwu key into sidecar process memory only, created a Codex thread with `modelProvider=yunwu`, `model=gpt-5.5`, `reasoningEffort=xhigh`, completed one proof turn, wrote the Codex JSON result through the app research-loop artifact route, measured Yunwu usage delta as `5.7116` quota / estimated USD `0.0000114232`, and captured local screenshots. Also fixed numeric usage telemetry redaction. Validation passed: sidecar unittest (29 tests), Python `py_compile`, Playwright screenshot smoke check, and `git diff --check`. No raw private material commit, public export, submission, or external writeback was used.

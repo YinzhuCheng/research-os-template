@@ -354,6 +354,9 @@ def redact_sensitive(value: Any) -> Any:
         redacted: dict[str, Any] = {}
         for key, item in value.items():
             lowered = str(key).lower()
+            if _is_safe_usage_telemetry(lowered, item):
+                redacted[key] = redact_sensitive(item)
+                continue
             if any(marker in lowered for marker in ("api_key", "apikey", "authorization", "cookie", "password", "secret", "token")):
                 redacted[key] = "[REDACTED]"
             else:
@@ -364,3 +367,19 @@ def redact_sensitive(value: Any) -> Any:
     if isinstance(value, str) and SECRET_RE.search(value):
         return "[REDACTED]"
     return value
+
+
+def _is_safe_usage_telemetry(lowered_key: str, value: Any) -> bool:
+    if "authorization" in lowered_key or "password" in lowered_key or "secret" in lowered_key:
+        return False
+    if lowered_key in {"tokenusage", "token_usage", "usage", "total_usage"} and isinstance(value, (dict, list, int, float)):
+        return True
+    if isinstance(value, (int, float)) and (
+        lowered_key.endswith("tokens")
+        or lowered_key.endswith("_tokens")
+        or lowered_key.endswith("token_count")
+        or lowered_key.endswith("tokencount")
+        or lowered_key in {"inputtokens", "outputtokens", "prompttokens", "completiontokens", "reasoningtokens"}
+    ):
+        return True
+    return False
