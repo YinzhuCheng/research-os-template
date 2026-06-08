@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import queue
+import shutil
 import sys
 import tempfile
 import threading
@@ -166,6 +168,19 @@ class SidecarServiceTests(unittest.TestCase):
             with self.assertRaises(SecurityError):
                 state.write_research_plan({"content": "api_key=secret"})
 
+            state.submit_choice_response(
+                {
+                    "prompt_id": "CP-RESEARCH-PLAN-ACCEPTANCE",
+                    "option_id": "accept_with_audit",
+                    "free_form": "Accept the plan and start with source/proof/novelty audit.",
+                }
+            )
+            accepted = state.read_state()["research_state"]
+            self.assertEqual(accepted["internal_phase"], "loop_plan_alignment")
+            self.assertEqual(accepted["choice_prompts"][0]["prompt_id"], "CP-FIRST-RESEARCH-LOOP")
+            readback = json.loads(Path(project["project_file"]).read_text(encoding="utf-8"))
+            self.assertEqual(readback["current_phase"], "loop_plan_alignment")
+
     def test_final_product_selection_syncs_project_phase(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
@@ -303,6 +318,30 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertEqual(len(result["imported_files"]), 1)
             self.assertTrue((project / result["imported_files"][0]["target"]).exists())
 
+    def test_directory_import_handles_long_nested_target_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            source = base / "source"
+            source.mkdir()
+            (source / "reference_material.pdf").write_bytes(b"%PDF-1.4")
+            project = base / ("project_" + "d" * 40)
+            project.mkdir()
+            target_subdir = (
+                "PRIVATE/intake/"
+                + ("prior_draft_project_" + "a" * 40)
+                + "/"
+                + ("source_materials_structured_" + "b" * 40)
+                + "/"
+                + ("target_journal_templates_" + "c" * 40)
+            )
+
+            result = import_directory_to_project(source, project, target_subdir)
+
+            self.assertEqual(len(result["imported_files"]), 1)
+            target = (project / result["imported_files"][0]["target"]).resolve()
+            self.assertTrue(os.path.exists("\\\\?\\" + str(target)))
+            shutil.rmtree("\\\\?\\" + str(project.resolve()))
+
     def test_directory_import_builds_folder_manifest_roles_and_state_summary(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
@@ -346,6 +385,33 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertEqual(manifest["excluded_count"], 2)
             self.assertEqual(manifest["role_counts"]["manuscript_draft"], 1)
             self.assertNotIn("api_key", json.dumps(manifest, ensure_ascii=False).lower())
+
+    def test_directory_import_aggregates_multiple_material_manifests(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            root = Path(project["project_root"])
+            source_a = base / "source-a"
+            source_b = base / "source-b"
+            source_a.mkdir()
+            source_b.mkdir()
+            (source_a / "main.tex").write_text("\\section{Draft}", encoding="utf-8")
+            (source_b / "slides.pptx").write_bytes(b"ppt")
+
+            import_directory_to_project(source_a, root, "PRIVATE/intake/source_a")
+            import_directory_to_project(source_b, root, "PRIVATE/intake/source_b")
+
+            state = ResearchStateService(projects.require_project_root).read_state()
+            manifest = state["material_manifest"]
+            self.assertEqual(manifest["source_name"], "2 material imports")
+            self.assertEqual(manifest["file_count"], 2)
+            self.assertEqual(len(manifest["imports"]), 2)
+            self.assertEqual(manifest["role_counts"]["manuscript_draft"], 1)
+            self.assertEqual(manifest["role_counts"]["slide_deck"], 1)
 
     def test_profile_rejects_secret_fields(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -406,6 +472,24 @@ class SidecarServiceTests(unittest.TestCase):
             (root / "PRIVATE" / "secret.txt").write_text("private note\n", encoding="utf-8")
             record = archives.create("private ignored by git", "", "research_loop")
             self.assertNotIn("PRIVATE", json.dumps(record, ensure_ascii=False))
+
+    def test_archive_preview_uses_runtime_project_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            projects.create_project("Demo", base / "demo.rosproj")
+            state = ResearchStateService(projects.require_project_root, projects.update_project)
+            state.write_research_plan({"summary": "plan", "content": "# Research Plan\n"})
+            state.submit_choice_response({"prompt_id": "CP-RESEARCH-PLAN-ACCEPTANCE", "option_id": "accept_with_audit"})
+            archives = ArchiveService(projects.require_project_root)
+
+            preview = archives.preview()
+
+            self.assertEqual(preview["macro_phase"], "research_loop")
+            self.assertEqual(preview["phase"], "loop_plan_alignment")
 
 
 if __name__ == "__main__":

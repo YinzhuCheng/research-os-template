@@ -69,7 +69,7 @@ Status: completed
 
 ### Step 3 - Reinitialize The Neural-Network Project Through The App
 
-Status: pending
+Status: completed
 
 - Create a fresh v4.6 `.rosproj` sandbox under `PRIVATE/projects/neural-network-submission/`.
 - Import the full `neural network/` folder and the prior private draft project as initialization material.
@@ -127,8 +127,14 @@ Status: pending
 - Directory import now skips operational/build directories such as `.git`, `node_modules`, `dist`, `target`, and common caches.
 - The generated project context now includes a structured theoretical-paper research-plan contract.
 - English-mode screenshots were captured under ignored `apps/research-os-desktop/test-results/researcher-qa/v4.6-english/`.
+- Step 3 created a fresh private project at `PRIVATE/projects/neural-network-submission/neural-network-v46-reinit-20260608-094813.rosproj`.
+- The app/sidecar imported two material sources: the original `neural network/` folder and the prior private draft project. Aggregate manifest summary: 496 imported files, 445 excluded operational/secret-like files, two material imports.
+- The app generated and accepted a structured research plan, then advanced to `research_loop / loop_plan_alignment` with prompt `CP-FIRST-RESEARCH-LOOP`.
+- Real app screenshots for the private project were saved under `PRIVATE/projects/neural-network-submission/neural-network-v46-reinit-20260608-094813/PROVENANCE/app_screenshots/step3-reinitialization/`.
+- Step 3 dogfooding found and fixed three app/workflow bugs: sidecar launcher could load stale installed code when using `python -m`, multiple material imports needed aggregate public summaries, and archive preview read stale seed config instead of runtime project phase. Windows long target paths in prior-project import also required long-path-safe directory creation.
 
 ## Validation Log
 
 - 2026-06-08T09:08:01+08:00: Step 1 completed. Added the v4.6 English-app submission plan and updated AGENTS, work order, phase gate, and project metadata to use `en-only` for this workflow. Validation passed: `git diff --check` for touched governance files, `scripts/validate_schemas.ps1`, `scripts/check_resource_guard.ps1`, and `scripts/scan_privacy.ps1`. No Yunwu call, paid API, credential access, raw private material commit, public export, submission, or external writeback was used.
 - 2026-06-08T09:28:12+08:00: Step 2 completed. Converted the active desktop paper workflow surfaces to English, finished the research-plan endpoint and acceptance prompt, upgraded project-open context generation, skipped operational/build directories during material import, updated English tests and checks, and captured screenshots at `apps/research-os-desktop/test-results/researcher-qa/v4.6-english/`. Validation passed: `git diff --check`, `scripts/validate_schemas.ps1`, `scripts/scan_privacy.ps1`, `scripts/check_resource_guard.ps1`, `scripts/check_desktop_app.ps1`, sidecar unittest (17 tests), Python `py_compile`, TypeScript `tsc --noEmit`, Vitest, Playwright desktop/narrow workflow, and Vite production build. No Yunwu call, paid API, credential access, raw private material commit, public export, submission, or external writeback was used.
+- 2026-06-08T09:53:42+08:00: Step 3 completed. Used the current sidecar launcher to create and reopen a fresh private `.rosproj`, imported the full original material folder and prior draft project, submitted intake, answered exactly three initialization prompts, wrote the structured research plan through `/api/research-plan/write`, accepted it through the app gate, and captured real app screenshots. Dogfooding fixes added aggregate material-manifest summaries, long-path-safe import directory creation, acceptance-gate advancement to `loop_plan_alignment`, and archive-preview runtime phase reads. Validation passed: `git diff --check`, `scripts/validate_schemas.ps1`, `scripts/scan_privacy.ps1`, `scripts/check_resource_guard.ps1`, `scripts/check_desktop_app.ps1`, sidecar unittest (20 tests), Python `py_compile`, TypeScript `tsc --noEmit`, Vitest, Playwright desktop/narrow workflow, and Vite production build. No Yunwu call, paid API, credential access, raw private material commit, public export, submission, or external writeback was used.

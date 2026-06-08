@@ -125,6 +125,18 @@ class ArchiveService:
         return paths
 
     def _phase(self, root: Path) -> tuple[str, str]:
+        project_state = read_json(root / ".research-os" / "project.json", {})
+        if project_state.get("current_phase") or project_state.get("current_macro_phase"):
+            return (
+                str(project_state.get("current_phase") or "unknown"),
+                str(project_state.get("current_macro_phase") or "unknown"),
+            )
+        research_state = read_json(root / "PUBLIC" / "research_state.json", {})
+        if research_state.get("internal_phase") or research_state.get("macro_phase"):
+            return (
+                str(research_state.get("internal_phase") or "unknown"),
+                str(research_state.get("macro_phase") or "unknown"),
+            )
         project = (root / "config" / "research_project.yaml")
         phase = "unknown"
         macro = "unknown"

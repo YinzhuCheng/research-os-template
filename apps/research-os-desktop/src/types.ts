@@ -90,6 +90,15 @@ export interface MaterialManifestSummary {
   excluded_count?: number;
   role_counts?: Record<string, number>;
   warnings?: string[];
+  imports?: Array<{
+    manifest_id?: string;
+    source_name?: string;
+    target_root?: string;
+    file_count?: number;
+    excluded_count?: number;
+    role_counts?: Record<string, number>;
+    warnings?: string[];
+  }>;
 }
 
 export interface SidecarState {

@@ -315,7 +315,23 @@ class ResearchStateService:
             "option_id": option_id,
             "free_form_present": bool(free_form.strip()),
         }
-        state["pending_user_confirmation"] = False
+        if prompt_id == "CP-RESEARCH-PLAN-ACCEPTANCE":
+            if option_id == "accept_with_audit":
+                state["macro_phase"] = "research_loop"
+                state["internal_phase"] = "loop_plan_alignment"
+                state["status"] = "research_plan_accepted_pending_loop_alignment"
+                state["pending_user_confirmation"] = True
+                state["choice_prompts"] = [self._research_loop_alignment_prompt()]
+                self._sync_project_phase("research_loop", "loop_plan_alignment")
+            else:
+                state["macro_phase"] = "research_loop"
+                state["internal_phase"] = "loop_acceptance_gate"
+                state["status"] = "research_plan_revision_requested" if option_id == "revise_plan" else "research_plan_material_expansion_requested"
+                state["pending_user_confirmation"] = True
+                state["choice_prompts"] = [self._research_plan_acceptance_prompt()]
+                self._sync_project_phase("research_loop", "loop_acceptance_gate")
+        else:
+            state["pending_user_confirmation"] = False
         write_json(root / "PUBLIC" / "research_state.json", state)
         return response
 
@@ -441,6 +457,37 @@ class ResearchStateService:
             "free_form_enabled": True,
             "free_form_label": "Natural-language additions",
             "free_form_placeholder": "Add acceptance notes, revision requests, or next-loop priorities.",
+            "requires_human_response": True,
+        }
+
+    def _research_loop_alignment_prompt(self) -> dict[str, Any]:
+        return {
+            "prompt_id": "CP-FIRST-RESEARCH-LOOP",
+            "stage": "loop_plan_alignment",
+            "question": "What should the first accepted research loop execute?",
+            "recommended_option": "source_proof_novelty",
+            "why_recommended": "The project is a theoretical submission, so the first loop should jointly verify sources, audit proof obligations, and position novelty before rewriting the paper.",
+            "options": [
+                {
+                    "id": "source_proof_novelty",
+                    "label": "Source, proof, and novelty audit",
+                    "description": "Verify venue/source facts, audit the proof route, and map related-work differences before final writing.",
+                    "is_recommended": True,
+                },
+                {
+                    "id": "proof_first",
+                    "label": "Proof audit first",
+                    "description": "Focus on definitions, assumptions, construction validity, and possible counterexamples.",
+                },
+                {
+                    "id": "source_first",
+                    "label": "Source verification first",
+                    "description": "Build the venue and citation verification table before proof or writing changes.",
+                },
+            ],
+            "free_form_enabled": True,
+            "free_form_label": "Natural-language additions",
+            "free_form_placeholder": "Add first-loop priorities, constraints, or sources that must be checked.",
             "requires_human_response": True,
         }
 

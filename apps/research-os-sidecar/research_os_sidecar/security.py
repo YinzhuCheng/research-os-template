@@ -8,7 +8,7 @@ import mimetypes
 from pathlib import Path
 from typing import Any
 
-from .common import new_id, now_iso, write_json
+from .common import new_id, now_iso, read_json, write_json
 
 
 SECRET_RE = re.compile(
@@ -93,7 +93,7 @@ def import_file_to_project(source: Path, project_root: Path, target_subdir: str 
     assert_no_secret_path(source)
     scan_text_for_secrets(source)
     target_dir = resolve_under(project_root, target_subdir)
-    target_dir.mkdir(parents=True, exist_ok=True)
+    _mkdir(target_dir)
     target = target_dir / source.name
     _copy2(source, target)
     return {"source_name": source.name, "target": relative_to_root(project_root, target)}
@@ -121,7 +121,7 @@ def import_directory_to_project(source_dir: Path, project_root: Path, target_sub
             excluded.append({"source_name": relative_name, "reason": str(exc)})
             continue
         target = target_root / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
+        _mkdir(target.parent)
         _copy2(source, target)
         role = classify_material_role(relative)
         imported.append(
@@ -167,8 +167,58 @@ def import_directory_to_project(source_dir: Path, project_root: Path, target_sub
         "warnings": warnings,
     }
     write_json(project_root / "CONTROL" / "intake_queue" / f"{manifest_id}.material_manifest.json", manifest)
-    write_json(project_root / "PUBLIC" / "material_manifest_summary.json", summary)
+    _write_public_manifest_summary(project_root, summary)
     return manifest
+
+
+def _write_public_manifest_summary(project_root: Path, current_summary: dict[str, Any]) -> None:
+    manifest_dir = project_root / "CONTROL" / "intake_queue"
+    manifest_files = sorted(manifest_dir.glob("*.material_manifest.json")) if manifest_dir.exists() else []
+    summaries: list[dict[str, Any]] = []
+    for manifest_file in manifest_files:
+        manifest = read_json(manifest_file, {})
+        if not manifest:
+            continue
+        summaries.append(
+            {
+                "manifest_id": manifest.get("manifest_id"),
+                "created_at": manifest.get("created_at"),
+                "source_name": manifest.get("source_name"),
+                "target_root": manifest.get("target_root"),
+                "file_count": manifest.get("file_count", 0),
+                "excluded_count": manifest.get("excluded_count", 0),
+                "role_counts": manifest.get("role_counts", {}),
+                "warnings": manifest.get("warnings", []),
+            }
+        )
+    if not summaries:
+        summaries = [current_summary]
+
+    aggregate_roles: dict[str, int] = {}
+    warnings: list[str] = []
+    for summary in summaries:
+        for role, count in dict(summary.get("role_counts") or {}).items():
+            aggregate_roles[str(role)] = aggregate_roles.get(str(role), 0) + int(count)
+        for warning in list(summary.get("warnings") or []):
+            text = str(warning)
+            if text not in warnings:
+                warnings.append(text)
+    if len(summaries) > 1:
+        warnings.insert(0, f"{len(summaries)} material imports are present; research planning must consider every manifest.")
+
+    aggregate = {
+        "schema_version": "research-material-manifest-summary-v1",
+        "manifest_id": "aggregate",
+        "created_at": now_iso(),
+        "source_name": summaries[0].get("source_name") if len(summaries) == 1 else f"{len(summaries)} material imports",
+        "target_root": summaries[0].get("target_root") if len(summaries) == 1 else "multiple",
+        "file_count": sum(int(summary.get("file_count") or 0) for summary in summaries),
+        "excluded_count": sum(int(summary.get("excluded_count") or 0) for summary in summaries),
+        "role_counts": aggregate_roles,
+        "warnings": warnings,
+        "imports": summaries,
+    }
+    write_json(project_root / "PUBLIC" / "material_manifest_summary.json", aggregate)
 
 
 def classify_material_role(relative_path: Path) -> str:
@@ -242,6 +292,13 @@ def _copy2(source: Path, target: Path) -> None:
         shutil.copy2(_windows_long_path(source), _windows_long_path(target))
         return
     shutil.copy2(source, target)
+
+
+def _mkdir(path: Path) -> None:
+    if os.name == "nt":
+        os.makedirs(_windows_long_path(path), exist_ok=True)
+        return
+    path.mkdir(parents=True, exist_ok=True)
 
 
 def _windows_long_path(path: Path) -> str:

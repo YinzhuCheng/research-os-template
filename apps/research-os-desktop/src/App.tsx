@@ -41,6 +41,7 @@ function MaterialManifestCard({ manifest }: { manifest?: MaterialManifestSummary
     );
   }
   const roleEntries = Object.entries(manifest.role_counts ?? {}).sort(([a], [b]) => a.localeCompare(b));
+  const imports = manifest.imports ?? [];
   return (
     <div className="material-summary" aria-label="Material bundle summary">
       <div className="metric-row">
@@ -61,6 +62,17 @@ function MaterialManifestCard({ manifest }: { manifest?: MaterialManifestSummary
             <span className="role-chip" key={role}>
               {roleLabels[role] ?? role}: {count}
             </span>
+          ))}
+        </div>
+      ) : null}
+      {imports.length > 1 ? (
+        <div className="import-list" aria-label="Imported material sources">
+          <strong>Imported sources</strong>
+          {imports.map((item) => (
+            <div className="metric-row compact-metric" key={item.manifest_id ?? item.source_name}>
+              <span>{item.source_name ?? item.manifest_id ?? "material source"}</span>
+              <strong>{item.file_count ?? 0} files</strong>
+            </div>
           ))}
         </div>
       ) : null}
