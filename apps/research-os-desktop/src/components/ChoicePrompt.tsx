@@ -34,7 +34,7 @@ export function ChoicePrompt({ prompt, pending = false, onSubmit }: Props) {
             <span>
               <strong>
                 {option.label}
-                {option.id === prompt.recommended_option ? <em>推荐</em> : null}
+                {option.id === prompt.recommended_option ? <em>Recommended</em> : null}
               </strong>
               <small>{option.description}</small>
             </span>
@@ -46,13 +46,13 @@ export function ChoicePrompt({ prompt, pending = false, onSubmit }: Props) {
         <textarea
           value={freeForm}
           onChange={(event) => setFreeForm(event.target.value)}
-          placeholder={prompt.free_form_placeholder ?? "用自然语言补充你的偏好、限制或修改意见。"}
+          placeholder={prompt.free_form_placeholder ?? "Add constraints, priorities, or corrections in natural language."}
           rows={3}
         />
       </label>
       <button className="primary-action" type="button" onClick={() => onSubmit?.({ optionId, freeForm })} disabled={pending}>
         <Check size={16} aria-hidden="true" />
-        {pending ? "正在保存" : "保存选择"}
+        {pending ? "Saving" : "Save choice"}
       </button>
     </section>
   );

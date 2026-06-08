@@ -4,23 +4,23 @@ import { useState } from "react";
 import { api } from "../api";
 import { useAppStore } from "../store";
 
-const DEFAULT_PAPER_TURN = `请按 Research OS app-first 工作流继续本项目。
+const DEFAULT_PAPER_TURN = `Continue this project through the Research OS app-first workflow.
 
-1. 先读取并遵守相关仓库 skills：research-os-orchestrator、research-os-execution-harness、research-os-resource-guard、research-os-live-evidence-refresh、research-os-paper-authoring、research-os-review-rebuttal，以及需要时的 research-os-visual-communication。
-2. 把当前论文、PDF、PPT、模板、示例论文、笔记、证明审计和先前 review 记录都视为初始化材料；不要把旧草稿直接当成最终产物。
-3. 基于材料 manifest 生成或更新研究计划，明确证明义务、来源核查、相关工作定位、期刊适配、rebuttal 攻防和最终投稿包路径。
-4. 对 Neural Networks 投稿规则、Elsevier 模板、每条引用和 DOI/arXiv/publisher 来源进行联网核查；不要凭记忆引用，不要编造引用。
-5. 如果 app 或工作流阻碍了可复用推进，先记录缺口并建议修 app，再继续论文。
-6. 本轮只产出可验收的下一步结果和结构化记录，不绕过 Research OS 阶段门。`;
+1. First read and follow the project AGENTS.md, CONTROL/project_context.md, CONTROL/work_order.yaml, CONTROL/phase_gate.yaml, and the relevant repo skills: research-os-orchestrator, research-os-execution-harness, research-os-resource-guard, research-os-live-evidence-refresh, research-os-paper-authoring, research-os-review-rebuttal, and research-os-visual-communication when needed.
+2. Treat the current manuscript, PDF, PPT, templates, example papers, notes, proof-audit files, and prior review records as initialization material. Do not treat an old draft as a final product.
+3. Use the material manifest to generate or update the structured research plan: problem, motivation, expected contributions, related literature, theoretical setup, proof route, optional computational checks, source verification, risks, and acceptance criteria.
+4. Verify Neural Networks submission rules, Elsevier template requirements, every citation, DOI, arXiv page, and publisher source online. Do not cite from memory and do not invent sources.
+5. If the app or workflow blocks reusable progress, record the gap and propose or implement the app fix before bypassing it manually.
+6. Produce only the next acceptance-ready artifact and structured records for this turn; do not bypass Research OS stage gates.`;
 
 function eventTitle(event: Record<string, unknown>) {
   const type = String(event.type ?? "runtime_event");
   const method = event.method ? ` / ${String(event.method)}` : "";
-  if (type === "assistant_message") return "Codex 输出";
-  if (type === "runtime_error") return "运行时需要修复";
-  if (type === "thread_started") return "Thread 已启动";
-  if (type === "turn_started") return "Turn 已开始";
-  if (type === "codex_notification") return `Codex 事件${method}`;
+  if (type === "assistant_message") return "Codex output";
+  if (type === "runtime_error") return "Runtime needs repair";
+  if (type === "thread_started") return "Thread started";
+  if (type === "turn_started") return "Turn started";
+  if (type === "codex_notification") return `Codex event${method}`;
   return type.replace(/_/g, " ");
 }
 
@@ -29,8 +29,8 @@ function eventSummary(event: Record<string, unknown>) {
   if (typeof event.error === "string") return event.error;
   const payload = event.payload as Record<string, unknown> | undefined;
   if (payload && typeof payload.message === "string") return payload.message;
-  if (payload && typeof payload.status === "string") return `状态：${payload.status}`;
-  return "已记录结构化事件，可展开查看详情。";
+  if (payload && typeof payload.status === "string") return `Status: ${payload.status}`;
+  return "Structured event recorded. Expand to inspect details.";
 }
 
 export function RuntimePanel() {
@@ -57,56 +57,56 @@ export function RuntimePanel() {
       <div className="section-heading">
         <Play size={18} aria-hidden="true" />
         <div>
-          <h2>Codex 执行流</h2>
-          <p>{runtimeReady ? "Codex SDK 可用，所有执行仍经过 Research OS 审批。" : "Codex SDK 未安装或不可用；先配置运行时，再启动真实执行。"}</p>
+          <h2>Codex Execution Stream</h2>
+          <p>{runtimeReady ? "Codex SDK is available. Execution still goes through Research OS approvals." : "Codex SDK is missing or unavailable. Configure the runtime before starting real execution."}</p>
         </div>
       </div>
       {!runtimeReady ? (
         <div className="empty-state action-state">
-          <strong>研究引擎尚未就绪</strong>
-          <p>当前仍可整理材料、回答对齐问题和创建存档；真实 Codex 执行需要先安装或配置 runtime。</p>
+          <strong>Research engine is not ready</strong>
+          <p>You can still organize materials, answer alignment questions, and create archives. Real Codex execution needs an installed or configured runtime.</p>
           <div className="inline-actions">
             <button className="secondary-action" type="button" onClick={() => environment.refetch()} disabled={environment.isFetching}>
               <RefreshCw size={16} aria-hidden="true" />
-              {environment.isFetching ? "正在检测" : "重试检测"}
+              {environment.isFetching ? "Checking" : "Retry check"}
             </button>
           </div>
           <details>
-            <summary>配置说明</summary>
-            <p>确认已安装 Codex runtime 或 Python SDK，并在 Profile 中选择可用模型。若 sidecar 崩溃，重启应用后会按 `.rosproj` 继续恢复。</p>
+            <summary>Configuration notes</summary>
+            <p>Install the Codex runtime or Python SDK, then select an available profile and model. If the sidecar crashes, restart the app and resume from the `.rosproj` file.</p>
           </details>
         </div>
       ) : null}
       <label className="field">
-        <span>下一轮指令</span>
+        <span>Next turn instruction</span>
         <textarea value={turnText} onChange={(event) => setTurnText(event.target.value)} rows={8} />
       </label>
       <div className="inline-actions">
         <button className="secondary-action" type="button" onClick={() => startThread.mutate()} disabled={!runtimeReady || startThread.isPending}>
           <Play size={16} aria-hidden="true" />
-          {startThread.isPending ? "正在启动" : "启动 Thread"}
+          {startThread.isPending ? "Starting" : "Start thread"}
         </button>
         <button className="primary-action" type="button" onClick={() => startTurn.mutate()} disabled={!runtimeReady || !canStartTurn || !turnText.trim() || startTurn.isPending}>
           <Play size={16} aria-hidden="true" />
-          {startTurn.isPending ? "正在执行" : "执行/继续"}
+          {startTurn.isPending ? "Running" : "Run or continue"}
         </button>
         <button className="secondary-action" type="button" onClick={() => interrupt.mutate()} disabled={!project?.codex.last_turn_id || interrupt.isPending}>
           <Square size={16} aria-hidden="true" />
-          中断
+          Interrupt
         </button>
       </div>
-      {runtimeReady && !canStartTurn ? <p className="hint-text">先启动 thread，或打开包含 thread_id 的项目。</p> : null}
+      {runtimeReady && !canStartTurn ? <p className="hint-text">Start a thread first, or open a project that already has a thread_id.</p> : null}
       {[startThread.error, startTurn.error, interrupt.error].filter(Boolean).map((error, index) => (
         <p className="error-text" key={index}>{(error as Error).message}</p>
       ))}
       <div className="event-log" aria-label="Runtime events">
-        {(events.data?.events ?? []).length === 0 ? <p>暂无执行事件。Codex 输出、工具调用、错误和恢复状态会显示在这里。</p> : null}
+        {(events.data?.events ?? []).length === 0 ? <p>No runtime events yet. Codex output, tool calls, errors, and recovery state will appear here.</p> : null}
         {(events.data?.events ?? []).slice(-8).map((event, index) => (
           <article className="event-card" key={index}>
             <strong>{eventTitle(event)}</strong>
             <p>{eventSummary(event)}</p>
             <details>
-              <summary>结构化详情</summary>
+              <summary>Structured details</summary>
               <pre>{JSON.stringify(event, null, 2)}</pre>
             </details>
           </article>

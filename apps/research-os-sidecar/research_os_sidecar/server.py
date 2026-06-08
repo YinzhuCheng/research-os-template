@@ -158,6 +158,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"plan": self.context.state.select_final_products(list(payload.get("tracks") or []), str(payload.get("free_form") or ""))})
             elif path == "/api/workflow-gap":
                 self.send_json({"gap": self.context.state.record_workflow_gap(payload)})
+            elif path == "/api/research-plan/write":
+                self.send_json({"research_plan": self.context.state.write_research_plan(payload)})
             elif path == "/api/paper-artifacts/write":
                 self.send_json({"paper_artifacts": self.context.paper_artifacts.write_artifacts(payload)})
             elif path == "/api/import-file":

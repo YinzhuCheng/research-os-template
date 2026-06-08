@@ -47,6 +47,8 @@ export const api = {
     request<Record<string, unknown>>("/api/final-products", { method: "POST", body: JSON.stringify({ tracks, free_form }) }),
   recordWorkflowGap: (description: string, severity = "medium") =>
     request<Record<string, unknown>>("/api/workflow-gap", { method: "POST", body: JSON.stringify({ description, severity }) }),
+  writeResearchPlan: (content: string, summary = "", next_actions: string[] = [], known_gaps: string[] = []) =>
+    request<Record<string, unknown>>("/api/research-plan/write", { method: "POST", body: JSON.stringify({ content, summary, next_actions, known_gaps }) }),
   writePaperArtifacts: (files: Array<{ path: string; content: string; role?: string }>, summary = "") =>
     request<Record<string, unknown>>("/api/paper-artifacts/write", { method: "POST", body: JSON.stringify({ files, summary }) }),
   importDirectory: (source_path: string, target_subdir = "INBOX/imports") =>

@@ -5,12 +5,12 @@ import { api } from "../api";
 import type { SubmissionWorkflow, SubmissionWorkflowItem } from "../types";
 
 function statusLabel(status?: string) {
-  if (!status) return "待记录";
-  if (status.includes("needs_online")) return "待联网核查";
-  if (status.includes("needs_doi")) return "待逐条核查";
-  if (status.includes("needs_review")) return "待审计";
-  if (status === "verified") return "已核查";
-  if (status === "resolved") return "已解决";
+  if (!status) return "Not recorded";
+  if (status.includes("needs_online")) return "Needs online verification";
+  if (status.includes("needs_doi")) return "Needs per-source check";
+  if (status.includes("needs_review")) return "Needs audit";
+  if (status === "verified") return "Verified";
+  if (status === "resolved") return "Resolved";
   return status;
 }
 
@@ -22,7 +22,7 @@ function WorkflowList({ title, items, icon }: { title: string; items?: Submissio
         <Icon size={16} aria-hidden="true" />
         <strong>{title}</strong>
       </div>
-      {(items ?? []).length === 0 ? <p className="empty-state">暂无条目。Codex 完成分析后会把核查项写回这里。</p> : null}
+      {(items ?? []).length === 0 ? <p className="empty-state">No items yet. Codex analysis should write reusable check items back here.</p> : null}
       {(items ?? []).map((item) => (
         <article className="workflow-item" key={item.id}>
           <div>
@@ -53,41 +53,41 @@ export function PaperWorkflowPanel({ workflow }: { workflow?: SubmissionWorkflow
       <div className="section-heading">
         <BookOpenCheck size={18} aria-hidden="true" />
         <div>
-          <h2>论文投稿工作流</h2>
-          <p>把目标期刊、来源真实性、证明审计、rebuttal 攻防和 app 缺口放在同一个验收面板中。</p>
+          <h2>Paper Submission Workflow</h2>
+          <p>Track venue rules, source authenticity, proof audit, rebuttal-style review, and reusable app gaps in one acceptance panel.</p>
         </div>
       </div>
 
       <div className="workflow-summary">
         <div>
-          <span>目标期刊</span>
-          <strong>{workflow?.target_venue ?? "待选择"}</strong>
+          <span>Target venue</span>
+          <strong>{workflow?.target_venue ?? "Not selected"}</strong>
         </div>
         <div>
-          <span>文章类型</span>
-          <strong>{workflow?.article_type ?? "待确认"}</strong>
+          <span>Article type</span>
+          <strong>{workflow?.article_type ?? "Not confirmed"}</strong>
         </div>
         <div>
-          <span>栏目</span>
-          <strong>{workflow?.target_section ?? "待确认"}</strong>
+          <span>Section</span>
+          <strong>{workflow?.target_section ?? "Not confirmed"}</strong>
         </div>
       </div>
 
       <div className="notice info">
         <ExternalLink size={16} aria-hidden="true" />
-        <span>每轮论文任务都必须要求 Codex 联网核查官方投稿规则和引用来源；未核查来源不得进入最终正文。</span>
+        <span>Every paper turn must require Codex to verify official submission rules and citation sources online. Unverified sources cannot enter final manuscript claims.</span>
       </div>
 
-      <WorkflowList title="来源真实性核查" items={workflow?.source_verification} icon="source" />
-      <WorkflowList title="数学证明审计" items={workflow?.proof_audit} icon="proof" />
+      <WorkflowList title="Source Authenticity" items={workflow?.source_verification} icon="source" />
+      <WorkflowList title="Mathematical Proof Audit" items={workflow?.proof_audit} icon="proof" />
 
       <div className="workflow-block">
         <div className="workflow-block-title">
           <BookOpenCheck size={16} aria-hidden="true" />
-          <strong>投稿包文件</strong>
+          <strong>Submission Package Files</strong>
         </div>
         {(workflow?.artifact_status ?? []).length === 0 ? (
-          <p className="empty-state">尚未生成论文文件。Codex 完成受控写入后，main.tex、references.bib、审计报告和投稿材料会显示在这里。</p>
+          <p className="empty-state">No paper files yet. After controlled sidecar writes, main.tex, references.bib, audit reports, and submission materials appear here.</p>
         ) : null}
         {(workflow?.artifact_status ?? []).map((item) => (
           <article className="workflow-item" key={item.path}>
@@ -95,7 +95,7 @@ export function PaperWorkflowPanel({ workflow }: { workflow?: SubmissionWorkflow
               <strong>{item.path}</strong>
               <small>{item.role ?? "paper_artifact"}</small>
             </div>
-            <span>{item.bytes ? `${Math.round(item.bytes / 1024)} KB` : "已写入"}</span>
+            <span>{item.bytes ? `${Math.round(item.bytes / 1024)} KB` : "Written"}</span>
           </article>
         ))}
       </div>
@@ -103,9 +103,9 @@ export function PaperWorkflowPanel({ workflow }: { workflow?: SubmissionWorkflow
       <div className="workflow-block">
         <div className="workflow-block-title">
           <Bug size={16} aria-hidden="true" />
-          <strong>App / 工作流缺口</strong>
+          <strong>App / Workflow Gaps</strong>
         </div>
-        {gaps.length === 0 ? <p className="empty-state">暂未记录缺口。只要 app 让论文流程不顺，就先记录并修 app。</p> : null}
+        {gaps.length === 0 ? <p className="empty-state">No gaps recorded yet. If the app makes the paper workflow awkward, record the gap and fix the app first.</p> : null}
         {gaps.slice(-4).map((item, index) => (
           <article className="workflow-item" key={String(item.gap_id ?? index)}>
             <div>
@@ -116,17 +116,17 @@ export function PaperWorkflowPanel({ workflow }: { workflow?: SubmissionWorkflow
           </article>
         ))}
         <label className="field">
-          <span>记录新的 app 或工作流不足</span>
+          <span>Record a new app or workflow gap</span>
           <textarea
             rows={3}
             value={gap}
             onChange={(event) => setGap(event.target.value)}
-            placeholder="例如：来源核查结果不能在 UI 中逐条验收，导致论文引用审计无法复用。"
+            placeholder="Example: source-verification results cannot be accepted per reference, so citation audit cannot be reused."
           />
         </label>
         <button className="secondary-action" type="button" disabled={!gap.trim() || recordGap.isPending} onClick={() => recordGap.mutate()}>
           <Bug size={16} aria-hidden="true" />
-          {recordGap.isPending ? "正在记录" : "记录缺口"}
+          {recordGap.isPending ? "Recording" : "Record gap"}
         </button>
         {recordGap.error ? <p className="error-text">{recordGap.error.message}</p> : null}
       </div>

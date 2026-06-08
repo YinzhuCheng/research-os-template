@@ -3,16 +3,16 @@ import { normalizeMacroPhase } from "../labels";
 import type { MacroPhase } from "../types";
 
 const phases: Array<{ id: MacroPhase; label: string; detail: string; Icon: typeof Rocket }> = [
-  { id: "initialization", label: "初始化阶段", detail: "材料、问题、项目启动包", Icon: Rocket },
-  { id: "research_loop", label: "半自动循环研究阶段", detail: "验收、对齐、执行、分析", Icon: FlaskConical },
-  { id: "final_product", label: "最终产物阶段", detail: "论文、报告、软件", Icon: FileStack },
+  { id: "initialization", label: "Initialization", detail: "Materials, questions, project context", Icon: Rocket },
+  { id: "research_loop", label: "Research loop", detail: "Acceptance, alignment, execution, analysis", Icon: FlaskConical },
+  { id: "final_product", label: "Final product", detail: "Paper, report, software", Icon: FileStack },
 ];
 
 export function PhaseBar({ active }: { active: MacroPhase | string }) {
   const normalizedActive = normalizeMacroPhase(active);
   const activeIndex = phases.findIndex((phase) => phase.id === normalizedActive);
   return (
-    <ol className="phase-bar" aria-label="Research OS 三阶段">
+    <ol className="phase-bar" aria-label="Research OS phases">
       {phases.map((phase, index) => {
         const complete = index < activeIndex;
         const selected = phase.id === normalizedActive;

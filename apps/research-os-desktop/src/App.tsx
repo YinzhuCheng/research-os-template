@@ -16,44 +16,44 @@ import { selectMaterialDirectory } from "./tauriDialog";
 import type { MaterialManifestSummary } from "./types";
 
 const roleLabels: Record<string, string> = {
-  manuscript_draft: "论文草稿",
-  bibliography: "参考文献",
-  venue_template: "期刊模板",
-  venue_instruction: "投稿要求",
-  example_paper: "示例论文",
-  pdf_document: "PDF 材料",
-  slide_deck: "PPT/演示",
-  proof_audit: "证明审计",
-  review_record: "审稿/反驳记录",
-  note: "笔记",
-  code_or_notebook: "代码/Notebook",
-  data_or_structured_record: "结构化数据",
-  figure_or_screenshot: "图片/截图",
-  other_material: "其他材料",
+  manuscript_draft: "Manuscript draft",
+  bibliography: "Bibliography",
+  venue_template: "Venue template",
+  venue_instruction: "Submission instructions",
+  example_paper: "Example paper",
+  pdf_document: "PDF material",
+  slide_deck: "Slides",
+  proof_audit: "Proof audit",
+  review_record: "Review or rebuttal record",
+  note: "Notes",
+  code_or_notebook: "Code or notebook",
+  data_or_structured_record: "Structured data",
+  figure_or_screenshot: "Figure or screenshot",
+  other_material: "Other material",
 };
 
 function MaterialManifestCard({ manifest }: { manifest?: MaterialManifestSummary | null }) {
   if (!manifest) {
     return (
       <div className="empty-state compact-empty">
-        尚未导入完整材料文件夹。先导入包含草稿、模板、示例论文和笔记的文件夹，Research OS 才能基于全量上下文生成计划。
+        No full material folder has been imported yet. Import the folder that contains drafts, templates, example papers, notes, and prior review material before generating a research plan.
       </div>
     );
   }
   const roleEntries = Object.entries(manifest.role_counts ?? {}).sort(([a], [b]) => a.localeCompare(b));
   return (
-    <div className="material-summary" aria-label="材料包概览">
+    <div className="material-summary" aria-label="Material bundle summary">
       <div className="metric-row">
-        <span>材料包</span>
-        <strong>{manifest.source_name ?? "未命名材料包"}</strong>
+        <span>Material bundle</span>
+        <strong>{manifest.source_name ?? "Unnamed bundle"}</strong>
       </div>
       <div className="metric-row">
-        <span>已导入文件</span>
-        <strong>{manifest.file_count ?? 0} 个</strong>
+        <span>Imported files</span>
+        <strong>{manifest.file_count ?? 0}</strong>
       </div>
       <div className="metric-row">
-        <span>排除文件</span>
-        <strong>{manifest.excluded_count ?? 0} 个</strong>
+        <span>Excluded files</span>
+        <strong>{manifest.excluded_count ?? 0}</strong>
       </div>
       {roleEntries.length > 0 ? (
         <div className="role-grid">
@@ -68,13 +68,24 @@ function MaterialManifestCard({ manifest }: { manifest?: MaterialManifestSummary
         <div className="notice warning">
           <AlertTriangle size={16} aria-hidden="true" />
           <div>
-            <strong>需要确认的材料问题</strong>
+            <strong>Material issues to confirm</strong>
             <ul>
               {manifest.warnings?.map((warning) => <li key={warning}>{warning}</li>)}
             </ul>
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function ResearchPlanStatus({ state }: { state?: Record<string, unknown> }) {
+  const plan = state?.research_plan as Record<string, unknown> | undefined;
+  if (!plan) return null;
+  return (
+    <div className="notice info">
+      <ClipboardCheck size={16} aria-hidden="true" />
+      <span>Research plan generated: {String(plan.summary ?? "awaiting researcher acceptance")}. The project should remain at the acceptance gate until this plan is accepted or revised.</span>
     </div>
   );
 }
@@ -119,7 +130,7 @@ function Workspace() {
       const selected = await selectMaterialDirectory();
       if (selected) setMaterialDirectory(selected);
     } catch {
-      setDialogNotice("当前不是 Tauri 桌面运行环境，无法打开系统目录选择器；请手动输入材料文件夹路径。");
+      setDialogNotice("This is not the Tauri desktop runtime, so the system folder picker is unavailable. Enter the material folder path manually.");
     }
   }
 
@@ -132,31 +143,31 @@ function Workspace() {
     <main className="workspace">
       <header className="workspace-header">
         <div className="header-copy">
-          <p className="eyebrow">当前项目</p>
+          <p className="eyebrow">Current project</p>
           <h1>{project?.name}</h1>
           <p className="path-text">{project?.project_root}</p>
         </div>
         <div className="header-actions">
-          <span className="status-pill">阶段：{activePhaseLabel}</span>
-          <span className="status-pill subtle">内部：{internalLabel}</span>
+          <span className="status-pill">Phase: {activePhaseLabel}</span>
+          <span className="status-pill subtle">Internal: {internalLabel}</span>
           <button className="primary-action" type="button" onClick={() => setFinalOpen(true)}>
             <FileStack size={16} aria-hidden="true" />
-            进入最终产物阶段
+            Enter Final Product
           </button>
         </div>
       </header>
 
       <PhaseBar active={activePhase} />
 
-      <section className="current-action" aria-label="当前研究行动">
-        <strong>当前任务：把整份神经网络论文材料包作为初始化输入。</strong>
-        <span>先导入文件夹、生成研究计划、完成验收门和来源核查，再进入最终论文产物；不要把旧草稿直接当成最终稿。</span>
+      <section className="current-action" aria-label="Current research action">
+        <strong>Current task: treat the full neural-network manuscript bundle as initialization material.</strong>
+        <span>Import the whole folder, generate a structured research plan, pass the acceptance gate, verify sources, and only then enter final paper production.</span>
       </section>
 
       {state.error ? (
         <div className="notice danger" role="alert">
           <AlertTriangle size={16} aria-hidden="true" />
-          <span>无法读取 Research OS 状态：{state.error.message}</span>
+          <span>Could not read Research OS state: {state.error.message}</span>
         </div>
       ) : null}
 
@@ -165,13 +176,13 @@ function Workspace() {
           <div className="section-heading">
             <Upload size={18} aria-hidden="true" />
             <div>
-              <h2>材料与目标</h2>
-              <p>导入完整文件夹，再补充自然语言目标。原始文件进入项目私有 intake；公开状态只显示摘要和警告。</p>
+              <h2>Materials and Goal</h2>
+              <p>Import the complete folder, then add the research objective in natural language. Raw files stay private; the UI shows only sanitized summaries and warnings.</p>
             </div>
           </div>
 
           <label className="field">
-            <span>研究材料文件夹</span>
+            <span>Research material folder</span>
             <input
               value={materialDirectory}
               onChange={(event) => setMaterialDirectory(event.target.value)}
@@ -181,7 +192,7 @@ function Workspace() {
           <div className="inline-actions split-actions">
             <button className="secondary-action" type="button" onClick={chooseMaterialDirectory}>
               <FolderOpen size={16} aria-hidden="true" />
-              选择文件夹
+              Choose folder
             </button>
             <button
               className="primary-action"
@@ -190,7 +201,7 @@ function Workspace() {
               disabled={!materialDirectory.trim() || importDirectory.isPending}
             >
               <Upload size={16} aria-hidden="true" />
-              {importDirectory.isPending ? "正在导入" : "导入完整材料包"}
+              {importDirectory.isPending ? "Importing" : "Import full material bundle"}
             </button>
           </div>
           {dialogNotice ? <p className="hint-text">{dialogNotice}</p> : null}
@@ -198,20 +209,20 @@ function Workspace() {
           <MaterialManifestCard manifest={state.data?.material_manifest} />
 
           <label className="field">
-            <span>研究目标、限制、期刊要求或自然语言补充</span>
+            <span>Research objective, constraints, venue rules, or free-form notes</span>
             <textarea
               value={material}
               onChange={(event) => setMaterial(event.target.value)}
               rows={7}
-              placeholder="例如：请把旧论文、PDF、PPT、投稿模板和示例论文都视为初始材料，先生成研究计划；所有引用和投稿规则必须联网核查。"
+              placeholder="Example: Treat the old paper, PDF, PPT, template, and example papers as initial materials. First generate a research plan. Verify every citation and submission rule online before final writing."
             />
           </label>
           <div className="inline-actions split-actions">
             <button className="primary-action" type="button" onClick={() => submitIntake.mutate()} disabled={!material.trim() || submitIntake.isPending}>
               <Upload size={16} aria-hidden="true" />
-              {submitIntake.isPending ? "正在保存" : "保存目标并初始化"}
+              {submitIntake.isPending ? "Saving" : "Save goal and initialize"}
             </button>
-            <span className="muted">保存后生成三个定向问题；不会绕过用户验收。</span>
+            <span className="muted">Saving creates exactly three targeted questions and does not bypass researcher acceptance.</span>
           </div>
           {submitIntake.error ? <p className="error-text">{submitIntake.error.message}</p> : null}
         </section>
@@ -220,12 +231,13 @@ function Workspace() {
           <div className="section-heading">
             <ClipboardCheck size={18} aria-hidden="true" />
             <div>
-              <h2>验收与下一步</h2>
-              <p>每轮先确认上一阶段产物，再回答 1-3 个高影响问题，最后交给 Codex 执行。</p>
+              <h2>Acceptance and Next Step</h2>
+              <p>Each loop starts by accepting or revising the previous artifact, then answering one to three high-impact alignment questions.</p>
             </div>
           </div>
-          {state.isLoading ? <p className="muted">正在读取当前阶段问题...</p> : null}
-          {!state.isLoading && prompts.length === 0 ? <p className="empty-state">当前没有待回答问题。导入材料或继续 Codex 执行后会在这里出现对齐问题。</p> : null}
+          {state.isLoading ? <p className="muted">Loading current phase questions...</p> : null}
+          <ResearchPlanStatus state={state.data?.research_state} />
+          {!state.isLoading && prompts.length === 0 ? <p className="empty-state">No pending questions. Import materials or continue Codex execution to create the next alignment prompt.</p> : null}
           {prompts.slice(0, 3).map((prompt) => (
             <ChoicePrompt
               key={prompt.prompt_id}

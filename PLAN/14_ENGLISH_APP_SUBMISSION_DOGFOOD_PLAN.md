@@ -58,7 +58,7 @@ Status: completed
 
 ### Step 2 - Finish English-Mode Research Planning App Support
 
-Status: pending
+Status: completed
 
 - Convert the active desktop paper workflow surfaces needed for this run to readable English.
 - Finish the sidecar research-plan endpoint so the app can write `PUBLIC/research_plan.md/json` and move to `loop_acceptance_gate`.
@@ -121,11 +121,14 @@ Status: pending
 ## Current Gap Audit
 
 - v4.5 correctly added whole-folder manifests and generated project context, and those should be kept.
-- The active app workflow still needs an English-first research-plan surface so paper work is not slowed by Chinese mojibake.
-- The app needs a structured research-plan contract that covers theoretical-paper needs, not only generic intake summaries.
-- Existing projects may not receive upgraded generated context on open; this should be fixed before reusing older private project material.
-- Research-plan writing and acceptance-gate transition should be a first-class sidecar route rather than a manual file edit.
+- The active app workflow now uses readable English for the project center, material intake, acceptance gate, runtime stream, approval queue, archive panel, final-product modal, paper workflow panel, profile panel, and Playwright workflow tests.
+- The sidecar now exposes a first-class research-plan write route that writes `PUBLIC/research_plan.md/json`, moves the project to `research_loop / loop_acceptance_gate`, and presents an English acceptance prompt.
+- Existing projects are upgraded with generated `AGENTS.md` and `CONTROL/project_context.md` when opened, not only when created.
+- Directory import now skips operational/build directories such as `.git`, `node_modules`, `dist`, `target`, and common caches.
+- The generated project context now includes a structured theoretical-paper research-plan contract.
+- English-mode screenshots were captured under ignored `apps/research-os-desktop/test-results/researcher-qa/v4.6-english/`.
 
 ## Validation Log
 
 - 2026-06-08T09:08:01+08:00: Step 1 completed. Added the v4.6 English-app submission plan and updated AGENTS, work order, phase gate, and project metadata to use `en-only` for this workflow. Validation passed: `git diff --check` for touched governance files, `scripts/validate_schemas.ps1`, `scripts/check_resource_guard.ps1`, and `scripts/scan_privacy.ps1`. No Yunwu call, paid API, credential access, raw private material commit, public export, submission, or external writeback was used.
+- 2026-06-08T09:28:12+08:00: Step 2 completed. Converted the active desktop paper workflow surfaces to English, finished the research-plan endpoint and acceptance prompt, upgraded project-open context generation, skipped operational/build directories during material import, updated English tests and checks, and captured screenshots at `apps/research-os-desktop/test-results/researcher-qa/v4.6-english/`. Validation passed: `git diff --check`, `scripts/validate_schemas.ps1`, `scripts/scan_privacy.ps1`, `scripts/check_resource_guard.ps1`, `scripts/check_desktop_app.ps1`, sidecar unittest (17 tests), Python `py_compile`, TypeScript `tsc --noEmit`, Vitest, Playwright desktop/narrow workflow, and Vite production build. No Yunwu call, paid API, credential access, raw private material commit, public export, submission, or external writeback was used.

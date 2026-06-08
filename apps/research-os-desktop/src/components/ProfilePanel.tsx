@@ -31,16 +31,16 @@ export function ProfilePanel() {
         <summary className="advanced-summary">
           <span>
             <KeyRound size={18} aria-hidden="true" />
-            <strong>高级设置：AI 模型与密钥引用</strong>
+            <strong>Advanced Settings: model and secret reference</strong>
           </span>
-          <small>{activeProfile ? `${activeProfile.label}${activeProfile.model ? ` / ${activeProfile.model}` : ""}` : "未选择 profile"}</small>
+          <small>{activeProfile ? `${activeProfile.label}${activeProfile.model ? ` / ${activeProfile.model}` : ""}` : "No profile selected"}</small>
         </summary>
         <p className="hint-text">
-          普通研究流程不需要先改这里。Profile 只保存 provider、模型和 secret 引用；不要把 API key、token 或密码粘贴进项目。
+          Normal research flow does not require editing this first. Profiles store provider, model, and secret references only. Do not paste API keys, tokens, or passwords into a project.
         </p>
         <div className="profile-list">
           {(profiles.data?.profiles ?? []).length === 0 ? (
-            <p className="empty-state">暂无 profile。可以先使用环境变量引用创建一个 OpenAI-compatible profile。</p>
+            <p className="empty-state">No profiles yet. Create an OpenAI-compatible profile that references a local environment variable.</p>
           ) : null}
           {(profiles.data?.profiles ?? []).map((profile) => (
             <button
@@ -63,7 +63,7 @@ export function ProfilePanel() {
             <input value={draft.profile_id} onChange={(event) => setDraft({ ...draft, profile_id: event.target.value })} />
           </label>
           <label className="field">
-            <span>显示名称</span>
+            <span>Display name</span>
             <input value={draft.label} onChange={(event) => setDraft({ ...draft, label: event.target.value })} />
           </label>
           <label className="field">
@@ -71,17 +71,17 @@ export function ProfilePanel() {
             <input value={draft.provider_id ?? ""} onChange={(event) => setDraft({ ...draft, provider_id: event.target.value })} />
           </label>
           <label className="field">
-            <span>默认模型</span>
+            <span>Default model</span>
             <input value={draft.model ?? ""} onChange={(event) => setDraft({ ...draft, model: event.target.value })} placeholder="gpt-5.5" />
           </label>
           <label className="field">
-            <span>Secret 引用</span>
+            <span>Secret reference</span>
             <input value={draft.secret_ref ?? ""} onChange={(event) => setDraft({ ...draft, secret_ref: event.target.value })} placeholder="env:YUNWU_API_KEY" />
           </label>
         </div>
         <button className="secondary-action" type="button" onClick={() => save.mutate()} disabled={save.isPending}>
           <Save size={16} aria-hidden="true" />
-          {save.isPending ? "正在保存" : "保存 Profile"}
+          {save.isPending ? "Saving" : "Save profile"}
         </button>
         {save.error ? <p className="error-text">{save.error.message}</p> : null}
       </details>

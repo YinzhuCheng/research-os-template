@@ -18,7 +18,7 @@ async function invokeDialog<T>(command: string, options: Record<string, unknown>
 
 export async function selectExistingRosproj(): Promise<string | null> {
   const selected = await invokeDialog<DialogPath>("plugin:dialog|open", {
-    title: "打开 Research OS 项目",
+    title: "Open Research OS project",
     multiple: false,
     directory: false,
     filters: [{ name: "Research OS Project", extensions: ["rosproj"] }],
@@ -28,7 +28,7 @@ export async function selectExistingRosproj(): Promise<string | null> {
 
 export async function chooseRosprojSavePath(defaultPath: string): Promise<string | null> {
   const selected = await invokeDialog<DialogPath>("plugin:dialog|save", {
-    title: "创建 Research OS 项目",
+    title: "Create Research OS project",
     defaultPath,
     filters: [{ name: "Research OS Project", extensions: ["rosproj"] }],
   });
@@ -38,7 +38,7 @@ export async function chooseRosprojSavePath(defaultPath: string): Promise<string
 
 export async function selectMaterialDirectory(): Promise<string | null> {
   const selected = await invokeDialog<DialogPath>("plugin:dialog|open", {
-    title: "选择研究材料文件夹",
+    title: "Select research material folder",
     multiple: false,
     directory: true,
   });

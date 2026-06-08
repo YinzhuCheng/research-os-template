@@ -15,20 +15,20 @@ const macroAliases: Record<string, MacroPhase> = {
 };
 
 const macroLabels: Record<MacroPhase, string> = {
-  initialization: "初始化阶段",
-  research_loop: "半自动循环研究阶段",
-  final_product: "最终产物阶段",
+  initialization: "Initialization",
+  research_loop: "Research Loop",
+  final_product: "Final Product",
 };
 
 const internalPhaseLabels: Record<string, string> = {
-  initialization_intake: "材料与目标 intake",
-  loop_acceptance_gate: "验收门",
-  loop_plan_alignment: "下一步规划对齐",
-  loop_user_decision: "用户决策记录",
-  loop_execute_analyze: "执行与分析",
-  final_product_selection: "最终产物选择",
-  final_product_production: "最终产物生产",
-  export_release_gate: "导出发布确认",
+  initialization_intake: "Material intake",
+  loop_acceptance_gate: "Acceptance gate",
+  loop_plan_alignment: "Plan alignment",
+  loop_user_decision: "User decision",
+  loop_execute_analyze: "Execution and analysis",
+  final_product_selection: "Final product selection",
+  final_product_production: "Final product production",
+  export_release_gate: "Export and release gate",
 };
 
 export function normalizeMacroPhase(value?: string | null): MacroPhase {
@@ -41,6 +41,6 @@ export function macroPhaseLabel(value?: string | null): string {
 }
 
 export function internalPhaseLabel(value?: string | null): string {
-  if (!value) return "未记录内部阶段";
+  if (!value) return "No internal phase recorded";
   return internalPhaseLabels[value] ?? value;
 }

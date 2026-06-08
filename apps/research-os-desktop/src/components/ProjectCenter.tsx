@@ -57,7 +57,7 @@ export function ProjectCenter() {
       const selected = await chooseRosprojSavePath(projectFile);
       if (selected) setProjectFile(selected);
     } catch {
-      setDialogNotice("当前不是 Tauri 桌面运行环境，无法打开系统文件选择器；请手动输入 .rosproj 路径。");
+      setDialogNotice("This is not the Tauri desktop runtime, so the system file picker is unavailable. Enter the .rosproj path manually.");
     }
   }
 
@@ -67,7 +67,7 @@ export function ProjectCenter() {
       const selected = await selectExistingRosproj();
       if (selected) setOpenPath(selected);
     } catch {
-      setDialogNotice("当前不是 Tauri 桌面运行环境，无法打开系统文件选择器；请手动输入已有 .rosproj 路径。");
+      setDialogNotice("This is not the Tauri desktop runtime, so the system file picker is unavailable. Enter an existing .rosproj path manually.");
     }
   }
 
@@ -76,16 +76,16 @@ export function ProjectCenter() {
       <section className="hero-panel">
         <div className="header-copy">
           <p className="eyebrow">Research OS Desktop</p>
-          <h1>研究项目工作台</h1>
-          <p className="hero-copy">创建或打开 `.rosproj` 项目文件。应用会把同名目录作为沙箱，并由 sidecar 统一治理 Codex、权限、归档和最终产物。</p>
+          <h1>Research Project Workbench</h1>
+          <p className="hero-copy">Create or open a `.rosproj` file. The app creates a sibling project directory as the sandbox and lets the sidecar govern Codex, permissions, archives, and final products.</p>
         </div>
         <div className="status-card" role="status">
           <Server size={18} aria-hidden="true" />
           <div>
-            <strong>{health.isSuccess ? "Sidecar 已连接" : "等待 sidecar"}</strong>
-            <small>{health.isSuccess ? "本地运行时可用" : "如果长时间未连接，请重启应用或检查 Python 环境。"}</small>
+            <strong>{health.isSuccess ? "Sidecar connected" : "Waiting for sidecar"}</strong>
+            <small>{health.isSuccess ? "Local runtime is available" : "If this persists, restart the app or check the Python sidecar environment."}</small>
           </div>
-          <button className="icon-button" type="button" aria-label="刷新 sidecar 状态" onClick={() => health.refetch()}>
+          <button className="icon-button" type="button" aria-label="Refresh sidecar status" onClick={() => health.refetch()}>
             <RefreshCw size={16} />
           </button>
         </div>
@@ -96,26 +96,26 @@ export function ProjectCenter() {
           <div className="section-heading">
             <Plus size={18} aria-hidden="true" />
             <div>
-              <h2>新建项目</h2>
-              <p>项目目录会自动生成 Research OS 结构和初始 git commit。</p>
+              <h2>Create Project</h2>
+              <p>The app initializes the Research OS directory structure, generated project context, and the first git commit.</p>
             </div>
           </div>
           <label className="field">
-            <span>项目名称</span>
+            <span>Project name</span>
             <input value={name} onChange={(event) => setName(event.target.value)} />
           </label>
           <label className="field">
-            <span>.rosproj 路径</span>
+            <span>.rosproj path</span>
             <input value={projectFile} onChange={(event) => setProjectFile(event.target.value)} aria-invalid={!createPathValid} />
           </label>
           <button className="secondary-action" type="button" onClick={chooseCreatePath}>
             <FolderOpen size={16} aria-hidden="true" />
-            选择保存位置
+            Choose save location
           </button>
-          {!createPathValid ? <p className="hint-text">路径应以 `.rosproj` 结尾；项目目录会使用同名文件夹。</p> : null}
+          {!createPathValid ? <p className="hint-text">The path should end with `.rosproj`; the project directory will use the same base name.</p> : null}
           <button className="primary-action" type="button" onClick={() => create.mutate()} disabled={create.isPending || !createPathValid || !name.trim()}>
             <Plus size={16} aria-hidden="true" />
-            {create.isPending ? "正在创建" : "创建项目"}
+            {create.isPending ? "Creating" : "Create project"}
           </button>
           {create.error ? <p className="error-text">{create.error.message}</p> : null}
         </section>
@@ -124,29 +124,29 @@ export function ProjectCenter() {
           <div className="section-heading">
             <FolderOpen size={18} aria-hidden="true" />
             <div>
-              <h2>打开项目</h2>
-              <p>打开已有 `.rosproj` 后恢复 Research OS 状态和最近 Codex thread。</p>
+              <h2>Open Project</h2>
+              <p>Open an existing `.rosproj` to resume Research OS state and the most recent Codex thread.</p>
             </div>
           </div>
           <label className="field">
-            <span>.rosproj 路径</span>
+            <span>.rosproj path</span>
             <input value={openPath} onChange={(event) => setOpenPath(event.target.value)} placeholder="D:/ResearchOSProjects/demo.rosproj" aria-invalid={Boolean(openPath) && !openPathValid} />
           </label>
           <div className="inline-actions">
             <button className="secondary-action" type="button" onClick={chooseOpenPath}>
               <FolderOpen size={16} aria-hidden="true" />
-              选择项目文件
+              Choose project file
             </button>
             <button className="secondary-action" type="button" onClick={() => open.mutate()} disabled={open.isPending || !openPathValid}>
               <FolderOpen size={16} aria-hidden="true" />
-              {open.isPending ? "正在打开" : "打开项目"}
+              {open.isPending ? "Opening" : "Open project"}
             </button>
           </div>
           {dialogNotice ? <p className="hint-text">{dialogNotice}</p> : null}
           {open.error ? <p className="error-text">{open.error.message}</p> : null}
-          <div className="recent-list" aria-label="最近项目">
-            <strong>最近项目</strong>
-            {recent.length === 0 ? <p className="muted">暂无最近项目。</p> : null}
+          <div className="recent-list" aria-label="Recent projects">
+            <strong>Recent projects</strong>
+            {recent.length === 0 ? <p className="muted">No recent projects yet.</p> : null}
             {recent.map((path) => (
               <button className="recent-item" type="button" key={path} onClick={() => setOpenPath(path)}>
                 {path}

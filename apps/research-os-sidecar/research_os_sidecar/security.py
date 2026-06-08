@@ -24,6 +24,16 @@ SECRET_PATH_PARTS = {
     "credentials",
     "secrets",
 }
+SKIP_IMPORT_PATH_PARTS = {
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "__pycache__",
+    "node_modules",
+    "dist",
+    "target",
+}
 SAFE_GIT_COMMANDS = {
     "status",
     "diff",
@@ -100,6 +110,10 @@ def import_directory_to_project(source_dir: Path, project_root: Path, target_sub
     for source in sorted(path for path in source_dir.rglob("*") if path.is_file()):
         relative = source.relative_to(source_dir)
         relative_name = relative.as_posix()
+        skip_reason = _skip_import_reason(relative)
+        if skip_reason:
+            excluded.append({"source_name": relative_name, "reason": skip_reason})
+            continue
         try:
             assert_no_secret_path(source)
             scan_text_for_secrets(source)
@@ -189,6 +203,14 @@ def classify_material_role(relative_path: Path) -> str:
     if suffix in {".png", ".jpg", ".jpeg", ".svg", ".webp"}:
         return "figure_or_screenshot"
     return "other_material"
+
+
+def _skip_import_reason(relative_path: Path) -> str | None:
+    parts = {part.lower() for part in relative_path.parts}
+    skipped = parts.intersection(SKIP_IMPORT_PATH_PARTS)
+    if skipped:
+        return f"Skipped operational or build directory: {sorted(skipped)[0]}"
+    return None
 
 
 def _manifest_warnings(imported: list[dict[str, Any]], excluded: list[dict[str, str]]) -> list[str]:

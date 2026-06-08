@@ -52,6 +52,7 @@ Require-Text "apps\research-os-desktop\src-tauri\src\main.rs" "--seed-root"
 Require-Text "apps\research-os-desktop\src-tauri\src\main.rs" "tauri_plugin_dialog"
 Require-Text "apps\research-os-desktop\src\App.tsx" "submitIntake"
 Require-Text "apps\research-os-desktop\src\App.tsx" "MaterialManifestCard"
+Require-Text "apps\research-os-desktop\src\App.tsx" "Research plan generated"
 Require-Text "apps\research-os-desktop\src\App.tsx" "importDirectory"
 Require-Text "apps\research-os-desktop\src\tauriDialog.ts" "selectMaterialDirectory"
 Require-Text "apps\research-os-desktop\src\App.tsx" "FinalProductModal"
@@ -73,6 +74,7 @@ Require-Text "apps\research-os-sidecar\research_os_sidecar\runtime_service.py" "
 Require-Text "apps\research-os-sidecar\research_os_sidecar\security.py" "Path escapes project sandbox"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\server.py" "ALLOWED_ORIGINS"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\server.py" "/api/workflow-gap"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\server.py" "/api/research-plan/write"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\server.py" "/api/paper-artifacts/write"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\server.py" "/api/import-directory"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\server.py" "port is already in use"
@@ -80,6 +82,9 @@ Require-Text "apps\research-os-sidecar\research_os_sidecar\security.py" "import_
 Require-Text "apps\research-os-sidecar\research_os_sidecar\security.py" "research-material-manifest-v1"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\security.py" "classify_material_role"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "material_manifest"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "write_research_plan"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "Do you accept the current research plan"
+Require-Text "apps\research-os-desktop\src\api.ts" "writeResearchPlan"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\paper_artifact_service.py" "PUBLIC/paper/"
 Require-Text "apps\research-os-desktop\src\components\PaperWorkflowPanel.tsx" "artifact_status"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "PUBLIC"
@@ -87,6 +92,7 @@ Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "re
 Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "CONTROL"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "intake_queue"
 Require-Text "apps\research-os-sidecar\research_os_sidecar\state_service.py" "submission_workflow"
+Require-Text "apps\research-os-sidecar\research_os_sidecar\project_service.py" "Structured Research Plan"
 Require-Text "docs\desktop-app.md" ".rosproj"
 Require-Text "PUBLIC\dashboard_data.json" "Desktop App"
 Require-Text "docs\doc_map.yaml" "desktop_app"
@@ -119,6 +125,12 @@ foreach ($rootPath in $desktopTextRoots) {
     foreach ($regex in $mojibakeAsciiRegexes) {
       if ($text -match $regex) {
         throw "Desktop UI text contains mojibake-like ASCII fallback matching '$regex': $($_.FullName)"
+      }
+    }
+    foreach ($char in $text.ToCharArray()) {
+      $codePoint = [int][char]$char
+      if (($codePoint -ge 0x4E00 -and $codePoint -le 0x9FFF) -or ($codePoint -ge 0x3400 -and $codePoint -le 0x4DBF)) {
+        throw "Desktop UI text contains CJK character U+$('{0:X4}' -f $codePoint) in English-mode workflow: $($_.FullName)"
       }
     }
   }

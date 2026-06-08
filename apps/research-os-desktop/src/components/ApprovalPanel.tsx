@@ -8,7 +8,7 @@ function riskLevel(approval: Approval) {
 }
 
 function riskReason(approval: Approval) {
-  return typeof approval.risk === "string" ? "需要研究者确认后才能继续。" : approval.risk?.reason ?? "需要研究者确认后才能继续。";
+  return typeof approval.risk === "string" ? "Researcher confirmation is required before continuing." : approval.risk?.reason ?? "Researcher confirmation is required before continuing.";
 }
 
 function approvalSummary(approval: Approval) {
@@ -26,7 +26,7 @@ function approvalScope(approval: Approval) {
   if (typeof params.cwd === "string") return params.cwd;
   if (typeof params.path === "string") return params.path;
   if (typeof params.file === "string") return params.file;
-  return "项目沙箱或受控权限范围";
+  return "Project sandbox or controlled permission scope";
 }
 
 export function ApprovalPanel() {
@@ -43,35 +43,35 @@ export function ApprovalPanel() {
       <div className="section-heading">
         <ShieldCheck size={18} aria-hidden="true" />
         <div>
-          <h2>审批队列</h2>
-          <p>Codex 的命令、文件和权限请求必须在这里确认；超时默认拒绝。</p>
+          <h2>Approval Queue</h2>
+          <p>Codex command, file, and permission requests must be confirmed here. Timeouts default to decline.</p>
         </div>
       </div>
-      {approvals.isLoading ? <p className="muted">正在读取审批队列...</p> : null}
-      {(approvals.data?.approvals ?? []).length === 0 ? <p className="empty-state">当前没有待确认请求。高风险命令、外部写回和凭据访问会出现在这里。</p> : null}
+      {approvals.isLoading ? <p className="muted">Loading approval queue...</p> : null}
+      {(approvals.data?.approvals ?? []).length === 0 ? <p className="empty-state">No pending approval requests. High-risk commands, external writeback, and credential access will appear here.</p> : null}
       <div className="approval-list">
         {(approvals.data?.approvals ?? []).map((approval) => (
           <article className="approval-row" key={approval.approval_id}>
             <div className="approval-copy">
               <div className="approval-title-row">
-                <strong>{approval.method || "权限请求"}</strong>
+                <strong>{approval.method || "Permission request"}</strong>
                 <span className={`risk-badge risk-${riskLevel(approval)}`}>{riskLevel(approval)}</span>
               </div>
               <p>{riskReason(approval)}</p>
               <code>{approvalSummary(approval)}</code>
-              <small>作用范围：{approvalScope(approval)}</small>
+              <small>Scope: {approvalScope(approval)}</small>
             </div>
             <div className="approval-actions">
               <button type="button" className="secondary-action" onClick={() => decide.mutate({ approvalId: approval.approval_id, decision: "decline" })}>
                 <ShieldX size={14} aria-hidden="true" />
-                拒绝本次
+                Decline once
               </button>
               <button type="button" className="primary-action" onClick={() => decide.mutate({ approvalId: approval.approval_id, decision: "accept" })}>
                 <ShieldCheck size={14} aria-hidden="true" />
-                允许一次
+                Allow once
               </button>
               <button type="button" className="secondary-action" onClick={() => decide.mutate({ approvalId: approval.approval_id, decision: "cancel" })}>
-                取消队列
+                Cancel queue
               </button>
             </div>
           </article>

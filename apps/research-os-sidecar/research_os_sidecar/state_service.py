@@ -1,96 +1,101 @@
 ﻿from __future__ import annotations
 
+import re
 from typing import Any
 
 from .common import append_jsonl, new_id, now_iso, read_json, write_json
+from .security import SECRET_RE, SecurityError
+
+
+CONTROL_CHAR_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
 DEFAULT_CHOICE_PROMPTS = [
     {
         "prompt_id": "CP-INITIALIZATION-MATERIAL-SCOPE",
         "stage": "initialization_intake",
-        "question": "本轮初始化应如何理解这批材料？",
+        "question": "How should Research OS interpret this initialization material bundle?",
         "recommended_option": "whole_folder_research_plan",
-        "why_recommended": "当前输入包含草稿、投稿要求、模板和示例论文，应先作为完整材料包生成研究计划，而不是直接进入最终产物阶段。",
+        "why_recommended": "The input includes drafts, submission requirements, templates, and example papers, so the app should first generate a folder-wide research plan instead of entering final-product production.",
         "options": [
             {
                 "id": "whole_folder_research_plan",
-                "label": "完整材料包优先",
-                "description": "先识别全部文件角色、证据缺口、证明风险和期刊要求，再形成研究计划。",
+                "label": "Use the full bundle",
+                "description": "Identify file roles, evidence gaps, proof risks, and venue requirements before forming the research plan.",
                 "is_recommended": True,
             },
             {
                 "id": "draft_first",
-                "label": "草稿诊断优先",
-                "description": "先阅读主论文草稿，但仍保留模板、示例论文和附属文件作为上下文。",
+                "label": "Diagnose the draft first",
+                "description": "Read the main paper draft first while keeping templates, examples, and supporting files as context.",
             },
             {
                 "id": "venue_first",
-                "label": "期刊要求优先",
-                "description": "先核查 Neural Networks 投稿规则、模板和示例论文写法，再反推研究计划。",
+                "label": "Start from venue fit",
+                "description": "Check Neural Networks rules, template, and comparable-paper style before deriving the research plan.",
             },
         ],
         "free_form_enabled": True,
-        "free_form_label": "自然语言补充",
-        "free_form_placeholder": "补充这批文件中最重要、最可信或最容易被忽略的材料。",
+        "free_form_label": "Natural-language additions",
+        "free_form_placeholder": "Name the most important, reliable, or easy-to-miss files in this bundle.",
         "requires_human_response": True,
     },
     {
         "prompt_id": "CP-INITIALIZATION-SOURCE-VERIFICATION",
         "stage": "initialization_intake",
-        "question": "来源真实性核查应采用哪种严格度？",
+        "question": "How strict should source-authenticity verification be?",
         "recommended_option": "strict_online",
-        "why_recommended": "投稿论文不能依赖记忆引用；每条引用、期刊规则和模板来源都应有 DOI、arXiv、publisher 或官方页面证据。",
+        "why_recommended": "A submission manuscript cannot rely on memory citations; every citation, venue rule, and template source needs DOI, arXiv, publisher, or official-page evidence.",
         "options": [
             {
                 "id": "strict_online",
-                "label": "逐条联网核查",
-                "description": "所有投稿规则和引用都记录 URL、访问日期、来源类型和核查状态。",
+                "label": "Verify every source online",
+                "description": "Record URL, access date, source type, and verification status for all venue rules and references.",
                 "is_recommended": True,
             },
             {
                 "id": "core_only",
-                "label": "先核核心来源",
-                "description": "先核期刊规则、模板和核心参考文献，次要文献后补。",
+                "label": "Verify core sources first",
+                "description": "First verify venue rules, templates, and core references, then complete secondary references later.",
             },
             {
                 "id": "local_first",
-                "label": "先整理本地材料",
-                "description": "先整理本地 PDF/BibTeX 和示例论文，再统一联网补证据。",
+                "label": "Organize local sources first",
+                "description": "First reconcile local PDFs, BibTeX, and example papers, then add online evidence in one pass.",
             },
         ],
         "free_form_enabled": True,
-        "free_form_label": "自然语言补充",
-        "free_form_placeholder": "补充必须核查的网站、文献范围、不可接受来源或引用风格要求。",
+        "free_form_label": "Natural-language additions",
+        "free_form_placeholder": "Add websites, literature scope, unacceptable source types, or citation-style constraints.",
         "requires_human_response": True,
     },
     {
         "prompt_id": "CP-INITIALIZATION-RESEARCH-PLAN",
         "stage": "initialization_intake",
-        "question": "进入研究循环前，优先产出哪类研究计划？",
+        "question": "What research plan should be produced before entering the loop?",
         "recommended_option": "proof_and_submission_plan",
-        "why_recommended": "理论论文需要同时锁定证明义务、相关工作定位、期刊适配和最终投稿包路径。",
+        "why_recommended": "A theoretical submission needs proof obligations, related-work positioning, venue fit, and the final submission-package path to be aligned together.",
         "options": [
             {
                 "id": "proof_and_submission_plan",
-                "label": "证明与投稿计划",
-                "description": "同时规划模型定义、定理证明、引用核查、写作结构和最终投稿材料。",
+                "label": "Proof and submission plan",
+                "description": "Plan model definitions, theorem proof route, citation verification, writing structure, and final submission materials together.",
                 "is_recommended": True,
             },
             {
                 "id": "proof_first",
-                "label": "证明风险优先",
-                "description": "先审计模型假设、层数/宽度边界、构造细节和潜在反例。",
+                "label": "Proof risk first",
+                "description": "Audit model assumptions, depth/width bounds, construction details, and possible counterexamples before writing.",
             },
             {
                 "id": "novelty_first",
-                "label": "创新定位优先",
-                "description": "先对照 arithmetic circuits、polynomial networks 和 approximation theory 梳理贡献边界。",
+                "label": "Novelty positioning first",
+                "description": "Map contributions against arithmetic circuits, polynomial networks, and approximation theory before proof polishing.",
             },
         ],
         "free_form_enabled": True,
-        "free_form_label": "自然语言补充",
-        "free_form_placeholder": "补充你希望研究计划特别强调的证明、写作、投稿或审稿攻防目标。",
+        "free_form_label": "Natural-language additions",
+        "free_form_placeholder": "Add proof, writing, submission, or rebuttal-review priorities for the research plan.",
         "requires_human_response": True,
     },
 ]
@@ -314,6 +319,59 @@ class ResearchStateService:
         write_json(root / "PUBLIC" / "research_state.json", state)
         return response
 
+    def write_research_plan(self, payload: dict[str, Any]) -> dict[str, Any]:
+        root = self._project_root_provider()
+        content = str(payload.get("content") or "").strip()
+        summary = str(payload.get("summary") or "").strip()
+        if not content:
+            raise ValueError("Research plan content is required.")
+        self._validate_public_text(content, "research plan")
+        self._validate_public_text(summary, "research plan summary")
+
+        plan_id = new_id("RP")
+        plan_record = {
+            "research_plan_id": plan_id,
+            "created_at": now_iso(),
+            "summary": summary or "Research plan generated from initialization materials.",
+            "path": "PUBLIC/research_plan.md",
+            "json_path": "PUBLIC/research_plan.json",
+            "source_manifest": self._material_manifest_summary(root),
+            "acceptance_required": True,
+            "status": "ready_for_researcher_acceptance",
+            "next_actions": payload.get("next_actions", []),
+            "known_gaps": payload.get("known_gaps", []),
+        }
+        (root / "PUBLIC").mkdir(parents=True, exist_ok=True)
+        (root / "PUBLIC" / "research_plan.md").write_text(content + "\n", encoding="utf-8")
+        write_json(root / "PUBLIC" / "research_plan.json", plan_record)
+
+        state = read_json(root / "PUBLIC" / "research_state.json", self._default_research_state())
+        state.update(
+            {
+                "schema_version": "research-state-v1",
+                "updated_at": now_iso(),
+                "macro_phase": "research_loop",
+                "internal_phase": "loop_acceptance_gate",
+                "status": "research_plan_ready_for_acceptance",
+                "pending_user_confirmation": True,
+                "research_plan": plan_record,
+                "choice_prompts": [self._research_plan_acceptance_prompt()],
+            }
+        )
+        write_json(root / "PUBLIC" / "research_state.json", state)
+        self._sync_project_phase("research_loop", "loop_acceptance_gate")
+        append_jsonl(
+            root / "PROVENANCE" / "run_manifest.jsonl",
+            {
+                "run_id": f"RUN-{plan_id}",
+                "timestamp": now_iso(),
+                "status": "research_plan_written",
+                "privacy_level": "public",
+                "outputs": ["PUBLIC/research_plan.md", "PUBLIC/research_plan.json", "PUBLIC/research_state.json"],
+            },
+        )
+        return {"plan": plan_record, "state": state}
+
     def record_workflow_gap(self, payload: dict[str, Any]) -> dict[str, Any]:
         root = self._project_root_provider()
         description = str(payload.get("description") or "").strip()
@@ -348,6 +406,43 @@ class ResearchStateService:
 
     def _material_manifest_summary(self, root) -> dict[str, Any] | None:
         return read_json(root / "PUBLIC" / "material_manifest_summary.json", None)
+
+    def _validate_public_text(self, text: str, label: str) -> None:
+        if SECRET_RE.search(text):
+            raise SecurityError(f"Secret-like content detected in {label}.")
+        if CONTROL_CHAR_RE.search(text):
+            raise SecurityError(f"Control character detected in {label}.")
+
+    def _research_plan_acceptance_prompt(self) -> dict[str, Any]:
+        return {
+            "prompt_id": "CP-RESEARCH-PLAN-ACCEPTANCE",
+            "stage": "loop_acceptance_gate",
+            "question": "Do you accept the current research plan and enter the semi-automated research loop?",
+            "recommended_option": "accept_with_audit",
+            "why_recommended": "The plan is based on the full material bundle, but a theoretical paper still needs source verification, proof audit, and rebuttal-style review records.",
+            "options": [
+                {
+                    "id": "accept_with_audit",
+                    "label": "Accept and enter research loop",
+                    "description": "Use this plan as the baseline and run source verification, proof audit, and novelty positioning next.",
+                    "is_recommended": True,
+                },
+                {
+                    "id": "revise_plan",
+                    "label": "Revise the plan first",
+                    "description": "Point out missing sections or goal drift and stay at the acceptance gate until revision is complete.",
+                },
+                {
+                    "id": "expand_materials",
+                    "label": "Add more materials first",
+                    "description": "Import more drafts, notes, templates, example papers, or data before regenerating the plan.",
+                },
+            ],
+            "free_form_enabled": True,
+            "free_form_label": "Natural-language additions",
+            "free_form_placeholder": "Add acceptance notes, revision requests, or next-loop priorities.",
+            "requires_human_response": True,
+        }
 
     def _default_research_state(self) -> dict[str, Any]:
         return {

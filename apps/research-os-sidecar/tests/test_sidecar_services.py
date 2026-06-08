@@ -65,8 +65,12 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertIn("Do not invent citations", generated_agents)
             self.assertIn("research-os-execution-harness", generated_agents)
             self.assertTrue((project_root / "CONTROL" / "project_context.md").exists())
+            (project_root / "AGENTS.md").write_text("legacy context\n", encoding="utf-8")
             reopened = service.open_project(project_file)
             self.assertEqual(reopened["schema_version"], "research-os-project-v1")
+            refreshed_agents = (project_root / "AGENTS.md").read_text(encoding="utf-8")
+            self.assertIn("Structured Research Plan", refreshed_agents)
+            self.assertIn("Do not invent citations", refreshed_agents)
             self.assertNotIn("api_key", json.dumps(reopened).lower())
 
     def test_desktop_intake_and_choice_response_use_new_state_paths(self) -> None:
@@ -130,6 +134,37 @@ class SidecarServiceTests(unittest.TestCase):
             readback = state.read_state()
             gaps = readback["submission_workflow"]["workflow_gaps"]
             self.assertEqual(gaps[-1]["description"], "source verification table needs per-reference acceptance")
+
+    def test_research_plan_write_moves_to_acceptance_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            root = Path(project["project_root"])
+            state = ResearchStateService(projects.require_project_root, projects.update_project)
+
+            result = state.write_research_plan(
+                {
+                    "summary": "folder-wide plan",
+                    "content": "# Research Plan\n\nUse the full material manifest before writing.",
+                    "next_actions": ["verify sources", "audit proof"],
+                }
+            )
+
+            self.assertEqual(result["state"]["internal_phase"], "loop_acceptance_gate")
+            self.assertTrue((root / "PUBLIC" / "research_plan.md").exists())
+            self.assertTrue((root / "PUBLIC" / "research_plan.json").exists())
+            prompts = result["state"]["choice_prompts"]
+            self.assertEqual(prompts[0]["prompt_id"], "CP-RESEARCH-PLAN-ACCEPTANCE")
+            readback = json.loads(Path(project["project_file"]).read_text(encoding="utf-8"))
+            self.assertEqual(readback["current_macro_phase"], "research_loop")
+            self.assertEqual(readback["current_phase"], "loop_acceptance_gate")
+
+            with self.assertRaises(SecurityError):
+                state.write_research_plan({"content": "api_key=secret"})
 
     def test_final_product_selection_syncs_project_phase(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -289,6 +324,8 @@ class SidecarServiceTests(unittest.TestCase):
             (source / "notes" / "proof_audit.md").write_text("proof notes", encoding="utf-8")
             (source / "secrets").mkdir()
             (source / "secrets" / "key.txt").write_text("api_key=secret", encoding="utf-8")
+            (source / ".git" / "objects").mkdir(parents=True)
+            (source / ".git" / "objects" / "noise").write_text("git object", encoding="utf-8")
 
             result = import_directory_to_project(source, root, "PRIVATE/intake/source_materials")
             roles = {item["role"] for item in result["imported_files"]}
@@ -299,13 +336,14 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertIn("example_paper", roles)
             self.assertIn("slide_deck", roles)
             self.assertIn("proof_audit", roles)
-            self.assertEqual(result["excluded_count"], 1)
+            self.assertEqual(result["excluded_count"], 2)
             self.assertIn("sensitive or secret-like", " ".join(result["warnings"]))
+            self.assertIn("operational or build", json.dumps(result["excluded_files"], ensure_ascii=False))
 
             state = ResearchStateService(projects.require_project_root).read_state()
             manifest = state["material_manifest"]
             self.assertEqual(manifest["file_count"], 6)
-            self.assertEqual(manifest["excluded_count"], 1)
+            self.assertEqual(manifest["excluded_count"], 2)
             self.assertEqual(manifest["role_counts"]["manuscript_draft"], 1)
             self.assertNotIn("api_key", json.dumps(manifest, ensure_ascii=False).lower())
 
