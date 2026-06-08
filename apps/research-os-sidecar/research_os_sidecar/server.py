@@ -34,13 +34,21 @@ class AppContext:
         self.projects = ProjectService(seed_root)
         self.profiles = ProfileService()
         self.approvals = ApprovalService()
-        self.runtime = RuntimeService(self.projects.require_project_root, self.approvals)
+        self.runtime = RuntimeService(self.projects.require_project_root, self.approvals, self._sync_turn_status)
         self.state = ResearchStateService(self.projects.require_project_root, self.projects.update_project)
         self.paper_artifacts = PaperArtifactService(self.projects.require_project_root, self.projects.update_project)
         self.research_loop_artifacts = ResearchLoopArtifactService(
             self.projects.require_project_root, self.projects.update_project
         )
         self.archives = ArchiveService(self.projects.require_project_root)
+
+    def _sync_turn_status(self, turn_id: str, status: str) -> None:
+        current = self.projects.current_project or {}
+        codex = dict(current.get("codex") or {})
+        if codex.get("last_turn_id") and codex.get("last_turn_id") != turn_id:
+            return
+        codex.update({"last_turn_id": turn_id, "last_status": status})
+        self.projects.update_project({"codex": codex})
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -87,7 +95,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"ok": False, "error": "Use POST for runtime secret loading."}, status=405)
             elif path == "/api/runtime/events":
                 after = int(query.get("after", ["0"])[0])
-                self.send_json(self.context.runtime.list_events(after=after))
+                limit_values = query.get("limit", [])
+                limit = int(limit_values[0]) if limit_values and str(limit_values[0]).strip() else None
+                self.send_json(self.context.runtime.list_events(after=after, limit=limit))
             elif path == "/api/account":
                 self.send_json({"account": self.context.runtime.account()})
             elif path == "/api/models":

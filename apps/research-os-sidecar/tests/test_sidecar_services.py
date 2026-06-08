@@ -78,6 +78,39 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertIn("Do not invent citations", refreshed_agents)
             self.assertNotIn("api_key", json.dumps(reopened).lower())
 
+    def test_project_open_recovers_completed_runtime_status(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            service = ProjectService(template)
+            project = service.create_project("Demo", base / "demo.rosproj")
+            project_file = Path(project["project_file"])
+            project_root = Path(project["project_root"])
+            data = json.loads(project_file.read_text(encoding="utf-8"))
+            data["codex"] = {
+                "thread_id": "thread_test",
+                "last_turn_id": "turn_test",
+                "last_status": "turn_started",
+            }
+            project_file.write_text(json.dumps(data), encoding="utf-8")
+            (project_root / ".research-os" / "runtime_events.jsonl").write_text(
+                json.dumps(
+                    {
+                        "type": "codex_notification",
+                        "method": "turn/completed",
+                        "payload": {"turn": {"id": "turn_test", "status": "completed"}},
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            reopened = service.open_project(project_file)
+
+            self.assertEqual(reopened["codex"]["last_status"], "turn_completed")
+
     def test_desktop_intake_and_choice_response_use_new_state_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
@@ -676,6 +709,38 @@ class SidecarServiceTests(unittest.TestCase):
             self.assertEqual(status["codex_home"], str(codex_home))
             self.assertFalse(status["secret_loaded"])
 
+    def test_runtime_config_status_recovers_existing_provider_without_secret(self) -> None:
+        old_value = os.environ.pop("YUNWU_API_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                codex_home = Path(temp) / "codex_home"
+                profile = {
+                    "profile_id": "yunwu-test",
+                    "label": "Yunwu Test",
+                    "type": "custom_provider",
+                    "provider_id": "yunwu",
+                    "model": "gpt-5.5",
+                    "base_url": "https://yunwu.ai/v1",
+                    "wire_api": "responses",
+                    "reasoning_effort": "xhigh",
+                    "env_key": "YUNWU_API_KEY",
+                    "secret_ref": "env:YUNWU_API_KEY",
+                }
+                RuntimeConfigService(codex_home).prepare_profile(profile, require_secret=False)
+
+                status = RuntimeConfigService(codex_home).status()
+
+                self.assertTrue(status["configured"])
+                self.assertEqual(status["provider_id"], "yunwu")
+                self.assertEqual(status["model"], "gpt-5.5")
+                self.assertEqual(status["reasoning_effort"], "xhigh")
+                self.assertFalse(status["secret_loaded"])
+        finally:
+            if old_value is not None:
+                os.environ["YUNWU_API_KEY"] = old_value
+            else:
+                os.environ.pop("YUNWU_API_KEY", None)
+
     def test_runtime_config_loads_secret_only_to_environment(self) -> None:
         old_value = os.environ.pop("YUNWU_API_KEY", None)
         try:
@@ -771,6 +836,50 @@ class SidecarServiceTests(unittest.TestCase):
                 os.environ.pop("YUNWU_API_KEY", None)
             else:
                 os.environ["YUNWU_API_KEY"] = old_value
+
+    def test_runtime_events_can_be_limited_to_tail(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            service = RuntimeService(lambda: root, ApprovalService(timeout_seconds=0.01))
+            for index in range(5):
+                service._record_event({"type": f"event_{index}"})  # type: ignore[attr-defined]
+
+            tail = service.list_events(limit=2)
+            window = service.list_events(after=2, limit=2)
+
+            self.assertEqual(tail["cursor"], 5)
+            self.assertEqual([event["type"] for event in tail["events"]], ["event_3", "event_4"])
+            self.assertEqual([event["type"] for event in window["events"]], ["event_2", "event_3"])
+
+    def test_runtime_service_reports_completed_turn_status(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            statuses: list[tuple[str, str]] = []
+
+            class Notification:
+                method = "turn/completed"
+                payload = {"ok": True}
+
+            class FakeClient:
+                def register_turn_notifications(self, turn_id: str) -> None:
+                    return None
+
+                def next_turn_notification(self, turn_id: str) -> Notification:
+                    return Notification()
+
+                def unregister_turn_notifications(self, turn_id: str) -> None:
+                    return None
+
+            service = RuntimeService(
+                lambda: root,
+                ApprovalService(timeout_seconds=0.01),
+                on_turn_status=lambda turn_id, status: statuses.append((turn_id, status)),
+            )
+            service._client = FakeClient()  # type: ignore[attr-defined]
+
+            service._drain_turn("turn_test")  # type: ignore[attr-defined]
+
+            self.assertEqual(statuses, [("turn_test", "turn_completed")])
 
     def test_approval_times_out_to_decline(self) -> None:
         approvals = ApprovalService(timeout_seconds=0.01)

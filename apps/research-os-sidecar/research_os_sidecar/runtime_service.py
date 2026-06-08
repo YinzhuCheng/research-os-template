@@ -3,7 +3,7 @@ from __future__ import annotations
 import shutil
 import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from .approval_service import ApprovalService
 from .common import append_jsonl, now_iso
@@ -27,9 +27,15 @@ When a Research OS Desktop or workflow gap blocks reusable progress, record the 
 
 
 class RuntimeService:
-    def __init__(self, project_root_provider, approval_service: ApprovalService) -> None:
+    def __init__(
+        self,
+        project_root_provider,
+        approval_service: ApprovalService,
+        on_turn_status: Callable[[str, str], None] | None = None,
+    ) -> None:
         self._project_root_provider = project_root_provider
         self._approval_service = approval_service
+        self._on_turn_status = on_turn_status
         self._runtime_config = RuntimeConfigService()
         self._client: Any | None = None
         self._events: list[dict[str, Any]] = []
@@ -158,9 +164,15 @@ class RuntimeService:
         self._record_event({"type": "turn_interrupted", "payload": payload})
         return payload
 
-    def list_events(self, after: int = 0) -> dict[str, Any]:
+    def list_events(self, after: int = 0, limit: int | None = None) -> dict[str, Any]:
         with self._lock:
-            events = self._events[after:]
+            if limit is not None and limit > 0 and after <= 0:
+                start = max(0, len(self._events) - limit)
+                events = self._events[start:]
+            else:
+                events = self._events[after:]
+                if limit is not None and limit > 0:
+                    events = events[:limit]
             cursor = len(self._events)
         return {"cursor": cursor, "events": events}
 
@@ -173,9 +185,11 @@ class RuntimeService:
                 payload = self._model_to_dict(notification.payload)
                 self._record_event({"type": "codex_notification", "method": notification.method, "payload": payload})
                 if notification.method == "turn/completed":
+                    self._update_turn_status(turn_id, "turn_completed")
                     break
         except Exception as exc:  # noqa: BLE001
             self._record_event({"type": "runtime_error", "error": str(exc), "turn_id": turn_id, "status": "needs_repair"})
+            self._update_turn_status(turn_id, "needs_repair")
         finally:
             client.unregister_turn_notifications(turn_id)
 
@@ -212,6 +226,21 @@ class RuntimeService:
             append_jsonl(self._project_root_provider() / ".research-os" / "runtime_events.jsonl", event)
         except Exception:
             pass
+
+    def _update_turn_status(self, turn_id: str, status: str) -> None:
+        if self._on_turn_status is None:
+            return
+        try:
+            self._on_turn_status(turn_id, status)
+        except Exception as exc:  # noqa: BLE001
+            self._record_event(
+                {
+                    "type": "runtime_status_sync_error",
+                    "turn_id": turn_id,
+                    "status": status,
+                    "error": str(exc),
+                }
+            )
 
     def _sdk_available(self) -> bool:
         try:

@@ -34,7 +34,7 @@ export const api = {
   environment: () => request<{ codex_cli: string | null; codex_sdk_available: boolean; adapter: string; runtime_config?: RuntimeConfigStatus }>("/api/runtime/environment"),
   loadRuntimeSecret: (profile_id: string | undefined, key_file_path: string) =>
     request<{ runtime_config: RuntimeConfigStatus }>("/api/runtime/load-secret", { method: "POST", body: JSON.stringify({ profile_id, key_file_path }) }),
-  runtimeEvents: (after = 0) => request<{ cursor: number; events: Array<Record<string, unknown>> }>(`/api/runtime/events?after=${after}`),
+  runtimeEvents: (after = 0, limit = 80) => request<{ cursor: number; events: Array<Record<string, unknown>> }>(`/api/runtime/events?after=${after}&limit=${limit}`),
   models: () => request<Record<string, unknown>>("/api/models"),
   startThread: (profile_id?: string, model?: string) =>
     request<Record<string, unknown>>("/api/runtime/start-thread", { method: "POST", body: JSON.stringify({ profile_id, model }) }),

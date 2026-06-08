@@ -61,6 +61,9 @@ class RuntimeConfigService:
         if self._active_runtime:
             runtime = {**self._active_runtime, "secret_loaded": bool(os.environ.get(self._active_runtime["env_key"]))}
             return self.redacted(runtime)
+        recovered = self._status_from_existing_config()
+        if recovered:
+            return self.redacted(recovered)
         return {
             "codex_home": str(self.codex_home),
             "configured": (self.codex_home / "config.toml").exists(),
@@ -83,6 +86,50 @@ class RuntimeConfigService:
             "model": runtime.get("model"),
             "reasoning_effort": runtime.get("reasoning_effort"),
             "secret_loaded": bool(runtime.get("secret_loaded")),
+        }
+
+    def _status_from_existing_config(self) -> dict[str, Any] | None:
+        config = self.codex_home / "config.toml"
+        if not config.exists():
+            return None
+        try:
+            text = config.read_text(encoding="utf-8")
+        except OSError:
+            return None
+        values: dict[str, str] = {}
+        in_provider_section = False
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("[model_providers.") and line.endswith("]"):
+                in_provider_section = True
+                continue
+            if "=" not in line:
+                continue
+            key, value = [part.strip() for part in line.split("=", 1)]
+            value = _toml_unescape(value.strip().strip('"'))
+            if not in_provider_section and key in {"model", "model_provider", "model_reasoning_effort"}:
+                values[key] = value
+            elif in_provider_section and key in {"name", "base_url", "env_key", "wire_api"}:
+                values[key] = value
+        provider_id = values.get("model_provider")
+        model = values.get("model")
+        if not provider_id and not model:
+            return None
+        env_key = values.get("env_key") or DEFAULT_YUNWU_ENV_KEY
+        return {
+            "configured": True,
+            "codex_home": str(self.codex_home),
+            "codex_profile": provider_id,
+            "provider_id": provider_id,
+            "provider_name": values.get("name") or provider_id,
+            "base_url": values.get("base_url"),
+            "wire_api": values.get("wire_api"),
+            "env_key": env_key,
+            "model": model,
+            "reasoning_effort": values.get("model_reasoning_effort"),
+            "secret_loaded": bool(os.environ.get(env_key)),
         }
 
     def _normalize_profile(self, profile: dict[str, Any]) -> dict[str, Any]:
@@ -164,3 +211,7 @@ class RuntimeConfigService:
 
 def _toml_escape(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _toml_unescape(value: str) -> str:
+    return value.replace('\\"', '"').replace("\\\\", "\\")

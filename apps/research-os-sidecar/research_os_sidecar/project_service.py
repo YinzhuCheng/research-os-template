@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -82,6 +83,7 @@ class ProjectService:
         if not project_root.exists():
             raise ValueError(f"Project root does not exist: {project_root}")
         data["project_root"] = str(project_root)
+        data = self._recover_codex_status_from_runtime_events(project_root, data)
         self._write_generated_context(project_root, data)
         write_json(project_root / ".research-os" / "project.json", data)
         self.current_project = data
@@ -111,6 +113,34 @@ class ProjectService:
 
     def safe_project_path(self, value: str | Path) -> Path:
         return resolve_under(self.require_project_root(), value)
+
+    def _recover_codex_status_from_runtime_events(self, project_root: Path, data: dict[str, Any]) -> dict[str, Any]:
+        codex = dict(data.get("codex") or {})
+        turn_id = codex.get("last_turn_id")
+        if not turn_id or codex.get("last_status") != "turn_started":
+            return data
+        runtime_events = project_root / ".research-os" / "runtime_events.jsonl"
+        if not runtime_events.exists():
+            return data
+        recovered_status: str | None = None
+        try:
+            for line in runtime_events.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                event = json.loads(line)
+                if event.get("type") == "runtime_error" and event.get("turn_id") == turn_id:
+                    recovered_status = "needs_repair"
+                elif event.get("type") == "codex_notification" and event.get("method") == "turn/completed":
+                    payload_turn = ((event.get("payload") or {}).get("turn") or {})
+                    if payload_turn.get("id") == turn_id:
+                        recovered_status = "turn_completed"
+        except (OSError, json.JSONDecodeError):
+            return data
+        if recovered_status:
+            codex["last_status"] = recovered_status
+            data["codex"] = codex
+            data["updated_at"] = now_iso()
+        return data
 
     def _seed_project(self, project_root: Path) -> None:
         for file_name in SEED_FILES:

@@ -41,6 +41,7 @@ export function RuntimePanel() {
   const events = useQuery({ queryKey: ["runtime-events"], queryFn: () => api.runtimeEvents(0), refetchInterval: 2500 });
   const environment = useQuery({ queryKey: ["runtime-environment"], queryFn: api.environment, retry: false });
   const runtimeConfig = environment.data?.runtime_config;
+  const runtimeConfigured = Boolean(runtimeConfig?.provider_id || runtimeConfig?.model);
   const runtimeReady = Boolean(environment.data?.codex_sdk_available && runtimeConfig?.secret_loaded);
   const loadSecret = useMutation({
     mutationFn: () => api.loadRuntimeSecret(activeProfileId, keyFilePath),
@@ -64,7 +65,13 @@ export function RuntimePanel() {
         <Play size={18} aria-hidden="true" />
         <div>
           <h2>Codex Execution Stream</h2>
-          <p>{runtimeReady ? "Codex SDK is available. Execution still goes through Research OS approvals." : "Codex SDK is missing or unavailable. Configure the runtime before starting real execution."}</p>
+          <p>
+            {runtimeReady
+              ? "Codex SDK is available. Execution still goes through Research OS approvals."
+              : runtimeConfigured
+                ? "Provider settings are detected. Reload the local key into sidecar memory before the next paid Codex turn."
+                : "Codex SDK is missing or unavailable. Configure the runtime before starting real execution."}
+          </p>
         </div>
       </div>
       <div className="runtime-proof">
@@ -75,8 +82,12 @@ export function RuntimePanel() {
       </div>
       {!runtimeReady ? (
         <div className="empty-state action-state">
-          <strong>Research engine is not ready</strong>
-          <p>You can still organize materials, answer alignment questions, and create archives. Real Codex execution needs the Codex SDK plus a loaded provider key.</p>
+          <strong>{runtimeConfigured ? "Provider profile is detected; key is not loaded" : "Research engine is not ready"}</strong>
+          <p>
+            {runtimeConfigured
+              ? "This is expected after a sidecar restart. Keys stay in process memory only, so reload the local key file before continuing a real Yunwu/Codex turn."
+              : "You can still organize materials, answer alignment questions, and create archives. Real Codex execution needs the Codex SDK plus a loaded provider key."}
+          </p>
           <label className="field">
             <span>Local key file path (not saved)</span>
             <input value={keyFilePath} onChange={(event) => setKeyFilePath(event.target.value)} placeholder="Select or paste a local key file path" />
@@ -121,7 +132,7 @@ export function RuntimePanel() {
         <p className="error-text" key={index}>{(error as Error).message}</p>
       ))}
       <div className="event-log" aria-label="Runtime events">
-        {(events.data?.events ?? []).length === 0 ? <p>No runtime events yet. Codex output, tool calls, errors, and recovery state will appear here.</p> : null}
+        {(events.data?.events ?? []).length === 0 ? <p>No runtime events yet. Codex output, tool calls, errors, and recovery state will appear here.</p> : <p className="hint-text">Showing the latest runtime events. Full redacted event history is preserved inside the project.</p>}
         {(events.data?.events ?? []).slice(-8).map((event, index) => (
           <article className="event-card" key={index}>
             <strong>{eventTitle(event)}</strong>
