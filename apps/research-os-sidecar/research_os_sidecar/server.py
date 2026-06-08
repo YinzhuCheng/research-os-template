@@ -15,6 +15,7 @@ from .common import DEFAULT_PORT, public_error
 from .paper_artifact_service import PaperArtifactService
 from .profile_service import ProfileService
 from .project_service import ProjectService
+from .research_loop_artifact_service import ResearchLoopArtifactService
 from .runtime_service import RuntimeService
 from .security import import_directory_to_project, import_file_to_project
 from .state_service import ResearchStateService
@@ -36,6 +37,9 @@ class AppContext:
         self.runtime = RuntimeService(self.projects.require_project_root, self.approvals)
         self.state = ResearchStateService(self.projects.require_project_root, self.projects.update_project)
         self.paper_artifacts = PaperArtifactService(self.projects.require_project_root, self.projects.update_project)
+        self.research_loop_artifacts = ResearchLoopArtifactService(
+            self.projects.require_project_root, self.projects.update_project
+        )
         self.archives = ArchiveService(self.projects.require_project_root)
 
 
@@ -162,6 +166,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"research_plan": self.context.state.write_research_plan(payload)})
             elif path == "/api/paper-artifacts/write":
                 self.send_json({"paper_artifacts": self.context.paper_artifacts.write_artifacts(payload)})
+            elif path == "/api/research-loop-artifacts/write":
+                self.send_json({"research_loop_artifacts": self.context.research_loop_artifacts.write_artifacts(payload)})
             elif path == "/api/import-file":
                 root = self.context.projects.require_project_root()
                 self.send_json({"import": import_file_to_project(Path(str(payload.get("source_path") or "")), root, str(payload.get("target_subdir") or "INBOX/imports"))})

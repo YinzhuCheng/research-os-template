@@ -73,9 +73,13 @@ export interface SubmissionWorkflow {
   article_type?: string;
   target_section?: string;
   status?: string;
+  venue_requirements?: SubmissionWorkflowItem[];
   source_verification?: SubmissionWorkflowItem[];
   proof_audit?: SubmissionWorkflowItem[];
+  claim_evidence?: SubmissionWorkflowItem[];
+  novelty_positioning?: SubmissionWorkflowItem[];
   artifact_status?: PaperArtifactStatus[];
+  research_loop_artifacts?: PaperArtifactStatus[];
   review_rounds?: Array<Record<string, unknown>>;
   workflow_gaps?: Array<Record<string, unknown>>;
 }

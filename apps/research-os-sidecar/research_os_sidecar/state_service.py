@@ -330,6 +330,21 @@ class ResearchStateService:
                 state["pending_user_confirmation"] = True
                 state["choice_prompts"] = [self._research_plan_acceptance_prompt()]
                 self._sync_project_phase("research_loop", "loop_acceptance_gate")
+        elif prompt_id == "CP-RESEARCH-LOOP-ARTIFACT-ACCEPTANCE":
+            if option_id == "accept_and_plan_next":
+                state["macro_phase"] = "research_loop"
+                state["internal_phase"] = "loop_plan_alignment"
+                state["status"] = "research_loop_artifact_accepted_pending_next_alignment"
+                state["pending_user_confirmation"] = True
+                state["choice_prompts"] = [self._next_research_loop_prompt(state.get("submission_workflow", {}))]
+                self._sync_project_phase("research_loop", "loop_plan_alignment")
+            else:
+                state["macro_phase"] = "research_loop"
+                state["internal_phase"] = "loop_acceptance_gate"
+                state["status"] = "research_loop_artifact_revision_requested"
+                state["pending_user_confirmation"] = True
+                state["choice_prompts"] = [self._research_loop_artifact_acceptance_prompt()]
+                self._sync_project_phase("research_loop", "loop_acceptance_gate")
         else:
             state["pending_user_confirmation"] = False
         write_json(root / "PUBLIC" / "research_state.json", state)
@@ -490,6 +505,94 @@ class ResearchStateService:
             "free_form_placeholder": "Add first-loop priorities, constraints, or sources that must be checked.",
             "requires_human_response": True,
         }
+
+    def _research_loop_artifact_acceptance_prompt(self) -> dict[str, Any]:
+        return {
+            "prompt_id": "CP-RESEARCH-LOOP-ARTIFACT-ACCEPTANCE",
+            "stage": "loop_acceptance_gate",
+            "question": "Do you accept the current research-loop audit artifacts?",
+            "recommended_option": "accept_and_plan_next",
+            "why_recommended": "Accepted audit artifacts can govern the next loop or final paper entry.",
+            "options": [
+                {
+                    "id": "accept_and_plan_next",
+                    "label": "Accept and plan next",
+                    "description": "Use the current source, proof, novelty, and claim-evidence records as accepted loop outputs.",
+                    "is_recommended": True,
+                },
+                {
+                    "id": "revise_artifacts",
+                    "label": "Revise artifacts first",
+                    "description": "Repair missing checks and stay at the acceptance gate.",
+                },
+                {
+                    "id": "expand_audit_scope",
+                    "label": "Expand audit scope",
+                    "description": "Add more sources, proof obligations, or reviewer-style checks before accepting.",
+                },
+            ],
+            "free_form_enabled": True,
+            "free_form_label": "Natural-language additions",
+            "free_form_placeholder": "Add acceptance notes, missing checks, or next-loop priorities.",
+            "requires_human_response": True,
+        }
+
+    def _next_research_loop_prompt(self, workflow: dict[str, Any] | None = None) -> dict[str, Any]:
+        blocking = self._workflow_has_blocking_status(workflow or {})
+        recommended = "repair_blocking_gaps" if blocking else "enter_final_product_after_audit"
+        return {
+            "prompt_id": "CP-NEXT-RESEARCH-LOOP",
+            "stage": "loop_plan_alignment",
+            "question": "What should Research OS do after the accepted audit artifacts?",
+            "recommended_option": recommended,
+            "why_recommended": (
+                "The accepted audit still contains blocking or partial items, so the next loop should repair them before final-paper production."
+                if blocking
+                else "The accepted audit has no blocking items, so the next appropriate action is to select the paper final-product track and produce submission files through controlled sidecar routes."
+            ),
+            "options": [
+                {
+                    "id": "repair_blocking_gaps",
+                    "label": "Repair blocking gaps",
+                    "description": "Stay in the research loop to fix unresolved source, proof, novelty, or claim-evidence issues.",
+                    "is_recommended": blocking,
+                },
+                {
+                    "id": "run_rebuttal_loop",
+                    "label": "Run rebuttal-style review",
+                    "description": "Ask Codex or an external reviewer to attack novelty, proof rigor, venue fit, and clarity before writing.",
+                },
+                {
+                    "id": "enter_final_product_after_audit",
+                    "label": "Enter final paper production",
+                    "description": "Open final-product selection with the accepted audit artifacts as constraints.",
+                    "is_recommended": not blocking,
+                },
+                {
+                    "id": "extend_source_audit",
+                    "label": "Extend source audit",
+                    "description": "Verify more references or replace weak citations before final writing.",
+                },
+            ],
+            "free_form_enabled": True,
+            "free_form_label": "Natural-language additions",
+            "free_form_placeholder": "Add the exact next-loop target, budget, reviewer role, or final-paper constraints.",
+            "requires_human_response": True,
+        }
+
+    def _workflow_has_blocking_status(self, workflow: dict[str, Any]) -> bool:
+        blocking_markers = ("need", "partial", "unverified", "unsupported", "failed", "risk", "revision")
+        for key in ("venue_requirements", "source_verification", "proof_audit", "claim_evidence", "novelty_positioning"):
+            items = workflow.get(key) if isinstance(workflow, dict) else None
+            if not isinstance(items, list):
+                continue
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                status = str(item.get("status") or "").lower()
+                if any(marker in status for marker in blocking_markers):
+                    return True
+        return False
 
     def _default_research_state(self) -> dict[str, Any]:
         return {

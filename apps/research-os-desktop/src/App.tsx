@@ -94,10 +94,20 @@ function MaterialManifestCard({ manifest }: { manifest?: MaterialManifestSummary
 function ResearchPlanStatus({ state }: { state?: Record<string, unknown> }) {
   const plan = state?.research_plan as Record<string, unknown> | undefined;
   if (!plan) return null;
+  const internalPhase = String(state?.internal_phase ?? "");
+  const status = String(state?.status ?? "");
+  let message = "The plan is available as the current research baseline.";
+  if (internalPhase === "loop_acceptance_gate" && status.includes("research_plan_ready")) {
+    message = "The project should remain at the acceptance gate until this plan is accepted or revised.";
+  } else if (status.includes("research_plan_accepted") || internalPhase === "loop_plan_alignment") {
+    message = "The plan has been accepted; use the current loop prompt to repair blockers or plan the next artifact.";
+  } else if (status.includes("revision")) {
+    message = "The plan needs revision before the project can move forward.";
+  }
   return (
     <div className="notice info">
       <ClipboardCheck size={16} aria-hidden="true" />
-      <span>Research plan generated: {String(plan.summary ?? "awaiting researcher acceptance")}. The project should remain at the acceptance gate until this plan is accepted or revised.</span>
+      <span>Research plan generated: {String(plan.summary ?? "awaiting researcher acceptance")}. {message}</span>
     </div>
   );
 }

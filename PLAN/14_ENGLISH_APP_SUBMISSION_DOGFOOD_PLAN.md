@@ -81,7 +81,7 @@ Status: completed
 
 ### Step 4 - Research Loop Before Final Product
 
-Status: pending
+Status: completed
 
 - Use acceptance-gated loops for source verification, proof audit, novelty/venue-fit analysis, and claim-evidence matrix construction.
 - Browse current official venue pages and source metadata where freshness matters.
@@ -89,11 +89,22 @@ Status: pending
 - Improve app/workflow gaps discovered during the run.
 - Commit and push app/provenance changes.
 
+### Step 4b - Repair Blocking Proof And Source Gaps
+
+Status: pending
+
+- Use the accepted Loop 1 audit as the governing diagnostic artifact.
+- Repair the proof semantics by replacing ambiguous "available scalar" language with an affine-readable layer representation invariant.
+- Reprove or weaken depth and width bounds before final-paper production.
+- Expand direct novelty/source checks for polynomial neural networks, product-unit networks, quadratic activations, and arithmetic-circuit comparators.
+- Extract the selected final manuscript citation set and verify every citation online.
+- Commit and push app/provenance changes.
+
 ### Step 5 - Final Paper Production Through App Routes
 
 Status: pending
 
-- Enter final paper track only after the research plan and analysis artifacts are accepted.
+- Enter final paper track only after the research plan, Loop 1 audit, and Step 4b repair artifacts are accepted.
 - Produce the English LaTeX manuscript, appendix/supplement if needed, references, highlights, cover letter, declarations, checklist, source verification report, and proof audit report through sidecar artifact routes.
 - Compile PDF, inspect logs, render screenshots, and run visual QA.
 - Commit and push app/provenance changes, not private raw material.
@@ -132,9 +143,15 @@ Status: pending
 - The app generated and accepted a structured research plan, then advanced to `research_loop / loop_plan_alignment` with prompt `CP-FIRST-RESEARCH-LOOP`.
 - Real app screenshots for the private project were saved under `PRIVATE/projects/neural-network-submission/neural-network-v46-reinit-20260608-094813/PROVENANCE/app_screenshots/step3-reinitialization/`.
 - Step 3 dogfooding found and fixed three app/workflow bugs: sidecar launcher could load stale installed code when using `python -m`, multiple material imports needed aggregate public summaries, and archive preview read stale seed config instead of runtime project phase. Windows long target paths in prior-project import also required long-path-safe directory creation.
+- Step 4 added a first-class research-loop artifact route so source verification, proof audits, novelty positioning, and claim-evidence matrices can be written and accepted without prematurely moving the project to `final_product`.
+- Step 4 Loop 1 verified official venue/policy pages and four starter references through DOI/Crossref, but recorded arXiv API 429 and full-reference extraction as unresolved checks.
+- Step 4 Loop 1 found a blocking proof issue: the draft's gate language treats affine readouts as if they were hidden coordinates. The next loop must formalize affine-readable layer representation, repair gate lemmas, and rederive depth/width bounds before final-paper production.
+- Step 4 dogfooding fixed the next-loop recommendation so accepted audit artifacts with blocking statuses recommend `repair_blocking_gaps`, not final paper production.
+- Step 4 dogfooding also fixed stale research-plan messaging after plan acceptance; the UI now distinguishes pending acceptance from accepted-plan alignment.
 
 ## Validation Log
 
 - 2026-06-08T09:08:01+08:00: Step 1 completed. Added the v4.6 English-app submission plan and updated AGENTS, work order, phase gate, and project metadata to use `en-only` for this workflow. Validation passed: `git diff --check` for touched governance files, `scripts/validate_schemas.ps1`, `scripts/check_resource_guard.ps1`, and `scripts/scan_privacy.ps1`. No Yunwu call, paid API, credential access, raw private material commit, public export, submission, or external writeback was used.
 - 2026-06-08T09:28:12+08:00: Step 2 completed. Converted the active desktop paper workflow surfaces to English, finished the research-plan endpoint and acceptance prompt, upgraded project-open context generation, skipped operational/build directories during material import, updated English tests and checks, and captured screenshots at `apps/research-os-desktop/test-results/researcher-qa/v4.6-english/`. Validation passed: `git diff --check`, `scripts/validate_schemas.ps1`, `scripts/scan_privacy.ps1`, `scripts/check_resource_guard.ps1`, `scripts/check_desktop_app.ps1`, sidecar unittest (17 tests), Python `py_compile`, TypeScript `tsc --noEmit`, Vitest, Playwright desktop/narrow workflow, and Vite production build. No Yunwu call, paid API, credential access, raw private material commit, public export, submission, or external writeback was used.
 - 2026-06-08T09:53:42+08:00: Step 3 completed. Used the current sidecar launcher to create and reopen a fresh private `.rosproj`, imported the full original material folder and prior draft project, submitted intake, answered exactly three initialization prompts, wrote the structured research plan through `/api/research-plan/write`, accepted it through the app gate, and captured real app screenshots. Dogfooding fixes added aggregate material-manifest summaries, long-path-safe import directory creation, acceptance-gate advancement to `loop_plan_alignment`, and archive-preview runtime phase reads. Validation passed: `git diff --check`, `scripts/validate_schemas.ps1`, `scripts/scan_privacy.ps1`, `scripts/check_resource_guard.ps1`, `scripts/check_desktop_app.ps1`, sidecar unittest (20 tests), Python `py_compile`, TypeScript `tsc --noEmit`, Vitest, Playwright desktop/narrow workflow, and Vite production build. No Yunwu call, paid API, credential access, raw private material commit, public export, submission, or external writeback was used.
+- 2026-06-08T10:23:52+08:00: Step 4 Loop 1 completed. Added `/api/research-loop-artifacts/write`, kept audit artifacts inside `research_loop`, displayed venue/source/proof/claim/novelty items in the paper workflow panel, and wrote accepted private loop artifacts for source verification, proof audit, claim-evidence, novelty positioning, and online-source records. Official online checks included the Neural Networks author guide, Elsevier LaTeX instructions, Elsevier generative-AI policy, Crossref DOI metadata for four starter references, and a recorded arXiv API 429 limitation. Validation passed: sidecar unittest (23 tests), Python `py_compile`, TypeScript `tsc --noEmit`, Vitest, Vite production build, `scripts/check_desktop_app.ps1`, and browser screenshot checks. No Yunwu call, paid API, credential access, raw private material commit, public export, submission, or external writeback was used.

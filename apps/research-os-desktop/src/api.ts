@@ -49,6 +49,15 @@ export const api = {
     request<Record<string, unknown>>("/api/workflow-gap", { method: "POST", body: JSON.stringify({ description, severity }) }),
   writeResearchPlan: (content: string, summary = "", next_actions: string[] = [], known_gaps: string[] = []) =>
     request<Record<string, unknown>>("/api/research-plan/write", { method: "POST", body: JSON.stringify({ content, summary, next_actions, known_gaps }) }),
+  writeResearchLoopArtifacts: (
+    files: Array<{ path: string; content: string; role?: string }>,
+    summary = "",
+    workflow_updates: Record<string, unknown> = {}
+  ) =>
+    request<Record<string, unknown>>("/api/research-loop-artifacts/write", {
+      method: "POST",
+      body: JSON.stringify({ files, summary, workflow_updates })
+    }),
   writePaperArtifacts: (files: Array<{ path: string; content: string; role?: string }>, summary = "") =>
     request<Record<string, unknown>>("/api/paper-artifacts/write", { method: "POST", body: JSON.stringify({ files, summary }) }),
   importDirectory: (source_path: string, target_subdir = "INBOX/imports") =>

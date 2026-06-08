@@ -17,6 +17,7 @@ from research_os_sidecar.archive_service import ArchiveService
 from research_os_sidecar.paper_artifact_service import PaperArtifactService
 from research_os_sidecar.profile_service import ProfileService
 from research_os_sidecar.project_service import ProjectService
+from research_os_sidecar.research_loop_artifact_service import ResearchLoopArtifactService
 from research_os_sidecar.security import SecurityError, import_directory_to_project, resolve_under
 from research_os_sidecar.state_service import ResearchStateService
 
@@ -259,6 +260,112 @@ class SidecarServiceTests(unittest.TestCase):
             readback = json.loads(Path(project["project_file"]).read_text(encoding="utf-8"))
             self.assertEqual(readback["current_macro_phase"], "final_product")
             self.assertEqual(readback["current_phase"], "final_product_production")
+
+    def test_research_loop_artifact_service_preserves_loop_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            root = Path(project["project_root"])
+            loop_artifacts = ResearchLoopArtifactService(projects.require_project_root, projects.update_project)
+
+            result = loop_artifacts.write_artifacts(
+                {
+                    "summary": "source and proof audit",
+                    "workflow_updates": {
+                        "status": "source_proof_audit_ready",
+                        "venue_requirements": [{"id": "VENUE-1", "label": "Guide", "status": "verified"}],
+                        "source_verification": [{"id": "SRC-1", "label": "Reference", "status": "verified"}],
+                        "proof_audit": [{"id": "PROOF-1", "label": "Model", "status": "needs_revision"}],
+                        "claim_evidence": [{"id": "CLAIM-1", "label": "Main theorem", "status": "supported"}],
+                        "novelty_positioning": [{"id": "NOVELTY-1", "label": "Exact representation", "status": "positioned"}],
+                    },
+                    "files": [
+                        {
+                            "path": "PUBLIC/research_loop/source_verification.md",
+                            "content": "# Source verification\n\nVerified official venue page.\n",
+                            "role": "source_verification",
+                        }
+                    ],
+                }
+            )
+
+            self.assertEqual(len(result["written"]), 1)
+            self.assertTrue((root / "PUBLIC" / "research_loop" / "source_verification.md").exists())
+            state = json.loads((root / "PUBLIC" / "research_state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["macro_phase"], "research_loop")
+            self.assertEqual(state["internal_phase"], "loop_acceptance_gate")
+            self.assertEqual(state["choice_prompts"][0]["prompt_id"], "CP-RESEARCH-LOOP-ARTIFACT-ACCEPTANCE")
+            workflow = state["submission_workflow"]
+            self.assertEqual(workflow["venue_requirements"][0]["status"], "verified")
+            self.assertIn("PUBLIC/research_loop/source_verification.md", {item["path"] for item in workflow["research_loop_artifacts"]})
+            project_readback = json.loads(Path(project["project_file"]).read_text(encoding="utf-8"))
+            self.assertEqual(project_readback["current_macro_phase"], "research_loop")
+            self.assertEqual(project_readback["current_phase"], "loop_acceptance_gate")
+
+    def test_research_loop_artifact_acceptance_returns_to_alignment(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            project = projects.create_project("Demo", base / "demo.rosproj")
+            state = ResearchStateService(projects.require_project_root, projects.update_project)
+            ResearchLoopArtifactService(projects.require_project_root, projects.update_project).write_artifacts(
+                {
+                    "summary": "audit",
+                    "files": [{"path": "PUBLIC/research_loop/audit.md", "content": "audit\n", "role": "audit"}],
+                }
+            )
+
+            state.submit_choice_response(
+                {
+                    "prompt_id": "CP-RESEARCH-LOOP-ARTIFACT-ACCEPTANCE",
+                    "option_id": "accept_and_plan_next",
+                    "free_form": "Accept the audit and prepare final paper production.",
+                }
+            )
+
+            readback = state.read_state()["research_state"]
+            self.assertEqual(readback["internal_phase"], "loop_plan_alignment")
+            self.assertEqual(readback["choice_prompts"][0]["prompt_id"], "CP-NEXT-RESEARCH-LOOP")
+            self.assertEqual(readback["choice_prompts"][0]["recommended_option"], "repair_blocking_gaps")
+            project_readback = json.loads(Path(project["project_file"]).read_text(encoding="utf-8"))
+            self.assertEqual(project_readback["current_phase"], "loop_plan_alignment")
+
+    def test_research_loop_acceptance_recommends_repair_when_audit_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            template = base / "template"
+            template.mkdir()
+            make_template(template)
+            projects = ProjectService(template)
+            projects.create_project("Demo", base / "demo.rosproj")
+            state = ResearchStateService(projects.require_project_root, projects.update_project)
+            ResearchLoopArtifactService(projects.require_project_root, projects.update_project).write_artifacts(
+                {
+                    "summary": "blocking proof audit",
+                    "workflow_updates": {
+                        "proof_audit": [{"id": "PROOF-1", "label": "Gate reuse", "status": "needs_revision"}]
+                    },
+                    "files": [{"path": "PUBLIC/research_loop/audit.md", "content": "audit\n", "role": "audit"}],
+                }
+            )
+
+            state.submit_choice_response(
+                {
+                    "prompt_id": "CP-RESEARCH-LOOP-ARTIFACT-ACCEPTANCE",
+                    "option_id": "accept_and_plan_next",
+                    "free_form": "Accept the audit diagnosis, then repair proof gaps.",
+                }
+            )
+
+            prompt = state.read_state()["research_state"]["choice_prompts"][0]
+            self.assertEqual(prompt["recommended_option"], "repair_blocking_gaps")
 
     def test_paper_artifact_service_rejects_private_escape_and_secret_content(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -78,8 +78,30 @@ export function PaperWorkflowPanel({ workflow }: { workflow?: SubmissionWorkflow
         <span>Every paper turn must require Codex to verify official submission rules and citation sources online. Unverified sources cannot enter final manuscript claims.</span>
       </div>
 
+      <WorkflowList title="Venue Requirements" items={workflow?.venue_requirements} icon="source" />
       <WorkflowList title="Source Authenticity" items={workflow?.source_verification} icon="source" />
       <WorkflowList title="Mathematical Proof Audit" items={workflow?.proof_audit} icon="proof" />
+      <WorkflowList title="Claim-Evidence Matrix" items={workflow?.claim_evidence} icon="proof" />
+      <WorkflowList title="Novelty Positioning" items={workflow?.novelty_positioning} icon="source" />
+
+      <div className="workflow-block">
+        <div className="workflow-block-title">
+          <BookOpenCheck size={16} aria-hidden="true" />
+          <strong>Accepted Research Loop Artifacts</strong>
+        </div>
+        {(workflow?.research_loop_artifacts ?? []).length === 0 ? (
+          <p className="empty-state">No accepted loop artifacts yet. Source verification, proof audit, novelty map, and claim-evidence records should appear here before final paper production.</p>
+        ) : null}
+        {(workflow?.research_loop_artifacts ?? []).map((item) => (
+          <article className="workflow-item" key={item.path}>
+            <div>
+              <strong>{item.path}</strong>
+              <small>{item.role ?? "research_loop_artifact"}</small>
+            </div>
+            <span>{item.bytes ? `${Math.round(item.bytes / 1024)} KB` : "Written"}</span>
+          </article>
+        ))}
+      </div>
 
       <div className="workflow-block">
         <div className="workflow-block-title">
