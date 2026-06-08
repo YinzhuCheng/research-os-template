@@ -142,7 +142,14 @@ class RuntimeService:
             params["model"] = chosen_model
         if profile.get("provider_id"):
             params["modelProvider"] = profile["provider_id"]
-        started = client.turn_start(thread_id, text, params)
+        try:
+            started = client.turn_start(thread_id, text, params)
+        except Exception as exc:  # noqa: BLE001
+            if "thread not found" not in str(exc).lower():
+                raise
+            self._record_event({"type": "thread_resume_required", "thread_id": thread_id, "reason": "thread_not_found"})
+            self.resume_thread(thread_id, profile, model=model)
+            started = client.turn_start(thread_id, text, params)
         payload = self._model_to_dict(started)
         turn_id = payload.get("turn", {}).get("id")
         if turn_id:

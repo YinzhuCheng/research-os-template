@@ -837,6 +837,70 @@ class SidecarServiceTests(unittest.TestCase):
             else:
                 os.environ["YUNWU_API_KEY"] = old_value
 
+    def test_runtime_service_resumes_thread_when_app_server_loses_it(self) -> None:
+        old_value = os.environ.get("YUNWU_API_KEY")
+        os.environ["YUNWU_API_KEY"] = "test-yunwu-value-12345"
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                calls: list[str] = []
+
+                class FakeClient:
+                    def __init__(self) -> None:
+                        self.turn_attempts = 0
+
+                    def thread_resume(self, thread_id: str, params: dict[str, object]) -> dict[str, object]:
+                        calls.append(f"resume:{thread_id}:{params.get('modelProvider')}")
+                        return {"thread": {"id": thread_id}}
+
+                    def turn_start(self, thread_id: str, text: str, params: dict[str, object]) -> dict[str, object]:
+                        self.turn_attempts += 1
+                        calls.append(f"turn:{self.turn_attempts}:{thread_id}:{params.get('modelProvider')}")
+                        if self.turn_attempts == 1:
+                            raise RuntimeError(f"JSON-RPC error -32600: thread not found: {thread_id}")
+                        return {"turn": {"id": "turn_after_resume"}}
+
+                    def register_turn_notifications(self, turn_id: str) -> None:
+                        return None
+
+                    def next_turn_notification(self, turn_id: str):
+                        raise RuntimeError("stop fake drain")
+
+                    def unregister_turn_notifications(self, turn_id: str) -> None:
+                        return None
+
+                service = RuntimeService(lambda: root, ApprovalService(timeout_seconds=0.01))
+                service._client = FakeClient()  # type: ignore[attr-defined]
+                profile = {
+                    "profile_id": "yunwu-test",
+                    "label": "Yunwu Test",
+                    "type": "custom_provider",
+                    "provider_id": "yunwu",
+                    "model": "gpt-5.5",
+                    "base_url": "https://yunwu.ai/v1",
+                    "wire_api": "responses",
+                    "reasoning_effort": "xhigh",
+                    "env_key": "YUNWU_API_KEY",
+                    "secret_ref": "env:YUNWU_API_KEY",
+                }
+
+                result = service.start_turn("thread_lost", "Continue the audit.", profile)
+
+                self.assertEqual(result["turn"]["id"], "turn_after_resume")
+                self.assertEqual(
+                    calls,
+                    [
+                        "turn:1:thread_lost:yunwu",
+                        "resume:thread_lost:yunwu",
+                        "turn:2:thread_lost:yunwu",
+                    ],
+                )
+        finally:
+            if old_value is None:
+                os.environ.pop("YUNWU_API_KEY", None)
+            else:
+                os.environ["YUNWU_API_KEY"] = old_value
+
     def test_runtime_events_can_be_limited_to_tail(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
