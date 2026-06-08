@@ -1,11 +1,11 @@
-current_phase: research-os-v4.6-english-app-neural-networks-submission
+current_phase: research-os-v4.7-real-yunwu-codex-dogfood
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "Run the neural-network workflow in English-mode Research OS Desktop: treat the existing manuscript package as source material, force whole-folder app intake, generate a structured research plan, accept it through the loop gate, then use the improved app to reach submission readiness."
+next_required_decision: "Repair the Research OS Desktop runtime so a fresh neural-network workflow is driven by app-controlled Codex app-server/SDK turns using a Yunwu gpt-5.5 xhigh provider profile, then rerun initialization, research loops, and paper production from imported baseline materials."
 confirmed_decisions:
   - "Research OS Desktop is the only primary user interface."
   - "The old browser bridge is retired."
@@ -30,6 +30,9 @@ confirmed_decisions:
   - "The app must consider whole folders, not only the obvious manuscript draft."
   - "Reusable prompts and workflow rules must be encoded in app-generated project context, AGENTS.md, skills, work orders, or harness rules rather than relying on advanced user prompting."
   - "Yunwu gpt-5.5 xhigh may be used up to USD 200 hard cap after availability and usage measurement are verified."
+  - "The current operator-assisted paper package is entry material for a fresh app run, not the accepted final output."
+  - "For this work order, app-driven Codex runtime must be proven with modelProvider=yunwu, model=gpt-5.5, and xhigh reasoning before large review spending."
+  - "Provider and auth configuration must live in an app-owned isolated CODEX_HOME or equivalent user-level runtime profile, not in project-local .codex/config.toml."
   - "All source authenticity, venue rules, references, and AI declaration requirements must be checked online before finalizing the paper."
   - "The local untracked neural network directory is source material, not a git deliverable."
   - "For this workflow, use English-mode app surfaces first; Chinese UI restoration is deferred unless it blocks the English paper workflow."

@@ -1,6 +1,6 @@
-work_order_id: WO-0017
-phase: research-os-v4.6-english-app-neural-networks-submission
-goal: "Use English-mode Research OS Desktop to treat the neural-network manuscript folder and prior draft package as initial material, generate and accept a structured research plan through the app, improve the app where the workflow is weak, and then bring the paper to Neural Networks submission readiness."
+work_order_id: WO-0018
+phase: research-os-v4.7-real-yunwu-codex-dogfood
+goal: "Use Research OS Desktop as the primary interface and real Codex app-server/SDK runtime backed by Yunwu gpt-5.5 xhigh to re-run the neural-network submission workflow from fresh app initialization through acceptance-gated research loops and paper production."
 inputs:
   - "AGENTS.md"
   - "CONTROL/work_order.yaml"
@@ -13,6 +13,7 @@ inputs:
   - "apps/"
   - "neural network/ (local untracked source material; full-folder intake required; do not commit raw inputs)"
   - "PRIVATE/projects/neural-network-submission/ (prior private draft package; treat as source material, not a completed final product)"
+  - "PRIVATE/projects/neural-network-submission/neural-network-v46-reinit-20260608-094813/ (operator-assisted baseline package; treat as source material, not a completed final product)"
   - "local screenshots under ignored test-results directories"
 allowed_paths:
   - ".agents/"
@@ -67,13 +68,15 @@ acceptance_criteria:
   - "Research OS Desktop treats the previous manuscript/PDF/PPT/notes/templates/examples as initialization material, not as an already accepted final product."
   - "Research OS Desktop can ingest and reason over the full neural-network folder, including templates, example papers, venue rules, prior proof audits, screenshots, and notes."
   - "Generated project context and app instructions automatically tell Codex to use repo skills, verify sources online, avoid hallucinated citations, preserve provenance, and record workflow gaps."
-  - "Research OS Desktop can drive a real paper workflow for the neural-network materials without relying on manual manuscript bypasses."
+  - "Research OS Desktop can drive a real paper workflow for the neural-network materials through app-controlled Codex turns without relying on manual manuscript bypasses."
+  - "The app runtime uses an isolated Research OS owned CODEX_HOME and a Yunwu provider profile rather than project-local provider config."
+  - "A real app-driven Codex thread and turn are proven to run with modelProvider=yunwu, model=gpt-5.5, and xhigh reasoning before large review spending."
   - "The active app workflow for this paper can run in readable English mode without Chinese mojibake blocking progress."
   - "The generated research plan includes research content, motivation, expected contributions, related literature, theoretical setup, proof route, optional experiments, source verification, risks, and acceptance criteria."
   - "The local neural-network materials are imported into a project sandbox without committing raw input files."
   - "Official venue rules and citation metadata are refreshed online with recorded sources."
-  - "The final paper package compiles and includes manuscript, appendix or supplement if needed, references, highlights, cover letter, checklist, source verification, proof audit, and required declarations."
-  - "Yunwu review/rebuttal calls use gpt-5.5 xhigh if available, are redacted, measured, and stay within the hard USD 200 ceiling."
+  - "The final paper package produced by app-driven Codex turns compiles and includes manuscript, appendix or supplement if needed, references, highlights, cover letter, checklist, source verification, proof audit, and required declarations."
+  - "Yunwu review/rebuttal calls use gpt-5.5 xhigh through Research OS Desktop runtime if available, are redacted, measured, and stay within the hard USD 200 ceiling."
   - "App interaction records, app/workflow gap records, screenshots, run manifests, resource ledger entries, and archive records are preserved."
 requires_confirmation: false
 privacy_level: mixed

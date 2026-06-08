@@ -1,6 +1,6 @@
 project_id: research-os-desktop
 title: "Research OS Desktop Seed Project"
-template_version: research-os-v4.6
+template_version: research-os-v4.7
 process_contract: config/research_flow.yaml
 language_mode: en-only
 intervention_level: low
@@ -87,6 +87,10 @@ desktop_app:
   project_file_extension: ".rosproj"
   sandbox_model: "sibling project directory is the only default writable root"
   codex_runtime: "official Codex app-server/SDK, system-installed or user-installed"
+  required_runtime_provider: "yunwu"
+  required_runtime_model: "gpt-5.5"
+  required_reasoning_effort: "xhigh"
+  runtime_config_scope: "app-owned isolated CODEX_HOME; never project-local provider auth"
   secrets_policy: "profile metadata stores references only; no API keys, tokens, cookies, or authorization headers in project files"
 created_from:
   source_type: app_first_reinitialization_dogfooding
@@ -98,6 +102,8 @@ dogfooding_policy:
   require_english_mode_for_current_workflow: true
   require_online_source_verification: true
   require_app_gap_logging: true
+  require_real_app_codex_runtime: true
+  treat_operator_assisted_baseline_as: entry_material
   private_project_root: "PRIVATE/projects/neural-network-submission/"
 research_plan_contract:
   required: true
