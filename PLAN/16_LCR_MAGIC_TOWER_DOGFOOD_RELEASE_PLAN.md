@@ -216,6 +216,18 @@ Latest evidence from the 2026-06-16 post-restart Yunwu image MCP retry:
 - Contact-sheet evidence was saved at `D:\workflow\magical-girl-tower-dogfood\captures\yunwu_mcp_retry_contact_sheet_20260616.png`.
 - Asset registry now records the latest assets with inferred types `heroine`, `door`, and `key`, all `not_promoted/unreviewed`; alpha correctness is better, but visual usability still needs Kimi/DS review before promotion.
 
+Latest LCR evidence-display fix from the same morning:
+
+- A DeepSeek `no_context` tool-compliance turn successfully called the LCR built-in web dynamic tool `lcr_web_search_batch`.
+- Verified event: `dynamic_tool_called server=lcr_web tool=lcr_web_search_batch`, record `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\research\search-batch-20260616T065707169673-4e2f12.json`.
+- The first DS web prompt claimed `lcr_web_research_brief`, but the important evidence distinction is now clear: only runtime `dynamicToolCall` / `dynamic_tool_called` records count as verified tool use.
+- LCR now overlays `dynamicToolCall` events back into `thread/read` when app-server omits them; live verification on thread `019ecd80-9dce-7233-8509-5b3c64fac8e9` returned item order `userMessage,dynamicToolCall,agentMessage`.
+- Sidecar unit tests passed: 119 tests.
+- Remaining LCR issues exposed:
+  - `profile_id=deepseek` returns `Unknown profile` even though provider `deepseek` exists; UI/API should suggest profile ids or resolve provider ids safely.
+  - `context_mode=health_check` was still blocked by the 90% context guard; short health checks should either bypass with a safe minimal thread or expose a clear continue-once decision path.
+  - Basic web search returned low-quality/off-topic results for autotile queries; use the research layer or better source-targeted queries for real design work.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.

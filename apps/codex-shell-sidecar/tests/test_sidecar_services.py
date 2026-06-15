@@ -952,6 +952,80 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn('"server": "lcr_web"', event_payload)
             self.assertIn("https://example.com/autotile", event_payload)
 
+    def test_runtime_read_thread_overlays_dynamic_tool_items_from_events(self) -> None:
+        class FakeClient:
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                if method == "thread/read":
+                    return {
+                        "thread": {
+                            "id": "thread-1",
+                            "turns": [
+                                {
+                                    "id": "turn-1",
+                                    "items": [
+                                        {"type": "userMessage", "id": "user-1", "content": []},
+                                        {"type": "agentMessage", "id": "agent-1", "text": "done"},
+                                    ],
+                                }
+                            ],
+                        }
+                    }
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._ensure_client = lambda _status: FakeClient()  # type: ignore[method-assign]
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True}  # type: ignore[method-assign]
+            runtime._record_event(
+                {
+                    "type": "notification",
+                    "method": "item/started",
+                    "params": {
+                        "threadId": "thread-1",
+                        "turnId": "turn-1",
+                        "item": {
+                            "type": "dynamicToolCall",
+                            "id": "tool-1",
+                            "tool": "lcr_web_search_batch",
+                            "arguments": {"queries": [{"query": "autotile"}]},
+                            "status": "inProgress",
+                        },
+                    },
+                }
+            )
+            runtime._record_event(
+                {
+                    "type": "notification",
+                    "method": "item/completed",
+                    "params": {
+                        "threadId": "thread-1",
+                        "turnId": "turn-1",
+                        "item": {
+                            "type": "dynamicToolCall",
+                            "id": "tool-1",
+                            "tool": "lcr_web_search_batch",
+                            "arguments": {"queries": [{"query": "autotile"}]},
+                            "status": "completed",
+                            "contentItems": [{"type": "inputText", "text": "tool_event_verified=true"}],
+                            "success": True,
+                        },
+                    },
+                }
+            )
+
+            result = runtime.read_thread({"profile_id": "p"}, "thread-1")
+
+            items = result["thread"]["turns"][0]["items"]
+            self.assertEqual([item["type"] for item in items], ["userMessage", "dynamicToolCall", "agentMessage"])
+            self.assertEqual(items[1]["tool"], "lcr_web_search_batch")
+            self.assertEqual(items[1]["status"], "completed")
+            self.assertIn("tool_event_verified", items[1]["contentItems"][0]["text"])
+
     def test_runtime_yunwu_tool_usage_refreshes_asset_registry(self) -> None:
         class FakeAssetRegistry:
             def __init__(self) -> None:

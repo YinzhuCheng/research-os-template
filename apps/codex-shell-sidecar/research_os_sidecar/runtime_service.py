@@ -185,6 +185,7 @@ class RuntimeService:
                 return {"thread": cached}
             raise
         thread = self._decorate_thread(dict(result.get("thread") or {}))
+        thread = self._overlay_dynamic_tool_events(thread)
         self._cache_thread_entry(thread["id"], {"name": thread.get("name")})
         return {"thread": thread}
 
@@ -2497,6 +2498,59 @@ for host in candidates:
         settings = self._thread_settings_for(thread_id) if thread_id else {}
         display_name = thread.get("name") or self._thread_cache_name(thread_id) or str(thread.get("preview") or thread_id)
         return {**thread, "shellSettings": settings, "displayName": display_name}
+
+    def _overlay_dynamic_tool_events(self, thread: dict[str, Any]) -> dict[str, Any]:
+        """Make app-server dynamic tool events visible when thread/read omits them."""
+        thread_id = str(thread.get("id") or "")
+        turns = list(thread.get("turns") or [])
+        if not thread_id or not turns:
+            return thread
+        turn_ids = {str(turn.get("id") or "") for turn in turns if isinstance(turn, dict)}
+        if not turn_ids:
+            return thread
+        with self._lock:
+            self._hydrate_events_from_disk_locked()
+            events = list(self._events)
+        tool_items: dict[str, list[tuple[int, dict[str, Any]]]] = {turn_id: [] for turn_id in turn_ids}
+        latest_by_item: dict[tuple[str, str], tuple[int, dict[str, Any]]] = {}
+        for event in events:
+            if event.get("type") != "notification" or event.get("method") not in {"item/started", "item/completed"}:
+                continue
+            params = dict(event.get("params") or {})
+            if str(params.get("threadId") or "") != thread_id:
+                continue
+            turn_id = str(params.get("turnId") or "")
+            if turn_id not in turn_ids:
+                continue
+            item = dict(params.get("item") or {})
+            if item.get("type") != "dynamicToolCall":
+                continue
+            item_id = str(item.get("id") or "")
+            if not item_id:
+                continue
+            latest_by_item[(turn_id, item_id)] = (int(event.get("index") or 0), item)
+        for (turn_id, _item_id), entry in latest_by_item.items():
+            tool_items.setdefault(turn_id, []).append(entry)
+        decorated_turns: list[dict[str, Any]] = []
+        for turn in turns:
+            if not isinstance(turn, dict):
+                decorated_turns.append(turn)
+                continue
+            turn_id = str(turn.get("id") or "")
+            extras = [item for _index, item in sorted(tool_items.get(turn_id, []), key=lambda pair: pair[0])]
+            if not extras:
+                decorated_turns.append(turn)
+                continue
+            items = [dict(item) if isinstance(item, dict) else item for item in list(turn.get("items") or [])]
+            existing_ids = {str(item.get("id") or "") for item in items if isinstance(item, dict)}
+            missing = [item for item in extras if str(item.get("id") or "") not in existing_ids]
+            if not missing:
+                decorated_turns.append(turn)
+                continue
+            insert_at = next((idx for idx, item in enumerate(items) if isinstance(item, dict) and item.get("type") == "agentMessage"), len(items))
+            items[insert_at:insert_at] = missing
+            decorated_turns.append({**turn, "items": items})
+        return {**thread, "turns": decorated_turns}
 
     def _thread_cache_name(self, thread_id: str) -> str | None:
         if not thread_id:
