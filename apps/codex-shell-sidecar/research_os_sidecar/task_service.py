@@ -169,6 +169,24 @@ class TaskService:
                 return dict(item)
         return None
 
+    def restore_active_provider_thread(self, thread_id: str) -> dict[str, Any] | None:
+        """Restore UI focus without mutating thread metadata or missing diagnostics."""
+        clean_thread_id = str(thread_id or "").strip()
+        if not clean_thread_id:
+            return self.current_task()
+        task = self.current_task()
+        if not task:
+            return None
+        task["active_provider_thread_id"] = clean_thread_id
+        task["updated_at"] = now_iso()
+        state = self._state()
+        state["tasks"] = self._replace_task(list(state.get("tasks") or []), task)
+        state["current_task_id"] = task["task_id"]
+        state["updated_at"] = now_iso()
+        self._write_state(state)
+        self._sync_project_current_task(task)
+        return task
+
     def needs_provider_handoff(self, *, thread_id: str | None, profile_id: str | None, model: str | None, effort: str | None) -> bool:
         if not thread_id:
             return False

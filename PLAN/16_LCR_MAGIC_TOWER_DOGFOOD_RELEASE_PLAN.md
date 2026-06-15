@@ -243,6 +243,21 @@ Latest LCR runtime profile / health-check fix from the same morning:
   - `Start-Process -ArgumentList` needs explicit quoting for paths with spaces such as `D:\Google One\research-os-template`.
 - The project was switched back to the previous DS dogfood thread after smoke so the app does not visually stay on the disposable health-check thread.
 
+Latest evidence from the 2026-06-16 Yunwu MCP retry after the network interruption:
+
+- Direct Yunwu Images API connectivity is healthy: `gpt-image-2` returned a smoke image URL in about 56 seconds.
+- The actual LCR MCP path is also healthy: `mcpServer/tool/call` for `yunwu_image_transparent_asset` completed twice through `/api/runtime/mcp/tool-call`.
+- Generated assets:
+  - `yunwu-1781566023-f48a6585.png`, key candidate, PNG/RGBA, `has_alpha=true`, transparent ratio about `0.826`.
+  - `yunwu-1781566680-32b6cc3a.png`, yellow-door candidate, PNG/RGBA, `has_alpha=true`, transparent ratio about `0.598`.
+- Contact-sheet evidence was saved at `D:\workflow\magical-girl-tower-dogfood\captures\yunwu_mcp_retry_after_fix_contact_sheet_20260616.png`.
+- Visual gate: the door is game-usable as a single transparent sprite candidate; the key is semantically usable but still has gold particles/glow, so future prompts should continue saying `no aura`, `no particles`, `no glow ring`, and `tight silhouette`.
+- LCR bug exposed and fixed: direct MCP tool calls used to create/reuse an internal tool thread and then steal the project/task active thread. `RuntimeService.call_mcp_tool` now restores the prior project current thread and task active provider thread by default, while still returning the internal tool thread id for audit. `/api/runtime/threads/switch` now also synchronizes task active thread state.
+- LCR dogfood milestone API bug exposed and fixed: old `dogfood_run.json` records can contain string capture refs, and `add_milestone` previously assumed all existing captures were objects. It now ignores legacy non-object captures during merge instead of returning 400.
+- Sidecar unit tests passed: 121 tests. Live verification after source sidecar restart confirmed project `current_thread_id` and task `active_provider_thread_id` remained on `019ecd80-9dce-7233-8509-5b3c64fac8e9` after the second Yunwu MCP image call.
+- Dogfood milestone was recorded as `Yunwu MCP transparent assets verified after active-thread fix`.
+- Operational footgun confirmed: `Stop-Process` did not terminate one old 8795 listener, while `taskkill /F /PID` did. Windows restart scripts should identify the `Listen` owner process robustly and verify the restarted process really serves the patched source.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.

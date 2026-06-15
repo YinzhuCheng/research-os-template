@@ -1193,11 +1193,13 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
 
             self.assertEqual(response["thread_id"], "thread-yunwu")
             self.assertEqual(response["usage_delta"], {"yunwu_images": 1})
-            self.assertEqual(projects.current_project["current_thread_id"], "thread-yunwu")
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-deepseek")
             current = tasks.current_task()
-            self.assertEqual(current["active_provider_thread_id"], "thread-yunwu")
+            self.assertEqual(current["active_provider_thread_id"], "thread-deepseek")
             yunwu_thread = [item for item in current["provider_threads"] if item["thread_id"] == "thread-yunwu"][0]
             self.assertEqual(yunwu_thread["provider_id"], "yunwu")
+            deepseek_thread = [item for item in current["provider_threads"] if item["thread_id"] == "thread-deepseek"][0]
+            self.assertEqual(deepseek_thread["missing_reason"], "provider_handoff_source_missing")
             self.assertEqual(dogfood.snapshot()["run"]["usage"]["yunwu_images"], 1)
             self.assertEqual(fake_client.tool_thread_id, "thread-yunwu")
             self.assertTrue(any(call[0] == "mcpServer/tool/call" and call[1]["threadId"] == "thread-yunwu" for call in fake_client.calls))
@@ -1298,7 +1300,7 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             current = tasks.current_task()
             stale = [item for item in current["provider_threads"] if item["thread_id"] == "thread-stale"][0]
             self.assertEqual(stale["missing_reason"], "mcp_tool_call_thread_missing")
-            self.assertEqual(current["active_provider_thread_id"], "thread-yunwu-recovered")
+            self.assertEqual(current["active_provider_thread_id"], "thread-stale")
             self.assertEqual(dogfood.snapshot()["run"]["usage"]["yunwu_images"], 2)
 
     def test_runtime_direct_mcp_tool_call_without_task_service_recovers_missing_source_thread(self) -> None:
@@ -5005,6 +5007,10 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
                 }
             )
             self.assertEqual(full_smoke["run"]["captures"][0]["path"], str(screenshot))
+            run_path = workspace / ".lcr" / "dogfood_run.json"
+            run_data = json.loads(run_path.read_text(encoding="utf-8"))
+            run_data["captures"].append(str(root / "legacy-string-capture.png"))
+            run_path.write_text(json.dumps(run_data), encoding="utf-8")
 
             milestone = dogfood.add_milestone(
                 {
@@ -5031,6 +5037,8 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertEqual(milestone["run_summary"]["latest_capture"]["path"], str(screenshot))
             self.assertEqual(milestone["run_summary"]["latest_capture"]["label"], "gameplay")
             self.assertEqual(milestone["run_summary"]["latest_capture"]["provider"], "deepseek")
+            updated_run_data = json.loads(run_path.read_text(encoding="utf-8"))
+            self.assertTrue(all(isinstance(item, dict) for item in updated_run_data["captures"]))
             full_milestone = dogfood.add_milestone({"label": "debug full run", "include_run": True})
             self.assertIn("run", full_milestone)
             self.assertEqual(full_milestone["run"]["milestones"][-1]["label"], "debug full run")

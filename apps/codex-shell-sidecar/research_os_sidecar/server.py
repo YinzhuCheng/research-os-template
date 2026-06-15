@@ -594,6 +594,7 @@ class Handler(BaseHTTPRequestHandler):
                         server=str(payload.get("server") or ""),
                         tool=str(payload.get("tool") or ""),
                         arguments=payload.get("arguments") or {},
+                        preserve_active_thread=bool(payload.get("preserve_active_thread", True)),
                     )
                 )
                 return
@@ -663,7 +664,10 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 return
             if path == "/api/runtime/threads/switch":
-                self.send_json({"project": self.context.projects.switch_thread(self._optional_string(payload, "thread_id"))})
+                thread_id = self._optional_string(payload, "thread_id")
+                project = self.context.projects.switch_thread(thread_id)
+                task = self.context.tasks.restore_active_provider_thread(thread_id) if thread_id else self.context.tasks.current_task()
+                self.send_json({"project": project, "task": task})
                 return
             if path == "/api/runtime/thread-settings":
                 settings = self.context.runtime.update_thread_defaults(

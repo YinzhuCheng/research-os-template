@@ -661,12 +661,31 @@ class RuntimeService:
         self._record_event({"type": "mcp_status_listed", "count": len(result.get("data") or []), "runtime": runtime_status})
         return {"servers": list(result.get("data") or []), "next_cursor": result.get("nextCursor")}
 
-    def call_mcp_tool(self, profile: dict[str, Any], *, thread_id: str, server: str, tool: str, arguments: Any | None = None) -> dict[str, Any]:
+    def call_mcp_tool(
+        self,
+        profile: dict[str, Any],
+        *,
+        thread_id: str,
+        server: str,
+        tool: str,
+        arguments: Any | None = None,
+        preserve_active_thread: bool = True,
+    ) -> dict[str, Any]:
         if not server.strip() or not tool.strip():
             raise ValueError("MCP server and tool are required.")
         tool_timeout = self._mcp_tool_timeout_seconds(server)
         runtime_status = self._prepare_runtime(profile, require_secret=False)
         client = self._ensure_client(runtime_status)
+        prior_project_thread_id = str((self._projects.current_project or {}).get("current_thread_id") or "")
+        prior_task_thread_id = ""
+        prior_task_thread_settings: dict[str, Any] = {}
+        if self._tasks is not None:
+            prior_task = self._tasks.current_task() or {}
+            prior_task_thread_id = str(prior_task.get("active_provider_thread_id") or "")
+            for item in list(prior_task.get("provider_threads") or []):
+                if str(item.get("thread_id") or "") == prior_task_thread_id:
+                    prior_task_thread_settings = dict(item)
+                    break
         source_thread_id = thread_id.strip() or str((self._projects.current_project or {}).get("current_thread_id") or "")
         try:
             effective_thread_id, handoff_event = self._ensure_provider_thread_for_mcp_call(
@@ -721,7 +740,37 @@ class RuntimeService:
                 "runtime": runtime_status,
             }
         )
+        if preserve_active_thread:
+            self._restore_active_thread_after_direct_mcp_tool_call(
+                project_thread_id=prior_project_thread_id,
+                task_thread_id=prior_task_thread_id,
+                task_thread_settings=prior_task_thread_settings,
+            )
         return {"result": result, "thread_id": effective_thread_id, "handoff_event": handoff_event, "usage_delta": usage_delta}
+
+    def _restore_active_thread_after_direct_mcp_tool_call(
+        self,
+        *,
+        project_thread_id: str,
+        task_thread_id: str,
+        task_thread_settings: dict[str, Any],
+    ) -> None:
+        """Direct tools may need an internal runtime thread, but must not steal UI focus."""
+        restored: dict[str, str] = {}
+        if project_thread_id:
+            try:
+                self._projects.switch_thread(project_thread_id)
+                restored["project_thread_id"] = project_thread_id
+            except Exception as exc:  # noqa: BLE001
+                self._record_event({"type": "mcp_tool_project_thread_restore_failed", "thread_id": project_thread_id, "error": str(exc)[:300]})
+        if self._tasks is not None and task_thread_id:
+            try:
+                self._tasks.restore_active_provider_thread(task_thread_id)
+                restored["task_thread_id"] = task_thread_id
+            except Exception as exc:  # noqa: BLE001
+                self._record_event({"type": "mcp_tool_task_thread_restore_failed", "thread_id": task_thread_id, "error": str(exc)[:300]})
+        if restored:
+            self._record_event({"type": "mcp_tool_active_thread_restored", **restored})
 
     def _mcp_tool_timeout_seconds(self, server: str) -> float:
         try:

@@ -248,7 +248,7 @@ class DogfoodRunService:
                 *[
                     item
                     for item in list(current.get("captures") or [])
-                    if str(item.get("path") or "").strip() not in milestone_capture_paths
+                    if isinstance(item, dict) and str(item.get("path") or "").strip() not in milestone_capture_paths
                 ],
             ][:80]
         current["milestones"] = [*list(current.get("milestones") or []), milestone][-80:]
