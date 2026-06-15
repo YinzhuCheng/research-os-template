@@ -204,6 +204,18 @@ Latest LCR tool-chain fix from the same checkpoint:
 - Sidecar unit tests passed: 118 tests, including new coverage for lcr_web dynamic tool registration and a fake research brief dynamic call.
 - The running sidecar must still be restarted/repackaged before this source change affects active app-server turns.
 
+Latest evidence from the 2026-06-16 post-restart Yunwu image MCP retry:
+
+- The source sidecar was restarted on port 8795 and the magic tower project was reopened; health shows WSL `Ubuntu-24.04`, project runtime configured, and provider secret loaded.
+- MCP status exposes `lcr_web` plus `yunwu_image` with `yunwu_image_transparent_asset`, `yunwu_image_edit`, and `yunwu_image_generate`.
+- Two `yunwu_image_transparent_asset` calls with stricter Japanese-anime sprite prompts produced PNG RGBA assets:
+  - `yunwu-1781563030-1cb35bb5.png` heroine candidate, `has_alpha=true`, transparent ratio about `0.663`.
+  - `yunwu-1781563084-6efc6537.png` yellow-door candidate, `has_alpha=true`, transparent ratio about `0.613`.
+- A stricter direct `yunwu_image_generate` call with `background=transparent`, `format=png`, and no-glow/no-backdrop prompt produced `yunwu-1781563564-d1ef0f96.png`, `has_alpha=true`, transparent ratio about `0.877`; this is cleaner than the edit-route samples but still has a gold aura.
+- A parallel `yunwu_image_transparent_asset` strict key call timed out after 240 seconds; treat edit-route transparency as useful but currently less stable than direct generation for small props.
+- Contact-sheet evidence was saved at `D:\workflow\magical-girl-tower-dogfood\captures\yunwu_mcp_retry_contact_sheet_20260616.png`.
+- Asset registry now records the latest assets with inferred types `heroine`, `door`, and `key`, all `not_promoted/unreviewed`; alpha correctness is better, but visual usability still needs Kimi/DS review before promotion.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.
