@@ -72,6 +72,7 @@ def yunwu_image_preset() -> dict[str, Any]:
         "disabled_tools": [],
         "tools": {
             "yunwu_image_generate": {"approval_mode": "prompt"},
+            "yunwu_image_transparent_asset": {"approval_mode": "prompt"},
             "yunwu_image_edit": {"approval_mode": "prompt"},
         },
         "trust_note": "Image generation/editing tool for Yunwu OpenAI-compatible Images endpoint. The tool reads only the configured runtime environment variable and never accepts credentials as tool arguments.",

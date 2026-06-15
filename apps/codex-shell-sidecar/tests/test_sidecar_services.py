@@ -67,6 +67,25 @@ def _png_rgba(width: int, height: int, rgba: tuple[int, int, int, int]) -> bytes
     )
 
 
+def _png_rgba_rect(width: int, height: int, rect: tuple[int, int, int, int], rgba: tuple[int, int, int, int]) -> bytes:
+    def chunk(kind: bytes, payload: bytes) -> bytes:
+        return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", binascii.crc32(kind + payload) & 0xFFFFFFFF)
+
+    left, top, right, bottom = rect
+    rows = []
+    for y in range(height):
+        row = bytearray([0])
+        for x in range(width):
+            row.extend(rgba if left <= x < right and top <= y < bottom else (0, 0, 0, 0))
+        rows.append(bytes(row))
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(b"".join(rows)))
+        + chunk(b"IEND", b"")
+    )
+
+
 class DummyRouter:
     def __init__(self) -> None:
         self.provider_tests: list[dict[str, object]] = []
@@ -1515,6 +1534,7 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn('"LOCAL_CODEX_ROUTER_WORKSPACE_ROOT"', toml)
             self.assertIn('"LOCAL_CODEX_ROUTER_WORKSPACE_ROOT_WSL"', toml)
             self.assertIn("[mcp_servers.yunwu_image.tools.yunwu_image_generate]", toml)
+            self.assertIn("[mcp_servers.yunwu_image.tools.yunwu_image_transparent_asset]", toml)
             self.assertNotIn("Bearer", toml)
 
     def test_yunwu_image_mcp_normalizes_cross_host_paths(self) -> None:
@@ -1943,6 +1963,73 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn("sprites.heroine.walk_down", heroine["manifest_keys"])
             self.assertIn("sprites/heroine_walk_down_0.png", heroine["game_refs"])
             self.assertIn("manifest=sprites.heroine.walk_down", rebuilt_after_promote["context_pack"]["text"])
+
+    def test_asset_registry_promote_can_crop_resize_and_record_pivot(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Dogfood", root / "dogfood.lcrproj", workspace_root=workspace, entry_mode="existing")
+            generated_root = workspace / ".lcr" / "assets" / "generated"
+            generated_root.mkdir(parents=True)
+            source_png = generated_root / "yunwu-portal.png"
+            source_png.write_bytes(_png_rgba_rect(32, 32, (10, 6, 23, 28), (80, 170, 255, 255)))
+            generated_manifest = {
+                "assets": [
+                    {
+                        "asset_id": "yunwu-portal",
+                        "provider": "yunwu",
+                        "tool": "yunwu_image_transparent_asset",
+                        "model": "gpt-image-2",
+                        "purpose": "ice portal",
+                        "prompt": "Transparent JRPG portal",
+                        "local_path": str(source_png),
+                        "generated_at": "2026-06-16T00:00:00+08:00",
+                    }
+                ]
+            }
+            (generated_root / "asset_manifest.json").write_text(json.dumps(generated_manifest), encoding="utf-8")
+
+            service = AssetRegistryService(projects)
+            service.rebuild()
+            promoted = service.promote(
+                {
+                    "asset_id": "yunwu-portal",
+                    "target_name": "portal_ice_crystal_lcr.png",
+                    "manifest_section": "tiles",
+                    "tile_key": "portal_ice",
+                    "role": "portal",
+                    "crop_to_alpha": True,
+                    "output_size": "96x96",
+                    "pivot": "bottom_center",
+                }
+            )
+
+            target = workspace / "assets" / "images" / "sprites" / "portal_ice_crystal_lcr.png"
+            self.assertTrue(target.is_file())
+            try:
+                from PIL import Image  # type: ignore
+            except Exception:  # pragma: no cover - mirrors optional runtime dependency
+                self.skipTest("Pillow is not available")
+            with Image.open(target) as image:
+                self.assertEqual(image.size, (96, 96))
+                self.assertEqual(image.mode, "RGBA")
+            game_manifest = json.loads((workspace / "assets" / "images" / "sprites" / "sprite_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(game_manifest["tiles"]["portal_ice"], "sprites/portal_ice_crystal_lcr.png")
+            transform = game_manifest["promoted_assets"]["yunwu-portal"]["transform"]
+            self.assertTrue(transform["crop_to_alpha"])
+            self.assertEqual(transform["output_width"], 96)
+            self.assertEqual(transform["output_height"], 96)
+            self.assertEqual(transform["pivot"], "bottom_center")
+            self.assertEqual(promoted["asset"]["pivot"], "bottom_center")
+            rebuilt = service.rebuild()
+            portal = next(item for item in rebuilt["registry"]["assets"] if item.get("asset_id") == "yunwu-portal")
+            self.assertEqual(portal["integration_status"], "in_use")
+            self.assertEqual(portal["sprite_width"], 96)
+            self.assertEqual(portal["sprite_height"], 96)
+            self.assertEqual(portal["pivot"], "bottom_center")
+            self.assertEqual(portal["manifest_keys"], ["tiles.portal_ice"])
 
     def test_asset_registry_rebuild_links_agent_copied_game_asset_by_hash(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

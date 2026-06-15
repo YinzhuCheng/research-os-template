@@ -1,6 +1,6 @@
 # LCR Magic Tower Dogfood Release Plan
 
-Last revised: 2026-06-16 04:20 +08:00
+Last revised: 2026-06-16 05:35 +08:00
 
 ## Objective
 
@@ -61,11 +61,30 @@ The operator should maintain LCR and supervise evidence. Game design, asset plan
   - Independent alpha check for the accepted candidate: PNG RGBA 1024x1024, transparent ratio about `0.579`, semi-transparent ratio about `0.034`.
   - Kimi final visual micro-check returned `pass`, usable role `portal`, and recommended crop-to-content, bottom-center pivot, and registering as a 96x96 portal.
   - Checker preview: `D:\workflow\magical-girl-tower-dogfood\captures\20260616-ds-yunwu-redraw-portal-no-shadow-checker.png`.
+- Latest LCR MCP preset fix:
+  - `yunwu_image_transparent_asset` now appears in the source `yunwu_image` MCP preset tools policy with `approval_mode=prompt`.
+  - The current running app data MCP config was also updated through `/api/router/mcp/config/save`, and `/api/runtime/mcp/reload` returned `reloaded=true`.
+  - Sidecar unit tests after this fix: `113` tests passed.
+- Latest Yunwu transparent asset retry:
+  - Real `/api/runtime/mcp/tool-call` to `yunwu_image.yunwu_image_transparent_asset` generated `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781558270-bd96583d.png`.
+  - Result: PNG RGBA 1024x1024, `actual_n=1`, `count_mismatch=false`, transparent pixel ratio about `0.911`, corner alpha all zero.
+  - Checker preview: `D:\workflow\magical-girl-tower-dogfood\captures\20260616-yunwu-mcp-retry-key-checker.png`.
+  - Human visual judgment: good transparent cutout for HUD/reward art, but too glow-heavy/concept-art-like for a 64x64 map pickup.
+- Latest DS bounded asset step:
+  - Provider handoff from Yunwu to DeepSeek stayed inside the same task and created provider thread `019ecd2b-e987-70f2-8c2f-419f35cb0c44`.
+  - DS promoted `yunwu-1781558270-bd96583d` as HUD/reward key art, not as the map pickup key.
+  - New game asset: `D:\workflow\magical-girl-tower-dogfood\workspace\assets\images\sprites\hud_key_yellow.png`.
+  - Updated game manifest: `sprites.hud.key_yellow` and `promoted_assets.yunwu-1781558270-bd96583d`.
+  - Updated registry: `integration_status=promoted_as_hud_reward`, `manifest_keys=["hud.key_yellow"]`, `in_use=true`.
+  - Validation: WSL `node --check js/*.js` passed; `sprite_manifest.json` parsed successfully; browser smoke at `http://127.0.0.1:8123/` passed with HTTP 200 and zero supplied console errors.
+  - Browser screenshot: `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\after-ds-hud-key-promotion-2026-06-16T052723-597271+0800.png`.
 - Known game quality gap: Kimi visual micro-check still marked the map as `retry`; the map remains too grid/block-like.
 - Known LCR risks:
   - Installed packages still need a fresh rebuild to carry the latest sidecar startup/tool-timeout/asset-registry/image-return fixes.
   - Provider-thread compact after runtime restart can still fail with `compact_thread_not_found`; in the latest run this left `current_thread_id=null` and required an explicit new provider thread.
   - `turn/start` may return a recovered/new provider thread id even when a caller supplied an older thread id; callers and UI must follow the returned `thread_id`.
+  - `context_mode=project` currently returns `Unsupported context mode: project`; UI/API should expose valid context mode choices instead of letting users or automation guess.
+  - Some DS file mutations were reflected in project files and context pack plan state, but the thread item view only exposed a final `agentMessage` rather than fine-grained command/tool/file-change events. Release UI should distinguish model claims from tool-event verified changes more explicitly.
   - DeepSeek output showed occasional mojibake (`กช`, `กม`) for symbols and PowerShell/GBK printing failed on emoji output; LCR should normalize/escape runtime output as UTF-8.
   - Asset registry usage must be proven by screenshots rather than claimed by model text.
 
@@ -149,14 +168,14 @@ The game can be considered publishable for this dogfood target only when these a
 
 ## Immediate Next Actions
 
-1. Let DS do one bounded promote step for accepted portal asset `yunwu-1781556517-68192932`: crop to content, set bottom-center pivot metadata, register as a 96x96 portal/stair transition candidate, and update registry/manifest without breaking current game rules.
-2. Run `node --check js/*.js`, browser smoke, and screenshot after the portal promote step.
-3. Ask DS for one bounded seamless/edge-blend step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
-4. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.
-5. Ask Kimi to judge the new screenshot against the previous `20260616-ds-grass-asset-map.png` and decide whether the map still reads as blocky.
-6. If the seamless/edge-blend step improves the screenshot, run Yunwu GPT-5.4 high playtest and send the critique back to DS for route/UI/value priorities.
-7. If visual quality is still poor, let DS plan a redraw of a dedicated seamless grass/background asset through Yunwu image tools rather than overfitting CSS around a bad texture.
-8. Keep treating ignored `asset_id`/manifest paths, stale provider threads, or unverified model claims as LCR context/evidence bugs and fix the app before continuing.
+1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
+2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
+3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.
+4. Ask Kimi to judge the new screenshot against the previous `20260616-ds-grass-asset-map.png` and decide whether the map still reads as blocky. Kimi may propose an executable visual plan, not only pass/fail.
+5. If the visual step improves the screenshot, run Yunwu GPT-5.4 high playtest and send the critique back to DS for route/UI/value priorities.
+6. If visual quality is still poor, let DS plan a redraw of a dedicated seamless grass/background asset through Yunwu image tools rather than overfitting CSS around a bad texture.
+7. Fix the LCR event/evidence display gap so command/tool/file-change evidence is visible as `tool-event verified`, not only inferred from model text.
+8. Keep treating ignored `asset_id`/manifest paths, stale provider threads, unsupported context-mode values, or unverified model claims as LCR context/evidence bugs and fix the app before continuing.
 
 ## Commit/Push Gate
 

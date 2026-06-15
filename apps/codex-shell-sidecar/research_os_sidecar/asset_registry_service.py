@@ -187,16 +187,22 @@ class AssetRegistryService:
         sprites_dir = self._workspace() / "assets" / "images" / "sprites"
         sprites_dir.mkdir(parents=True, exist_ok=True)
         target = resolve_under(self._workspace(), sprites_dir / target_name)
-        shutil.copy2(source, target)
+        transform = self._promote_asset_file(source, target, payload)
 
         ref = f"sprites/{target.name}"
         manifest = self._read_game_sprite_manifest()
-        self._update_game_manifest(manifest, payload, entry, ref)
+        self._update_game_manifest(manifest, payload, entry, ref, transform=transform)
         write_json(self._game_sprite_manifest_path(), manifest)
 
         entry["promoted_path"] = self._relative_path(target)
         entry["integration_status"] = "promoted"
         entry["status"] = "promoted"
+        if transform:
+            entry["promote_transform"] = transform
+            entry["sprite_width"] = transform.get("output_width")
+            entry["sprite_height"] = transform.get("output_height")
+            if transform.get("pivot"):
+                entry["pivot"] = transform.get("pivot")
         refs = list(entry.get("game_refs") or [])
         if ref not in refs:
             refs.append(ref)
@@ -407,6 +413,13 @@ class AssetRegistryService:
             entries[asset_id]["promoted_path"] = entries[asset_id].get("promoted_path") or f"assets/images/{ref}"
             entries[asset_id]["game_refs"] = sorted(set(list(entries[asset_id].get("game_refs") or []) + ([ref] if ref else [])))
             entries[asset_id]["manifest_keys"] = sorted(set(list(entries[asset_id].get("manifest_keys") or []) + manifest_ref_map.get(ref, [])))
+            transform = promoted.get("transform")
+            if isinstance(transform, dict) and transform:
+                entries[asset_id]["promote_transform"] = transform
+                if transform.get("pivot"):
+                    entries[asset_id]["pivot"] = transform.get("pivot")
+                entries[asset_id]["sprite_width"] = transform.get("output_width")
+                entries[asset_id]["sprite_height"] = transform.get("output_height")
         for entry in entries.values():
             promoted = str(entry.get("promoted_path") or "")
             source = str(entry.get("source_path") or "")
@@ -525,7 +538,15 @@ class AssetRegistryService:
                 digest.update(chunk)
         return digest.hexdigest()
 
-    def _update_game_manifest(self, manifest: dict[str, Any], payload: dict[str, Any], entry: dict[str, Any], ref: str) -> None:
+    def _update_game_manifest(
+        self,
+        manifest: dict[str, Any],
+        payload: dict[str, Any],
+        entry: dict[str, Any],
+        ref: str,
+        *,
+        transform: dict[str, Any] | None = None,
+    ) -> None:
         manifest.setdefault("manifest_version", 1)
         manifest["updated_at"] = now_iso()
         manifest.setdefault("sprites", {})
@@ -546,12 +567,113 @@ class AssetRegistryService:
             entity = str(payload.get("entity") or self._default_entity(entry)).strip()
             state = str(payload.get("state") or self._default_state(entry)).strip()
             manifest.setdefault("sprites", {}).setdefault(slugify(entity, "asset"), {})[slugify(state, "grid")] = ref
-        manifest["promoted_assets"][str(entry["asset_id"])] = {
+        promoted: dict[str, Any] = {
             "ref": ref,
             "role": role,
             "kind": kind,
             "promoted_at": now_iso(),
         }
+        if transform:
+            promoted["transform"] = transform
+            if transform.get("pivot"):
+                promoted["pivot"] = transform.get("pivot")
+        manifest["promoted_assets"][str(entry["asset_id"])] = promoted
+
+    def _promote_asset_file(self, source: Path, target: Path, payload: dict[str, Any]) -> dict[str, Any]:
+        crop_to_alpha = bool(payload.get("crop_to_alpha") or payload.get("crop_transparent_bounds"))
+        output_size = self._parse_output_size(payload.get("output_size") or payload.get("sprite_size"))
+        pivot = self._normalize_pivot(payload.get("pivot") or payload.get("anchor") or ("bottom_center" if output_size else ""))
+        if not crop_to_alpha and not output_size:
+            shutil.copy2(source, target)
+            return {}
+        try:
+            from PIL import Image  # type: ignore
+        except Exception as exc:  # pragma: no cover - depends on runtime packaging
+            raise RuntimeError("Pillow is required for crop/resize asset promotion.") from exc
+
+        with Image.open(source) as image:
+            original_size = image.size
+            working = image.convert("RGBA")
+            crop_box = (0, 0, working.width, working.height)
+            if crop_to_alpha:
+                alpha = working.getchannel("A")
+                bbox = alpha.getbbox()
+                if bbox:
+                    padding = self._safe_int(payload.get("padding"), default=4, minimum=0, maximum=256)
+                    left = max(0, bbox[0] - padding)
+                    top = max(0, bbox[1] - padding)
+                    right = min(working.width, bbox[2] + padding)
+                    bottom = min(working.height, bbox[3] + padding)
+                    crop_box = (left, top, right, bottom)
+                    working = working.crop(crop_box)
+            output_width = working.width
+            output_height = working.height
+            if output_size:
+                output_width, output_height = output_size
+                canvas = Image.new("RGBA", output_size, (0, 0, 0, 0))
+                scale = min(output_width / max(1, working.width), output_height / max(1, working.height))
+                resized_size = (max(1, round(working.width * scale)), max(1, round(working.height * scale)))
+                resample = getattr(Image, "Resampling", Image).LANCZOS
+                resized = working.resize(resized_size, resample)
+                x = (output_width - resized.width) // 2
+                if pivot == "bottom_center":
+                    y = output_height - resized.height
+                else:
+                    y = (output_height - resized.height) // 2
+                canvas.alpha_composite(resized, (x, y))
+                working = canvas
+            if target.suffix.lower() not in {".png", ".webp"}:
+                target = target.with_suffix(".png")
+            working.save(target)
+            return {
+                "crop_to_alpha": crop_to_alpha,
+                "crop_box": list(crop_box),
+                "original_width": original_size[0],
+                "original_height": original_size[1],
+                "output_width": working.width,
+                "output_height": working.height,
+                "pivot": pivot or None,
+            }
+
+    def _parse_output_size(self, value: Any) -> tuple[int, int] | None:
+        if value in (None, "", False):
+            return None
+        if isinstance(value, int):
+            size = self._safe_int(value, default=0, minimum=1, maximum=2048)
+            return (size, size)
+        if isinstance(value, (list, tuple)) and len(value) == 2:
+            return (
+                self._safe_int(value[0], default=0, minimum=1, maximum=2048),
+                self._safe_int(value[1], default=0, minimum=1, maximum=2048),
+            )
+        text = str(value).strip().lower().replace(" ", "")
+        if "x" in text:
+            left, right = text.split("x", 1)
+            return (
+                self._safe_int(left, default=0, minimum=1, maximum=2048),
+                self._safe_int(right, default=0, minimum=1, maximum=2048),
+            )
+        size = self._safe_int(text, default=0, minimum=1, maximum=2048)
+        return (size, size)
+
+    def _safe_int(self, value: Any, *, default: int, minimum: int, maximum: int) -> int:
+        try:
+            parsed = int(value)
+        except Exception:
+            parsed = default
+        if parsed < minimum:
+            return minimum
+        if parsed > maximum:
+            return maximum
+        return parsed
+
+    def _normalize_pivot(self, value: Any) -> str:
+        raw = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+        if raw in {"bottom", "bottom_center", "center_bottom"}:
+            return "bottom_center"
+        if raw in {"center", "middle", "center_center"}:
+            return "center"
+        return raw if raw else ""
 
     def _target_name(self, payload: dict[str, Any], entry: dict[str, Any], source: Path) -> str:
         raw = str(payload.get("target_name") or "").strip()
