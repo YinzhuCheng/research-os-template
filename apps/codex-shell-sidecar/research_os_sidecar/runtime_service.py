@@ -17,6 +17,8 @@ from typing import Any
 
 from .app_server_client import AppServerClient, JsonRpcError
 from .common import LEGACY_WORKSPACE_STATE_DIRNAME, WORKSPACE_STATE_DIRNAME, append_jsonl, new_id, now_iso, read_json, write_json
+from .lcr_web_mcp_server import _tools as lcr_web_dynamic_tools
+from .lcr_web_service import LcrWebService
 from .mcp_config_service import McpConfigService
 from .modal_service import ModalService
 from .router_service import ROUTER_ENV_KEY, ROUTER_PORT
@@ -56,6 +58,7 @@ class RuntimeService:
         project_context: Any | None = None,
         task_service: Any | None = None,
         dogfood_run: Any | None = None,
+        lcr_web_service: Any | None = None,
     ) -> None:
         self._projects = project_service
         self._modals = modal_service
@@ -65,6 +68,7 @@ class RuntimeService:
         self._project_context = project_context
         self._tasks = task_service
         self._dogfood_run = dogfood_run
+        self._lcr_web = lcr_web_service or LcrWebService(project_service)
         self._runtime_config = runtime_config or RuntimeConfigService(secret_service=self._secrets, mcp_config=self._mcp_config)
         self._client: AppServerClient | None = None
         self._runtime_signature: tuple[Any, ...] | None = None
@@ -1513,13 +1517,15 @@ class RuntimeService:
         try:
             if tool not in self._lcr_dynamic_tool_names():
                 raise ValueError(f"Unsupported LCR dynamic tool: {tool}")
-            result = self._call_yunwu_dynamic_tool(tool, arguments)
-            summary = summarize_yunwu_image_result(result)
-            usage_delta = self._record_yunwu_image_usage_from_tool_result(server="yunwu_image", tool=tool, result=summary)
+            result = self._call_lcr_dynamic_tool(tool, arguments)
+            summary = self._summarize_lcr_dynamic_tool_result(tool, result)
+            tool_server = self._dynamic_tool_server(tool)
+            usage_delta = self._record_yunwu_image_usage_from_tool_result(server=tool_server, tool=tool, result=summary)
             content_text = self._dynamic_tool_text_result(tool, summary)
             self._record_event(
                 {
                     "type": "dynamic_tool_called",
+                    "server": tool_server,
                     "tool": tool,
                     "thread_id": payload.get("threadId"),
                     "turn_id": payload.get("turnId"),
@@ -1534,6 +1540,7 @@ class RuntimeService:
             self._record_event(
                 {
                     "type": "dynamic_tool_failed",
+                    "server": self._dynamic_tool_server(tool),
                     "tool": tool,
                     "thread_id": payload.get("threadId"),
                     "turn_id": payload.get("turnId"),
@@ -1542,6 +1549,40 @@ class RuntimeService:
                 }
             )
             return {"success": False, "contentItems": [{"type": "inputText", "text": f"LCR dynamic tool failed: {message}"}]}
+
+    def _call_lcr_dynamic_tool(self, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        if tool.startswith("lcr_web_"):
+            return self._call_lcr_web_dynamic_tool(tool, arguments)
+        return self._call_yunwu_dynamic_tool(tool, arguments)
+
+    def _summarize_lcr_dynamic_tool_result(self, tool: str, result: dict[str, Any]) -> dict[str, Any]:
+        if tool.startswith("yunwu_image_"):
+            return summarize_yunwu_image_result(result)
+        return result
+
+    def _dynamic_tool_server(self, tool: str) -> str:
+        if tool.startswith("lcr_web_"):
+            return "lcr_web"
+        if tool.startswith("yunwu_image_"):
+            return "yunwu_image"
+        return "lcr"
+
+    def _call_lcr_web_dynamic_tool(self, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        if tool == "lcr_web_search_batch":
+            return self._lcr_web.search_batch(arguments)
+        if tool == "lcr_web_research_brief":
+            return self._lcr_web.research_brief(arguments)
+        if tool == "lcr_web_search":
+            return self._lcr_web.search_batch(
+                {
+                    "queries": [{"query": str(arguments.get("query") or ""), "max_results": int(arguments.get("max_results") or 5)}],
+                    "dedupe": True,
+                    "timeout_sec": int(arguments.get("timeout_sec") or 20),
+                }
+            )
+        if tool == "lcr_web_fetch":
+            return self._lcr_web.fetch(arguments)
+        raise ValueError(f"Unsupported LCR web dynamic tool: {tool}")
 
     def _call_yunwu_dynamic_tool(self, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
         workspace_root = self._projects.require_workspace_root()
@@ -2236,17 +2277,28 @@ for host in candidates:
         return params
 
     def _lcr_dynamic_tools(self) -> list[dict[str, Any]]:
-        if not self._mcp_server_enabled("yunwu_image"):
-            return []
-        return [
-            {
-                "name": str(tool.get("name") or ""),
-                "description": str(tool.get("description") or ""),
-                "inputSchema": dict(tool.get("inputSchema") or {}),
-            }
-            for tool in yunwu_image_dynamic_tools()
-            if tool.get("name")
-        ]
+        dynamic_tools: list[dict[str, Any]] = []
+        if self._mcp_server_enabled("lcr_web"):
+            dynamic_tools.extend(
+                {
+                    "name": str(tool.get("name") or ""),
+                    "description": str(tool.get("description") or ""),
+                    "inputSchema": dict(tool.get("inputSchema") or {}),
+                }
+                for tool in lcr_web_dynamic_tools()
+                if tool.get("name")
+            )
+        if self._mcp_server_enabled("yunwu_image"):
+            dynamic_tools.extend(
+                {
+                    "name": str(tool.get("name") or ""),
+                    "description": str(tool.get("description") or ""),
+                    "inputSchema": dict(tool.get("inputSchema") or {}),
+                }
+                for tool in yunwu_image_dynamic_tools()
+                if tool.get("name")
+            )
+        return dynamic_tools
 
     def _lcr_dynamic_tool_names(self) -> set[str]:
         return {str(tool.get("name") or "") for tool in self._lcr_dynamic_tools()}

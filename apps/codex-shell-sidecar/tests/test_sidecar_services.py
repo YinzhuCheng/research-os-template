@@ -827,6 +827,29 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn("yunwu_image_transparent_asset", names)
             self.assertIn("yunwu_image_edit", names)
 
+    def test_runtime_thread_start_registers_lcr_web_dynamic_tools_when_enabled(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._mcp_config.enabled_servers = lambda: [{"name": "lcr_web", "enabled": True}]  # type: ignore[method-assign]
+
+            params = runtime._thread_start_params(  # noqa: SLF001
+                profile={"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro"},
+                model="deepseek-v4-pro",
+                permission_mode="auto",
+            )
+
+            names = {tool["name"] for tool in params["dynamicTools"]}
+            self.assertIn("lcr_web_search_batch", names)
+            self.assertIn("lcr_web_research_brief", names)
+            self.assertIn("lcr_web_search", names)
+            self.assertIn("lcr_web_fetch", names)
+            self.assertNotIn("yunwu_image_generate", names)
+
     def test_runtime_dynamic_yunwu_tool_call_returns_app_server_content_items(self) -> None:
         class FakeYunwuImage:
             def transparent_asset(self, **kwargs: object) -> dict[str, object]:
@@ -875,8 +898,59 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertNotIn("iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB", result["contentItems"][0]["text"])
             self.assertEqual(runtime.list_events()["events"][-1]["type"], "dynamic_tool_called")
             event_payload = json.dumps(runtime.list_events()["events"][-1], ensure_ascii=False)
+            self.assertIn('"server": "yunwu_image"', event_payload)
             self.assertIn("b64_json_present", event_payload)
             self.assertNotIn("iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB", event_payload)
+
+    def test_runtime_dynamic_lcr_web_tool_call_returns_research_brief_content(self) -> None:
+        class FakeLcrWeb:
+            def research_brief(self, arguments: dict[str, object]) -> dict[str, object]:
+                return {
+                    "ok": True,
+                    "record_id": "research-1",
+                    "tool_event_verified": True,
+                    "path": "D:/workspace/.lcr/research/research-1.json",
+                    "result": {
+                        "tool": "lcr_web_research_brief",
+                        "research_goal": arguments.get("research_goal"),
+                        "sources": [{"url": "https://example.com/autotile", "title": "Autotile"}],
+                        "citation_rule": "Use only URLs in sources.",
+                    },
+                }
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(
+                projects,
+                ModalService(projects.require_shell_state_root),
+                lcr_web_service=FakeLcrWeb(),
+            )
+            runtime._mcp_config.enabled_servers = lambda: [{"name": "lcr_web", "enabled": True}]  # type: ignore[method-assign]
+
+            result = runtime._on_server_request(  # noqa: SLF001
+                "item/tool/call",
+                {
+                    "threadId": "thread-1",
+                    "turnId": "turn-1",
+                    "tool": "lcr_web_research_brief",
+                    "arguments": {"research_goal": "RPG autotile map visual design"},
+                },
+            )
+
+            self.assertTrue(result["success"])
+            self.assertEqual(result["contentItems"][0]["type"], "inputText")
+            text = result["contentItems"][0]["text"]
+            self.assertIn("lcr_web_research_brief", text)
+            self.assertIn("https://example.com/autotile", text)
+            self.assertIn("tool_event_verified", text)
+            event_payload = json.dumps(runtime.list_events()["events"][-1], ensure_ascii=False)
+            self.assertIn("dynamic_tool_called", event_payload)
+            self.assertIn('"server": "lcr_web"', event_payload)
+            self.assertIn("https://example.com/autotile", event_payload)
 
     def test_runtime_yunwu_tool_usage_refreshes_asset_registry(self) -> None:
         class FakeAssetRegistry:

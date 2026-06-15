@@ -188,6 +188,22 @@ The game can be considered publishable for this dogfood target only when these a
 
 ## Immediate Next Actions
 
+Latest evidence from the 2026-06-16 Yunwu MCP retry:
+
+- `yunwu_image_transparent_asset` is callable through LCR MCP when the request includes the local admin session token.
+- `n=2` remained unstable: the request returned `actual_n=1`, so production draws should still prefer concurrent repeated `n=1` calls.
+- The transparent edit route now reliably produced PNG RGBA assets with alpha, but visual usability still needs a separate gate.
+- `yunwu-1781561870-18ebb71e.png` is a better heroine walk-pose candidate than the earlier portrait-like image, but it still has an oval ground shadow/halo.
+- `yunwu-1781561922-7e785d75.png` is semantically a good yellow-key sprite, but still has gold glow and should be cropped/cleaned or redrawn before promotion.
+- Next DS/Kimi asset steps must treat `has_alpha=true` as necessary but not sufficient; contact-sheet and in-game scale review remain required before promote.
+
+Latest LCR tool-chain fix from the same checkpoint:
+
+- Source now injects `lcr_web_search_batch`, `lcr_web_research_brief`, `lcr_web_search`, and `lcr_web_fetch` as app-server `dynamicTools` whenever the LCR built-in web server is enabled.
+- Dynamic tool events now record `server=lcr_web` or `server=yunwu_image`, so dogfood evidence can distinguish web research from image generation and avoid charging web calls as image usage.
+- Sidecar unit tests passed: 118 tests, including new coverage for lcr_web dynamic tool registration and a fake research brief dynamic call.
+- The running sidecar must still be restarted/repackaged before this source change affects active app-server turns.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.
