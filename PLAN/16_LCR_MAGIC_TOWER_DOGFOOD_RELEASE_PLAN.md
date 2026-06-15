@@ -228,6 +228,21 @@ Latest LCR evidence-display fix from the same morning:
   - `context_mode=health_check` was still blocked by the 90% context guard; short health checks should either bypass with a safe minimal thread or expose a clear continue-once decision path.
   - Basic web search returned low-quality/off-topic results for autotile queries; use the research layer or better source-targeted queries for real design work.
 
+Latest LCR runtime profile / health-check fix from the same morning:
+
+- Runtime profile resolution now accepts provider ids such as `deepseek` for runtime calls and resolves them to a safe default profile when available, while profile CRUD and secret-loading endpoints remain strict about concrete `profile_id`.
+- `context_mode=health_check` / `lightweight` maps to `minimal_text` and now starts a fresh minimal provider thread, so short provider/tool smoke checks are not blocked by a hot user task thread at 90%+ context.
+- Sidecar unit tests passed: 121 tests, including new coverage for provider-id runtime profile resolution and fresh-thread health-check behavior.
+- Live verification after restarting the source sidecar on port 8795:
+  - posting `/api/runtime/turns/start` with `profile_id=deepseek` and `context_mode=health_check` succeeded,
+  - the handoff resolved to `profile_id=deepseek-default`,
+  - the runtime event recorded `reason=minimal_text_fresh_thread`,
+  - DeepSeek returned `ok` in about 2 seconds.
+- The live restart exposed two Windows-side operational footguns to harden later:
+  - selecting the first `Get-NetTCPConnection` row can hit `TimeWait` instead of the real listener,
+  - `Start-Process -ArgumentList` needs explicit quoting for paths with spaces such as `D:\Google One\research-os-template`.
+- The project was switched back to the previous DS dogfood thread after smoke so the app does not visually stay on the disposable health-check thread.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.

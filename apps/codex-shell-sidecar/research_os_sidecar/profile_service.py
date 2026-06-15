@@ -98,6 +98,48 @@ class ProfileService:
             raise ValueError(f"Unknown profile: {profile_id}")
         return profiles[0]
 
+    def resolve_runtime_profile(self, profile_id_or_provider: str | None) -> dict[str, Any]:
+        """Resolve runtime-facing profile aliases without weakening profile CRUD.
+
+        UI and automation often pass a provider id such as ``deepseek`` when the
+        intended profile is the provider's default profile. Runtime entry points
+        can accept that convenience alias, while settings/editing APIs stay
+        strict and continue to require concrete ``profile_id`` values.
+        """
+
+        chosen = str(profile_id_or_provider or "").strip()
+        if not chosen:
+            return self.get_profile(None)
+        try:
+            return self.get_profile(chosen)
+        except ValueError as exc:
+            profiles = self.list_profiles()["profiles"]
+            provider_matches = [
+                item
+                for item in profiles
+                if str(item.get("provider_id") or "").strip() == chosen
+            ]
+            if not provider_matches:
+                raise
+
+            default_profile_id = f"{chosen}-default"
+            for item in provider_matches:
+                if item.get("profile_id") == default_profile_id:
+                    return item
+
+            sorted_matches = sorted(provider_matches, key=lambda item: str(item.get("profile_id") or ""))
+            if len(sorted_matches) == 1:
+                return sorted_matches[0]
+
+            env_ref_matches = [item for item in sorted_matches if item.get("auth_mode") == "env_ref"]
+            if len(env_ref_matches) == 1:
+                return env_ref_matches[0]
+
+            suggestions = ", ".join(str(item.get("profile_id") or "") for item in sorted_matches)
+            raise ValueError(
+                f"Unknown profile: {chosen}. Provider '{chosen}' has multiple profiles; use one of: {suggestions}"
+            ) from exc
+
     def _assert_no_secret(self, value: Any) -> None:
         if isinstance(value, dict):
             for key, nested in value.items():

@@ -670,6 +670,78 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn("turn/start", [method for method, _params in client.requests])
             self.assertEqual(runtime.list_events()["events"][-1]["type"], "turn_start_background_pending")
 
+    def test_start_turn_health_check_uses_fresh_minimal_thread(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.requests: list[tuple[str, dict[str, object]]] = []
+
+            def request(self, method: str, params: dict[str, object], timeout: float | None = None) -> dict[str, object]:
+                self.requests.append((method, params))
+                if method == "thread/start":
+                    return {"thread": {"id": "thread-health", "name": "Health Check"}}
+                if method == "turn/start":
+                    return {"turn": {"id": "turn-health"}}
+                raise AssertionError(f"Unexpected method {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            projects.switch_thread("thread-hot")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-hot",
+                settings={
+                    "profile_id": "deepseek-default",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "high",
+                    "permission_mode": "auto",
+                },
+            )
+            client = FakeClient()
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), task_service=tasks)
+            runtime._prepare_runtime = lambda profile, require_secret=False: {"provider_id": profile.get("provider_id")}  # type: ignore[method-assign]  # noqa: ARG005
+            runtime._ensure_client = lambda runtime_status: client  # type: ignore[method-assign]  # noqa: ARG005
+            runtime._events = [
+                {
+                    "type": "notification",
+                    "method": "thread/tokenUsage/updated",
+                    "timestamp": "2026-06-16T00:00:01+00:00",
+                    "params": {
+                        "threadId": "thread-hot",
+                        "turnId": "turn-hot",
+                        "tokenUsage": {"total": {"totalTokens": 95}, "modelContextWindow": 100},
+                    },
+                }
+            ]
+
+            result = runtime.start_turn(
+                {"profile_id": "deepseek-default", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "high"},
+                thread_id="thread-hot",
+                text="Reply exactly: ok",
+                attachments=[],
+                model="deepseek-v4-pro",
+                effort="high",
+                permission_mode="auto",
+                context_mode="health_check",
+            )
+
+            self.assertEqual(result["thread_id"], "thread-health")
+            self.assertEqual(result["turn"]["id"], "turn-health")
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-health")
+            self.assertEqual([method for method, _params in client.requests], ["thread/start", "turn/start"])
+            self.assertTrue(
+                any(
+                    event.get("type") == "provider_handoff"
+                    and event.get("reason") == "minimal_text_fresh_thread"
+                    for event in runtime.list_events()["events"]
+                )
+            )
+
     def test_start_turn_missing_thread_recovery_timeout_returns_background_pending_response(self) -> None:
         class FakeClient:
             def __init__(self) -> None:
@@ -4679,6 +4751,62 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
                         "api_key": "should-not-be-here",
                     }
                 )
+
+    def test_profile_service_resolves_provider_id_for_runtime(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            service = ProfileService(Path(temp) / "profiles.json")
+            service.upsert_profile(
+                {
+                    "profile_id": "deepseek-default",
+                    "label": "DeepSeek Default",
+                    "type": "custom_provider",
+                    "provider_id": "deepseek",
+                    "base_url": "https://api.deepseek.com",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "high",
+                    "wire_api": "responses",
+                    "env_key": "DEEPSEEK_API_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            service.upsert_profile(
+                {
+                    "profile_id": "deepseek-v4-pro-max",
+                    "label": "DeepSeek V4 Pro Max",
+                    "type": "custom_provider",
+                    "provider_id": "deepseek",
+                    "base_url": "https://api.deepseek.com",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "max",
+                    "wire_api": "responses",
+                    "env_key": "DEEPSEEK_API_KEY",
+                    "auth_mode": "session_paste",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            service.upsert_profile(
+                {
+                    "profile_id": "solo-provider-profile",
+                    "label": "Solo Provider",
+                    "type": "custom_provider",
+                    "provider_id": "solo-provider",
+                    "base_url": "https://example.invalid/v1",
+                    "model": "solo-model",
+                    "reasoning_effort": "high",
+                    "wire_api": "responses",
+                    "env_key": "SOLO_PROVIDER_API_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+
+            self.assertEqual(service.resolve_runtime_profile("deepseek")["profile_id"], "deepseek-default")
+            self.assertEqual(service.resolve_runtime_profile("deepseek-v4-pro-max")["provider_id"], "deepseek")
+            self.assertEqual(service.resolve_runtime_profile("solo-provider")["profile_id"], "solo-provider-profile")
 
     def test_router_config_tracks_models_and_sanitized_export(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -409,7 +409,8 @@ class RuntimeService:
         normalized_context_mode = self._normalize_context_mode(context_mode)
         runtime_status = self._prepare_runtime(profile, require_secret=True)
         client = self._ensure_client(runtime_status)
-        if normalized_context_mode == "no_context" and self._tasks is not None:
+        force_fresh_context_thread = normalized_context_mode in {"minimal_text", "no_context"} and self._tasks is not None
+        if force_fresh_context_thread:
             desired = self._task_thread_settings(
                 profile,
                 model,
@@ -417,6 +418,7 @@ class RuntimeService:
                 permission_mode,
                 collaboration_mode=collaboration_mode,
             )
+            reason = "no_context_fresh_thread" if normalized_context_mode == "no_context" else "minimal_text_fresh_thread"
             effective_thread_id, handoff_event = self._start_fresh_provider_thread_for_turn(
                 client,
                 source_thread_id=thread_id,
@@ -425,7 +427,7 @@ class RuntimeService:
                 effort=effort,
                 permission_mode=permission_mode,
                 desired=desired,
-                reason="no_context_fresh_thread",
+                reason=reason,
             )
         else:
             effective_thread_id, handoff_event = self._ensure_provider_thread_for_turn(

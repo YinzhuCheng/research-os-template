@@ -757,7 +757,7 @@ class Handler(BaseHTTPRequestHandler):
     def _resolve_runtime_profile(self, profile_id: Any) -> dict[str, Any]:
         current = self.context.projects.current_project or {}
         chosen = str(profile_id or "") or str(current.get("default_profile_id") or "")
-        profile = self.context.profiles.get_profile(chosen or None)
+        profile = self.context.profiles.resolve_runtime_profile(chosen or None)
         self.context.llm_manager.inject_profile_key(profile)
         return self._profile_with_model_capabilities(profile)
 
