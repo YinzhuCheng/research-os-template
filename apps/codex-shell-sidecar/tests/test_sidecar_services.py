@@ -1,0 +1,5268 @@
+﻿from __future__ import annotations
+
+import base64
+import binascii
+import io
+import json
+import hashlib
+import os
+import struct
+import sys
+import tempfile
+import threading
+import unittest
+import urllib.request
+import zipfile
+import zlib
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from research_os_sidecar import common as common_module
+from research_os_sidecar import project_service as project_service_module
+from research_os_sidecar import runtime_service as runtime_service_module
+from research_os_sidecar import lcr_web_service as lcr_web_service_module
+from research_os_sidecar import lcr_web_mcp_server
+from research_os_sidecar.app_server_client import AppServerClient, JsonRpcError
+from research_os_sidecar.asset_registry_service import AssetRegistryService
+from research_os_sidecar.modal_service import ModalService
+from research_os_sidecar.checkpoint_service import CheckpointService
+from research_os_sidecar.dogfood_run_service import DogfoodRunService
+from research_os_sidecar.image_prompt_strategy import build_rewrite_instruction, prompt_guides_payload
+from research_os_sidecar.isolation_audit_service import IsolationAuditService
+from research_os_sidecar.llm_api_manager_service import LlmApiManagerService
+from research_os_sidecar.lcr_web_service import LcrWebService
+from research_os_sidecar.lcr_web_mcp_server import _tools as lcr_web_mcp_tools
+from research_os_sidecar.metadata_service import MetadataService
+from research_os_sidecar.mcp_config_service import McpConfigService
+from research_os_sidecar.official_codex_service import OfficialCodexService
+from research_os_sidecar.profile_service import ProfileService
+from research_os_sidecar.project_context_service import ProjectContextService
+from research_os_sidecar.project_service import DEFAULT_RUNTIME_HOST_ENV, DEFAULT_RUNTIME_WSL_DISTRO_ENV, ProjectService
+from research_os_sidecar.router_config_service import RouterConfigService
+from research_os_sidecar.router_service import ROUTER_ENV_KEY, RouterService
+from research_os_sidecar.runtime_config_service import RuntimeConfigService
+from research_os_sidecar.runtime_supervisor_service import RuntimeSupervisorService
+from research_os_sidecar.runtime_service import RuntimeService
+from research_os_sidecar.server import Handler, turn_text_from_payload
+from research_os_sidecar.task_service import TaskService
+from research_os_sidecar.wsl_dependency_service import WslDependencyService
+from research_os_sidecar.yunwu_image_mcp_server import _normalize_path_for_os as yunwu_image_normalize_path_for_os
+from research_os_sidecar.yunwu_image_mcp_server import _tools as yunwu_image_mcp_tools
+from research_os_sidecar.yunwu_image_service import YunwuImageService
+
+
+def _png_rgba(width: int, height: int, rgba: tuple[int, int, int, int]) -> bytes:
+    def chunk(kind: bytes, payload: bytes) -> bytes:
+        return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", binascii.crc32(kind + payload) & 0xFFFFFFFF)
+
+    row = bytes([0]) + bytes(rgba) * width
+    raw = row * height
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(raw))
+        + chunk(b"IEND", b"")
+    )
+
+
+class DummyRouter:
+    def __init__(self) -> None:
+        self.provider_tests: list[dict[str, object]] = []
+        self.model_tests: list[dict[str, object]] = []
+
+    def test_provider(self, provider_id: str, model_id: str | None = None, *, stream: bool = False) -> dict[str, object]:
+        self.provider_tests.append({"provider_id": provider_id, "model_id": model_id, "stream": stream})
+        return {
+            "ok": True,
+            "provider": provider_id,
+            "model": model_id or f"{provider_id}/model",
+            "stream": stream,
+            "status": 200,
+            "preview": {"model": model_id},
+            "response_excerpt": "ok",
+        }
+
+    def test_model_case(self, *, provider_id: str, model_id: str, effort: str | None = None, temperature: float | None = None, stream: bool = False) -> dict[str, object]:
+        self.model_tests.append({"provider_id": provider_id, "model_id": model_id, "effort": effort, "temperature": temperature, "stream": stream})
+        return {
+            "ok": True,
+            "provider": provider_id,
+            "model": model_id,
+            "effort": effort,
+            "temperature": temperature,
+            "stream": stream,
+            "status": 200,
+            "warnings": [],
+            "preview": {"model": model_id},
+            "response_excerpt": "ok",
+        }
+
+
+class _LiveProcessStub:
+    def poll(self) -> None:
+        return None
+
+
+class LocalCodexRouterServiceTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._default_runtime_host = os.environ.get(DEFAULT_RUNTIME_HOST_ENV)
+        self._default_runtime_distro = os.environ.get(DEFAULT_RUNTIME_WSL_DISTRO_ENV)
+        os.environ[DEFAULT_RUNTIME_HOST_ENV] = "windows"
+        os.environ.pop(DEFAULT_RUNTIME_WSL_DISTRO_ENV, None)
+        project_service_module._DEFAULT_RUNTIME_PREFS_CACHE = None
+
+    def tearDown(self) -> None:
+        if self._default_runtime_host is None:
+            os.environ.pop(DEFAULT_RUNTIME_HOST_ENV, None)
+        else:
+            os.environ[DEFAULT_RUNTIME_HOST_ENV] = self._default_runtime_host
+        if self._default_runtime_distro is None:
+            os.environ.pop(DEFAULT_RUNTIME_WSL_DISTRO_ENV, None)
+        else:
+            os.environ[DEFAULT_RUNTIME_WSL_DISTRO_ENV] = self._default_runtime_distro
+        project_service_module._DEFAULT_RUNTIME_PREFS_CACHE = None
+
+    def test_write_json_retries_transient_replace_permission_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "project_context_state.json"
+            original_replace = common_module.os.replace
+            calls = {"count": 0}
+
+            def flaky_replace(src: str | os.PathLike[str], dst: str | os.PathLike[str]) -> None:
+                calls["count"] += 1
+                if calls["count"] == 1:
+                    raise PermissionError("simulated transient Windows file lock")
+                original_replace(src, dst)
+
+            common_module.os.replace = flaky_replace  # type: ignore[assignment]
+            try:
+                common_module.write_json(target, {"ok": True})
+            finally:
+                common_module.os.replace = original_replace  # type: ignore[assignment]
+
+            self.assertEqual(calls["count"], 2)
+            self.assertEqual(json.loads(target.read_text(encoding="utf-8")), {"ok": True})
+            self.assertEqual(list(Path(temp).glob(".project_context_state.json.*.tmp")), [])
+
+    def test_project_create_and_duplicate_workspace_guard(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            store = root / "recent.json"
+            workspace = root / "workspace"
+            workspace.mkdir()
+            service = ProjectService(store)
+
+            project = service.create_project(
+                "Demo",
+                root / "demo.lcrproj",
+                workspace_root=workspace,
+                entry_mode="existing",
+            )
+
+            self.assertEqual(project["schema_version"], "local-codex-router-project-v1")
+            self.assertIsNone(project["current_task_id"])
+            self.assertEqual(project["recent_tasks"], [])
+            self.assertTrue((workspace / ".lcr" / "attachments").exists())
+            self.assertTrue((workspace / ".lcr" / "runtime_events.jsonl").exists())
+
+            with self.assertRaises(ValueError):
+                service.create_project(
+                    "Other",
+                    root / "other.lcrproj",
+                    workspace_root=workspace,
+                    entry_mode="existing",
+                )
+
+    def test_app_server_client_is_not_running_after_reader_disconnect(self) -> None:
+        client = AppServerClient(codex_executable="codex")
+        client._process = _LiveProcessStub()  # type: ignore[assignment]
+
+        self.assertTrue(client.is_running())
+
+        client._disconnected.set()
+
+        self.assertFalse(client.is_running())
+
+    def test_app_server_client_notification_callback_error_does_not_disconnect_reader(self) -> None:
+        client = AppServerClient(codex_executable="codex", on_notification=lambda _method, _params: (_ for _ in ()).throw(PermissionError("cache locked")))
+
+        client._emit_notification("thread/started", {"thread": {"id": "thread-a"}})  # noqa: SLF001
+
+        self.assertFalse(client._disconnected.is_set())  # noqa: SLF001
+
+    def test_handler_accepts_utf8_bom_json_body(self) -> None:
+        handler = object.__new__(Handler)
+        body = "\ufeff{\"project_file\":\"demo.lcrproj\"}".encode("utf-8")
+        handler.headers = {"Content-Length": str(len(body))}
+        handler.rfile = io.BytesIO(body)
+
+        self.assertEqual(handler.read_json_body()["project_file"], "demo.lcrproj")
+
+    def test_project_defaults_to_wsl_when_runtime_default_is_wsl(self) -> None:
+        previous_host = os.environ.get(DEFAULT_RUNTIME_HOST_ENV)
+        previous_distro = os.environ.get(DEFAULT_RUNTIME_WSL_DISTRO_ENV)
+        os.environ[DEFAULT_RUNTIME_HOST_ENV] = "wsl"
+        os.environ[DEFAULT_RUNTIME_WSL_DISTRO_ENV] = "Ubuntu-24.04"
+        project_service_module._DEFAULT_RUNTIME_PREFS_CACHE = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                workspace = root / "workspace"
+                workspace.mkdir()
+                service = ProjectService(root / "recent.json")
+
+                project = service.create_project(
+                    "Demo",
+                    root / "demo.lcrproj",
+                    workspace_root=workspace,
+                    entry_mode="existing",
+                )
+
+                self.assertEqual(project["ui_preferences"]["execution_host"], "wsl")
+                self.assertEqual(project["ui_preferences"]["wsl_distro"], "Ubuntu-24.04")
+
+        finally:
+            if previous_host is None:
+                os.environ.pop(DEFAULT_RUNTIME_HOST_ENV, None)
+            else:
+                os.environ[DEFAULT_RUNTIME_HOST_ENV] = previous_host
+            if previous_distro is None:
+                os.environ.pop(DEFAULT_RUNTIME_WSL_DISTRO_ENV, None)
+            else:
+                os.environ[DEFAULT_RUNTIME_WSL_DISTRO_ENV] = previous_distro
+            project_service_module._DEFAULT_RUNTIME_PREFS_CACHE = None
+
+    def test_task_service_tracks_provider_handoff_without_secrets(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+
+            task = tasks.create_task(
+                "Build game",
+                thread_id="thread-openai",
+                settings={
+                    "profile_id": "openai-default",
+                    "provider_id": "openai",
+                    "model": "gpt-5.5",
+                    "reasoning_effort": "high",
+                    "permission_mode": "auto",
+                },
+            )
+            self.assertEqual(projects.current_project["current_task_id"], task["task_id"])
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-openai")
+
+            event = tasks.record_provider_handoff(
+                from_thread_id="thread-openai",
+                to_thread_id="thread-deepseek",
+                settings={
+                    "profile_id": "deepseek-default",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "max",
+                    "permission_mode": "auto",
+                },
+                reused_existing=False,
+            )
+
+            snapshot = tasks.snapshot()
+            current = snapshot["current_task"]
+            self.assertEqual(event["to_thread_id"], "thread-deepseek")
+            self.assertEqual(current["active_provider_thread_id"], "thread-deepseek")
+            self.assertEqual(len(current["provider_threads"]), 2)
+            state_text = (workspace / ".lcr" / "tasks.json").read_text(encoding="utf-8")
+            self.assertIn("multi_provider_handoff", state_text)
+            self.assertNotIn("Authorization", state_text)
+
+    def test_default_task_inherits_thread_context_goal_and_plan(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            shell_root = workspace / ".lcr"
+            thread_id = "thread-deepseek"
+            (shell_root / "thread_cache.json").write_text(
+                json.dumps(
+                    {
+                        "by_id": {
+                            thread_id: {
+                                "name": "DS continuity thread",
+                                "profile_id": "deepseek-v4-pro-max",
+                                "model": "deepseek/deepseek-v4-pro",
+                                "reasoning_effort": "xhigh",
+                                "permission_mode": "auto",
+                            }
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (shell_root / "project_context_state.json").write_text(
+                json.dumps(
+                    {
+                        "threads": {
+                            thread_id: {
+                                "goal": {"objective": "Continue the same game task"},
+                                "latest_plan": {
+                                    "steps": [
+                                        {"step": "Keep task context", "status": "inProgress"},
+                                    ],
+                                },
+                            }
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            task = TaskService(projects).ensure_default_task(thread_id=thread_id, title="Game task")
+
+            provider_thread = task["provider_threads"][0]
+            self.assertEqual(provider_thread["profile_id"], "deepseek-v4-pro-max")
+            self.assertEqual(provider_thread["provider_id"], "deepseek")
+            self.assertEqual(provider_thread["model"], "deepseek/deepseek-v4-pro")
+            self.assertEqual(task["goal"]["objective"], "Continue the same game task")
+            self.assertEqual(task["plan"]["steps"][0]["step"], "Keep task context")
+
+    def test_provider_thread_matching_normalizes_model_and_effort_aliases(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Build game",
+                thread_id="thread-deepseek",
+                settings={
+                    "profile_id": "deepseek-v4-pro-max",
+                    "provider_id": "deepseek",
+                    "model": "deepseek/deepseek-v4-pro",
+                    "reasoning_effort": "xhigh",
+                    "permission_mode": "auto",
+                },
+            )
+
+            match = tasks.find_provider_thread(
+                profile_id="deepseek-v4-pro-max",
+                model="deepseek-v4-pro",
+                effort="max",
+            )
+
+            self.assertIsNotNone(match)
+            self.assertEqual(match["thread_id"], "thread-deepseek")
+            self.assertFalse(
+                tasks.needs_provider_handoff(
+                    thread_id="thread-deepseek",
+                    profile_id="deepseek-v4-pro-max",
+                    model="deepseek-v4-pro",
+                    effort="max",
+                )
+            )
+
+    def test_provider_thread_matching_can_fall_back_to_provider_id_and_skips_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Build game",
+                thread_id="thread-kimi",
+                settings={
+                    "profile_id": "kimi-old-profile",
+                    "provider_id": "kimi",
+                    "model": "moonshot/kimi-k2.6",
+                    "reasoning_effort": "xhigh",
+                    "permission_mode": "auto",
+                },
+            )
+
+            match = tasks.find_provider_thread(
+                profile_id="kimi-new-profile",
+                provider_id="kimi",
+                model="kimi-k2.6",
+                effort="xhigh",
+            )
+
+            self.assertIsNotNone(match)
+            self.assertEqual(match["thread_id"], "thread-kimi")
+            tasks.mark_provider_thread_missing("thread-kimi", reason="test_missing")
+            self.assertIsNone(
+                tasks.find_provider_thread(
+                    profile_id="kimi-new-profile",
+                    provider_id="kimi",
+                    model="kimi-k2.6",
+                    effort="xhigh",
+                )
+            )
+
+    def test_runtime_reuses_existing_provider_thread_for_same_task_handoff(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.requests: list[tuple[str, dict[str, object]]] = []
+
+            def request(self, method: str, params: dict[str, object], timeout: float | None = None) -> dict[str, object]:
+                self.requests.append((method, params))
+                if method == "thread/read":
+                    return {"thread": {"id": params.get("threadId")}}
+                if method == "thread/fork":
+                    raise AssertionError("Provider handoff should reuse existing thread instead of forking.")
+                raise AssertionError(f"Unexpected method {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-openai",
+                settings={
+                    "profile_id": "openai-default",
+                    "provider_id": "openai",
+                    "model": "gpt-5.5",
+                    "reasoning_effort": "high",
+                    "permission_mode": "auto",
+                },
+            )
+            tasks.bind_thread(
+                thread_id="thread-deepseek-existing",
+                settings={
+                    "profile_id": "deepseek-profile-old",
+                    "provider_id": "deepseek",
+                    "model": "deepseek/deepseek-v4-pro",
+                    "reasoning_effort": "xhigh",
+                    "permission_mode": "auto",
+                },
+                make_active=False,
+            )
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), task_service=tasks)
+            client = FakeClient()
+
+            thread_id, handoff = runtime._ensure_provider_thread_for_turn(  # noqa: SLF001
+                client,
+                source_thread_id="thread-openai",
+                profile={"profile_id": "deepseek-profile-new", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+                model="deepseek-v4-pro",
+                effort="max",
+                permission_mode="auto",
+                collaboration_mode=None,
+            )
+
+            self.assertEqual(thread_id, "thread-deepseek-existing")
+            self.assertTrue(handoff["reused_existing"])
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-deepseek-existing")
+            self.assertEqual([method for method, _params in client.requests], ["thread/read", "thread/read"])
+
+    def test_runtime_marks_missing_reusable_provider_thread_and_forks_once(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.requests: list[tuple[str, dict[str, object]]] = []
+
+            def request(self, method: str, params: dict[str, object], timeout: float | None = None) -> dict[str, object]:
+                self.requests.append((method, params))
+                if method == "thread/read":
+                    if params.get("threadId") == "thread-openai":
+                        return {"thread": {"id": "thread-openai"}}
+                    raise JsonRpcError("thread not found")
+                if method == "thread/fork":
+                    return {"thread": {"id": "thread-deepseek-forked", "name": "Forked DS"}}
+                raise AssertionError(f"Unexpected method {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-openai",
+                settings={"profile_id": "openai", "provider_id": "openai", "model": "gpt-5.5", "reasoning_effort": "high"},
+            )
+            tasks.bind_thread(
+                thread_id="thread-deepseek-missing",
+                settings={"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+                make_active=False,
+            )
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), task_service=tasks)
+
+            thread_id, handoff = runtime._ensure_provider_thread_for_turn(  # noqa: SLF001
+                FakeClient(),
+                source_thread_id="thread-openai",
+                profile={"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+                model="deepseek-v4-pro",
+                effort="max",
+                permission_mode="auto",
+                collaboration_mode=None,
+            )
+
+            self.assertEqual(thread_id, "thread-deepseek-forked")
+            self.assertFalse(handoff["reused_existing"])
+            task = tasks.current_task()
+            missing = [item for item in task["provider_threads"] if item["thread_id"] == "thread-deepseek-missing"][0]
+            self.assertEqual(missing["missing_reason"], "provider_handoff_target_missing")
+
+    def test_runtime_recovers_when_source_provider_thread_is_missing(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.requests: list[tuple[str, dict[str, object]]] = []
+
+            def request(self, method: str, params: dict[str, object], timeout: float | None = None) -> dict[str, object]:
+                self.requests.append((method, params))
+                if method == "thread/read":
+                    raise JsonRpcError("thread not found")
+                if method == "thread/start":
+                    return {"thread": {"id": "thread-recovered", "name": "Recovered DS"}}
+                if method == "thread/fork":
+                    raise AssertionError("Missing source thread should recover with thread/start, not fork.")
+                raise AssertionError(f"Unexpected method {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-stale",
+                settings={"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+            )
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), task_service=tasks)
+
+            thread_id, handoff = runtime._ensure_provider_thread_for_turn(  # noqa: SLF001
+                FakeClient(),
+                source_thread_id="thread-stale",
+                profile={"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+                model="deepseek-v4-pro",
+                effort="max",
+                permission_mode="auto",
+                collaboration_mode=None,
+            )
+
+            self.assertEqual(thread_id, "thread-recovered")
+            self.assertFalse(handoff["reused_existing"])
+            task = tasks.current_task()
+            missing = [item for item in task["provider_threads"] if item["thread_id"] == "thread-stale"][0]
+            self.assertEqual(missing["missing_reason"], "provider_handoff_source_missing")
+
+    def test_task_title_update_and_missing_provider_thread_pruning(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Old smoke title",
+                thread_id="thread-openai",
+                settings={"profile_id": "openai", "provider_id": "openai", "model": "gpt-5.5", "reasoning_effort": "high"},
+            )
+
+            renamed = tasks.update_current_task_title("Magic tower visual renderer dogfood")
+            self.assertEqual(renamed["title"], "Magic tower visual renderer dogfood")
+
+            for index in range(5):
+                thread_id = f"thread-deepseek-missing-{index}"
+                tasks.bind_thread(
+                    thread_id=thread_id,
+                    settings={"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+                    make_active=False,
+                )
+                tasks.mark_provider_thread_missing(thread_id, reason="test_missing")
+
+            task = tasks.current_task()
+            missing = [
+                item
+                for item in task["provider_threads"]
+                if item.get("missing_at") and item.get("provider_id") == "deepseek" and item.get("model") == "deepseek-v4-pro"
+            ]
+            self.assertLessEqual(len(missing), 2)
+            self.assertIn("Magic tower visual renderer dogfood", (workspace / ".lcr" / "tasks.json").read_text(encoding="utf-8"))
+
+    def test_start_turn_timeout_returns_background_pending_response(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.requests: list[tuple[str, dict[str, object]]] = []
+
+            def request(self, method: str, params: dict[str, object], timeout: float | None = None) -> dict[str, object]:
+                self.requests.append((method, params))
+                if method == "thread/read":
+                    return {"thread": {"id": params.get("threadId")}}
+                if method == "turn/start":
+                    raise TimeoutError("slow provider")
+                raise AssertionError(f"Unexpected method {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            projects.switch_thread("thread-deepseek")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-deepseek",
+                settings={
+                    "profile_id": "deepseek",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "max",
+                    "permission_mode": "auto",
+                },
+            )
+            client = FakeClient()
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), task_service=tasks)
+            runtime._prepare_runtime = lambda profile, require_secret=False: {"provider_id": profile.get("provider_id")}  # type: ignore[method-assign]  # noqa: ARG005
+            runtime._ensure_client = lambda runtime_status: client  # type: ignore[method-assign]  # noqa: ARG005
+
+            result = runtime.start_turn(
+                {"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+                thread_id="thread-deepseek",
+                text="Continue.",
+                attachments=[],
+                model="deepseek-v4-pro",
+                effort="max",
+                permission_mode="auto",
+            )
+
+            self.assertTrue(result["background_start"])
+            self.assertEqual(result["thread_id"], "thread-deepseek")
+            self.assertTrue(result["turn"]["synthetic"])
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-deepseek")
+            self.assertIn("turn/start", [method for method, _params in client.requests])
+            self.assertEqual(runtime.list_events()["events"][-1]["type"], "turn_start_background_pending")
+
+    def test_start_turn_missing_thread_recovery_timeout_returns_background_pending_response(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.requests: list[tuple[str, dict[str, object]]] = []
+
+            def request(self, method: str, params: dict[str, object], timeout: float | None = None) -> dict[str, object]:
+                self.requests.append((method, params))
+                if method == "thread/read":
+                    raise JsonRpcError("thread not found")
+                if method == "thread/start":
+                    return {"thread": {"id": "thread-recovered", "name": "Recovered DS"}}
+                if method == "turn/start":
+                    raise TimeoutError("slow recovered provider")
+                raise AssertionError(f"Unexpected method {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            projects.switch_thread("thread-stale")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-stale",
+                settings={
+                    "profile_id": "deepseek",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "max",
+                    "permission_mode": "auto",
+                },
+            )
+            client = FakeClient()
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), task_service=tasks)
+            runtime._prepare_runtime = lambda profile, require_secret=False: {"provider_id": profile.get("provider_id")}  # type: ignore[method-assign]  # noqa: ARG005
+            runtime._ensure_client = lambda runtime_status: client  # type: ignore[method-assign]  # noqa: ARG005
+
+            result = runtime.start_turn(
+                {"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+                thread_id="thread-stale",
+                text="Continue.",
+                attachments=[],
+                model="deepseek-v4-pro",
+                effort="max",
+                permission_mode="auto",
+            )
+
+            self.assertTrue(result["background_start"])
+            self.assertEqual(result["thread_id"], "thread-recovered")
+            self.assertTrue(result["turn"]["synthetic"])
+            self.assertIn("thread/start", [method for method, _params in client.requests])
+            self.assertEqual(runtime.list_events()["events"][-1]["type"], "turn_start_background_pending")
+
+    def test_start_turn_recovers_when_app_server_reports_thread_not_loaded(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.requests: list[tuple[str, dict[str, object]]] = []
+
+            def request(self, method: str, params: dict[str, object], timeout: float | None = None) -> dict[str, object]:
+                self.requests.append((method, params))
+                if method == "thread/read":
+                    return {"thread": {"id": params.get("threadId")}}
+                if method == "thread/start":
+                    return {"thread": {"id": "thread-recovered", "name": "Recovered DS"}}
+                if method == "turn/start":
+                    if params.get("threadId") == "thread-stale":
+                        raise JsonRpcError("thread not loaded: thread-stale")
+                    return {"turn": {"id": "turn-recovered"}}
+                raise AssertionError(f"Unexpected method {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            projects.switch_thread("thread-stale")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-stale",
+                settings={
+                    "profile_id": "deepseek",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "max",
+                    "permission_mode": "auto",
+                },
+            )
+            client = FakeClient()
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), task_service=tasks)
+            runtime._prepare_runtime = lambda profile, require_secret=False: {"provider_id": profile.get("provider_id")}  # type: ignore[method-assign]  # noqa: ARG005
+            runtime._ensure_client = lambda runtime_status: client  # type: ignore[method-assign]  # noqa: ARG005
+
+            result = runtime.start_turn(
+                {"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+                thread_id="thread-stale",
+                text="Continue.",
+                attachments=[],
+                model="deepseek-v4-pro",
+                effort="max",
+                permission_mode="auto",
+            )
+
+            self.assertEqual(result["thread_id"], "thread-recovered")
+            self.assertEqual(result["turn"]["id"], "turn-recovered")
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-recovered")
+            self.assertEqual([method for method, _params in client.requests].count("turn/start"), 2)
+            self.assertTrue(any(event.get("type") == "provider_thread_recovered" for event in runtime.list_events()["events"]))
+
+    def test_runtime_thread_cache_write_failure_is_non_fatal(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            original_write_json = runtime_service_module.write_json
+            runtime_service_module.write_json = lambda _path, _payload: (_ for _ in ()).throw(PermissionError("cache locked"))  # type: ignore[assignment]
+            try:
+                runtime._cache_thread_entry("thread-a", {"name": "Thread A"})  # noqa: SLF001
+            finally:
+                runtime_service_module.write_json = original_write_json  # type: ignore[assignment]
+
+            self.assertEqual(runtime.list_events()["events"][-1]["type"], "thread_cache_write_failed")
+
+    def test_turn_text_from_payload_accepts_prompt_alias(self) -> None:
+        self.assertEqual(turn_text_from_payload({"text": "Use text", "prompt": "Ignore prompt"}), "Use text")
+        self.assertEqual(turn_text_from_payload({"prompt": "Use prompt"}), "Use prompt")
+        self.assertEqual(turn_text_from_payload({"message": "Use message"}), "Use message")
+        self.assertEqual(turn_text_from_payload({"text": "", "prompt": "Ignored because text is explicit"}), "")
+        self.assertEqual(turn_text_from_payload({}), "")
+
+    def test_runtime_thread_start_registers_yunwu_dynamic_tools_when_enabled(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._mcp_config.enabled_servers = lambda: [{"name": "yunwu_image", "enabled": True}]  # type: ignore[method-assign]
+
+            params = runtime._thread_start_params(  # noqa: SLF001
+                profile={"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro"},
+                model="deepseek-v4-pro",
+                permission_mode="auto",
+            )
+
+            names = {tool["name"] for tool in params["dynamicTools"]}
+            self.assertIn("yunwu_image_generate", names)
+            self.assertIn("yunwu_image_transparent_asset", names)
+            self.assertIn("yunwu_image_edit", names)
+
+    def test_runtime_dynamic_yunwu_tool_call_returns_app_server_content_items(self) -> None:
+        class FakeYunwuImage:
+            def transparent_asset(self, **kwargs: object) -> dict[str, object]:
+                return {
+                    "created": 123,
+                    "requested_n": kwargs.get("n"),
+                    "actual_n": 1,
+                    "count_mismatch": False,
+                    "asset_manifest_path": str(Path(str(kwargs["workspace_root"])) / ".lcr" / "assets" / "generated" / "asset_manifest.json"),
+                    "data": [
+                        {
+                            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB",
+                            "asset_id": "yunwu-test",
+                            "local_path": str(Path(str(kwargs["workspace_root"])) / ".lcr" / "assets" / "generated" / "yunwu-test.png"),
+                            "has_alpha": True,
+                            "transparent_pixel_ratio": 0.5,
+                            "transparency_status": "passed",
+                        }
+                    ],
+                }
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._mcp_config.enabled_servers = lambda: [{"name": "yunwu_image", "enabled": True}]  # type: ignore[method-assign]
+            runtime._yunwu_image = FakeYunwuImage()  # type: ignore[assignment]
+
+            result = runtime._on_server_request(  # noqa: SLF001
+                "item/tool/call",
+                {
+                    "threadId": "thread-1",
+                    "turnId": "turn-1",
+                    "tool": "yunwu_image_transparent_asset",
+                    "arguments": {"prompt": "single transparent key", "n": 1},
+                },
+            )
+
+            self.assertTrue(result["success"])
+            self.assertEqual(result["contentItems"][0]["type"], "inputText")
+            self.assertIn("yunwu-test", result["contentItems"][0]["text"])
+            self.assertIn("b64_json_present", result["contentItems"][0]["text"])
+            self.assertNotIn("iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB", result["contentItems"][0]["text"])
+            self.assertEqual(runtime.list_events()["events"][-1]["type"], "dynamic_tool_called")
+            event_payload = json.dumps(runtime.list_events()["events"][-1], ensure_ascii=False)
+            self.assertIn("b64_json_present", event_payload)
+            self.assertNotIn("iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB", event_payload)
+
+    def test_runtime_yunwu_tool_usage_refreshes_asset_registry(self) -> None:
+        class FakeAssetRegistry:
+            def __init__(self) -> None:
+                self.rebuild_count = 0
+
+            def rebuild(self) -> dict[str, object]:
+                self.rebuild_count += 1
+                return {"registry": {"assets": [{"asset_id": "asset-1"}]}}
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            assets = FakeAssetRegistry()
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), asset_registry=assets)
+
+            delta = runtime._record_yunwu_image_usage_from_tool_result(  # noqa: SLF001
+                server="yunwu_image",
+                tool="yunwu_image_transparent_asset",
+                result={"actual_n": 1, "data": [{"asset_id": "asset-1"}]},
+            )
+
+            self.assertEqual(delta, {"yunwu_images": 1})
+            self.assertEqual(assets.rebuild_count, 1)
+            self.assertTrue(any(event.get("type") == "asset_registry_refreshed" for event in runtime.list_events()["events"]))
+
+    def test_runtime_direct_mcp_tool_call_recovers_matching_provider_thread_and_usage(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.calls: list[tuple[str, dict[str, object]]] = []
+                self.tool_thread_id: str | None = None
+
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                payload = dict(params or {})
+                self.calls.append((method, payload))
+                if method == "thread/read":
+                    thread_id = str(payload.get("threadId") or "")
+                    if thread_id == "thread-deepseek":
+                        raise JsonRpcError("thread not found: thread-deepseek")
+                    return {"thread": {"id": thread_id}}
+                if method == "thread/start":
+                    return {"thread": {"id": "thread-yunwu", "name": "Yunwu tool thread"}}
+                if method == "mcpServer/tool/call":
+                    self.tool_thread_id = str(payload.get("threadId") or "")
+                    return {
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": 'Yunwu image tool result:\n{"actual_n": 1, "data": [{"asset_id": "asset-1"}]}',
+                            }
+                        ]
+                    }
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.ensure_default_task(
+                thread_id="thread-deepseek",
+                settings={
+                    "profile_id": "deepseek-v4-pro-max",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "max",
+                    "permission_mode": "auto",
+                },
+                title="Tool task",
+            )
+            dogfood = DogfoodRunService(projects)
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), task_service=tasks, dogfood_run=dogfood)
+            fake_client = FakeClient()
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True, "provider_id": "yunwu"}  # type: ignore[method-assign]
+            runtime._ensure_client = lambda _runtime_status: fake_client  # type: ignore[method-assign]
+
+            response = runtime.call_mcp_tool(
+                {
+                    "profile_id": "yunwu-gpt-54",
+                    "provider_id": "yunwu",
+                    "model": "gpt-5.4",
+                    "reasoning_effort": "high",
+                },
+                thread_id="thread-deepseek",
+                server="yunwu_image",
+                tool="yunwu_image_transparent_asset",
+                arguments={"prompt": "transparent grass"},
+            )
+
+            self.assertEqual(response["thread_id"], "thread-yunwu")
+            self.assertEqual(response["usage_delta"], {"yunwu_images": 1})
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-yunwu")
+            current = tasks.current_task()
+            self.assertEqual(current["active_provider_thread_id"], "thread-yunwu")
+            yunwu_thread = [item for item in current["provider_threads"] if item["thread_id"] == "thread-yunwu"][0]
+            self.assertEqual(yunwu_thread["provider_id"], "yunwu")
+            self.assertEqual(dogfood.snapshot()["run"]["usage"]["yunwu_images"], 1)
+            self.assertEqual(fake_client.tool_thread_id, "thread-yunwu")
+            self.assertTrue(any(call[0] == "mcpServer/tool/call" and call[1]["threadId"] == "thread-yunwu" for call in fake_client.calls))
+
+    def test_runtime_direct_mcp_tool_call_uses_configured_tool_timeout(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.tool_call_timeout: float | None = None
+
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                if method == "thread/read":
+                    return {"thread": {"id": str((params or {}).get("threadId") or "")}}
+                if method == "mcpServer/tool/call":
+                    self.tool_call_timeout = timeout
+                    return {"content": [{"type": "text", "text": "ok"}]}
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._mcp_config.enabled_servers = lambda: [{"name": "yunwu_image", "enabled": True, "tool_timeout_sec": 333}]  # type: ignore[method-assign]
+            fake_client = FakeClient()
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True, "provider_id": "yunwu"}  # type: ignore[method-assign]
+            runtime._ensure_client = lambda _runtime_status: fake_client  # type: ignore[method-assign]
+
+            runtime.call_mcp_tool(
+                {"profile_id": "yunwu-gpt-54", "provider_id": "yunwu", "model": "gpt-5.4", "reasoning_effort": "high"},
+                thread_id="thread-yunwu",
+                server="yunwu_image",
+                tool="yunwu_image_transparent_asset",
+                arguments={"prompt": "transparent door"},
+            )
+
+            self.assertEqual(fake_client.tool_call_timeout, 333.0)
+
+    def test_runtime_direct_mcp_tool_call_retries_when_tool_call_thread_missing(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.calls: list[tuple[str, dict[str, object]]] = []
+                self.tool_thread_ids: list[str] = []
+
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                payload = dict(params or {})
+                self.calls.append((method, payload))
+                if method == "thread/read":
+                    return {"thread": {"id": str(payload.get("threadId") or "")}}
+                if method == "thread/start":
+                    return {"thread": {"id": "thread-yunwu-recovered", "name": "Recovered Yunwu tool thread"}}
+                if method == "mcpServer/tool/call":
+                    thread_id = str(payload.get("threadId") or "")
+                    self.tool_thread_ids.append(thread_id)
+                    if thread_id != "thread-yunwu-recovered":
+                        raise JsonRpcError(f"thread not found: {thread_id}")
+                    return {
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": 'Yunwu image tool result:\n{"actual_n": 2, "data": [{"asset_id": "a"}, {"asset_id": "b"}]}',
+                            }
+                        ]
+                    }
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.ensure_default_task(thread_id="thread-stale", title="Tool task")
+            dogfood = DogfoodRunService(projects)
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), task_service=tasks, dogfood_run=dogfood)
+            fake_client = FakeClient()
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True, "provider_id": "yunwu"}  # type: ignore[method-assign]
+            runtime._ensure_client = lambda _runtime_status: fake_client  # type: ignore[method-assign]
+
+            response = runtime.call_mcp_tool(
+                {
+                    "profile_id": "yunwu-gpt-54",
+                    "provider_id": "yunwu",
+                    "model": "gpt-5.4",
+                    "reasoning_effort": "high",
+                },
+                thread_id="thread-stale",
+                server="yunwu_image",
+                tool="yunwu_image_transparent_asset",
+                arguments={"prompt": "transparent grass"},
+            )
+
+            self.assertEqual(fake_client.tool_thread_ids, ["thread-stale", "thread-yunwu-recovered"])
+            self.assertEqual(response["thread_id"], "thread-yunwu-recovered")
+            self.assertEqual(response["usage_delta"], {"yunwu_images": 2})
+            current = tasks.current_task()
+            stale = [item for item in current["provider_threads"] if item["thread_id"] == "thread-stale"][0]
+            self.assertEqual(stale["missing_reason"], "mcp_tool_call_thread_missing")
+            self.assertEqual(current["active_provider_thread_id"], "thread-yunwu-recovered")
+            self.assertEqual(dogfood.snapshot()["run"]["usage"]["yunwu_images"], 2)
+
+    def test_runtime_direct_mcp_tool_call_without_task_service_recovers_missing_source_thread(self) -> None:
+        class FakeClient:
+            def __init__(self) -> None:
+                self.calls: list[tuple[str, dict[str, object]]] = []
+                self.tool_thread_id: str | None = None
+
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                payload = dict(params or {})
+                self.calls.append((method, payload))
+                if method == "thread/read":
+                    raise JsonRpcError(f"thread not found: {payload.get('threadId')}")
+                if method == "thread/start":
+                    return {"thread": {"id": "thread-yunwu-fresh", "name": "Fresh Yunwu tool thread"}}
+                if method == "mcpServer/tool/call":
+                    self.tool_thread_id = str(payload.get("threadId") or "")
+                    return {
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": 'Yunwu image tool result:\n{"actual_n": 1, "data": [{"asset_id": "fresh"}]}',
+                            }
+                        ]
+                    }
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            dogfood = DogfoodRunService(projects)
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), dogfood_run=dogfood)
+            fake_client = FakeClient()
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True, "provider_id": "yunwu"}  # type: ignore[method-assign]
+            runtime._ensure_client = lambda _runtime_status: fake_client  # type: ignore[method-assign]
+
+            response = runtime.call_mcp_tool(
+                {
+                    "profile_id": "yunwu-gpt-54",
+                    "provider_id": "yunwu",
+                    "model": "gpt-5.4",
+                    "reasoning_effort": "high",
+                },
+                thread_id="thread-from-other-runtime",
+                server="yunwu_image",
+                tool="yunwu_image_transparent_asset",
+                arguments={"prompt": "transparent grass"},
+            )
+
+            self.assertEqual(response["thread_id"], "thread-yunwu-fresh")
+            self.assertEqual(fake_client.tool_thread_id, "thread-yunwu-fresh")
+            self.assertEqual(response["usage_delta"], {"yunwu_images": 1})
+            self.assertEqual(dogfood.snapshot()["run"]["usage"]["yunwu_images"], 1)
+
+    def test_handler_payload_thread_id_defaults_to_current_project_thread(self) -> None:
+        handler = Handler.__new__(Handler)
+
+        class Context:
+            projects = type("Projects", (), {"current_project": {"current_thread_id": "thread-current"}})()
+
+        handler.context = Context()  # type: ignore[assignment]
+        self.assertEqual(handler._payload_thread_id({"thread_id": "thread-explicit"}), "thread-explicit")  # noqa: SLF001
+        self.assertEqual(handler._payload_thread_id({}), "thread-current")  # noqa: SLF001
+
+    def test_lcr_web_service_persists_verified_research_record(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            service = LcrWebService(projects)
+            original_research_brief = lcr_web_service_module._research_brief
+            lcr_web_service_module._research_brief = lambda **_kwargs: {  # type: ignore[assignment]
+                "tool": "lcr_web_research_brief",
+                "sources": [{"url": "https://example.com/", "title": "Example"}],
+            }
+
+            try:
+                result = service.research_brief(
+                    {
+                        "research_goal": "unit test known source",
+                        "queries": [],
+                        "source_urls": ["https://example.com/"],
+                        "fetch_top_n": 1,
+                        "max_chars_per_source": 500,
+                        "timeout_sec": 10,
+                    }
+                )
+            finally:
+                lcr_web_service_module._research_brief = original_research_brief  # type: ignore[assignment]
+
+            self.assertTrue(result["ok"])
+            self.assertTrue(result["tool_event_verified"])
+            path = Path(result["path"])
+            self.assertTrue(path.is_file())
+            self.assertIn(str(workspace / ".lcr" / "research"), str(path))
+            record = json.loads(path.read_text(encoding="utf-8"))
+            self.assertTrue(record["tool_event_verified"])
+
+    def test_open_project_fills_missing_runtime_preferences_from_default(self) -> None:
+        previous_host = os.environ.get(DEFAULT_RUNTIME_HOST_ENV)
+        previous_distro = os.environ.get(DEFAULT_RUNTIME_WSL_DISTRO_ENV)
+        os.environ[DEFAULT_RUNTIME_HOST_ENV] = "wsl"
+        os.environ[DEFAULT_RUNTIME_WSL_DISTRO_ENV] = "Ubuntu-24.04"
+        project_service_module._DEFAULT_RUNTIME_PREFS_CACHE = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                workspace = root / "workspace"
+                workspace.mkdir()
+                project_file = root / "demo.lcrproj"
+                project_file.write_text(
+                    json.dumps(
+                        {
+                            "schema_version": "local-codex-router-project-v1",
+                            "project_id": "demo",
+                            "name": "Demo",
+                            "project_file": str(project_file),
+                            "workspace_root": str(workspace),
+                            "entry_mode": "existing",
+                            "default_profile_id": "openai-compatible",
+                            "default_model": "gpt-5",
+                            "default_effort": "high",
+                            "current_thread_id": None,
+                            "recent_threads": [],
+                            "ui_preferences": {},
+                            "created_at": "2026-01-01T00:00:00+00:00",
+                            "updated_at": "2026-01-01T00:00:00+00:00",
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+                project = ProjectService(root / "recent.json").open_project(project_file)
+
+                self.assertEqual(project["ui_preferences"]["execution_host"], "wsl")
+                self.assertEqual(project["ui_preferences"]["wsl_distro"], "Ubuntu-24.04")
+        finally:
+            if previous_host is None:
+                os.environ.pop(DEFAULT_RUNTIME_HOST_ENV, None)
+            else:
+                os.environ[DEFAULT_RUNTIME_HOST_ENV] = previous_host
+            if previous_distro is None:
+                os.environ.pop(DEFAULT_RUNTIME_WSL_DISTRO_ENV, None)
+            else:
+                os.environ[DEFAULT_RUNTIME_WSL_DISTRO_ENV] = previous_distro
+            project_service_module._DEFAULT_RUNTIME_PREFS_CACHE = None
+
+    def test_open_legacy_project_migrates_to_lcrproj_and_lcr_state(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            legacy_state = workspace / ".codex-shell"
+            (legacy_state / "attachments").mkdir(parents=True)
+            (legacy_state / "runtime_events.jsonl").write_text("", encoding="utf-8")
+            (legacy_state / "approvals.jsonl").write_text("", encoding="utf-8")
+            (legacy_state / "thread_cache.json").write_text("{}", encoding="utf-8")
+            (legacy_state / "ui_state.json").write_text("{}", encoding="utf-8")
+            legacy_project = root / "legacy.codexproj"
+            legacy_project.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "codex-shell-project-v1",
+                        "project_id": "legacy",
+                        "name": "Legacy",
+                        "project_file": str(legacy_project),
+                        "workspace_root": str(workspace),
+                        "entry_mode": "existing",
+                        "default_profile_id": "openai-compatible",
+                        "default_model": "gpt-5.3-codex",
+                        "default_effort": "high",
+                        "current_thread_id": None,
+                        "recent_threads": [],
+                        "ui_preferences": {"locale": "en"},
+                        "created_at": "2026-01-01T00:00:00+00:00",
+                        "updated_at": "2026-01-01T00:00:00+00:00",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            service = ProjectService(root / "recent.json")
+            project = service.open_project(legacy_project)
+            self.assertTrue(project["project_file"].endswith(".lcrproj"))
+            self.assertTrue((workspace / ".lcr" / "attachments").exists())
+
+    def test_runtime_config_writes_profile_without_persisting_secret(self) -> None:
+        original = os.environ.pop("TEST_PROVIDER_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                service = RuntimeConfigService(root / "embedded_codex_home")
+                status = service.load_secret(
+                    {
+                        "profile_id": "provider-test",
+                        "label": "Provider Test",
+                        "provider_id": "openai",
+                        "base_url": "https://example.com/v1",
+                        "model": "test-model",
+                        "reasoning_effort": "max",
+                        "wire_api": "responses",
+                        "env_key": "TEST_PROVIDER_KEY",
+                        "auth_mode": "session_paste",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    },
+                    session_key="unit_secret_test_value_123456",
+                )
+
+                config_text = (root / "embedded_codex_home" / "config.toml").read_text(encoding="utf-8")
+                self.assertTrue(status["secret_loaded"])
+                self.assertEqual(status["reasoning_effort"], "max")
+                self.assertNotIn("unit_secret_test_value_123456", config_text)
+                self.assertIn('model = "openai/test-model"', config_text)
+                self.assertIn('base_url = "http://127.0.0.1:8787/v1"', config_text)
+                self.assertIn('env_key = "CODEX_ROUTER_API_KEY"', config_text)
+                self.assertIn('wire_api = "responses"', config_text)
+                self.assertIn('model_reasoning_effort = "xhigh"', config_text)
+                self.assertEqual(os.environ["TEST_PROVIDER_KEY"], "unit_secret_test_value_123456")
+        finally:
+            if original is None:
+                os.environ.pop("TEST_PROVIDER_KEY", None)
+            else:
+                os.environ["TEST_PROVIDER_KEY"] = original
+
+    def test_runtime_config_keeps_verified_kimi_image_modality_for_catalog(self) -> None:
+        original = os.environ.pop("TEST_KIMI_PROVIDER_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                service = RuntimeConfigService(root / "embedded_codex_home")
+                service.load_secret(
+                    {
+                        "profile_id": "kimi-router",
+                        "label": "Kimi Router",
+                        "provider_id": "kimi",
+                        "base_url": "https://api.moonshot.cn/v1",
+                        "model": "kimi-k2.6",
+                        "reasoning_effort": "xhigh",
+                        "wire_api": "chat",
+                        "env_key": "TEST_KIMI_PROVIDER_KEY",
+                        "auth_mode": "session_paste",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                        # Older saved profiles/catalog rows may have text-only modalities.
+                        "input_modalities": ["text"],
+                    },
+                    session_key="unit_secret_kimi_test_value_123456",
+                )
+
+                catalog = json.loads((root / "embedded_codex_home" / "models" / "lcr-models.json").read_text(encoding="utf-8"))
+                model_info = catalog["models"][0]
+                self.assertEqual(model_info["slug"], "kimi/kimi-k2.6")
+                self.assertEqual(model_info["input_modalities"], ["text", "image"])
+                self.assertEqual(service.status()["input_modalities"], ["text", "image"])
+        finally:
+            if original is None:
+                os.environ.pop("TEST_KIMI_PROVIDER_KEY", None)
+            else:
+                os.environ["TEST_KIMI_PROVIDER_KEY"] = original
+
+    def test_modal_service_translates_approvals_and_user_input(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            shell_root = root / ".lcr"
+            shell_root.mkdir()
+            service = ModalService(lambda: shell_root, timeout_seconds=2.0)
+
+            approval_result: dict[str, object] = {}
+
+            def approval_worker() -> None:
+                nonlocal approval_result
+                approval_result = service.request(
+                    "item/commandExecution/requestApproval",
+                    {"threadId": "thread_1", "turnId": "turn_1", "itemId": "item_1", "command": "git status"},
+                )
+
+            thread = threading.Thread(target=approval_worker)
+            thread.start()
+            pending = service.list_pending()["modals"][0]
+            service.resolve(pending["modal_id"], {"decision": "approve_session"})
+            thread.join(timeout=2)
+            self.assertEqual(approval_result["decision"], "acceptForSession")
+
+            execpolicy_result: dict[str, object] = {}
+            amendment = ["powershell.exe", "-Command", "Get-ChildItem"]
+
+            def execpolicy_worker() -> None:
+                nonlocal execpolicy_result
+                execpolicy_result = service.request(
+                    "item/commandExecution/requestApproval",
+                    {
+                        "threadId": "thread_1",
+                        "turnId": "turn_1b",
+                        "itemId": "item_1b",
+                        "command": "Get-ChildItem",
+                        "availableDecisions": [
+                            "accept",
+                            {"acceptWithExecpolicyAmendment": {"execpolicy_amendment": amendment}},
+                            "cancel",
+                        ],
+                    },
+                )
+
+            thread = threading.Thread(target=execpolicy_worker)
+            thread.start()
+            pending = service.list_pending()["modals"][0]
+            service.resolve(pending["modal_id"], {"decision": "accept_with_execpolicy_amendment"})
+            thread.join(timeout=2)
+            self.assertEqual(
+                execpolicy_result,
+                {"decision": {"acceptWithExecpolicyAmendment": {"execpolicy_amendment": amendment}}},
+            )
+
+            input_result: dict[str, object] = {}
+
+            def input_worker() -> None:
+                nonlocal input_result
+                input_result = service.request(
+                    "item/tool/requestUserInput",
+                    {
+                        "threadId": "thread_1",
+                        "turnId": "turn_2",
+                        "itemId": "item_2",
+                        "questions": [
+                            {
+                                "id": "provider",
+                                "header": "Provider",
+                                "question": "Which provider should be used?",
+                                "options": [{"label": "Yunwu", "description": "Low-cost smoke test"}],
+                            }
+                        ],
+                    },
+                )
+
+            thread = threading.Thread(target=input_worker)
+            thread.start()
+            pending = service.list_pending()["modals"][0]
+            service.resolve(
+                pending["modal_id"],
+                {"answers": {"provider": {"answers": ["Yunwu", "Use the low-cost route first."]}}},
+            )
+            thread.join(timeout=2)
+            self.assertEqual(
+                input_result,
+                {"answers": {"provider": {"answers": ["Yunwu", "Use the low-cost route first."]}}},
+            )
+
+            mcp_result: dict[str, object] = {}
+
+            def mcp_worker() -> None:
+                nonlocal mcp_result
+                mcp_result = service.request(
+                    "mcpServer/elicitation/request",
+                    {
+                        "threadId": "thread_1",
+                        "turnId": "turn_3",
+                        "serverName": "context7",
+                        "mode": "form",
+                        "message": "Choose a library.",
+                        "requestedSchema": {"type": "object", "properties": {"library": {"type": "string"}}},
+                    },
+                )
+
+            thread = threading.Thread(target=mcp_worker)
+            thread.start()
+            pending = service.list_pending()["modals"][0]
+            self.assertEqual(pending["kind"], "mcp_elicitation")
+            service.resolve(pending["modal_id"], {"action": "accept", "content": {"library": "react"}, "_meta": None})
+            thread.join(timeout=2)
+            self.assertEqual(mcp_result, {"action": "accept", "content": {"library": "react"}, "_meta": None})
+
+            cancelled_result: dict[str, object] = {}
+
+            def cancelled_worker() -> None:
+                nonlocal cancelled_result
+                cancelled_result = service.request(
+                    "item/commandExecution/requestApproval",
+                    {
+                        "threadId": "thread_1",
+                        "turnId": "turn_cancel",
+                        "itemId": "item_cancel",
+                        "command": "curl https://example.com",
+                    },
+                )
+
+            thread = threading.Thread(target=cancelled_worker)
+            thread.start()
+            self.assertEqual(len(service.list_pending()["modals"]), 1)
+            cancelled = service.cancel_for_turn("thread_1", "turn_cancel", reason="interrupted")
+            thread.join(timeout=2)
+            self.assertEqual(len(cancelled), 1)
+            self.assertEqual(cancelled_result["decision"], "cancel")
+            self.assertEqual(service.list_pending()["modals"], [])
+
+            fake_input = service.create_fake("request_user_input")
+            self.assertEqual(fake_input["kind"], "user_input")
+            self.assertEqual(fake_input["method"], "item/tool/requestUserInput")
+            self.assertEqual(service.list_pending()["modals"][0]["modal_id"], fake_input["modal_id"])
+            service.resolve(fake_input["modal_id"], {"answers": {"path": {"answers": ["Run smoke test"]}}})
+            self.assertEqual(service.list_pending()["modals"], [])
+
+            fake_write = service.create_fake("approval_write")
+            self.assertEqual(fake_write["kind"], "approval")
+            self.assertEqual(fake_write["method"], "item/commandExecution/requestApproval")
+            self.assertIn("Set-Content", str(fake_write["params"].get("command")))
+            service.resolve(fake_write["modal_id"], {"decision": "decline"})
+            self.assertEqual(service.list_pending()["modals"], [])
+
+            fake_log = service.create_fake("lcr_log_read")
+            self.assertIn(".lcr", str(fake_log["params"].get("command")))
+            service.resolve(fake_log["modal_id"], {"decision": "decline"})
+            self.assertEqual(service.list_pending()["modals"], [])
+
+    def test_mcp_config_context7_toml_and_secret_guard(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            service = McpConfigService(Path(temp) / "mcp_servers.json")
+            applied = service.apply_context7_preset()
+            self.assertEqual(applied["server"]["name"], "context7")
+            toml = service.render_toml()
+            self.assertIn("[mcp_servers.context7]", toml)
+            self.assertIn('command = "npx"', toml)
+            self.assertIn('args = ["-y", "@upstash/context7-mcp"]', toml)
+            self.assertIn('default_tools_approval_mode = "prompt"', toml)
+
+            with self.assertRaises(ValueError):
+                service.upsert_server(
+                    {
+                        "name": "bad",
+                        "transport": "streamable_http",
+                        "url": "https://example.com",
+                        "http_headers": {"Authorization": "Bearer unit"},
+                    }
+                )
+
+    def test_mcp_config_yunwu_image_preset_toml(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            service = McpConfigService(Path(temp) / "mcp_servers.json")
+            applied = service.apply_yunwu_image_preset()
+            self.assertEqual(applied["server"]["name"], "yunwu_image")
+            self.assertIn("YUNWU_API_KEY", applied["server"]["env_vars"])
+            self.assertIn("LOCAL_CODEX_ROUTER_WORKSPACE_ROOT", applied["server"]["env_vars"])
+            self.assertIn("LOCAL_CODEX_ROUTER_WORKSPACE_ROOT_WSL", applied["server"]["env_vars"])
+            toml = service.render_toml()
+            self.assertIn("[mcp_servers.yunwu_image]", toml)
+            self.assertIn("yunwu_image_mcp_server.py", toml)
+            self.assertIn('"-u"', toml)
+            self.assertIn('"LOCAL_CODEX_ROUTER_WORKSPACE_ROOT"', toml)
+            self.assertIn('"LOCAL_CODEX_ROUTER_WORKSPACE_ROOT_WSL"', toml)
+            self.assertIn("[mcp_servers.yunwu_image.tools.yunwu_image_generate]", toml)
+            self.assertNotIn("Bearer", toml)
+
+    def test_yunwu_image_mcp_normalizes_cross_host_paths(self) -> None:
+        self.assertEqual(
+            yunwu_image_normalize_path_for_os("/mnt/d/workflow/game workspace", "nt"),
+            "D:\\workflow\\game workspace",
+        )
+        self.assertEqual(
+            yunwu_image_normalize_path_for_os("D:\\workflow\\game workspace", "posix"),
+            "/mnt/d/workflow/game workspace",
+        )
+
+    def test_mcp_config_lcr_web_preset_toml_and_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            service = McpConfigService(Path(temp) / "mcp_servers.json")
+            applied = service.apply_lcr_web_preset()
+            self.assertEqual(applied["server"]["name"], "lcr_web")
+            toml = service.render_toml()
+            self.assertIn("[mcp_servers.lcr_web]", toml)
+            self.assertIn("lcr_web_mcp_server.py", toml)
+            self.assertIn('default_tools_approval_mode = "auto"', toml)
+            self.assertIn("[mcp_servers.lcr_web.tools.lcr_web_search_batch]", toml)
+            self.assertIn("[mcp_servers.lcr_web.tools.lcr_web_research_brief]", toml)
+            self.assertIn("[mcp_servers.lcr_web.tools.lcr_web_search]", toml)
+            self.assertIn("[mcp_servers.lcr_web.tools.lcr_web_fetch]", toml)
+            self.assertIn('approval_mode = "auto"', toml)
+            self.assertNotIn("Authorization", toml)
+
+            tools = {tool["name"]: tool for tool in lcr_web_mcp_tools()}
+            self.assertIn("lcr_web_search_batch", tools)
+            self.assertIn("lcr_web_research_brief", tools)
+            self.assertIn("lcr_web_search", tools)
+            self.assertIn("lcr_web_fetch", tools)
+            self.assertEqual(tools["lcr_web_search_batch"]["inputSchema"]["properties"]["queries"]["maxItems"], 8)
+            self.assertEqual(tools["lcr_web_research_brief"]["inputSchema"]["properties"]["fetch_top_n"]["maximum"], 12)
+            self.assertEqual(tools["lcr_web_search"]["inputSchema"]["properties"]["max_results"]["maximum"], 10)
+
+    def test_lcr_web_batch_and_research_brief_are_structured_and_sanitized(self) -> None:
+        encoded = "a1" + base64.urlsafe_b64encode(b"https://developers.openai.com/codex/mcp").decode("ascii").rstrip("=")
+        self.assertEqual(
+            lcr_web_mcp_server._clean_bing_url(f"https://www.bing.com/ck/a?u={encoded}&ntb=1"),
+            "https://developers.openai.com/codex/mcp",
+        )
+
+        original_search = lcr_web_mcp_server._search
+        original_fetch = lcr_web_mcp_server._fetch
+
+        def fake_search(query: str, *, max_results: int, timeout_sec: int) -> dict[str, object]:
+            return {
+                "tool": "lcr_web_search",
+                "query": query,
+                "results": [
+                    {"title": f"{query} A", "url": "https://example.com/a?utm_source=x", "snippet": "alpha"},
+                    {"title": f"{query} A duplicate", "url": "https://example.com/a", "snippet": "duplicate"},
+                    {"title": f"{query} B", "url": f"https://example.com/{query.replace(' ', '-')}", "snippet": "beta"},
+                ][:max_results],
+                "result_count": min(max_results, 3),
+                "warning": "",
+            }
+
+        def fake_fetch(url: str, *, max_chars: int, timeout_sec: int) -> dict[str, object]:
+            return {
+                "tool": "lcr_web_fetch",
+                "url": url,
+                "content_type": "text/html",
+                "text": f"Fetched source text for {url}. X-Unit-Auth: Bearer unit",
+                "truncated": False,
+                "char_count": 80,
+            }
+
+        try:
+            lcr_web_mcp_server._search = fake_search
+            lcr_web_mcp_server._fetch = fake_fetch
+
+            batch = lcr_web_mcp_server._search_batch(
+                [{"query": "magic tower design", "max_results": 3}, {"query": "autotile rules", "max_results": 2}],
+                dedupe=True,
+                timeout_sec=5,
+            )
+            self.assertEqual(batch["tool"], "lcr_web_search_batch")
+            self.assertEqual(batch["query_count"], 2)
+            urls = [item["url"] for item in batch["merged_results"]]
+            self.assertEqual(urls.count("https://example.com/a?utm_source=x"), 1)
+
+            brief = lcr_web_mcp_server._research_brief(
+                research_goal="magic tower RPG autotile visual design",
+                queries=["magic tower design"],
+                source_urls=["https://example.com/source"],
+                search_top_k=2,
+                fetch_top_n=2,
+                max_chars_per_source=500,
+                timeout_sec=5,
+            )
+            self.assertEqual(brief["tool"], "lcr_web_research_brief")
+            self.assertGreaterEqual(brief["fetched_source_count"], 1)
+            self.assertIn("citation_rule", brief)
+            self.assertNotIn("unit_secret_test", json.dumps(brief))
+
+            with self.assertRaises(ValueError):
+                lcr_web_mcp_server._research_brief(
+                    research_goal="bad",
+                    queries=["X-Unit-Auth: Bearer unit"],
+                    source_urls=[],
+                    search_top_k=1,
+                    fetch_top_n=1,
+                    max_chars_per_source=500,
+                    timeout_sec=5,
+                )
+        finally:
+            lcr_web_mcp_server._search = original_search
+            lcr_web_mcp_server._fetch = original_fetch
+
+    def test_yunwu_image_generation_payload_and_smoke_request(self) -> None:
+        class YunwuHandler(BaseHTTPRequestHandler):
+            request_payload: dict[str, object] = {}
+            request_auth = ""
+            transparent_png = _png_rgba(1, 1, (0, 0, 0, 0))
+
+            def do_POST(self) -> None:  # noqa: N802
+                length = int(self.headers.get("Content-Length", "0"))
+                raw = self.rfile.read(length)
+                type(self).request_auth = str(self.headers.get("Authorization") or "")
+                content_type = str(self.headers.get("Content-Type") or "")
+                if "multipart/form-data" in content_type:
+                    type(self).request_payload = {"multipart": raw.decode("utf-8", errors="replace")}
+                    data = [{"revised_prompt": "", "b64_json": base64.b64encode(type(self).transparent_png).decode("ascii")}]
+                else:
+                    type(self).request_payload = json.loads(raw.decode("utf-8"))
+                    if type(self).request_payload.get("response_format") == "b64_json":
+                        data = [{"revised_prompt": "", "b64_json": base64.b64encode(type(self).transparent_png).decode("ascii")}]
+                    else:
+                        data = [{"revised_prompt": "", "url": "https://example.test/generated.webp"}]
+                body = json.dumps(
+                    {
+                        "created": 1776909189,
+                        "data": data,
+                    }
+                ).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format: str, *args: object) -> None:  # noqa: A003
+                return
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), YunwuHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            service = YunwuImageService(f"http://127.0.0.1:{server.server_address[1]}/v1")
+            payload = service.generation_payload(
+                prompt="merge the two references",
+                size="2048x2048",
+                n=10,
+                quality="high",
+                image_format="png",
+                background="transparent",
+                image_urls=["https://example.test/a.png", "https://example.test/b.jpg"],
+            )
+            self.assertEqual(payload["model"], "gpt-image-2")
+            self.assertEqual(payload["size"], "2048x2048")
+            self.assertEqual(payload["n"], 10)
+            self.assertEqual(payload["quality"], "high")
+            self.assertEqual(payload["format"], "png")
+            self.assertEqual(payload["background"], "transparent")
+            self.assertEqual(payload["image"], ["https://example.test/a.png", "https://example.test/b.jpg"])
+            custom = service.generation_payload(prompt="custom", size="1280x768")
+            self.assertEqual(custom["size"], "1280x768")
+            with self.assertRaises(ValueError):
+                service.generation_payload(prompt="bad", size="1200x700")
+            with self.assertRaises(ValueError):
+                service.generation_payload(prompt="bad", background="glass")
+
+            protocol = service.protocol()
+            self.assertEqual(protocol["schema_version"], 4)
+            self.assertEqual(protocol["max_concurrency"], 5)
+            self.assertIn("background", protocol["generation"]["parameters"])
+            self.assertIn("transparent", protocol["edit"]["parameters"]["background"]["values"])
+            self.assertEqual(protocol["transparent_asset_contract"]["default_params"]["background"], "transparent")
+            self.assertIn("n_greater_than_1", protocol["count_contract"])
+            self.assertIn("transparent_asset_edit_route", protocol)
+            tools = {tool["name"]: tool for tool in yunwu_image_mcp_tools()}
+            generate_props = tools["yunwu_image_generate"]["inputSchema"]["properties"]
+            self.assertEqual(generate_props["quality"]["default"], "high")
+            self.assertEqual(generate_props["background"]["default"], "transparent")
+            self.assertIn("output_format", generate_props)
+            self.assertIn("yunwu_image_transparent_asset", tools)
+
+            result = service.test_connectivity(api_key="unit-token-value")
+            self.assertTrue(result["ok"])
+            self.assertEqual(YunwuHandler.request_auth, "Bearer unit-token-value")
+            self.assertEqual(YunwuHandler.request_payload["model"], "gpt-image-2")
+            self.assertEqual(YunwuHandler.request_payload["size"], "1024x1024")
+            self.assertEqual(result["data"][0]["url"], "https://example.test/generated.webp")
+            self.assertNotIn("unit-token-value", json.dumps(result))
+
+            with tempfile.TemporaryDirectory() as asset_temp:
+                workspace = Path(asset_temp)
+                persisted = service.generate(
+                    prompt="asset test",
+                    response_format="b64_json",
+                    api_key="unit-token-value",
+                    workspace_root=workspace,
+                    purpose="unit_test_asset",
+                )
+                manifest_path = workspace / ".lcr" / "assets" / "generated" / "asset_manifest.json"
+                self.assertTrue(manifest_path.exists())
+                manifest_text = manifest_path.read_text(encoding="utf-8")
+                self.assertIn("unit_test_asset", manifest_text)
+                self.assertNotIn("unit-token-value", manifest_text)
+                self.assertTrue(persisted["persisted_assets"][0]["local_path"])
+                self.assertEqual(persisted["requested_n"], 1)
+                self.assertEqual(persisted["actual_n"], 1)
+                self.assertFalse(persisted["count_mismatch"])
+                self.assertNotIn("b64_json", persisted["data"][0])
+                self.assertTrue(persisted["data"][0]["b64_json_present"])
+                self.assertTrue(persisted["data"][0]["local_path"])
+                self.assertTrue(persisted["persisted_assets"][0]["has_alpha"])
+                self.assertEqual(persisted["persisted_assets"][0]["actual_format"], "png")
+                self.assertEqual(persisted["persisted_assets"][0]["actual_width"], 1)
+
+                transparent = service.transparent_asset(
+                    prompt="single yellow magic tower key icon",
+                    api_key="unit-token-value",
+                    workspace_root=workspace,
+                    purpose="unit_transparent_asset",
+                )
+                self.assertTrue(transparent["persisted_assets"][0]["has_alpha"])
+                self.assertNotIn("b64_json", transparent["data"][0])
+                self.assertTrue(transparent["data"][0]["b64_json_present"])
+                self.assertEqual(transparent["persisted_assets"][0]["requested_background"], "transparent")
+                self.assertIn("alpha=0", transparent["persisted_assets"][0]["prompt"])
+                self.assertIn('name="background"', str(YunwuHandler.request_payload.get("multipart") or ""))
+                self.assertIn("transparent", str(YunwuHandler.request_payload.get("multipart") or ""))
+        finally:
+            server.shutdown()
+            server.server_close()
+
+    def test_yunwu_image_chat_style_response_and_prompt_guides(self) -> None:
+        class ChatStyleHandler(BaseHTTPRequestHandler):
+            def do_POST(self) -> None:  # noqa: N802
+                _ = self.rfile.read(int(self.headers.get("Content-Length", "0")))
+                body = json.dumps(
+                    {
+                        "id": "chatcmpl-image",
+                        "object": "chat.completion",
+                        "created": 1776909199,
+                        "choices": [
+                            {
+                                "index": 0,
+                                "message": {
+                                    "role": "assistant",
+                                    "content": "Generated: https://example.test/anime_asset.png",
+                                },
+                                "finish_reason": "stop",
+                            }
+                        ],
+                        "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+                    }
+                ).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format: str, *args: object) -> None:  # noqa: A003
+                return
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), ChatStyleHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            with tempfile.TemporaryDirectory() as asset_temp:
+                service = YunwuImageService(f"http://127.0.0.1:{server.server_address[1]}/v1")
+                result = service.generate(
+                    prompt="Japanese anime magical girl game asset",
+                    quality="high",
+                    image_format="png",
+                    api_key="unit-token-value",
+                    workspace_root=Path(asset_temp),
+                    purpose="chat_style_response",
+                )
+                self.assertEqual(result["data"][0]["url"], "https://example.test/anime_asset.png")
+                self.assertEqual(result["persisted_assets"][0]["quality"], "high")
+                self.assertEqual(result["persisted_assets"][0]["format"], "png")
+        finally:
+            server.shutdown()
+            server.server_close()
+
+        guides = prompt_guides_payload()
+        self.assertGreaterEqual(len(guides["guides"]), 12)
+        self.assertEqual(guides["schema_version"], 3)
+        self.assertIn("asset_mode", guides["rewrite_policy"]["required_json_fields"])
+        self.assertIn("game_asset_policy", guides)
+        self.assertIn(
+            "game_asset_japanese_anime",
+            {str(item.get("category_id")) for item in guides["guides"] if isinstance(item, dict)},
+        )
+        instruction = build_rewrite_instruction(
+            category_id="game_asset_japanese_anime",
+            user_prompt="tower game heroine sprites",
+            size="2048x2048",
+            transparent_background=True,
+            reference_image_mode=True,
+        )
+        self.assertIn("Yunwu gpt-image-2", instruction["instruction"])
+        self.assertIn("transparent background", instruction["instruction"])
+        self.assertIn("asset_mode", instruction["instruction"])
+        self.assertIn("terrain_tileset", instruction["instruction"])
+        self.assertLessEqual(len(instruction["defaults"]["size"]), 16)
+
+        with tempfile.TemporaryDirectory() as temp:
+            image_path = Path(temp) / "input.png"
+            mask_path = Path(temp) / "mask.png"
+            image_path.write_bytes(b"fake")
+            mask_path.write_bytes(b"mask")
+            fields, files = YunwuImageService().edit_payload(
+                prompt="convert into a transparent JRPG icon",
+                image_paths=[str(image_path)],
+                mask_path=str(mask_path),
+                model="flux-kontext-pro",
+                size="1024x1024",
+                n=3,
+                quality="high",
+                background="transparent",
+                moderation="low",
+            )
+            self.assertEqual(fields["model"], "flux-kontext-pro")
+            self.assertEqual(fields["n"], "3")
+            self.assertEqual(fields["background"], "transparent")
+            self.assertEqual(fields["moderation"], "low")
+            self.assertEqual([name for name, _ in files], ["image", "mask"])
+
+    def test_asset_registry_rebuild_context_and_promote_are_secret_free(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Dogfood", root / "dogfood.lcrproj", workspace_root=workspace, entry_mode="existing")
+            generated_root = workspace / ".lcr" / "assets" / "generated"
+            sliced_root = workspace / ".lcr" / "assets" / "sliced" / "yunwu-asset-1"
+            generated_root.mkdir(parents=True)
+            sliced_root.mkdir(parents=True)
+            source_png = generated_root / "yunwu-asset-1.png"
+            slice_png = sliced_root / "heroine_fullbody_000.png"
+            source_png.write_bytes(b"png source")
+            slice_png.write_bytes(b"png slice")
+            generated_manifest = {
+                "assets": [
+                    {
+                        "asset_id": "yunwu-asset-1",
+                        "provider": "yunwu",
+                        "tool": "yunwu_image_generate",
+                        "model": "gpt-image-2",
+                        "purpose": "heroine_sprite_reference",
+                        "prompt": "Original Japanese anime heroine sprite",
+                        "local_path": str(source_png),
+                        "generated_at": "2026-06-13T00:00:00+08:00",
+                    }
+                ]
+            }
+            (generated_root / "asset_manifest.json").write_text(json.dumps(generated_manifest), encoding="utf-8")
+            per_sheet = {
+                "asset_id": "yunwu-asset-1",
+                "strategy": "heroine",
+                "manual_review_needed": False,
+                "quality_gate": {"passed": True},
+                "assets": [
+                    {
+                        "asset_id": "yunwu-asset-1_heroine_fullbody_000",
+                        "file": "heroine_fullbody_000.png",
+                        "class": "heroine_fullbody",
+                        "confidence": 1.0,
+                        "quality_flags": [],
+                    }
+                ],
+            }
+            (sliced_root / "sliced_manifest.json").write_text(json.dumps(per_sheet), encoding="utf-8")
+            aggregate = {
+                "sheets": [
+                    {
+                        "asset_id": "yunwu-asset-1",
+                        "strategy": "heroine",
+                        "manifest_path": str(sliced_root / "sliced_manifest.json"),
+                        "quality_gate_passed": True,
+                        "manual_review_needed": False,
+                    }
+                ]
+            }
+            (workspace / ".lcr" / "assets" / "sliced" / "sliced_manifest.json").write_text(json.dumps(aggregate), encoding="utf-8")
+
+            service = AssetRegistryService(projects)
+            rebuilt = service.rebuild()
+            registry_text = json.dumps(rebuilt, ensure_ascii=False)
+            self.assertIn("yunwu-asset-1_heroine_fullbody_000", registry_text)
+            self.assertIn("LCR Asset Context Pack", rebuilt["context_pack"]["text"])
+            self.assertNotIn("Bearer", registry_text)
+            self.assertNotIn("api_key", registry_text.lower())
+
+            promoted = service.promote(
+                {
+                    "asset_id": "yunwu-asset-1_heroine_fullbody_000",
+                    "target_name": "heroine_walk_down_0.png",
+                    "manifest_section": "sprites",
+                    "entity": "heroine",
+                    "state": "walk_down",
+                }
+            )
+            target = workspace / "assets" / "images" / "sprites" / "heroine_walk_down_0.png"
+            self.assertTrue(target.is_file())
+            game_manifest = json.loads((workspace / "assets" / "images" / "sprites" / "sprite_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(game_manifest["sprites"]["heroine"]["walk_down"], "sprites/heroine_walk_down_0.png")
+            self.assertEqual(promoted["asset"]["integration_status"], "promoted")
+            rebuilt_after_promote = service.rebuild()
+            heroine = next(
+                item
+                for item in rebuilt_after_promote["registry"]["assets"]
+                if item.get("asset_id") == "yunwu-asset-1_heroine_fullbody_000"
+            )
+            self.assertEqual(heroine["asset_type"], "heroine")
+            self.assertEqual(heroine["integration_status"], "in_use")
+            self.assertIn("sprites.heroine.walk_down", heroine["manifest_keys"])
+            self.assertIn("sprites/heroine_walk_down_0.png", heroine["game_refs"])
+            self.assertIn("manifest=sprites.heroine.walk_down", rebuilt_after_promote["context_pack"]["text"])
+
+    def test_asset_registry_rebuild_links_agent_copied_game_asset_by_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Dogfood", root / "dogfood.lcrproj", workspace_root=workspace, entry_mode="existing")
+
+            generated_root = workspace / ".lcr" / "assets" / "generated"
+            sprites_root = workspace / "assets" / "images" / "sprites"
+            generated_root.mkdir(parents=True)
+            sprites_root.mkdir(parents=True)
+
+            generated_png = generated_root / "yunwu-door.png"
+            game_png = sprites_root / "tile_door_new.png"
+            generated_png.write_bytes(b"same transparent door bytes")
+            game_png.write_bytes(b"same transparent door bytes")
+            (generated_root / "asset_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "assets": [
+                            {
+                                "asset_id": "yunwu-door",
+                                "provider": "yunwu",
+                                "tool": "yunwu_image_transparent_asset",
+                                "model": "gpt-image-2",
+                                "purpose": "yellow magic door",
+                                "local_path": str(generated_png),
+                                "has_alpha": True,
+                                "generated_at": "2026-06-16T00:00:00+08:00",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (sprites_root / "sprite_manifest.json").write_text(
+                json.dumps({"tiles": {"door": "sprites/tile_door_new.png"}}),
+                encoding="utf-8",
+            )
+
+            rebuilt = AssetRegistryService(projects).rebuild()
+            assets = rebuilt["registry"]["assets"]
+            door = next(item for item in assets if item.get("asset_id") == "yunwu-door")
+            self.assertEqual(door["integration_status"], "in_use")
+            self.assertEqual(door["promoted_path"], "assets/images/sprites/tile_door_new.png")
+            self.assertIn("sprites/tile_door_new.png", door["game_refs"])
+            self.assertIn("tiles.door", door["manifest_keys"])
+            self.assertIn("linked_by_content_hash", door["warnings"])
+            self.assertFalse(any(item.get("asset_id") == "game-tile_door_new" for item in assets))
+
+    def test_runtime_injects_asset_context_pack(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Dogfood", root / "dogfood.lcrproj", workspace_root=workspace, entry_mode="existing")
+            registry_root = workspace / ".lcr" / "assets"
+            registry_root.mkdir(parents=True)
+            (registry_root / "asset_registry.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "lcr-asset-registry-v1",
+                        "assets": [
+                            {
+                                "asset_id": "sprite-1",
+                                "stage": "sliced",
+                                "kind": "heroine",
+                                "role": "walk_down",
+                                "status": "approved",
+                                "quality_status": "passed",
+                                "integration_status": "not_promoted",
+                                "source_path": ".lcr/assets/sliced/sprite-1.png",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            assets = AssetRegistryService(projects)
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), asset_registry=assets)
+            inputs = runtime._build_user_inputs("Continue the tower game.", [])  # noqa: SLF001
+            text = "\n".join(str(item.get("text") or "") for item in inputs if item.get("type") == "text")
+            mentions = [item for item in inputs if item.get("type") == "mention"]
+            self.assertIn("Continue the tower game.", text)
+            self.assertIn("LCR Asset Context Pack", text)
+            self.assertTrue(any(item.get("name") == "asset_registry.json" for item in mentions))
+
+    def test_runtime_minimal_visual_context_skips_project_and_asset_packs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Dogfood", root / "dogfood.lcrproj", workspace_root=workspace, entry_mode="existing")
+            registry_root = workspace / ".lcr" / "assets"
+            registry_root.mkdir(parents=True)
+            (registry_root / "asset_registry.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "lcr-asset-registry-v1",
+                        "assets": [
+                            {
+                                "asset_id": "sprite-1",
+                                "kind": "heroine",
+                                "quality_status": "passed",
+                                "source_path": ".lcr/assets/sliced/sprite-1.png",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            image_path = root / "visual.png"
+            image_path.write_bytes(_png_rgba(2, 2, (10, 20, 30, 255)))
+            assets = AssetRegistryService(projects)
+            context = ProjectContextService(projects)
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), asset_registry=assets, project_context=context)
+
+            inputs = runtime._build_user_inputs(  # noqa: SLF001
+                "Visual micro-check: pass/retry/redraw only.",
+                [{"path": str(image_path), "name": "visual.png", "mime_type": "image/png"}],
+                context_mode="minimal_visual",
+            )
+
+            text = "\n".join(str(item.get("text") or "") for item in inputs if item.get("type") == "text")
+            self.assertIn("LCR minimal visual mode", text)
+            self.assertIn("Visual micro-check", text)
+            self.assertNotIn("LCR Asset Context Pack", text)
+            self.assertNotIn("LCR Project Context Pack", text)
+            self.assertEqual([item.get("type") for item in inputs].count("localImage"), 1)
+            self.assertFalse(any(item.get("type") == "mention" and item.get("name") in {"asset_registry.json", "project_context_pack.json"} for item in inputs))
+
+    def test_runtime_accepts_multi_provider_handoff_context_alias(self) -> None:
+        runtime = RuntimeService(None, ModalService(lambda: Path(tempfile.gettempdir())))
+
+        self.assertEqual(runtime._normalize_context_mode("multi_provider_handoff"), "default")  # noqa: SLF001
+        self.assertEqual(runtime._normalize_context_mode("multi_provider"), "default")  # noqa: SLF001
+        self.assertEqual(runtime._normalize_context_mode("handoff"), "default")  # noqa: SLF001
+
+    def test_asset_context_pack_injects_priority_slice_not_full_registry(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Dogfood", root / "dogfood.lcrproj", workspace_root=workspace, entry_mode="existing")
+            registry_root = workspace / ".lcr" / "assets"
+            registry_root.mkdir(parents=True)
+            assets = []
+            for index in range(20):
+                assets.append(
+                    {
+                        "asset_id": f"promoted-{index}",
+                        "stage": "game_sprite",
+                        "kind": "monster",
+                        "role": "monster",
+                        "quality_status": "passed",
+                        "integration_status": "promoted",
+                        "promoted_path": f"assets/images/sprites/monster_{index}.png",
+                    }
+                )
+            for index in range(20):
+                assets.append(
+                    {
+                        "asset_id": f"approved-{index}",
+                        "stage": "sliced",
+                        "kind": "terrain",
+                        "role": "tile",
+                        "quality_status": "passed",
+                        "integration_status": "not_promoted",
+                        "source_path": f".lcr/assets/sliced/tile_{index}.png",
+                    }
+                )
+            (registry_root / "asset_registry.json").write_text(
+                json.dumps({"schema_version": "lcr-asset-registry-v1", "assets": assets}),
+                encoding="utf-8",
+            )
+
+            service = AssetRegistryService(projects)
+            pack = service.context_pack()
+            text = pack["text"]
+            self.assertIn("Only a small priority slice is auto-injected", text)
+            self.assertIn("10 more promoted/in-use assets", text)
+            self.assertIn("14 more approved assets", text)
+            self.assertIn("promoted-0", text)
+            self.assertNotIn("promoted-19", text)
+            self.assertIn("approved-0", text)
+            self.assertNotIn("approved-19", text)
+            self.assertLessEqual(len(text), 3500)
+
+    def test_asset_context_pack_flags_missing_blocking_obstacle_sprites(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Dogfood", root / "dogfood.lcrproj", workspace_root=workspace, entry_mode="existing")
+            registry_root = workspace / ".lcr" / "assets"
+            registry_root.mkdir(parents=True)
+            (registry_root / "asset_registry.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "lcr-asset-registry-v1",
+                        "assets": [
+                            {
+                                "asset_id": "yellow-key",
+                                "kind": "key",
+                                "role": "key",
+                                "quality_status": "passed",
+                                "promoted_path": "assets/images/sprites/tile_key.png",
+                            },
+                            {
+                                "asset_id": "floor-tile",
+                                "kind": "terrain",
+                                "role": "floor",
+                                "quality_status": "passed",
+                                "promoted_path": "assets/images/sprites/tile_floor.png",
+                            },
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            service = AssetRegistryService(projects)
+            pack = service.context_pack()
+
+            self.assertIn("blocking_obstacle_sprites_missing", json.dumps(pack["asset_gaps"]))
+            self.assertIn("Do not repurpose keys", pack["text"])
+            self.assertIn("tree_wall", pack["text"])
+
+            (registry_root / "asset_registry.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "lcr-asset-registry-v1",
+                        "assets": [
+                            {
+                                "asset_id": "forest-tree-wall",
+                                "kind": "terrain",
+                                "role": "tree_wall",
+                                "quality_status": "passed",
+                                "promoted_path": "assets/images/sprites/tree_wall.png",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            self.assertFalse(AssetRegistryService(projects).context_pack()["asset_gaps"])
+
+    def test_project_context_pack_survives_thread_switch_and_plan_notifications(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Context Project", root / "context.lcrproj", workspace_root=workspace, entry_mode="existing")
+            service = ProjectContextService(projects)
+            service.record_thread_hint("thread-a", {"name": "Design", "model": "deepseek-v4-pro", "reasoning_effort": "max"})
+            service.record_thread_hint("thread-b", {"name": "Implement", "model": "kimi-k2.6", "reasoning_effort": "xhigh"})
+            projects.switch_thread("thread-b")
+            service.record_runtime_notification(
+                "turn/plan/updated",
+                {
+                    "threadId": "thread-b",
+                    "turnId": "turn-1",
+                    "explanation": "Implement safely",
+                    "plan": [{"step": "Use promoted sprites", "status": "pending"}],
+                },
+            )
+            service.record_runtime_notification(
+                "thread/goal/updated",
+                {
+                    "threadId": "thread-b",
+                    "goal": {"objective": "Ship a playable tower slice", "status": "active"},
+                },
+            )
+            snapshot = service.snapshot(thread_id="thread-b")
+            pack_text = snapshot["context_pack"]["text"]
+            self.assertIn("Context Project", pack_text)
+            self.assertIn("Current thread: thread-b", pack_text)
+            self.assertIn("Ship a playable tower slice", pack_text)
+            self.assertIn("Use promoted sprites", pack_text)
+            self.assertTrue((workspace / ".lcr" / "project_context_pack.json").is_file())
+            self.assertTrue((workspace / ".lcr" / "project_context_state.json").is_file())
+
+    def test_runtime_injects_project_context_pack_across_threads(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Generic Project", root / "generic.lcrproj", workspace_root=workspace, entry_mode="existing")
+            context = ProjectContextService(projects)
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), project_context=context)
+            runtime._cache_thread_entry("thread-1", {"name": "First", "model": "deepseek-v4-pro"})  # noqa: SLF001
+            runtime._cache_thread_entry("thread-2", {"name": "Second", "model": "kimi-k2.6"})  # noqa: SLF001
+            projects.switch_thread("thread-2")
+            inputs = runtime._build_user_inputs("Resume work.", [], thread_id="thread-2")  # noqa: SLF001
+            text = "\n".join(str(item.get("text") or "") for item in inputs if item.get("type") == "text")
+            mentions = [item for item in inputs if item.get("type") == "mention"]
+            self.assertIn("LCR Project Context Pack", text)
+            self.assertIn("Current thread: thread-2", text)
+            self.assertIn("Second", text)
+            self.assertTrue(any(item.get("name") == "project_context_pack.json" for item in mentions))
+
+    def test_dogfood_run_service_project_local_and_secret_guarded(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Dogfood", root / "dogfood.lcrproj", workspace_root=workspace, entry_mode="existing")
+            service = DogfoodRunService(projects)
+
+            saved = service.save(
+                {
+                    "enabled": True,
+                    "goal": "Build a tower game",
+                    "phase": "dogfood",
+                    "usage": {"deepseek_cny": 3, "yunwu_images": 2},
+                }
+            )
+            self.assertTrue(saved["run"]["enabled"])
+            self.assertEqual(saved["run"]["budgets"]["kimi_cny"], 50)
+            self.assertEqual(saved["run"]["budgets"]["deepseek_cny"], 50)
+            self.assertEqual(saved["run"]["budgets"]["yunwu_gpt_usd"], 50)
+            self.assertEqual(saved["run"]["usage"]["deepseek_cny"], 3)
+            self.assertTrue((workspace / ".lcr" / "dogfood_run.json").exists())
+            self.assertNotIn(".codex", saved["path"])
+            with self.assertRaises(ValueError):
+                service.save({"notes": ["Bearer unit-test-token"]})
+
+            actions = service._browser_actions(  # noqa: SLF001
+                [
+                    {"type": "click_selector", "selector": "#btn-new-game", "timeout_ms": 1500},
+                    {"type": "expect_selector", "selector": "#grid-container"},
+                    {"type": "expect_text", "text": "Floor"},
+                ]
+            )
+            self.assertEqual(actions[0]["selector"], "#btn-new-game")
+            self.assertEqual(actions[1]["type"], "expect_selector")
+            self.assertEqual(actions[2]["text"], "Floor")
+            with self.assertRaises(ValueError):
+                service._browser_actions([{"type": "click_selector", "selector": "Bearer unit-test-token"}])  # noqa: SLF001
+
+    def test_checkpoint_service_git_save_load_without_git_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            subprocess = __import__("subprocess")
+            subprocess.check_call(["git", "init"], cwd=str(workspace), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.check_call(["git", "config", "user.email", "lcr@example.invalid"], cwd=str(workspace))
+            subprocess.check_call(["git", "config", "user.name", "LCR Test"], cwd=str(workspace))
+            (workspace / "game.txt").write_text("v1\n", encoding="utf-8")
+            subprocess.check_call(["git", "add", "game.txt"], cwd=str(workspace))
+            subprocess.check_call(["git", "commit", "-m", "initial"], cwd=str(workspace), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            before_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=str(workspace), text=True).strip()
+            (workspace / "game.txt").write_text("v2\n", encoding="utf-8")
+            (workspace / "new.txt").write_text("new\n", encoding="utf-8")
+
+            projects = ProjectService(root / "projects.json")
+            project = projects.create_project("Checkpoint", root / "checkpoint.lcrproj", workspace_root=workspace, entry_mode="existing")
+            projects.cache_threads([{"id": "thread-1", "name": "Checkpoint thread"}])
+            projects.switch_thread("thread-1")
+            service = CheckpointService(projects)
+            save = service.create({"description": "", "provider": "deepseek", "model": "deepseek-v4-pro"})
+
+            after_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=str(workspace), text=True).strip()
+            self.assertEqual(before_head, after_head)
+            self.assertTrue(save["save"]["git"]["is_repo"])
+            self.assertTrue((workspace / ".lcr" / "saves" / save["save"]["save_id"] / "git.diff").is_file())
+            self.assertIn("Checkpoint thread", save["save"]["description"])
+
+            (workspace / "game.txt").write_text("broken\n", encoding="utf-8")
+            preview = service.load({"save_id": save["save"]["save_id"], "preview": True})
+            self.assertTrue(preview["dirty"]["dirty"])
+            with self.assertRaises(ValueError):
+                service.load({"save_id": save["save"]["save_id"]})
+            loaded = service.load({"save_id": save["save"]["save_id"], "confirm_dirty": True})
+            self.assertTrue(loaded["loaded"])
+            self.assertEqual((workspace / "game.txt").read_text(encoding="utf-8"), "v2\n")
+            self.assertNotIn("Bearer", json.dumps(save))
+            self.assertEqual(Path(project["project_file"]).suffix, ".lcrproj")
+
+    def test_checkpoint_service_non_git_snapshot_excludes_secrets_and_saves(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            (workspace / "index.html").write_text("<h1>ok</h1>\n", encoding="utf-8")
+            (workspace / ".env").write_text("API_KEY=unit_secret_value\n", encoding="utf-8")
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Snapshot", root / "snapshot.lcrproj", workspace_root=workspace, entry_mode="existing")
+            state_root = workspace / ".lcr"
+            (state_root / "runtime_events.jsonl").write_text('{"large":"event"}\n', encoding="utf-8")
+            (state_root / "approvals.jsonl").write_text('{"large":"approval"}\n', encoding="utf-8")
+            (state_root / ".thread_cache.json.atomic.tmp").write_text('{"transient":true}\n', encoding="utf-8")
+            service = CheckpointService(projects)
+            save = service.create({"description": "manual save"})
+            save_dir = workspace / ".lcr" / "saves" / save["save"]["save_id"]
+            manifest_text = (save_dir / "manifest.json").read_text(encoding="utf-8")
+            self.assertNotIn("unit_secret_value", manifest_text)
+            excluded = json.dumps(save["save"]["workspace"]["excluded"])
+            self.assertIn(".env", excluded)
+            self.assertIn(".lcr/runtime_events.jsonl", excluded)
+            self.assertIn(".lcr/approvals.jsonl", excluded)
+            self.assertIn(".lcr/.thread_cache.json.atomic.tmp", excluded)
+            with zipfile.ZipFile(save_dir / "workspace.zip", "r") as archive:
+                self.assertNotIn(".lcr/.thread_cache.json.atomic.tmp", set(archive.namelist()))
+
+            (workspace / "index.html").write_text("<h1>changed</h1>\n", encoding="utf-8")
+            loaded = service.load({"save_id": save["save"]["save_id"], "confirm_dirty": True})
+            self.assertTrue(loaded["loaded"])
+            self.assertEqual((workspace / "index.html").read_text(encoding="utf-8"), "<h1>ok</h1>\n")
+
+    def test_checkpoint_service_prunes_heavy_lcr_asset_dirs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            (workspace / "index.html").write_text("<h1>ok</h1>\n", encoding="utf-8")
+            assets_root = workspace / ".lcr" / "assets"
+            (assets_root / "generated").mkdir(parents=True)
+            (assets_root / "sliced").mkdir(parents=True)
+            (assets_root / "sliced_failed_20260614_oversegmented").mkdir(parents=True)
+            (assets_root / "asset_registry.json").write_text('{"assets":[]}\n', encoding="utf-8")
+            (assets_root / "asset_context_pack.json").write_text('{"summary":{"total":0}}\n', encoding="utf-8")
+            for directory in ["generated", "sliced", "sliced_failed_20260614_oversegmented"]:
+                for index in range(8):
+                    (assets_root / directory / f"artifact-{index}.png").write_bytes(b"\x89PNG\r\n")
+
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Snapshot", root / "snapshot.lcrproj", workspace_root=workspace, entry_mode="existing")
+            service = CheckpointService(projects)
+            save = service.create({"description": "pruned save"})
+
+            save_dir = workspace / ".lcr" / "saves" / save["save"]["save_id"]
+            with zipfile.ZipFile(save_dir / "workspace.zip", "r") as archive:
+                names = set(archive.namelist())
+            self.assertIn(".lcr/assets/asset_registry.json", names)
+            self.assertIn(".lcr/assets/asset_context_pack.json", names)
+            self.assertNotIn(".lcr/assets/generated/artifact-0.png", names)
+            self.assertNotIn(".lcr/assets/sliced/artifact-0.png", names)
+            excluded = json.dumps(save["save"]["workspace"]["excluded"])
+            self.assertIn(".lcr/assets/generated", excluded)
+            self.assertIn(".lcr/assets/sliced", excluded)
+            self.assertIn(".lcr/assets/sliced_failed_20260614_oversegmented", excluded)
+
+    def test_llm_api_manager_vault_login_password_change_and_no_plaintext(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            profiles = ProfileService(root / "profiles.json")
+            config = RouterConfigService(profiles, root / "router.json")
+            manager = LlmApiManagerService(config, DummyRouter(), root / "manager")
+
+            created = manager.create_user({"username": "user", "password": "correct horse battery staple"})
+            self.assertEqual(created["session"]["mode"], "managed_user")
+            self.assertNotIn("_unlock_key", created["session"])
+            manager.save_key({"provider_id": "deepseek", "label": "DeepSeek main", "env_key": "DEEPSEEK_API_KEY", "secret": "unit_secret_deepseek_value"})
+
+            vault_text = (root / "manager" / "users" / "user" / "vault.lcrvault").read_text(encoding="utf-8")
+            self.assertNotIn("unit_secret_deepseek_value", vault_text)
+            self.assertNotIn("correct horse", vault_text)
+
+            manager.logout()
+            with self.assertRaises(PermissionError):
+                manager.login({"username": "user", "password": "wrong"})
+            manager.login({"username": "user", "password": "correct horse battery staple"})
+            self.assertEqual(manager.list_keys()["keys"][0]["fingerprint"], hashlib.sha256(b"unit_secret_deepseek_value").hexdigest()[:12])
+
+            manager.change_password({"username": "user", "old_password": "correct horse battery staple", "new_password": "new battery staple"})
+            manager.logout()
+            with self.assertRaises(PermissionError):
+                manager.login({"username": "user", "password": "correct horse battery staple"})
+            relogged = manager.login({"username": "user", "password": "new battery staple"})
+            self.assertEqual(relogged["session"]["key_count"], 1)
+
+    def test_llm_api_manager_multi_user_isolation_key_redaction_and_env_cleanup(self) -> None:
+        original = os.environ.pop("DEEPSEEK_API_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                profiles = ProfileService(root / "profiles.json")
+                config = RouterConfigService(profiles, root / "router.json")
+                config.upsert_provider(
+                    {
+                        "id": "deepseek",
+                        "display_name": "DeepSeek",
+                        "adapter_type": "chat",
+                        "base_url": "https://api.deepseek.com",
+                        "default_model": "deepseek-v4-pro",
+                        "env_key": "DEEPSEEK_API_KEY",
+                    }
+                )
+                manager = LlmApiManagerService(config, DummyRouter(), root / "manager")
+
+                manager.create_user({"username": "alice", "password": "alice-password-123"})
+                saved = manager.save_key({"provider_id": "deepseek", "label": "Alice DS", "secret": "unit_secret_alice_deepseek", "env_key": "DEEPSEEK_API_KEY"})
+                self.assertNotIn("secret", saved["key"])
+                self.assertNotIn("unit_secret_alice", json.dumps(saved))
+
+                profile = profiles.get_profile("deepseek-default")
+                injected = manager.inject_profile_key(profile)
+                self.assertTrue(injected["injected"])
+                self.assertEqual(os.environ["DEEPSEEK_API_KEY"], "unit_secret_alice_deepseek")
+                manager.logout()
+                self.assertNotIn("DEEPSEEK_API_KEY", os.environ)
+
+                manager.create_user({"username": "bob", "password": "bob-password-123"})
+                self.assertEqual(manager.list_keys()["keys"], [])
+                manager.logout()
+                os.environ["DEEPSEEK_API_KEY"] = "preexisting-env-key"
+                manager.login({"username": "alice", "password": "alice-password-123"})
+                self.assertEqual(len(manager.list_keys()["keys"]), 1)
+                manager.inject_profile_key(profile)
+                self.assertEqual(os.environ["DEEPSEEK_API_KEY"], "unit_secret_alice_deepseek")
+                manager.logout()
+                self.assertEqual(os.environ["DEEPSEEK_API_KEY"], "preexisting-env-key")
+        finally:
+            if original is None:
+                os.environ.pop("DEEPSEEK_API_KEY", None)
+            else:
+                os.environ["DEEPSEEK_API_KEY"] = original
+
+    def test_llm_api_manager_user_profile_is_public_and_secret_guarded(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            profiles = ProfileService(root / "profiles.json")
+            config = RouterConfigService(profiles, root / "router.json")
+            manager = LlmApiManagerService(config, DummyRouter(), root / "manager")
+            manager.create_user({"username": "user", "password": "vault-password-123"})
+
+            saved = manager.save_user_profile(
+                {
+                    "username": "user",
+                    "display_name": "Cy User",
+                    "avatar_path": "D:\\avatars\\cy.png",
+                }
+            )
+            self.assertEqual(saved["profile"]["display_name"], "Cy User")
+            self.assertEqual(saved["session"]["profile"]["avatar_path"], "D:\\avatars\\cy.png")
+            profile_text = (root / "manager" / "users" / "user" / "profile.json").read_text(encoding="utf-8")
+            self.assertNotIn("unit_secret_", profile_text)
+
+            with self.assertRaises(ValueError):
+                manager.save_user_profile({"username": "user", "avatar_path": "Bearer secret"})
+
+    def test_llm_api_manager_effective_catalog_filters_managed_and_marks_anonymous_verified(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            profiles = ProfileService(root / "profiles.json")
+            config = RouterConfigService(profiles, root / "router.json")
+            config.upsert_provider(
+                {
+                    "id": "deepseek",
+                    "display_name": "DeepSeek",
+                    "adapter_type": "chat",
+                    "base_url": "https://api.deepseek.com",
+                    "default_model": "deepseek-v4-pro",
+                    "env_key": "DEEPSEEK_API_KEY",
+                }
+            )
+            config.upsert_provider(
+                {
+                    "id": "kimi",
+                    "display_name": "Kimi",
+                    "adapter_type": "chat",
+                    "base_url": "https://api.moonshot.cn/v1",
+                    "default_model": "kimi-k2.6",
+                    "env_key": "KIMI_API_KEY",
+                }
+            )
+            config.upsert_model(
+                {
+                    "id": "deepseek/deepseek-v4-pro",
+                    "provider": "deepseek",
+                    "native_model": "deepseek-v4-pro",
+                    "display_name": "DeepSeek V4 Pro",
+                    "enabled": True,
+                    "advertised_context_window": 1000000,
+                    "ui_context_hint_only": True,
+                    "adapter_profile": "default",
+                }
+            )
+            class DocsHandler(BaseHTTPRequestHandler):
+                def do_GET(self) -> None:  # noqa: N802
+                    body = b"DeepSeek docs"
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/plain")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+
+                def log_message(self, format: str, *args) -> None:  # noqa: A003
+                    return
+
+            docs = ThreadingHTTPServer(("127.0.0.1", 0), DocsHandler)
+            docs_thread = threading.Thread(target=docs.serve_forever, daemon=True)
+            docs_thread.start()
+            pro_model = next(item for item in config.models() if item["id"] == "deepseek/deepseek-v4-pro")
+            config.upsert_model({**pro_model, "source_urls": [f"http://127.0.0.1:{docs.server_address[1]}/docs"]})
+            manager = LlmApiManagerService(config, DummyRouter(), root / "manager")
+            try:
+                anonymous = manager.effective_catalog()
+                self.assertEqual(anonymous["mode"], "anonymous")
+                self.assertIn("deepseek/deepseek-v4-pro", {item["id"] for item in anonymous["models"]})
+
+                manager.create_user({"username": "user", "password": "vault-password-123"})
+                manager.save_key({"provider_id": "deepseek", "label": "DeepSeek", "secret": "unit_secret_deepseek_value", "env_key": "DEEPSEEK_API_KEY"})
+                locked_down = manager.effective_catalog()
+                self.assertEqual(locked_down["models"], [])
+
+                health = manager.run_health({"model_ids": ["deepseek/deepseek-v4-pro"], "efforts": ["high"], "temperatures": [0], "web_smoke": True})
+                self.assertEqual(health["model_health"]["deepseek/deepseek-v4-pro"]["tool_web_search_support"], "verified")
+                self.assertEqual(health["model_health"]["deepseek/deepseek-v4-pro"]["web_smoke_status"], "pass")
+                stream_health = manager.run_health({"model_ids": ["deepseek/deepseek-v4-pro"], "efforts": ["high"], "temperatures": [0], "stream": True})
+                self.assertEqual(stream_health["model_health"]["deepseek/deepseek-v4-pro"]["streaming"], "pass")
+                managed = manager.effective_catalog()
+                self.assertEqual({item["id"] for item in managed["models"]}, {"deepseek/deepseek-v4-pro"})
+                self.assertTrue(managed["models"][0]["verified"])
+            finally:
+                docs.shutdown()
+                docs.server_close()
+
+    def test_runtime_config_embeds_isolated_mcp_config(self) -> None:
+        original = os.environ.pop("TEST_MCP_PROVIDER_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                mcp = McpConfigService(root / "mcp_servers.json")
+                mcp.apply_context7_preset()
+                service = RuntimeConfigService(root / "embedded_codex_home", mcp_config=mcp)
+                service.load_secret(
+                    {
+                        "profile_id": "provider-test",
+                        "label": "Provider Test",
+                        "provider_id": "openai",
+                        "base_url": "https://example.com/v1",
+                        "model": "test-model",
+                        "reasoning_effort": "high",
+                        "wire_api": "responses",
+                        "env_key": "TEST_MCP_PROVIDER_KEY",
+                        "auth_mode": "session_paste",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    },
+                    session_key="unit_secret_test_value_123456",
+                )
+                config_text = (root / "embedded_codex_home" / "config.toml").read_text(encoding="utf-8")
+                self.assertIn("[mcp_servers.context7]", config_text)
+                self.assertIn('command = "npx"', config_text)
+                self.assertNotIn("unit_secret_test_value_123456", config_text)
+        finally:
+            if original is None:
+                os.environ.pop("TEST_MCP_PROVIDER_KEY", None)
+            else:
+                os.environ["TEST_MCP_PROVIDER_KEY"] = original
+
+    def test_runtime_service_rewrites_windows_mcp_paths_for_wsl(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            project = ProjectService(root / "projects.json")
+            project.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(project, ModalService(project.require_shell_state_root))
+            config_text = "\n".join(
+                [
+                    'model_catalog_json = "C:\\\\Users\\\\cyz19\\\\AppData\\\\Local\\\\LCR\\\\cx\\\\models\\\\lcr-models.json"',
+                    'base_url = "http://127.0.0.1:8787/v1"',
+                    "",
+                    "[mcp_servers.yunwu_image]",
+                    'command = "C:\\\\Users\\\\cyz19\\\\.cache\\\\codex-runtimes\\\\codex-primary-runtime\\\\dependencies\\\\python\\\\python.exe"',
+                    'args = ["-u", "D:\\\\Google One\\\\research-os-template\\\\apps\\\\codex-shell-sidecar\\\\research_os_sidecar\\\\yunwu_image_mcp_server.py"]',
+                    'cwd = "D:\\\\Google One\\\\research-os-template\\\\apps\\\\codex-shell-sidecar"',
+                    "",
+                    "[mcp_servers.yunwu_image.env]",
+                    'PYTHONPATH = "D:\\\\Google One\\\\research-os-template\\\\apps\\\\codex-shell-sidecar"',
+                ]
+            )
+
+            rewritten = runtime._rewrite_wsl_config_text(  # type: ignore[attr-defined]
+                config_text,
+                codex_home_wsl_abs="/home/user/.local/share/local-codex-router/codex-home",
+                router_base_url="http://10.255.255.254:8787",
+                sidecar_source_wsl="/mnt/d/Google One/research-os-template/apps/codex-shell-sidecar",
+                sidecar_link_wsl="/home/user/.local/share/local-codex-router/sidecar-src",
+            )
+
+            self.assertIn('model_catalog_json = "/home/user/.local/share/local-codex-router/codex-home/models/lcr-models.json"', rewritten)
+            self.assertIn('base_url = "http://10.255.255.254:8787/v1"', rewritten)
+            self.assertIn('command = "python3"', rewritten)
+            self.assertIn('"/home/user/.local/share/local-codex-router/sidecar-src/research_os_sidecar/yunwu_image_mcp_server.py"', rewritten)
+            self.assertIn('cwd = "/home/user/.local/share/local-codex-router/sidecar-src"', rewritten)
+            self.assertIn('PYTHONPATH = "/home/user/.local/share/local-codex-router/sidecar-src"', rewritten)
+            self.assertNotIn("C:\\\\Users", rewritten)
+            self.assertNotIn("D:\\\\Google One", rewritten)
+            self.assertNotIn("/mnt/d/Google One", rewritten)
+
+    def test_runtime_service_hydrates_recent_events_from_runtime_jsonl(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            project = ProjectService(root / "projects.json")
+            project.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            state_root = project.require_shell_state_root()
+            events_path = state_root / "runtime_events.jsonl"
+            persisted = [
+                {
+                    "index": 42,
+                    "type": "notification",
+                    "method": "thread/tokenUsage/updated",
+                    "timestamp": "2026-06-12T00:00:01+00:00",
+                    "params": {
+                        "threadId": "thread-compact",
+                        "tokenUsage": {"total": {"totalTokens": 91}, "modelContextWindow": 100},
+                    },
+                },
+                {
+                    "index": 43,
+                    "type": "notification",
+                    "method": "item/completed",
+                    "timestamp": "2026-06-12T00:00:03+00:00",
+                    "params": {
+                        "threadId": "thread-compact",
+                        "item": {"type": "contextCompaction", "id": "compact-1"},
+                        "authorization": "Bearer unit",
+                    },
+                },
+            ]
+            events_path.write_text("\n".join(json.dumps(item) for item in persisted) + "\n", encoding="utf-8")
+
+            runtime = RuntimeService(project, ModalService(project.require_shell_state_root))
+            runtime.record_supervisor_event({"event": "session_started"})
+            listed = runtime.list_events(after=0)
+            self.assertEqual(listed["cursor"], 3)
+            self.assertEqual(listed["events"][0]["index"], 0)
+            self.assertEqual(listed["events"][1]["params"]["item"]["type"], "contextCompaction")
+            self.assertEqual(listed["events"][2]["event"], "session_started")
+            self.assertNotIn("unit_secret_test_value", json.dumps(listed))
+
+    def test_runtime_service_permission_mapping_and_attachment_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            project = ProjectService(root / "projects.json")
+            project.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(project, ModalService(project.require_shell_state_root))
+
+            ask = runtime._turn_permission_overrides("ask")  # type: ignore[attr-defined]
+            auto = runtime._turn_permission_overrides("auto")  # type: ignore[attr-defined]
+            full = runtime._turn_permission_overrides("full")  # type: ignore[attr-defined]
+
+            self.assertEqual(ask["approvalPolicy"], "untrusted")
+            self.assertEqual(auto["sandboxPolicy"]["type"], "workspaceWrite")
+            self.assertEqual(full["sandboxPolicy"]["type"], "dangerFullAccess")
+
+            outside = root / "diagram.png"
+            outside.write_bytes(b"png")
+            staged = runtime._stage_attachment(str(outside), "diagram.png")  # type: ignore[attr-defined]
+            self.assertTrue(staged.exists())
+            self.assertIn(".lcr\\attachments", str(staged))
+
+    def test_runtime_config_collaboration_and_compaction_metadata(self) -> None:
+        original_key = os.environ.pop("TEST_DEEPSEEK_VERIFY_KEY", None)
+        original_compact = os.environ.get("LOCAL_CODEX_ROUTER_AUTO_COMPACT_TOKEN_LIMIT")
+        try:
+            os.environ["LOCAL_CODEX_ROUTER_AUTO_COMPACT_TOKEN_LIMIT"] = "4096"
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                config = RuntimeConfigService(root / "embedded_codex_home")
+                profile = {
+                    "profile_id": "deepseek-verify-default",
+                    "label": "DeepSeek Verify",
+                    "provider_id": "deepseek-verify",
+                    "base_url": "https://api.deepseek.com",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "max",
+                    "wire_api": "chat",
+                    "env_key": "TEST_DEEPSEEK_VERIFY_KEY",
+                    "auth_mode": "session_paste",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+                config.load_secret(profile, session_key="unit_secret_deepseek_test")
+                config_text = (root / "embedded_codex_home" / "config.toml").read_text(encoding="utf-8")
+                self.assertIn('model = "deepseek-verify/deepseek-v4-pro"', config_text)
+                self.assertIn("model_catalog_json =", config_text)
+                self.assertIn("model_context_window = 1000000", config_text)
+                self.assertIn("model_auto_compact_token_limit = 4096", config_text)
+                model_catalog = json.loads((root / "embedded_codex_home" / "models" / "lcr-models.json").read_text(encoding="utf-8"))
+                model_info = model_catalog["models"][0]
+                self.assertEqual(model_info["slug"], "deepseek-verify/deepseek-v4-pro")
+                self.assertEqual(model_info["input_modalities"], ["text"])
+                self.assertFalse(model_info["supports_parallel_tool_calls"])
+                self.assertFalse(model_info["supports_search_tool"])
+                self.assertIsNone(model_info["apply_patch_tool_type"])
+                self.assertEqual(model_info["web_search_tool_type"], "text")
+                self.assertEqual(model_info["auto_compact_token_limit"], 4096)
+
+                project = ProjectService(root / "projects.json")
+                workspace = root / "workspace"
+                workspace.mkdir()
+                project.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+                runtime = RuntimeService(project, ModalService(project.require_shell_state_root), runtime_config=config)
+                mode = runtime._collaboration_mode_params(  # type: ignore[attr-defined]
+                    profile=profile,
+                    model="deepseek-v4-pro",
+                    effort="max",
+                    collaboration_mode="plan",
+                )
+                self.assertEqual(mode["mode"], "plan")
+                self.assertEqual(mode["settings"]["model"], "deepseek-verify/deepseek-v4-pro")
+                self.assertIsNone(mode["settings"]["developer_instructions"])
+        finally:
+            if original_key is None:
+                os.environ.pop("TEST_DEEPSEEK_VERIFY_KEY", None)
+            else:
+                os.environ["TEST_DEEPSEEK_VERIFY_KEY"] = original_key
+            if original_compact is None:
+                os.environ.pop("LOCAL_CODEX_ROUTER_AUTO_COMPACT_TOKEN_LIMIT", None)
+            else:
+                os.environ["LOCAL_CODEX_ROUTER_AUTO_COMPACT_TOKEN_LIMIT"] = original_compact
+
+    def test_runtime_signature_ignores_require_secret_mode_but_tracks_key_fingerprint(self) -> None:
+        original_key = os.environ.get("TEST_SIGNATURE_KEY")
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                config = RuntimeConfigService(root / "embedded_codex_home")
+                profile = {
+                    "profile_id": "signature-provider",
+                    "label": "Signature Provider",
+                    "provider_id": "signature-provider",
+                    "base_url": "https://example.com",
+                    "model": "signature-model",
+                    "reasoning_effort": "high",
+                    "wire_api": "chat",
+                    "env_key": "TEST_SIGNATURE_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+
+                os.environ["TEST_SIGNATURE_KEY"] = "unit_secret_signature_one"
+                with_secret = config.prepare_profile(profile, require_secret=True)
+                without_secret = config.prepare_profile(profile, require_secret=False)
+                self.assertEqual(config.runtime_signature(with_secret), config.runtime_signature(without_secret))
+
+                os.environ["TEST_SIGNATURE_KEY"] = "unit_secret_signature_two"
+                rotated = config.prepare_profile(profile, require_secret=True)
+                self.assertNotEqual(config.runtime_signature(with_secret), config.runtime_signature(rotated))
+
+                with_image = config.prepare_profile({**profile, "input_modalities": ["text", "image"]}, require_secret=True)
+                self.assertNotEqual(config.runtime_signature(rotated), config.runtime_signature(with_image))
+        finally:
+            if original_key is None:
+                os.environ.pop("TEST_SIGNATURE_KEY", None)
+            else:
+                os.environ["TEST_SIGNATURE_KEY"] = original_key
+
+    def test_runtime_service_wsl_probe_rejects_windowsapps_codex(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            project = ProjectService(root / "projects.json")
+            project.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            project.update_project({"ui_preferences": {"execution_host": "wsl", "wsl_distro": "Ubuntu-24.04"}})
+            runtime = RuntimeService(project, ModalService(project.require_shell_state_root))
+
+            def fake_capture(command: list[str]) -> dict[str, object]:
+                joined = " ".join(command)
+                if "-l -q" in joined:
+                    return {"returncode": 0, "stdout": "Ubuntu-24.04\n", "stderr": ""}
+                if "bash -lc" in joined:
+                    return {
+                        "returncode": 126,
+                        "stdout": "",
+                        "stderr": "codex resolves to WindowsApps inside WSL: /mnt/c/Program Files/WindowsApps/OpenAI.Codex/app/resources/codex",
+                    }
+                return {"returncode": 0, "stdout": "", "stderr": ""}
+
+            runtime._run_capture = fake_capture  # type: ignore[method-assign]
+            with self.assertRaisesRegex(RuntimeError, "Linux-native Codex CLI"):
+                runtime._resolve_launch_target({"codex_home": str(root / "cx")})  # type: ignore[attr-defined]
+
+    def test_runtime_service_records_stale_wsl_app_server_cleanup(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            project = ProjectService(root / "projects.json")
+            project.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(project, ModalService(project.require_shell_state_root))
+
+            def fake_capture(command: list[str]) -> dict[str, object]:
+                self.assertIn("local-codex-router/bin/codex app-server", " ".join(command))
+                return {"returncode": 0, "stdout": "101,202\n", "stderr": ""}
+
+            runtime._run_capture = fake_capture  # type: ignore[method-assign]
+            runtime._terminate_stale_lcr_wsl_app_servers("wsl.exe", ["-d", "Ubuntu-24.04"])  # type: ignore[attr-defined]
+
+            cleanup_events = [
+                event for event in runtime.list_events().get("events", []) if event.get("type") == "wsl_app_server_cleanup"
+            ]
+            self.assertEqual(cleanup_events[-1]["terminated_pids"], ["101", "202"])
+
+    def test_router_service_fails_fast_when_port_is_owned(self) -> None:
+        class EmptyHandler(BaseHTTPRequestHandler):
+            def log_message(self, format: str, *args: object) -> None:  # noqa: A003
+                return
+
+        listener = ThreadingHTTPServer(("127.0.0.1", 0), EmptyHandler)
+        try:
+            port = int(listener.server_address[1])
+            profiles = ProfileService()
+            router = RouterService(profiles, host="127.0.0.1", port=port)
+            with self.assertRaisesRegex(RuntimeError, "port is already in use|cannot be bound"):
+                router.start()
+        finally:
+            listener.server_close()
+
+    def test_runtime_service_wsl_router_probe_requires_matching_current_router(self) -> None:
+        original_port = os.environ.get("LOCAL_CODEX_ROUTER_PORT")
+        original_fingerprint = os.environ.get("LOCAL_CODEX_ROUTER_TOKEN_FINGERPRINT")
+        try:
+            os.environ["LOCAL_CODEX_ROUTER_PORT"] = "8787"
+            os.environ["LOCAL_CODEX_ROUTER_TOKEN_FINGERPRINT"] = "expected123"
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                workspace = root / "workspace"
+                workspace.mkdir()
+                project = ProjectService(root / "projects.json")
+                project.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+                runtime = RuntimeService(project, ModalService(project.require_shell_state_root))
+
+                def fake_capture(command: list[str]) -> dict[str, object]:
+                    joined = " ".join(command)
+                    if "ip route show default" in joined:
+                        return {"returncode": 0, "stdout": "default via 172.23.112.1 dev eth0\n", "stderr": ""}
+                    if "cat /etc/resolv.conf" in joined:
+                        return {"returncode": 0, "stdout": "nameserver 10.255.255.254\n", "stderr": ""}
+                    if "/readyz" in joined:
+                        return {
+                            "returncode": 0,
+                            "stdout": "\n".join(
+                                [
+                                    json.dumps(
+                                        {
+                                            "host": "172.23.112.1",
+                                            "base_url": "http://172.23.112.1:8787",
+                                            "service": "local-codex-router",
+                                            "token_fingerprint": "stale999",
+                                        }
+                                    ),
+                                    json.dumps(
+                                        {
+                                            "host": "host.docker.internal",
+                                            "base_url": "http://host.docker.internal:8787",
+                                            "service": "local-codex-router",
+                                            "token_fingerprint": "expected123",
+                                        }
+                                    ),
+                                ]
+                            ),
+                            "stderr": "",
+                        }
+                    return {"returncode": 0, "stdout": "", "stderr": ""}
+
+                runtime._run_capture = fake_capture  # type: ignore[method-assign]
+                self.assertEqual(
+                    runtime._wsl_router_base_url("wsl.exe", ["-d", "Ubuntu-24.04"]),  # type: ignore[attr-defined]
+                    "http://host.docker.internal:8787",
+                )
+        finally:
+            if original_port is None:
+                os.environ.pop("LOCAL_CODEX_ROUTER_PORT", None)
+            else:
+                os.environ["LOCAL_CODEX_ROUTER_PORT"] = original_port
+            if original_fingerprint is None:
+                os.environ.pop("LOCAL_CODEX_ROUTER_TOKEN_FINGERPRINT", None)
+            else:
+                os.environ["LOCAL_CODEX_ROUTER_TOKEN_FINGERPRINT"] = original_fingerprint
+
+    def test_runtime_service_wsl_path_export_quotes_windows_path_tail(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            project = ProjectService(root / "projects.json")
+            project.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(project, ModalService(project.require_shell_state_root))
+
+            path_export = runtime._wsl_codex_path_export()  # type: ignore[attr-defined]
+            self.assertEqual(path_export, 'export PATH="$HOME/.local/share/local-codex-router/bin:$PATH"; ')
+            probe = runtime._wsl_codex_probe_command("$HOME/.local/share/local-codex-router/bin/codex")  # type: ignore[attr-defined]
+            self.assertIn("command -v codex", probe)
+            self.assertNotIn("LCR_CODEX_BIN", probe)
+
+    def test_runtime_service_wsl_launch_defaults_to_lcr_managed_codex(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            project = ProjectService(root / "projects.json")
+            project.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            project.update_project({"ui_preferences": {"execution_host": "wsl", "wsl_distro": "Ubuntu-24.04"}})
+            codex_home = root / "cx"
+            mcp_config = McpConfigService(root / "mcp_servers.json")
+            mcp_config.apply_yunwu_image_preset()
+            runtime_config = RuntimeConfigService(codex_home=codex_home, mcp_config=mcp_config)
+            runtime = RuntimeService(project, ModalService(project.require_shell_state_root), runtime_config=runtime_config)
+            (codex_home / "models").mkdir(parents=True)
+            (codex_home / "config.toml").write_text('model_catalog_json = "C:\\\\tmp\\\\models\\\\lcr-models.json"\n', encoding="utf-8")
+            (codex_home / "models" / "lcr-models.json").write_text('{"models":[]}', encoding="utf-8")
+            original_router_token = os.environ.get("CODEX_ROUTER_API_KEY")
+            original_yunwu_key = os.environ.get("YUNWU_API_KEY")
+            os.environ["CODEX_ROUTER_API_KEY"] = "router-token-for-wsl-test"
+            os.environ["YUNWU_API_KEY"] = "yunwu-token-for-wsl-test"
+
+            def fake_capture(command: list[str]) -> dict[str, object]:
+                joined = " ".join(command)
+                if "-l -q" in joined:
+                    return {"returncode": 0, "stdout": "Ubuntu-24.04\n", "stderr": ""}
+                if 'printf "%s" "$HOME"' in joined:
+                    return {"returncode": 0, "stdout": "/home/demo", "stderr": ""}
+                if "ip route show default" in joined:
+                    return {"returncode": 0, "stdout": "default via 10.255.255.254 dev eth0 proto kernel", "stderr": ""}
+                if "nameserver" in joined and "/etc/resolv.conf" in joined:
+                    return {"returncode": 0, "stdout": "10.255.255.254", "stderr": ""}
+                if "local-codex-router/bin/codex app-server" in joined and "/proc" in joined:
+                    return {"returncode": 0, "stdout": "", "stderr": ""}
+                if "/readyz" in joined:
+                    return {
+                        "returncode": 0,
+                        "stdout": json.dumps(
+                            {
+                                "host": "10.255.255.254",
+                                "base_url": "http://10.255.255.254:8787",
+                                "service": "local-codex-router",
+                                "token_fingerprint": os.environ.get("LOCAL_CODEX_ROUTER_TOKEN_FINGERPRINT") or "test",
+                            }
+                        ),
+                        "stderr": "",
+                    }
+                if "config.wsl.toml" in joined:
+                    return {"returncode": 0, "stdout": "", "stderr": ""}
+                if "bash -lc" in joined:
+                    self.assertIn("command -v codex", joined)
+                    return {"returncode": 0, "stdout": "codex-cli 0.139.0", "stderr": ""}
+                return {"returncode": 0, "stdout": "", "stderr": ""}
+
+            try:
+                runtime._run_capture = fake_capture  # type: ignore[method-assign]
+                target = runtime._resolve_launch_target({"codex_home": str(codex_home)})  # type: ignore[attr-defined]
+                joined_launch = " ".join(target["launch_command"])
+                self.assertIn("exec env -i", joined_launch)
+                self.assertIn("PATH=/home/demo/.local/share/local-codex-router/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", joined_launch)
+                self.assertIn('CODEX_ROUTER_API_KEY="${CODEX_ROUTER_API_KEY:-}"', joined_launch)
+                self.assertIn('YUNWU_API_KEY="${YUNWU_API_KEY:-}"', joined_launch)
+                self.assertIn('LOCAL_CODEX_ROUTER_WORKSPACE_ROOT="${LOCAL_CODEX_ROUTER_WORKSPACE_ROOT:-}"', joined_launch)
+                self.assertIn('LOCAL_CODEX_ROUTER_WORKSPACE_ROOT_WSL="${LOCAL_CODEX_ROUTER_WORKSPACE_ROOT_WSL:-}"', joined_launch)
+                self.assertNotIn("router-token-for-wsl-test", joined_launch)
+                self.assertNotIn("yunwu-token-for-wsl-test", joined_launch)
+                self.assertEqual(target["env_updates"]["CODEX_ROUTER_API_KEY"], "router-token-for-wsl-test")
+                self.assertEqual(target["env_updates"]["YUNWU_API_KEY"], "yunwu-token-for-wsl-test")
+                self.assertEqual(target["env_updates"]["LOCAL_CODEX_ROUTER_WORKSPACE_ROOT"], str(workspace))
+                self.assertTrue(str(target["env_updates"]["LOCAL_CODEX_ROUTER_WORKSPACE_ROOT_WSL"]).startswith("/mnt/"))
+                self.assertIn("CODEX_ROUTER_API_KEY", target["env_updates"]["WSLENV"])
+                self.assertIn("YUNWU_API_KEY", target["env_updates"]["WSLENV"])
+                self.assertIn("LOCAL_CODEX_ROUTER_WORKSPACE_ROOT", target["env_updates"]["WSLENV"])
+                self.assertIn("LOCAL_CODEX_ROUTER_WORKSPACE_ROOT_WSL", target["env_updates"]["WSLENV"])
+                self.assertIn("/home/demo/.local/share/local-codex-router/bin/codex app-server", joined_launch)
+            finally:
+                if original_router_token is None:
+                    os.environ.pop("CODEX_ROUTER_API_KEY", None)
+                else:
+                    os.environ["CODEX_ROUTER_API_KEY"] = original_router_token
+                if original_yunwu_key is None:
+                    os.environ.pop("YUNWU_API_KEY", None)
+                else:
+                    os.environ["YUNWU_API_KEY"] = original_yunwu_key
+
+    def test_runtime_load_secret_preserves_project_wsl_host(self) -> None:
+        original_key = os.environ.pop("TEST_LCR_WSL_SECRET_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                workspace = root / "workspace"
+                workspace.mkdir()
+                key_file = root / "provider.key"
+                key_file.write_text("test-provider-key", encoding="utf-8")
+                project = ProjectService(root / "projects.json")
+                project.create_project("WSL Secret", root / "wsl-secret.lcrproj", workspace_root=workspace, entry_mode="existing")
+                project.update_project({"ui_preferences": {"execution_host": "wsl", "wsl_distro": "Ubuntu-24.04"}})
+                runtime = RuntimeService(project, ModalService(project.require_shell_state_root))
+                status = runtime.load_secret(
+                    {
+                        "profile_id": "test-wsl",
+                        "label": "Test WSL",
+                        "provider_id": "deepseek",
+                        "base_url": "https://api.deepseek.com",
+                        "model": "deepseek-v4-pro",
+                        "reasoning_effort": "max",
+                        "wire_api": "chat",
+                        "env_key": "TEST_LCR_WSL_SECRET_KEY",
+                        "auth_mode": "session_paste",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    },
+                    key_file_path=str(key_file),
+                )
+                self.assertTrue(status["secret_loaded"])
+                self.assertEqual(status["execution_host"], "wsl")
+                self.assertEqual(status["wsl_distro"], "Ubuntu-24.04")
+        finally:
+            if original_key is None:
+                os.environ.pop("TEST_LCR_WSL_SECRET_KEY", None)
+            else:
+                os.environ["TEST_LCR_WSL_SECRET_KEY"] = original_key
+
+    def test_wsl_dependency_status_reports_codex_version_failure(self) -> None:
+        service = WslDependencyService(Path(tempfile.mkdtemp()) / "bootstrap")
+
+        def fake_run(command: list[str]) -> dict[str, object]:
+            joined = " ".join(command)
+            if "-l -v" in joined:
+                return {"returncode": 0, "stdout": "  NAME            STATE           VERSION\n* Ubuntu-24.04    Stopped         2\n", "stderr": ""}
+            if "cat /etc/os-release" in joined:
+                return {"returncode": 0, "stdout": 'PRETTY_NAME="Ubuntu 24.04 LTS"', "stderr": ""}
+            if "command -v codex" in joined:
+                return {"returncode": 0, "stdout": "/mnt/c/Program Files/WindowsApps/OpenAI.Codex/app/resources/codex", "stderr": ""}
+            if "codex --version" in joined:
+                return {"returncode": 126, "stdout": "", "stderr": "Permission denied"}
+            if "codex app-server" in joined:
+                return {"returncode": 126, "stdout": "", "stderr": "Permission denied"}
+            if any(item in joined for item in ("python3 --version", "git --version", "node --version", "npm --version", "npx --version", "bwrap --version")):
+                return {"returncode": 0, "stdout": "ok", "stderr": ""}
+            return {"returncode": 0, "stdout": "", "stderr": ""}
+
+        service._run = fake_run  # type: ignore[method-assign]
+        status = service.status("Ubuntu-24.04")
+        by_id = {item["id"]: item for item in status["checks"]}
+        self.assertFalse(status["ok"])
+        self.assertEqual(by_id["codex_path"]["status"], "misconfigured")
+        self.assertEqual(by_id["codex_version"]["status"], "missing")
+
+    def test_wsl_dependency_scripts_do_not_contain_secrets(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            service = WslDependencyService(Path(temp) / "bootstrap")
+            result = service.write_scripts("Ubuntu-24.04")
+            windows_text = Path(result["windows_script_path"]).read_text(encoding="utf-8")
+            wsl_text = Path(result["wsl_script_path"]).read_text(encoding="utf-8")
+            combined = windows_text + "\n" + wsl_text
+            self.assertIn("wsl.exe --install", combined)
+            self.assertIn("CODEX_INSTALL_DIR", combined)
+            self.assertNotIn("Authorization", combined)
+            self.assertNotIn("Bearer ", combined)
+            self.assertNotIn("unit_secret_", combined)
+
+    def test_official_codex_config_apply_and_restore(self) -> None:
+        original = os.environ.get("LOCAL_CODEX_ROUTER_OFFICIAL_CODEX_HOME")
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                os.environ["LOCAL_CODEX_ROUTER_OFFICIAL_CODEX_HOME"] = str(root / ".codex")
+                profiles = ProfileService(root / "profiles.json")
+                service = OfficialCodexService(profiles, root / "backups")
+                status = service.apply_router_config(router_base_url="http://127.0.0.1:8787/v1", default_model="yunwu/gpt-5.5")
+                config_text = (root / ".codex" / "config.toml").read_text(encoding="utf-8")
+                self.assertTrue(status["router_configured"])
+                self.assertIn('[model_providers.router]', config_text)
+                self.assertIn('env_key = "CODEX_ROUTER_API_KEY"', config_text)
+
+                (root / ".codex" / "config.toml").write_text('model = "custom"\n', encoding="utf-8")
+                status = service.apply_router_config(router_base_url="http://127.0.0.1:8787/v1", default_model="yunwu/gpt-5.5")
+                self.assertGreaterEqual(status["backup_count"], 1)
+                restored = service.restore_latest_backup()
+                restored_text = (root / ".codex" / "config.toml").read_text(encoding="utf-8")
+                self.assertEqual(restored["backup_count"], status["backup_count"])
+                self.assertIn('model = "custom"', restored_text)
+        finally:
+            if original is None:
+                os.environ.pop("LOCAL_CODEX_ROUTER_OFFICIAL_CODEX_HOME", None)
+            else:
+                os.environ["LOCAL_CODEX_ROUTER_OFFICIAL_CODEX_HOME"] = original
+
+    def test_router_service_models_and_responses_passthrough(self) -> None:
+        class UpstreamHandler(BaseHTTPRequestHandler):
+            last_payload = None
+
+            def do_POST(self) -> None:  # noqa: N802
+                length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                UpstreamHandler.last_payload = payload
+                body = json.dumps(
+                    {
+                        "id": "resp_test",
+                        "object": "response",
+                        "model": payload["model"],
+                        "output": [{"type": "message", "content": [{"type": "output_text", "text": "ok"}]}],
+                    }
+                ).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format: str, *args) -> None:  # noqa: A003
+                return
+
+        upstream = ThreadingHTTPServer(("127.0.0.1", 0), UpstreamHandler)
+        upstream_port = upstream.server_address[1]
+        upstream_thread = threading.Thread(target=upstream.serve_forever, daemon=True)
+        upstream_thread.start()
+
+        original_router_token = os.environ.get(ROUTER_ENV_KEY)
+        original_provider_token = os.environ.get("TEST_ROUTER_PROVIDER_KEY")
+        router = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                profiles = ProfileService(Path(temp) / "profiles.json")
+                profiles.upsert_profile(
+                    {
+                        "profile_id": "router-openai",
+                        "label": "Router OpenAI",
+                        "type": "custom_provider",
+                        "provider_id": "openai",
+                        "base_url": f"http://127.0.0.1:{upstream_port}",
+                        "model": "gpt-5.5",
+                        "reasoning_effort": "high",
+                        "wire_api": "responses",
+                        "env_key": "TEST_ROUTER_PROVIDER_KEY",
+                        "auth_mode": "env_ref",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    }
+                )
+                os.environ["TEST_ROUTER_PROVIDER_KEY"] = "unit_secret_provider_test"
+                router = RouterService(profiles, port=0)
+                router.start()
+                token = os.environ[ROUTER_ENV_KEY]
+
+                models_request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/models",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                with urllib.request.urlopen(models_request, timeout=5) as response:
+                    models_payload = json.loads(response.read().decode("utf-8"))
+                self.assertIn("openai/gpt-5.5", [item["id"] for item in models_payload["data"]])
+                router_model = next(item for item in models_payload["data"] if item["id"] == "openai/gpt-5.5")
+                self.assertEqual(router_model["input_modalities"], ["text"])
+                self.assertEqual(router_model["effective_context_window_percent"], 80)
+                self.assertEqual(router_model["auto_compact_token_limit"], 800000)
+                self.assertFalse(router_model["supports_parallel_tool_calls"])
+                self.assertIsNone(router_model["apply_patch_tool_type"])
+
+                response_request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/responses",
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    data=json.dumps({"model": "openai/gpt-5.5", "input": "hello", "stream": False}).encode("utf-8"),
+                    method="POST",
+                )
+                with urllib.request.urlopen(response_request, timeout=5) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+                self.assertEqual(payload["model"], "gpt-5.5")
+                self.assertEqual(UpstreamHandler.last_payload["model"], "gpt-5.5")
+
+                native_smoke = router.test_provider("openai", "gpt-5.5", stream=False)
+                self.assertTrue(native_smoke["ok"])
+                self.assertEqual(native_smoke["model"], "openai/gpt-5.5")
+                self.assertEqual(UpstreamHandler.last_payload["model"], "gpt-5.5")
+        finally:
+            upstream.shutdown()
+            upstream.server_close()
+            if router is not None:
+                router.stop()
+            if original_router_token is None:
+                os.environ.pop(ROUTER_ENV_KEY, None)
+            else:
+                os.environ[ROUTER_ENV_KEY] = original_router_token
+            if original_provider_token is None:
+                os.environ.pop("TEST_ROUTER_PROVIDER_KEY", None)
+            else:
+                os.environ["TEST_ROUTER_PROVIDER_KEY"] = original_provider_token
+
+    def test_router_service_uses_instance_token_not_inherited_environment(self) -> None:
+        original_router_token = os.environ.get(ROUTER_ENV_KEY)
+        router = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                os.environ[ROUTER_ENV_KEY] = "stale_router"
+                profiles = ProfileService(Path(temp) / "profiles.json")
+                router = RouterService(profiles, port=0)
+                router.start()
+                fresh_token = os.environ[ROUTER_ENV_KEY]
+                self.assertNotEqual(fresh_token, "stale_router")
+
+                stale_request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/models",
+                    headers={"Authorization": "Bearer stale_router"},
+                )
+                with self.assertRaises(urllib.error.HTTPError) as captured:
+                    urllib.request.urlopen(stale_request, timeout=5)
+                self.assertEqual(captured.exception.code, 401)
+
+                fresh_request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/models",
+                    headers={"Authorization": f"Bearer {fresh_token}"},
+                )
+                with urllib.request.urlopen(fresh_request, timeout=5) as response:
+                    self.assertEqual(response.status, 200)
+        finally:
+            if router is not None:
+                router.stop()
+            if original_router_token is None:
+                os.environ.pop(ROUTER_ENV_KEY, None)
+            else:
+                os.environ[ROUTER_ENV_KEY] = original_router_token
+
+    def test_isolation_audit_reports_lcr_boundaries_without_secret_values(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            project_service = ProjectService(root / "projects.json")
+            project = project_service.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            codex_home = root / "isolated-codex-home"
+            codex_home.mkdir()
+            (codex_home / "config.toml").write_text('model = "deepseek/deepseek-v4-pro"\n', encoding="utf-8")
+            official_home = root / ".codex"
+            official_home.mkdir()
+            official_config = official_home / "config.toml"
+            official_config.write_text('model = "gpt-5"\n', encoding="utf-8")
+            audit = IsolationAuditService().snapshot(
+                current_project=project,
+                runtime_environment={
+                    "running": False,
+                    "codex_cli": "codex",
+                    "execution_host": "windows",
+                    "runtime_config": {"codex_home": str(codex_home)},
+                },
+                router_status={"listen_port": 8787, "base_url": "http://127.0.0.1:8787/v1"},
+                official_codex_status={
+                    "config_path": str(official_config),
+                    "exists": True,
+                    "managed_by_app": False,
+                    "router_configured": False,
+                },
+                sidecar_port=8790,
+            )
+            self.assertTrue(audit["ok"])
+            self.assertEqual(audit["paths"]["lcr_state"], str(workspace / ".lcr"))
+            self.assertIsNotNone(audit["official_codex"]["config_sha256"])
+
+    def test_qwen_adapter_maps_effort_to_enable_thinking(self) -> None:
+        class UpstreamHandler(BaseHTTPRequestHandler):
+            last_payload = None
+
+            def do_POST(self) -> None:  # noqa: N802
+                length = int(self.headers.get("Content-Length", "0"))
+                UpstreamHandler.last_payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                body = json.dumps({"id": "resp_qwen", "object": "response", "model": UpstreamHandler.last_payload["model"]}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format: str, *args) -> None:  # noqa: A003
+                return
+
+        upstream = ThreadingHTTPServer(("127.0.0.1", 0), UpstreamHandler)
+        upstream_port = upstream.server_address[1]
+        upstream_thread = threading.Thread(target=upstream.serve_forever, daemon=True)
+        upstream_thread.start()
+
+        original_router_token = os.environ.get(ROUTER_ENV_KEY)
+        original_provider_token = os.environ.get("TEST_QWEN_PROVIDER_KEY")
+        router = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                profiles = ProfileService(Path(temp) / "profiles.json")
+                profiles.upsert_profile(
+                    {
+                        "profile_id": "qwen-router",
+                        "label": "Qwen Router",
+                        "type": "custom_provider",
+                        "provider_id": "qwen",
+                        "base_url": f"http://127.0.0.1:{upstream_port}",
+                        "model": "qwen3-coder-plus",
+                        "reasoning_effort": "xhigh",
+                        "wire_api": "responses",
+                        "env_key": "TEST_QWEN_PROVIDER_KEY",
+                        "auth_mode": "env_ref",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    }
+                )
+                os.environ["TEST_QWEN_PROVIDER_KEY"] = "unit_secret_qwen_test"
+                router = RouterService(profiles, port=0)
+                router.start()
+                token = os.environ[ROUTER_ENV_KEY]
+
+                response_request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/responses",
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    data=json.dumps(
+                        {
+                            "model": "qwen/qwen3-coder-plus",
+                            "input": "hello",
+                            "stream": False,
+                            "reasoning": {"effort": "off"},
+                            "temperature": 0.2,
+                        }
+                    ).encode("utf-8"),
+                    method="POST",
+                )
+                with urllib.request.urlopen(response_request, timeout=5):
+                    pass
+
+                self.assertEqual(UpstreamHandler.last_payload["model"], "qwen3-coder-plus")
+                self.assertEqual(UpstreamHandler.last_payload["enable_thinking"], False)
+                self.assertNotIn("reasoning", UpstreamHandler.last_payload)
+                self.assertEqual(UpstreamHandler.last_payload["temperature"], 0.2)
+
+                omitted = router.preview_payload(
+                    {
+                        "model": "qwen/qwen3-coder-plus",
+                        "input": "hello",
+                        "stream": False,
+                        "temperature": 0,
+                    }
+                )
+                self.assertNotIn("temperature", omitted["upstream_payload"])
+                self.assertIn("omitted", omitted["warnings"][0])
+
+                clamped = router.preview_payload(
+                    {
+                        "model": "qwen/qwen3-coder-plus",
+                        "input": "hello",
+                        "stream": False,
+                        "temperature": 2,
+                    }
+                )
+                self.assertEqual(clamped["upstream_payload"]["temperature"], 1.0)
+                self.assertIn("caps", clamped["warnings"][0])
+        finally:
+            upstream.shutdown()
+            upstream.server_close()
+            if router is not None:
+                router.stop()
+            if original_router_token is None:
+                os.environ.pop(ROUTER_ENV_KEY, None)
+            else:
+                os.environ[ROUTER_ENV_KEY] = original_router_token
+            if original_provider_token is None:
+                os.environ.pop("TEST_QWEN_PROVIDER_KEY", None)
+            else:
+                os.environ["TEST_QWEN_PROVIDER_KEY"] = original_provider_token
+
+    def test_deepseek_adapter_converts_chat_completion_to_response(self) -> None:
+        class UpstreamHandler(BaseHTTPRequestHandler):
+            last_payload = None
+
+            def do_POST(self) -> None:  # noqa: N802
+                length = int(self.headers.get("Content-Length", "0"))
+                UpstreamHandler.last_payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                body = json.dumps(
+                    {
+                        "id": "chatcmpl-deepseek",
+                        "object": "chat.completion",
+                        "created": 123,
+                        "choices": [
+                            {
+                                "index": 0,
+                                "message": {
+                                    "role": "assistant",
+                                    "content": "deepseek ok",
+                                    "tool_calls": [
+                                        {
+                                            "id": "call_ds_1",
+                                            "type": "function",
+                                            "function": {"name": "update_plan", "arguments": "{\"step\":\"x\"}"},
+                                        }
+                                    ],
+                                },
+                                "finish_reason": "stop",
+                            }
+                        ],
+                        "usage": {"prompt_tokens": 11, "completion_tokens": 17, "total_tokens": 28},
+                    }
+                ).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format: str, *args) -> None:  # noqa: A003
+                return
+
+        upstream = ThreadingHTTPServer(("127.0.0.1", 0), UpstreamHandler)
+        upstream_port = upstream.server_address[1]
+        threading.Thread(target=upstream.serve_forever, daemon=True).start()
+
+        original_router_token = os.environ.get(ROUTER_ENV_KEY)
+        original_provider_token = os.environ.get("TEST_DEEPSEEK_PROVIDER_KEY")
+        router = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                profiles = ProfileService(Path(temp) / "profiles.json")
+                profiles.upsert_profile(
+                    {
+                        "profile_id": "deepseek-router",
+                        "label": "DeepSeek Router",
+                        "type": "custom_provider",
+                        "provider_id": "deepseek",
+                        "base_url": f"http://127.0.0.1:{upstream_port}",
+                        "model": "deepseek-v4-pro",
+                        "reasoning_effort": "xhigh",
+                        "wire_api": "chat",
+                        "env_key": "TEST_DEEPSEEK_PROVIDER_KEY",
+                        "auth_mode": "env_ref",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    }
+                )
+                os.environ["TEST_DEEPSEEK_PROVIDER_KEY"] = "unit_secret_deepseek_test"
+                router = RouterService(profiles, port=0)
+                router.start()
+                token = os.environ[ROUTER_ENV_KEY]
+
+                request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/responses",
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    data=json.dumps(
+                        {
+                            "model": "deepseek/deepseek-v4-pro",
+                            "input": "hello",
+                            "stream": False,
+                            "reasoning": {"effort": "xhigh"},
+                            "tools": [{"type": "function", "name": "update_plan", "description": "update", "parameters": {"type": "object"}}],
+                        }
+                    ).encode("utf-8"),
+                    method="POST",
+                )
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+
+                self.assertEqual(UpstreamHandler.last_payload["model"], "deepseek-v4-pro")
+                self.assertEqual(UpstreamHandler.last_payload["thinking"]["type"], "enabled")
+                self.assertEqual(UpstreamHandler.last_payload["reasoning_effort"], "max")
+                self.assertEqual(UpstreamHandler.last_payload["tools"][0]["function"]["name"], "update_plan")
+                self.assertEqual(payload["object"], "response")
+                self.assertEqual(payload["output_text"], "deepseek ok")
+                self.assertEqual(payload["output"][1]["type"], "function_call")
+        finally:
+            upstream.shutdown()
+            upstream.server_close()
+            if router is not None:
+                router.stop()
+            if original_router_token is None:
+                os.environ.pop(ROUTER_ENV_KEY, None)
+            else:
+                os.environ[ROUTER_ENV_KEY] = original_router_token
+            if original_provider_token is None:
+                os.environ.pop("TEST_DEEPSEEK_PROVIDER_KEY", None)
+            else:
+                os.environ["TEST_DEEPSEEK_PROVIDER_KEY"] = original_provider_token
+
+    def test_deepseek_adapter_preserves_reasoning_content_across_tool_turns(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "deepseek-router",
+                    "label": "DeepSeek Router",
+                    "type": "custom_provider",
+                    "provider_id": "deepseek",
+                    "base_url": "https://api.deepseek.com",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "xhigh",
+                    "wire_api": "chat",
+                    "env_key": "TEST_DEEPSEEK_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            preview = router.preview_payload(
+                {
+                    "model": "deepseek/deepseek-v4-pro",
+                    "input": [
+                        {"type": "reasoning", "summary": ["hidden reasoning"]},
+                        {"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "I will ask."}]},
+                        {"type": "function_call", "call_id": "call_1", "name": "request_user_input", "arguments": "{}"},
+                    ],
+                    "stream": False,
+                    "reasoning": {"effort": "xhigh"},
+                }
+            )
+            assistant = next(
+                message
+                for message in preview["upstream_payload"]["messages"]
+                if message.get("role") == "assistant" and message.get("tool_calls")
+            )
+            self.assertEqual(assistant["reasoning_content"], "hidden reasoning")
+            self.assertEqual(assistant["content"], "I will ask.")
+            self.assertEqual(assistant["tool_calls"][0]["id"], "call_1")
+
+    def test_chat_adapter_pairs_codex_command_execution_with_tool_call(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "deepseek-router",
+                    "label": "DeepSeek Router",
+                    "type": "custom_provider",
+                    "provider_id": "deepseek",
+                    "base_url": "https://api.deepseek.com",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "xhigh",
+                    "wire_api": "chat",
+                    "env_key": "TEST_DEEPSEEK_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            preview = router.preview_payload(
+                {
+                    "model": "deepseek/deepseek-v4-pro",
+                    "input": [
+                        {"type": "function_call", "call_id": "call_shell", "name": "shell", "arguments": "{\"cmd\":\"dir\"}"},
+                        {
+                            "type": "commandExecution",
+                            "id": "call_shell",
+                            "command": "dir",
+                            "status": "completed",
+                            "aggregatedOutput": "index.html",
+                            "exitCode": 0,
+                        },
+                    ],
+                    "stream": False,
+                    "reasoning": {"effort": "xhigh"},
+                }
+            )
+            messages = preview["upstream_payload"]["messages"]
+            assistant = messages[-2]
+            tool = messages[-1]
+            self.assertEqual(assistant["role"], "assistant")
+            self.assertEqual(assistant["tool_calls"][0]["id"], "call_shell")
+            self.assertEqual(tool["role"], "tool")
+            self.assertEqual(tool["tool_call_id"], "call_shell")
+            self.assertIn("index.html", tool["content"])
+
+    def test_chat_adapter_pairs_parallel_codex_command_executions(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "kimi-router",
+                    "label": "Kimi Router",
+                    "type": "custom_provider",
+                    "provider_id": "kimi",
+                    "base_url": "https://api.moonshot.cn/v1",
+                    "model": "kimi-k2.6",
+                    "reasoning_effort": "xhigh",
+                    "wire_api": "chat",
+                    "env_key": "TEST_KIMI_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            preview = router.preview_payload(
+                {
+                    "model": "kimi/kimi-k2.6",
+                    "input": [
+                        {"type": "function_call", "call_id": "shell_command:2", "name": "shell_command", "arguments": "{\"command\":\"Get-Content index.html\"}"},
+                        {"type": "function_call", "call_id": "shell_command:3", "name": "shell_command", "arguments": "{\"command\":\"Get-Content README.md\"}"},
+                        {"type": "function_call", "call_id": "shell_command:4", "name": "shell_command", "arguments": "{\"command\":\"Get-Content js/main.js\"}"},
+                        {"type": "commandExecution", "id": "shell_command:2", "command": "Get-Content index.html", "status": "completed", "aggregatedOutput": "<html>", "exitCode": 0},
+                        {"type": "commandExecution", "id": "shell_command:3", "command": "Get-Content README.md", "status": "completed", "aggregatedOutput": "# Readme", "exitCode": 0},
+                        {"type": "commandExecution", "id": "shell_command:4", "command": "Get-Content js/main.js", "status": "completed", "aggregatedOutput": "init()", "exitCode": 0},
+                    ],
+                    "stream": False,
+                    "reasoning": {"effort": "xhigh"},
+                }
+            )
+            messages = preview["upstream_payload"]["messages"]
+            assistant_index = next(i for i, message in enumerate(messages) if message.get("role") == "assistant" and message.get("tool_calls"))
+            assistant = messages[assistant_index]
+            self.assertEqual([call["id"] for call in assistant["tool_calls"]], ["shell_command:2", "shell_command:3", "shell_command:4"])
+            tool_ids = [messages[assistant_index + offset]["tool_call_id"] for offset in (1, 2, 3)]
+            self.assertEqual(tool_ids, ["shell_command:2", "shell_command:3", "shell_command:4"])
+
+    def test_kimi_adapter_encodes_local_image_as_base64_image_url(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            image_path = Path(temp) / "vision.png"
+            image_path.write_bytes(_png_rgba(1, 1, (0, 64, 255, 255)))
+            raw_path = str(image_path)
+            if image_path.drive:
+                drive = image_path.drive.rstrip(":").lower()
+                tail = str(image_path)[len(image_path.drive) + 1 :].replace("\\", "/")
+                raw_path = f"/mnt/{drive}/{tail}"
+
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "kimi-router",
+                    "label": "Kimi Router",
+                    "type": "custom_provider",
+                    "provider_id": "kimi",
+                    "base_url": "https://api.moonshot.cn/v1",
+                    "model": "kimi-k2.6",
+                    "reasoning_effort": "off",
+                    "wire_api": "chat",
+                    "env_key": "TEST_KIMI_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            payload = {
+                "model": "kimi/kimi-k2.6",
+                "input": [
+                    {"type": "text", "text": "What color is this image?"},
+                    {"type": "localImage", "path": raw_path, "detail": "high"},
+                ],
+                "stream": False,
+            }
+            profile = router._resolve_profile(payload)  # noqa: SLF001
+            upstream = router._adapter_for(profile).upstream_payload(payload)  # noqa: SLF001
+            image_message = next(message for message in upstream["messages"] if isinstance(message.get("content"), list))
+            image_part = next(part for part in image_message["content"] if part.get("type") == "image_url")
+            self.assertTrue(image_part["image_url"]["url"].startswith("data:image/png;base64,"))
+            self.assertIn(base64.b64encode(image_path.read_bytes()).decode("ascii"), image_part["image_url"]["url"])
+
+            preview = router.preview_payload(payload)
+            self.assertIn("[REDACTED_IMAGE_DATA_URL]", json.dumps(preview["upstream_payload"]))
+
+    def test_kimi_adapter_keeps_thinking_for_visual_micro_check_with_large_output_window(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            image_path = Path(temp) / "vision.png"
+            image_path.write_bytes(_png_rgba(2, 2, (0, 64, 255, 255)))
+            raw_path = str(image_path)
+            if image_path.drive:
+                drive = image_path.drive.rstrip(":").lower()
+                tail = str(image_path)[len(image_path.drive) + 1 :].replace("\\", "/")
+                raw_path = f"/mnt/{drive}/{tail}"
+
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "kimi-router",
+                    "label": "Kimi Router",
+                    "type": "custom_provider",
+                    "provider_id": "kimi",
+                    "base_url": "https://api.moonshot.cn/v1",
+                    "model": "kimi-k2.6",
+                    "reasoning_effort": "xhigh",
+                    "wire_api": "chat",
+                    "env_key": "TEST_KIMI_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            payload = {
+                "model": "kimi/kimi-k2.6",
+                "input": [
+                    {"type": "text", "text": "Visual micro-check only. Reply pass or retry."},
+                    {"type": "localImage", "path": raw_path, "detail": "high"},
+                ],
+                "stream": False,
+            }
+            preview = router.preview_payload(payload)
+            upstream = preview["upstream_payload"]
+            self.assertEqual(upstream["thinking"], {"type": "enabled"})
+            self.assertEqual(upstream["max_tokens"], 32768)
+            self.assertIn("[REDACTED_IMAGE_DATA_URL]", json.dumps(upstream))
+
+    def test_kimi_adapter_maps_app_server_input_image_to_chat_image_part(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "kimi-router",
+                    "label": "Kimi Router",
+                    "type": "custom_provider",
+                    "provider_id": "kimi",
+                    "base_url": "https://api.moonshot.cn/v1",
+                    "model": "kimi-k2.6",
+                    "reasoning_effort": "xhigh",
+                    "wire_api": "chat",
+                    "env_key": "TEST_KIMI_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            payload = {
+                "model": "kimi/kimi-k2.6",
+                "input": [
+                    {
+                        "type": "message",
+                        "role": "user",
+                        "content": [
+                            {"type": "input_text", "text": "Visual micro-check only."},
+                            {"type": "input_image", "image_url": "data:image/png;base64,AAAA", "detail": "high"},
+                        ],
+                    }
+                ],
+                "stream": True,
+                "reasoning": {"effort": "high"},
+            }
+            upstream = router.preview_payload(payload)["upstream_payload"]
+            content = upstream["messages"][-1]["content"]
+            image_part = next(part for part in content if part.get("type") == "image_url")
+            self.assertEqual(image_part["image_url"]["url"], "[REDACTED_IMAGE_DATA_URL]")
+            self.assertEqual(upstream["thinking"], {"type": "enabled"})
+            self.assertEqual(upstream["max_tokens"], 32768)
+
+    def test_kimi_adapter_recovers_app_server_embedded_input_image_text(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "kimi-router",
+                    "label": "Kimi Router",
+                    "type": "custom_provider",
+                    "provider_id": "kimi",
+                    "base_url": "https://api.moonshot.cn/v1",
+                    "model": "kimi-k2.6",
+                    "reasoning_effort": "xhigh",
+                    "wire_api": "chat",
+                    "env_key": "TEST_KIMI_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            embedded = (
+                'Look at this image.\n<image name=[Image #1] path="/tmp/asset.png">\n'
+                '{"type": "input_image", "image_url": "data:image/png;base64,AAAA", "detail": "high"}\n'
+                "</image>"
+            )
+            payload = {
+                "model": "kimi/kimi-k2.6",
+                "input": [{"type": "message", "role": "user", "content": [{"type": "input_text", "text": embedded}]}],
+                "stream": True,
+                "reasoning": {"effort": "high"},
+            }
+            upstream = router._adapter_for(router._resolve_profile(payload)).upstream_payload(payload)  # noqa: SLF001
+            content = upstream["messages"][-1]["content"]
+            self.assertIsInstance(content, list)
+            self.assertTrue(any(part.get("type") == "image_url" for part in content))
+            self.assertFalse("data:image/png;base64,AAAA" in json.dumps(router.preview_payload(payload)))
+            self.assertIn("[REDACTED_IMAGE_DATA_URL]", json.dumps(router.preview_payload(payload)))
+            self.assertEqual(upstream["thinking"], {"type": "enabled"})
+            self.assertEqual(upstream["max_tokens"], 32768)
+
+    def test_kimi_adapter_recovers_loose_embedded_image_url_text(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "kimi-router",
+                    "label": "Kimi Router",
+                    "type": "custom_provider",
+                    "provider_id": "kimi",
+                    "base_url": "https://api.moonshot.cn/v1",
+                    "model": "kimi-k2.6",
+                    "reasoning_effort": "xhigh",
+                    "wire_api": "chat",
+                    "env_key": "TEST_KIMI_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            embedded = (
+                'Look at this attachment.\n<image>\n'
+                '{"detail": "high", "metadata": {"name": "asset.png"}, "type": "input_image", '
+                '"image_url": "data:image/png;base64,BBBB"}\n'
+                "</image>"
+            )
+            payload = {
+                "model": "kimi/kimi-k2.6",
+                "input": [{"type": "message", "role": "user", "content": [{"type": "text", "text": embedded}]}],
+                "stream": True,
+            }
+
+            upstream = router._adapter_for(router._resolve_profile(payload)).upstream_payload(payload)  # noqa: SLF001
+            content = upstream["messages"][-1]["content"]
+            self.assertIsInstance(content, list)
+            self.assertTrue(any(part.get("type") == "image_url" for part in content))
+            self.assertFalse("data:image/png;base64,BBBB" in json.dumps(router.preview_payload(payload)))
+            self.assertIn("[REDACTED_IMAGE_DATA_URL]", json.dumps(router.preview_payload(payload)))
+
+    def test_kimi_adapter_keeps_explicit_deep_visual_reasoning(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            image_path = Path(temp) / "vision.png"
+            image_path.write_bytes(_png_rgba(2, 2, (0, 64, 255, 255)))
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "kimi-router",
+                    "label": "Kimi Router",
+                    "type": "custom_provider",
+                    "provider_id": "kimi",
+                    "base_url": "https://api.moonshot.cn/v1",
+                    "model": "kimi-k2.6",
+                    "reasoning_effort": "high",
+                    "wire_api": "chat",
+                    "env_key": "TEST_KIMI_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            preview = router.preview_payload(
+                {
+                    "model": "kimi/kimi-k2.6",
+                    "input": [
+                        {"type": "text", "text": "Deeply inspect this image."},
+                        {"type": "localImage", "path": str(image_path), "detail": "high"},
+                    ],
+                    "reasoning": {"effort": "max"},
+                    "stream": False,
+                }
+            )
+            upstream = preview["upstream_payload"]
+            self.assertEqual(upstream["thinking"], {"type": "enabled", "keep": "all"})
+            self.assertGreaterEqual(upstream["max_tokens"], 32768)
+
+    def test_chat_adapter_repairs_missing_tool_result(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "deepseek-router",
+                    "label": "DeepSeek Router",
+                    "type": "custom_provider",
+                    "provider_id": "deepseek",
+                    "base_url": "https://api.deepseek.com",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "xhigh",
+                    "wire_api": "chat",
+                    "env_key": "TEST_DEEPSEEK_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            preview = router.preview_payload(
+                {
+                    "model": "deepseek/deepseek-v4-pro",
+                    "input": [
+                        {"type": "function_call", "call_id": "call_missing", "name": "shell", "arguments": "{}"},
+                        {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "continue"}]},
+                    ],
+                    "stream": False,
+                    "reasoning": {"effort": "xhigh"},
+                }
+            )
+            messages = preview["upstream_payload"]["messages"]
+            assistant_index = next(i for i, message in enumerate(messages) if message.get("role") == "assistant" and message.get("tool_calls"))
+            self.assertEqual(messages[assistant_index + 1]["role"], "tool")
+            self.assertEqual(messages[assistant_index + 1]["tool_call_id"], "call_missing")
+            self.assertIn("unavailable", messages[assistant_index + 1]["content"])
+
+    def test_deepseek_adapter_repairs_tool_pairs_after_reasoning_merge(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            profiles.upsert_profile(
+                {
+                    "profile_id": "deepseek-router",
+                    "label": "DeepSeek Router",
+                    "type": "custom_provider",
+                    "provider_id": "deepseek",
+                    "base_url": "https://api.deepseek.com",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "xhigh",
+                    "wire_api": "chat",
+                    "env_key": "TEST_DEEPSEEK_PROVIDER_KEY",
+                    "auth_mode": "env_ref",
+                    "proxy_mode": "direct",
+                    "proxy_url": "",
+                }
+            )
+            router = RouterService(profiles, port=0)
+            preview = router.preview_payload(
+                {
+                    "model": "deepseek/deepseek-v4-pro",
+                    "input": [
+                        {"type": "reasoning", "summary": ["compact summary before a tool call"]},
+                        {"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "I will inspect a file."}]},
+                        {"type": "function_call", "call_id": "call_after_compact", "name": "shell", "arguments": "{\"cmd\":\"type js/data.js\"}"},
+                        {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "continue after compact"}]},
+                        {"type": "function_call_output", "call_id": "call_after_compact", "output": "late tool output"},
+                    ],
+                    "stream": False,
+                    "reasoning": {"effort": "xhigh"},
+                }
+            )
+            messages = preview["upstream_payload"]["messages"]
+            assistant_index = next(i for i, message in enumerate(messages) if message.get("role") == "assistant" and message.get("tool_calls"))
+            assistant = messages[assistant_index]
+            tool = messages[assistant_index + 1]
+            self.assertEqual(assistant["reasoning_content"], "compact summary before a tool call")
+            self.assertEqual(assistant["content"], "I will inspect a file.")
+            self.assertEqual(tool["role"], "tool")
+            self.assertEqual(tool["tool_call_id"], "call_after_compact")
+
+    def test_deepseek_adapter_uses_adapter_profile_not_exact_provider_id(self) -> None:
+        class UpstreamHandler(BaseHTTPRequestHandler):
+            last_payload = None
+            last_path = None
+
+            def do_POST(self) -> None:  # noqa: N802
+                UpstreamHandler.last_path = self.path
+                length = int(self.headers.get("Content-Length", "0"))
+                UpstreamHandler.last_payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                if self.path != "/chat/completions":
+                    self.send_response(404)
+                    self.end_headers()
+                    return
+                body = json.dumps(
+                    {
+                        "id": "chatcmpl-deepseek",
+                        "object": "chat.completion",
+                        "created": 123,
+                        "choices": [{"index": 0, "message": {"role": "assistant", "content": "ok"}, "finish_reason": "stop"}],
+                    }
+                ).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format: str, *args) -> None:  # noqa: A003
+                return
+
+        upstream = ThreadingHTTPServer(("127.0.0.1", 0), UpstreamHandler)
+        upstream_port = upstream.server_address[1]
+        threading.Thread(target=upstream.serve_forever, daemon=True).start()
+        original_provider_token = os.environ.get("TEST_DEEPSEEK_VERIFY_KEY")
+        router = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                profiles = ProfileService(Path(temp) / "profiles.json")
+                config = RouterConfigService(profiles, Path(temp) / "router.json")
+                config.upsert_provider(
+                    {
+                        "id": "deepseek-verify",
+                        "display_name": "DeepSeek Verify",
+                        "adapter_type": "chat",
+                        "base_url": f"http://127.0.0.1:{upstream_port}",
+                        "default_model": "deepseek-v4-pro",
+                        "env_key": "TEST_DEEPSEEK_VERIFY_KEY",
+                        "auth_mode": "env_ref",
+                    }
+                )
+                config.upsert_model(
+                    {
+                        "id": "deepseek-verify/deepseek-v4-pro",
+                        "provider": "deepseek-verify",
+                        "native_model": "deepseek-v4-pro",
+                        "display_name": "DeepSeek V4 Pro",
+                        "enabled": True,
+                        "advertised_context_window": 1000000,
+                        "ui_context_hint_only": True,
+                        "adapter_profile": "deepseek",
+                    }
+                )
+                os.environ["TEST_DEEPSEEK_VERIFY_KEY"] = "unit_secret_deepseek_test"
+                router = RouterService(profiles, config, port=0)
+                router.start()
+                token = os.environ[ROUTER_ENV_KEY]
+                request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/responses",
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    data=json.dumps(
+                        {
+                            "model": "deepseek-verify/deepseek-v4-pro",
+                            "input": "hello",
+                            "stream": False,
+                            "reasoning": {"effort": "xhigh"},
+                        }
+                    ).encode("utf-8"),
+                    method="POST",
+                )
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+
+                self.assertEqual(UpstreamHandler.last_path, "/chat/completions")
+                self.assertEqual(UpstreamHandler.last_payload["thinking"]["type"], "enabled")
+                self.assertEqual(payload["output_text"], "ok")
+        finally:
+            upstream.shutdown()
+            upstream.server_close()
+            if router is not None:
+                router.stop()
+            if original_provider_token is None:
+                os.environ.pop("TEST_DEEPSEEK_VERIFY_KEY", None)
+            else:
+                os.environ["TEST_DEEPSEEK_VERIFY_KEY"] = original_provider_token
+
+    def test_chat_streaming_translates_tool_calls(self) -> None:
+        class UpstreamHandler(BaseHTTPRequestHandler):
+            last_payload = None
+
+            def do_POST(self) -> None:  # noqa: N802
+                length = int(self.headers.get("Content-Length", "0"))
+                UpstreamHandler.last_payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                events = [
+                    {"choices": [{"delta": {"reasoning_content": "hidden stream reasoning"}}]},
+                    {
+                        "choices": [
+                            {
+                                "delta": {
+                                    "tool_calls": [
+                                        {
+                                            "index": 0,
+                                            "id": "call_ask",
+                                            "type": "function",
+                                            "function": {"name": "request_user_input", "arguments": '{"questions":['},
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "choices": [
+                            {
+                                "delta": {
+                                    "tool_calls": [
+                                        {
+                                            "index": 0,
+                                            "function": {"arguments": '{"id":"q","question":"Pick one"}'},
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {"choices": [{"delta": {"tool_calls": [{"index": 0, "function": {"arguments": "]}"}}]}}]},
+                    {"choices": [], "usage": {"prompt_tokens": 10, "completion_tokens": 3, "total_tokens": 13}},
+                ]
+                body = "".join(f"data: {json.dumps(event)}\n\n" for event in events).encode("utf-8") + b"data: [DONE]\n\n"
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format: str, *args) -> None:  # noqa: A003
+                return
+
+        upstream = ThreadingHTTPServer(("127.0.0.1", 0), UpstreamHandler)
+        upstream_port = upstream.server_address[1]
+        threading.Thread(target=upstream.serve_forever, daemon=True).start()
+        original_provider_token = os.environ.get("TEST_DEEPSEEK_STREAM_KEY")
+        router = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                profiles = ProfileService(Path(temp) / "profiles.json")
+                profiles.upsert_profile(
+                    {
+                        "profile_id": "deepseek-stream",
+                        "label": "DeepSeek Stream",
+                        "type": "custom_provider",
+                        "provider_id": "deepseek-stream",
+                        "base_url": f"http://127.0.0.1:{upstream_port}",
+                        "model": "deepseek-v4-pro",
+                        "reasoning_effort": "xhigh",
+                        "wire_api": "chat",
+                        "env_key": "TEST_DEEPSEEK_STREAM_KEY",
+                        "auth_mode": "env_ref",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    }
+                )
+                os.environ["TEST_DEEPSEEK_STREAM_KEY"] = "unit_secret_deepseek_test"
+                router = RouterService(profiles, port=0)
+                router.start()
+                token = os.environ[ROUTER_ENV_KEY]
+                request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/responses",
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    data=json.dumps(
+                        {
+                            "model": "deepseek-stream/deepseek-v4-pro",
+                            "input": "ask",
+                            "stream": True,
+                            "tools": [{"type": "function", "name": "request_user_input", "parameters": {"type": "object"}}],
+                        }
+                    ).encode("utf-8"),
+                    method="POST",
+                )
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    sse_text = response.read().decode("utf-8")
+
+                self.assertIn('"type": "function_call"', sse_text)
+                self.assertIn('"name": "request_user_input"', sse_text)
+                self.assertIn('"call_id": "call_ask"', sse_text)
+                self.assertIn('"type": "reasoning"', sse_text)
+                self.assertIn("hidden stream reasoning", sse_text)
+                self.assertLess(sse_text.index('"id": "reasoning_stream"'), sse_text.index('"type": "response.completed"'))
+                self.assertEqual(UpstreamHandler.last_payload["stream_options"], {"include_usage": True})
+                self.assertIn('"input_tokens": 10', sse_text)
+        finally:
+            upstream.shutdown()
+            upstream.server_close()
+            if router is not None:
+                router.stop()
+            if original_provider_token is None:
+                os.environ.pop("TEST_DEEPSEEK_STREAM_KEY", None)
+            else:
+                os.environ["TEST_DEEPSEEK_STREAM_KEY"] = original_provider_token
+
+    def test_chat_streaming_reasoning_only_has_visible_notice(self) -> None:
+        class UpstreamHandler(BaseHTTPRequestHandler):
+            def do_POST(self) -> None:  # noqa: N802
+                _ = self.rfile.read(int(self.headers.get("Content-Length", "0")))
+                events = [
+                    {"choices": [{"delta": {"reasoning_content": "thinking without final content"}}]},
+                    {"choices": [], "usage": {"prompt_tokens": 8, "completion_tokens": 2, "total_tokens": 10}},
+                ]
+                body = "".join(f"data: {json.dumps(event)}\n\n" for event in events).encode("utf-8") + b"data: [DONE]\n\n"
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format: str, *args) -> None:  # noqa: A003
+                return
+
+        upstream = ThreadingHTTPServer(("127.0.0.1", 0), UpstreamHandler)
+        upstream_port = upstream.server_address[1]
+        threading.Thread(target=upstream.serve_forever, daemon=True).start()
+        original_provider_token = os.environ.get("TEST_DEEPSEEK_REASONING_ONLY_KEY")
+        router = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                profiles = ProfileService(Path(temp) / "profiles.json")
+                profiles.upsert_profile(
+                    {
+                        "profile_id": "deepseek-reasoning-only",
+                        "label": "DeepSeek Reasoning Only",
+                        "type": "custom_provider",
+                        "provider_id": "deepseek-reasoning-only",
+                        "base_url": f"http://127.0.0.1:{upstream_port}",
+                        "model": "deepseek-v4-pro",
+                        "reasoning_effort": "xhigh",
+                        "wire_api": "chat",
+                        "env_key": "TEST_DEEPSEEK_REASONING_ONLY_KEY",
+                        "auth_mode": "env_ref",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    }
+                )
+                os.environ["TEST_DEEPSEEK_REASONING_ONLY_KEY"] = "unit_secret_deepseek_test"
+                router = RouterService(profiles, port=0)
+                router.start()
+                token = os.environ[ROUTER_ENV_KEY]
+                request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/responses",
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    data=json.dumps(
+                        {
+                            "model": "deepseek-reasoning-only/deepseek-v4-pro",
+                            "input": "reply ok",
+                            "stream": True,
+                        }
+                    ).encode("utf-8"),
+                    method="POST",
+                )
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    sse_text = response.read().decode("utf-8")
+
+                self.assertIn("Provider returned reasoning content but no final assistant message", sse_text)
+                self.assertIn("thinking without final content", sse_text)
+                self.assertIn('"output_text": "(Provider returned reasoning content but no final assistant message.', sse_text)
+        finally:
+            upstream.shutdown()
+            upstream.server_close()
+            if router is not None:
+                router.stop()
+            if original_provider_token is None:
+                os.environ.pop("TEST_DEEPSEEK_REASONING_ONLY_KEY", None)
+            else:
+                os.environ["TEST_DEEPSEEK_REASONING_ONLY_KEY"] = original_provider_token
+
+    def test_kimi_adapter_maps_thinking_policy_and_streams_sse(self) -> None:
+        class UpstreamHandler(BaseHTTPRequestHandler):
+            last_payload = None
+
+            def do_POST(self) -> None:  # noqa: N802
+                length = int(self.headers.get("Content-Length", "0"))
+                UpstreamHandler.last_payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                body = json.dumps(
+                    {
+                        "id": "chatcmpl-kimi",
+                        "object": "chat.completion",
+                        "created": 321,
+                        "choices": [
+                            {
+                                "index": 0,
+                                "message": {"role": "assistant", "content": "kimi ok"},
+                                "finish_reason": "stop",
+                            }
+                        ],
+                        "usage": {"prompt_tokens": 15, "completion_tokens": 20, "total_tokens": 35},
+                    }
+                ).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format: str, *args) -> None:  # noqa: A003
+                return
+
+        upstream = ThreadingHTTPServer(("127.0.0.1", 0), UpstreamHandler)
+        upstream_port = upstream.server_address[1]
+        threading.Thread(target=upstream.serve_forever, daemon=True).start()
+
+        original_router_token = os.environ.get(ROUTER_ENV_KEY)
+        original_provider_token = os.environ.get("TEST_KIMI_PROVIDER_KEY")
+        router = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                profiles = ProfileService(Path(temp) / "profiles.json")
+                profiles.upsert_profile(
+                    {
+                        "profile_id": "kimi-router",
+                        "label": "Kimi Router",
+                        "type": "custom_provider",
+                        "provider_id": "kimi",
+                        "base_url": f"http://127.0.0.1:{upstream_port}",
+                        "model": "kimi-k2.6",
+                        "reasoning_effort": "max",
+                        "wire_api": "chat",
+                        "env_key": "TEST_KIMI_PROVIDER_KEY",
+                        "auth_mode": "env_ref",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    }
+                )
+                os.environ["TEST_KIMI_PROVIDER_KEY"] = "unit_secret_kimi_test"
+                router = RouterService(profiles, port=0)
+                router.start()
+                token = os.environ[ROUTER_ENV_KEY]
+
+                request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/responses",
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    data=json.dumps(
+                        {
+                            "model": "kimi/kimi-k2.6",
+                            "input": "hello",
+                            "stream": True,
+                            "tool_choice": "required",
+                            "tools": [{"type": "function", "name": "update_plan", "description": "update", "parameters": {"type": "object"}}],
+                        }
+                    ).encode("utf-8"),
+                    method="POST",
+                )
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    sse_text = response.read().decode("utf-8")
+
+                self.assertEqual(UpstreamHandler.last_payload["model"], "kimi-k2.6")
+                self.assertEqual(UpstreamHandler.last_payload["thinking"]["keep"], "all")
+                self.assertEqual(UpstreamHandler.last_payload["tool_choice"], "auto")
+                self.assertGreaterEqual(int(UpstreamHandler.last_payload["max_tokens"]), 32768)
+                self.assertIn('"type": "response.created"', sse_text)
+                self.assertIn('"type": "response.completed"', sse_text)
+                self.assertIn('[DONE]', sse_text)
+        finally:
+            upstream.shutdown()
+            upstream.server_close()
+            if router is not None:
+                router.stop()
+            if original_router_token is None:
+                os.environ.pop(ROUTER_ENV_KEY, None)
+            else:
+                os.environ[ROUTER_ENV_KEY] = original_router_token
+            if original_provider_token is None:
+                os.environ.pop("TEST_KIMI_PROVIDER_KEY", None)
+            else:
+                os.environ["TEST_KIMI_PROVIDER_KEY"] = original_provider_token
+
+    def test_profile_service_rejects_secret_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            service = ProfileService(Path(temp) / "profiles.json")
+            with self.assertRaises(ValueError):
+                service.upsert_profile(
+                    {
+                        "profile_id": "bad",
+                        "label": "Bad",
+                        "type": "custom_provider",
+                        "provider_id": "openai",
+                        "model": "gpt-test",
+                        "reasoning_effort": "high",
+                        "wire_api": "responses",
+                        "env_key": "OPENAI_API_KEY",
+                        "auth_mode": "env_ref",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                        "api_key": "should-not-be-here",
+                    }
+                )
+
+    def test_router_config_tracks_models_and_sanitized_export(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            config = RouterConfigService(profiles, Path(temp) / "router.json")
+            provider = config.upsert_provider(
+                {
+                    "id": "deepseek",
+                    "display_name": "DeepSeek",
+                    "adapter_type": "chat",
+                    "base_url": "https://api.deepseek.com",
+                    "default_model": "deepseek-v4-pro",
+                    "env_key": "DEEPSEEK_API_KEY",
+                    "auth_mode": "os_keychain",
+                    "auth_key_ref": "wincred:deepseek",
+                }
+            )
+            model = config.upsert_model(
+                {
+                    "id": "deepseek/deepseek-v4-flash",
+                    "provider": "deepseek",
+                    "native_model": "deepseek-v4-flash",
+                    "display_name": "DeepSeek V4 Flash",
+                    "enabled": True,
+                    "advertised_context_window": 1000000,
+                    "ui_context_hint_only": True,
+                    "adapter_profile": "default",
+                }
+            )
+            exported = config.export_sanitized()
+            self.assertEqual(provider["id"], "deepseek")
+            self.assertEqual(model["provider"], "deepseek")
+            self.assertEqual(exported["providers"][0]["auth_key_ref"], None)
+            self.assertEqual(exported["models"][0]["id"], "deepseek/deepseek-v4-flash")
+
+    def test_metadata_seed_import_and_effective_catalog_are_conservative(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            config = RouterConfigService(profiles, Path(temp) / "router.json")
+            router = RouterService(profiles, config, port=0)
+            metadata = MetadataService(config, router, Path(temp) / "sources.json", Path(temp) / "report")
+
+            imported = metadata.import_seed(apply=True)
+            catalog = metadata.effective_catalog()
+            catalog_ids = {item["id"] for item in catalog["models"]}
+            deepseek = next(item for item in catalog["models"] if item["id"] == "deepseek/deepseek-v4-pro")
+            kimi = next(item for item in config.models() if item["id"] == "kimi/kimi-k2.6")
+
+            self.assertGreaterEqual(imported["model_count"], 10)
+            self.assertNotIn("yunwu/gpt-image-2", catalog_ids)
+            self.assertIn("deepseek/deepseek-v4-pro", catalog_ids)
+            self.assertEqual(deepseek["input_modalities"], ["text"])
+            self.assertFalse(deepseek["supports_parallel_tool_calls"])
+            self.assertIsNone(deepseek["apply_patch_tool_type"])
+            self.assertIn("max", {item["effort"] for item in deepseek["supported_reasoning_levels"]})
+            self.assertEqual(deepseek["temperature_default"], 0.0)
+            self.assertTrue(deepseek["supports_mcp_tools"])
+            self.assertEqual(deepseek["mcp_tool_call_policy"], "conservative")
+            self.assertIn("lcr_web", deepseek["mcp_verified_servers"])
+            self.assertEqual(deepseek["mcp_smoke_status"], "pass_direct_tool_call")
+            self.assertEqual(deepseek["tool_web_search_support"], "verified")
+            self.assertIn("request_user_input", deepseek["codex_builtin_tools"])
+            self.assertIn("structured_summary_quality", deepseek["context_compaction_support"])
+            self.assertIn("image", kimi["input_modalities"])
+            self.assertIn("https://platform.kimi.com/docs/guide/kimi-k2-6-quickstart", kimi["source_urls"])
+            self.assertEqual(kimi["modality_limits"]["image_transport"], "chat_completions_base64_image_url")
+            self.assertFalse(kimi["modality_limits"]["remote_image_url_supported"])
+
+    def test_metadata_report_writes_sanitized_html_and_catalog_json(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            config = RouterConfigService(profiles, Path(temp) / "router.json")
+            router = RouterService(profiles, config, port=0)
+            metadata = MetadataService(config, router, Path(temp) / "sources.json", Path(temp) / "report")
+            metadata.import_seed(apply=True)
+
+            report = metadata.metadata_report()
+            html_text = Path(report["path"]).read_text(encoding="utf-8")
+            catalog = json.loads(Path(report["catalog_path"]).read_text(encoding="utf-8"))
+
+            self.assertIn("Local Codex Router Model Metadata Report", html_text)
+            self.assertIn("Secrets are not included", html_text)
+            self.assertIn("MCP policy", html_text)
+            self.assertIn("Compact quality", html_text)
+            self.assertNotIn("unit_secret_", html_text)
+            self.assertTrue(any(item["id"] == "qwen/qwen3.7-plus" for item in catalog["models"]))
+
+    def test_router_temperature_policy_from_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            profiles = ProfileService(Path(temp) / "profiles.json")
+            config = RouterConfigService(profiles, Path(temp) / "router.json")
+            router = RouterService(profiles, config, port=0)
+            metadata = MetadataService(config, router, Path(temp) / "sources.json", Path(temp) / "report")
+            metadata.import_seed(apply=True)
+
+            zero = router.preview_payload({"model": "qwen/qwen3.7-plus", "input": "hello", "temperature": 0})
+            high = router.preview_payload({"model": "qwen/qwen3.7-plus", "input": "hello", "temperature": 2})
+
+            self.assertNotIn("temperature", zero["upstream_payload"])
+            self.assertIn("omitted", zero["warnings"][0])
+            self.assertEqual(high["upstream_payload"]["temperature"], 1.0)
+            self.assertIn("caps", high["warnings"][0])
+
+            kimi = router.preview_payload({"model": "kimi/kimi-k2.6", "input": "hello", "temperature": 0.7})
+            self.assertNotIn("temperature", kimi["upstream_payload"])
+            self.assertIn("only accept temperature=1", kimi["warnings"][0])
+
+    def test_router_service_normalizes_provider_error(self) -> None:
+        class UpstreamHandler(BaseHTTPRequestHandler):
+            def do_POST(self) -> None:  # noqa: N802
+                body = json.dumps({"error": {"type": "invalid_request_error", "message": "context length exceeded"}}).encode("utf-8")
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format: str, *args) -> None:  # noqa: A003
+                return
+
+        upstream = ThreadingHTTPServer(("127.0.0.1", 0), UpstreamHandler)
+        upstream_port = upstream.server_address[1]
+        threading.Thread(target=upstream.serve_forever, daemon=True).start()
+        original_provider_token = os.environ.get("TEST_DEEPSEEK_PROVIDER_KEY")
+        router = None
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                profiles = ProfileService(Path(temp) / "profiles.json")
+                config = RouterConfigService(profiles, Path(temp) / "router.json")
+                config.upsert_provider(
+                    {
+                        "id": "deepseek",
+                        "display_name": "DeepSeek",
+                        "adapter_type": "chat",
+                        "base_url": f"http://127.0.0.1:{upstream_port}",
+                        "default_model": "deepseek-v4-pro",
+                        "env_key": "TEST_DEEPSEEK_PROVIDER_KEY",
+                        "auth_mode": "env_ref",
+                    }
+                )
+                os.environ["TEST_DEEPSEEK_PROVIDER_KEY"] = "unit_secret_deepseek_test"
+                router = RouterService(profiles, config, port=0)
+                router.start()
+                token = os.environ[ROUTER_ENV_KEY]
+                request = urllib.request.Request(
+                    f"http://127.0.0.1:{router.status()['listen_port']}/v1/responses",
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    data=json.dumps({"model": "deepseek/deepseek-v4-pro", "input": "hello", "stream": False}).encode("utf-8"),
+                    method="POST",
+                )
+                with self.assertRaises(urllib.error.HTTPError) as captured:
+                    urllib.request.urlopen(request, timeout=5)
+                payload = json.loads(captured.exception.read().decode("utf-8"))
+                self.assertEqual(payload["error"]["type"], "provider_error")
+                self.assertEqual(payload["error"]["provider"], "deepseek")
+                self.assertIn("context limit", payload["error"]["actionable_hint"].lower())
+        finally:
+            upstream.shutdown()
+            upstream.server_close()
+            if router is not None:
+                router.stop()
+            if original_provider_token is None:
+                os.environ.pop("TEST_DEEPSEEK_PROVIDER_KEY", None)
+            else:
+                os.environ["TEST_DEEPSEEK_PROVIDER_KEY"] = original_provider_token
+
+    def test_dogfood_browser_smoke_and_milestone_are_sanitized(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            (workspace / "index.html").write_text("<!doctype html><title>ok</title>", encoding="utf-8")
+            screenshot = root / "capture.png"
+            screenshot.write_bytes(b"png")
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            dogfood = DogfoodRunService(projects)
+
+            smoke = dogfood.browser_smoke(
+                {
+                    "url": (workspace / "index.html").resolve().as_uri(),
+                    "label": "local file smoke",
+                    "screenshot_path": str(screenshot),
+                }
+            )
+            self.assertEqual(smoke["browser_smoke"]["status"], "pass")
+            self.assertNotIn("run", smoke)
+            self.assertEqual(smoke["run_summary"]["latest_capture"]["path"], str(screenshot))
+            self.assertEqual(smoke["run_summary"]["latest_milestone"]["label"], "Browser smoke: local file smoke")
+            full_smoke = dogfood.browser_smoke(
+                {
+                    "url": (workspace / "index.html").resolve().as_uri(),
+                    "label": "local file smoke with full run",
+                    "screenshot_path": str(screenshot),
+                    "include_run": True,
+                }
+            )
+            self.assertEqual(full_smoke["run"]["captures"][0]["path"], str(screenshot))
+
+            milestone = dogfood.add_milestone(
+                {
+                    "label": "asset smoke",
+                    "provider": "kimi",
+                    "model": "kimi-k2.6",
+                    "goal": "Build tower game",
+                    "plan_step": "asset smoke",
+                    "validation": ["title rendered", "no console errors"],
+                    "validation_result": {"fatal_console_errors": 0},
+                    "captures": [{"path": str(screenshot), "label": "gameplay", "provider": "deepseek"}],
+                    "next_action": "continue visual pass",
+                }
+            )
+            self.assertEqual(milestone["milestone"]["label"], "asset smoke")
+            self.assertNotIn("run", milestone)
+            self.assertIn("run_summary", milestone)
+            self.assertEqual(milestone["run_summary"]["latest_milestone"]["label"], "asset smoke")
+            self.assertEqual(milestone["milestone"]["model"], "kimi-k2.6")
+            self.assertEqual(milestone["milestone"]["capture_paths"], [str(screenshot)])
+            self.assertEqual(milestone["milestone"]["captures"][0]["label"], "gameplay")
+            self.assertEqual(milestone["milestone"]["captures"][0]["provider"], "deepseek")
+            self.assertEqual(milestone["milestone"]["validation_result"]["fatal_console_errors"], "0")
+            full_milestone = dogfood.add_milestone({"label": "debug full run", "include_run": True})
+            self.assertIn("run", full_milestone)
+            self.assertEqual(full_milestone["run"]["milestones"][-1]["label"], "debug full run")
+
+            audit = dogfood.add_milestone(
+                {
+                    "label": "isolation audit",
+                    "validation": ["No API key, Authorization header, or cookie was written to reports."],
+                }
+            )
+            self.assertEqual(audit["milestone"]["label"], "isolation audit")
+            with self.assertRaises(ValueError):
+                dogfood.add_milestone({"label": "bad", "validation": ["Bearer unit-test-token"]})
+
+    def test_runtime_supervisor_aggregates_plan_token_and_guard_without_secrets(self) -> None:
+        class FakeProjects:
+            current_project = {
+                "name": "Demo",
+                "current_thread_id": "thread-1",
+                "default_profile_id": "deepseek",
+                "default_model": "deepseek-v4-pro",
+                "default_effort": "max",
+                "ui_preferences": {},
+            }
+
+            def require_workspace_root(self) -> Path:
+                return Path(tempfile.gettempdir())
+
+        class FakeRuntime:
+            interrupted: list[tuple[dict[str, object], str, str]] = []
+            supervisor_events: list[dict[str, object]] = []
+
+            def list_events(self, after: int = 0, limit: int | None = None) -> dict[str, object]:
+                return {
+                    "cursor": 3,
+                    "events": [
+                        {
+                            "type": "notification",
+                            "method": "turn/plan/updated",
+                            "timestamp": "2026-06-12T00:00:00+00:00",
+                            "params": {
+                                "threadId": "thread-1",
+                                "turnId": "turn-1",
+                                "explanation": "test",
+                                "plan": [{"step": "Run smoke", "status": "in_progress"}],
+                            },
+                        },
+                        {
+                            "type": "notification",
+                            "method": "thread/tokenUsage/updated",
+                            "timestamp": "2026-06-12T00:00:01+00:00",
+                            "params": {
+                                "threadId": "thread-1",
+                                "turnId": "turn-1",
+                                "tokenUsage": {
+                                    "total": {"totalTokens": 91},
+                                    "modelContextWindow": 100,
+                                },
+                            },
+                        },
+                        {
+                            "type": "notification",
+                            "method": "thread/status/changed",
+                            "params": {"threadId": "thread-1", "status": {"type": "active"}},
+                        },
+                    ],
+                }
+
+            def compact_thread(self, profile, thread_id):  # noqa: ANN001
+                return {"started": True, "thread_id": thread_id}
+
+            def interrupt_turn(self, profile, thread_id, turn_id):  # noqa: ANN001
+                self.interrupted.append((profile, thread_id, turn_id))
+                return {"interrupt": {"ok": True}}
+
+            def record_supervisor_event(self, event):  # noqa: ANN001
+                self.supervisor_events.append(event)
+
+        class FakeModals:
+            def list_pending(self) -> dict[str, object]:
+                return {"modals": []}
+
+        class FakeDogfood:
+            def snapshot(self) -> dict[str, object]:
+                return {"run": {"enabled": True, "browser_smokes": [], "milestones": [], "usage": {}, "budgets": {}}}
+
+            def add_note(self, note: str) -> None:
+                self.note = note
+
+        runtime = FakeRuntime()
+        supervisor = RuntimeSupervisorService(FakeProjects(), runtime, FakeModals(), FakeDogfood())
+        status = supervisor.status(thread_id="thread-1", profile={"provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"})
+        self.assertEqual(status["plan"]["steps"][0]["step"], "Run smoke")
+        self.assertEqual(status["guard"]["level"], "pause")
+        self.assertTrue(status["guard"]["should_pause"])
+        self.assertTrue(status["guard"]["requires_decision"])
+        self.assertEqual(runtime.interrupted, [({"provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"}, "thread-1", "turn-1")])
+        self.assertEqual(status["guard"]["auto_pause"]["status"], "interrupted")
+        self.assertEqual(runtime.supervisor_events[0]["event"], "context_guard")
+        self.assertEqual(runtime.supervisor_events[0]["level"], "pause")
+
+    def test_runtime_supervisor_does_not_auto_interrupt_pending_approval(self) -> None:
+        class FakeProjects:
+            current_project = {
+                "name": "Demo",
+                "current_thread_id": "thread-approval",
+                "default_profile_id": "deepseek",
+                "default_model": "deepseek-v4-pro",
+                "default_effort": "max",
+                "ui_preferences": {},
+            }
+
+            def require_workspace_root(self) -> Path:
+                return Path(tempfile.gettempdir())
+
+        class FakeRuntime:
+            interrupted: list[tuple[dict[str, object], str, str]] = []
+            supervisor_events: list[dict[str, object]] = []
+
+            def list_events(self, after: int = 0, limit: int | None = None) -> dict[str, object]:
+                return {
+                    "cursor": 3,
+                    "events": [
+                        {
+                            "type": "notification",
+                            "method": "thread/tokenUsage/updated",
+                            "timestamp": "2026-06-12T00:00:01+00:00",
+                            "params": {
+                                "threadId": "thread-approval",
+                                "turnId": "turn-approval",
+                                "tokenUsage": {"total": {"totalTokens": 95}, "modelContextWindow": 100},
+                            },
+                        },
+                        {
+                            "type": "notification",
+                            "method": "thread/status/changed",
+                            "timestamp": "2026-06-12T00:00:02+00:00",
+                            "params": {
+                                "threadId": "thread-approval",
+                                "status": {"type": "active", "activeFlags": ["waitingOnApproval"]},
+                            },
+                        },
+                    ],
+                }
+
+            def interrupt_turn(self, profile, thread_id, turn_id):  # noqa: ANN001
+                self.interrupted.append((profile, thread_id, turn_id))
+                return {"interrupt": {"ok": True}}
+
+            def record_supervisor_event(self, event):  # noqa: ANN001
+                self.supervisor_events.append(event)
+
+        class FakeModals:
+            def list_pending(self) -> dict[str, object]:
+                return {
+                    "modals": [
+                        {
+                            "thread_id": "thread-approval",
+                            "turn_id": "turn-approval",
+                            "params": {"authorization": "Bearer unit"},
+                        }
+                    ]
+                }
+
+        class FakeDogfood:
+            def snapshot(self) -> dict[str, object]:
+                return {"run": {"enabled": False, "browser_smokes": [], "milestones": [], "usage": {}, "budgets": {}}}
+
+            def add_note(self, note: str) -> None:
+                self.note = note
+
+        runtime = FakeRuntime()
+        supervisor = RuntimeSupervisorService(FakeProjects(), runtime, FakeModals(), FakeDogfood())
+        status = supervisor.status(thread_id="thread-approval", profile={"provider_id": "deepseek"})
+        self.assertEqual(status["guard"]["level"], "approval_wait")
+        self.assertFalse(status["guard"]["should_pause"])
+        self.assertEqual(status["watchdog"]["level"], "waiting")
+        self.assertEqual(status["watchdog"]["recommended_action"], "resolve_approval")
+        self.assertEqual(runtime.interrupted, [])
+        self.assertNotIn("unit_secret", json.dumps(status))
+
+    def test_runtime_supervisor_falls_back_to_plan_delta(self) -> None:
+        class FakeProjects:
+            current_project = {
+                "name": "Demo",
+                "current_thread_id": "thread-plan",
+                "default_profile_id": "kimi",
+                "default_model": "kimi-k2.6",
+                "default_effort": "xhigh",
+                "ui_preferences": {},
+            }
+
+            def require_workspace_root(self) -> Path:
+                return Path(tempfile.gettempdir())
+
+        class FakeRuntime:
+            def list_events(self, after: int = 0, limit: int | None = None) -> dict[str, object]:
+                return {
+                    "cursor": 2,
+                    "events": [
+                        {
+                            "type": "notification",
+                            "method": "item/plan/delta",
+                            "timestamp": "2026-06-12T00:00:00+00:00",
+                            "params": {"threadId": "thread-plan", "turnId": "turn-plan", "delta": "Plan\n- Inspect UI\n"},
+                        },
+                        {
+                            "type": "notification",
+                            "method": "item/plan/delta",
+                            "timestamp": "2026-06-12T00:00:01+00:00",
+                            "params": {"threadId": "thread-plan", "turnId": "turn-plan", "delta": "- Run smoke\n"},
+                        },
+                    ],
+                }
+
+        class FakeModals:
+            def list_pending(self) -> dict[str, object]:
+                return {"modals": []}
+
+        class FakeDogfood:
+            def snapshot(self) -> dict[str, object]:
+                return {"run": {"enabled": False, "browser_smokes": [], "milestones": [], "usage": {}, "budgets": {}}}
+
+            def add_note(self, note: str) -> None:
+                self.note = note
+
+        supervisor = RuntimeSupervisorService(FakeProjects(), FakeRuntime(), FakeModals(), FakeDogfood())
+        status = supervisor.status(thread_id="thread-plan", profile={"provider_id": "kimi", "model": "kimi-k2.6", "reasoning_effort": "xhigh"})
+        self.assertEqual(status["plan"]["source"], "item/plan/delta")
+        self.assertIn("Inspect UI", status["plan"]["steps"][1]["step"])
+
+    def test_runtime_supervisor_compaction_completed_suppresses_stale_token_pause(self) -> None:
+        class FakeProjects:
+            current_project = {
+                "name": "Demo",
+                "current_thread_id": "thread-compact",
+                "default_profile_id": "deepseek",
+                "default_model": "deepseek-v4-pro",
+                "default_effort": "max",
+                "ui_preferences": {},
+            }
+
+            def require_workspace_root(self) -> Path:
+                return Path(tempfile.gettempdir())
+
+        class FakeRuntime:
+            interrupted: list[tuple[dict[str, object], str, str]] = []
+
+            def list_events(self, after: int = 0, limit: int | None = None) -> dict[str, object]:
+                return {
+                    "cursor": 5,
+                    "events": [
+                        {
+                            "type": "notification",
+                            "method": "thread/tokenUsage/updated",
+                            "timestamp": "2026-06-12T00:00:01+00:00",
+                            "params": {
+                                "threadId": "thread-compact",
+                                "turnId": "turn-before-compact",
+                                "tokenUsage": {
+                                    "total": {"totalTokens": 91},
+                                    "modelContextWindow": 100,
+                                },
+                            },
+                        },
+                        {
+                            "type": "notification",
+                            "method": "item/started",
+                            "timestamp": "2026-06-12T00:00:02+00:00",
+                            "params": {
+                                "threadId": "thread-compact",
+                                "turnId": "turn-compact",
+                                "item": {"type": "contextCompaction", "id": "compact-1"},
+                            },
+                        },
+                        {
+                            "type": "notification",
+                            "method": "item/completed",
+                            "timestamp": "2026-06-12T00:00:03+00:00",
+                            "params": {
+                                "threadId": "thread-compact",
+                                "turnId": "turn-compact",
+                                "item": {"type": "contextCompaction", "id": "compact-1"},
+                            },
+                        },
+                        {
+                            "type": "notification",
+                            "method": "thread/status/changed",
+                            "timestamp": "2026-06-12T00:00:04+00:00",
+                            "params": {"threadId": "thread-compact", "status": {"type": "active"}},
+                        },
+                    ],
+                }
+
+            def interrupt_turn(self, profile, thread_id, turn_id):  # noqa: ANN001
+                self.interrupted.append((profile, thread_id, turn_id))
+                return {"interrupt": {"ok": True}}
+
+            def record_supervisor_event(self, event):  # noqa: ANN001
+                self.event = event
+
+        class FakeModals:
+            def list_pending(self) -> dict[str, object]:
+                return {"modals": []}
+
+        class FakeDogfood:
+            def snapshot(self) -> dict[str, object]:
+                return {"run": {"enabled": False, "browser_smokes": [], "milestones": [], "usage": {}, "budgets": {}}}
+
+            def add_note(self, note: str) -> None:
+                self.note = note
+
+        runtime = FakeRuntime()
+        supervisor = RuntimeSupervisorService(FakeProjects(), runtime, FakeModals(), FakeDogfood())
+        status = supervisor.status(thread_id="thread-compact", profile={"provider_id": "deepseek"})
+        self.assertEqual(status["guard"]["level"], "compacted")
+        self.assertEqual(status["guard"]["recommended_action"], "health_check")
+        self.assertTrue(status["guard"]["stale_context_estimate"])
+        self.assertEqual(status["compaction"]["status"], "completed")
+        self.assertEqual(runtime.interrupted, [])
+
+    def test_runtime_supervisor_marks_missing_thread_status(self) -> None:
+        class FakeProjects:
+            current_project = {"name": "Demo", "current_thread_id": "thread-missing", "ui_preferences": {}}
+
+            def require_workspace_root(self) -> Path:
+                return Path(tempfile.gettempdir())
+
+        class FakeRuntime:
+            def list_events(self, after: int = 0, limit: int | None = None) -> dict[str, object]:
+                return {
+                    "cursor": 2,
+                    "events": [
+                        {
+                            "type": "notification",
+                            "method": "thread/status/changed",
+                            "timestamp": "2026-06-12T00:00:00+00:00",
+                            "params": {"threadId": "thread-missing", "status": {"type": "active"}},
+                        },
+                        {
+                            "type": "provider_thread_missing",
+                            "timestamp": "2026-06-12T00:00:01+00:00",
+                            "thread_id": "thread-missing",
+                            "reason": "turn_interrupt_thread_missing",
+                        },
+                    ],
+                }
+
+            def record_supervisor_event(self, event):  # noqa: ANN001
+                self.event = event
+
+        class FakeModals:
+            def list_pending(self) -> dict[str, object]:
+                return {"modals": []}
+
+        class FakeDogfood:
+            def snapshot(self) -> dict[str, object]:
+                return {"run": {"enabled": False, "browser_smokes": [], "milestones": [], "usage": {}, "budgets": {}}}
+
+            def add_note(self, note: str) -> None:
+                self.note = note
+
+        supervisor = RuntimeSupervisorService(FakeProjects(), FakeRuntime(), FakeModals(), FakeDogfood())
+        status = supervisor.status(thread_id="thread-missing", profile={"provider_id": "deepseek"})
+        self.assertEqual(status["thread_status"]["type"], "missing")
+        self.assertEqual(status["guard"]["level"], "ok")
+
+    def test_runtime_supervisor_marks_compaction_running_as_stale_after_later_activity(self) -> None:
+        class FakeProjects:
+            current_project = {"name": "Demo", "current_thread_id": "thread-stale-compact", "ui_preferences": {}}
+
+            def require_workspace_root(self) -> Path:
+                return Path(tempfile.gettempdir())
+
+        class FakeRuntime:
+            def list_events(self, after: int = 0, limit: int | None = None) -> dict[str, object]:
+                return {
+                    "cursor": 3,
+                    "events": [
+                        {
+                            "type": "notification",
+                            "method": "item/started",
+                            "timestamp": "2026-06-12T00:00:00+00:00",
+                            "params": {
+                                "threadId": "thread-stale-compact",
+                                "turnId": "turn-compact",
+                                "item": {"type": "contextCompaction", "id": "compact-1"},
+                            },
+                        },
+                        {
+                            "type": "notification",
+                            "method": "thread/status/changed",
+                            "timestamp": "2026-06-12T00:00:10+00:00",
+                            "params": {"threadId": "thread-stale-compact", "status": {"type": "idle"}},
+                        },
+                    ],
+                }
+
+        class FakeModals:
+            def list_pending(self) -> dict[str, object]:
+                return {"modals": []}
+
+        class FakeDogfood:
+            def snapshot(self) -> dict[str, object]:
+                return {"run": {"enabled": False, "browser_smokes": [], "milestones": [], "usage": {}, "budgets": {}}}
+
+            def add_note(self, note: str) -> None:
+                self.note = note
+
+        supervisor = RuntimeSupervisorService(FakeProjects(), FakeRuntime(), FakeModals(), FakeDogfood())
+        status = supervisor.status(thread_id="thread-stale-compact", profile={"provider_id": "deepseek"})
+        self.assertEqual(status["compaction"]["status"], "stale_running")
+        self.assertIn("stale", status["compaction"]["message"])
+
+    def test_runtime_supervisor_decisions_call_runtime_actions(self) -> None:
+        class FakeProjects:
+            current_project = {"current_thread_id": "thread-1", "ui_preferences": {}}
+
+            def require_workspace_root(self) -> Path:
+                return Path(tempfile.gettempdir())
+
+        class FakeRuntime:
+            continued: list[str] = []
+
+            def list_events(self, after: int = 0, limit: int | None = None) -> dict[str, object]:
+                return {"cursor": 0, "events": []}
+
+            def compact_thread(self, profile, thread_id):  # noqa: ANN001
+                return {"action": "compact", "thread_id": thread_id, "provider": profile.get("provider_id")}
+
+            def fork_thread(self, profile, *, thread_id, model, effort, permission_mode, name=None):  # noqa: ANN001
+                return {
+                    "action": "fork",
+                    "thread_id": thread_id,
+                    "model": model,
+                    "effort": effort,
+                    "permission_mode": permission_mode,
+                    "name": name,
+                }
+
+            def interrupt_turn(self, profile, thread_id, turn_id):  # noqa: ANN001
+                return {"action": "interrupt", "thread_id": thread_id, "turn_id": turn_id}
+
+            def allow_context_guard_continue_once(self, thread_id):  # noqa: ANN001
+                self.continued.append(thread_id)
+                return {"allowed": True, "thread_id": thread_id}
+
+        class FakeModals:
+            def list_pending(self) -> dict[str, object]:
+                return {"modals": []}
+
+        class FakeDogfood:
+            notes: list[str] = []
+
+            def snapshot(self) -> dict[str, object]:
+                return {"run": {"enabled": False, "browser_smokes": [], "milestones": [], "usage": {}, "budgets": {}}}
+
+            def add_note(self, note: str) -> None:
+                self.notes.append(note)
+
+        dogfood = FakeDogfood()
+        supervisor = RuntimeSupervisorService(FakeProjects(), FakeRuntime(), FakeModals(), dogfood)
+        profile = {"provider_id": "deepseek"}
+
+        compact = supervisor.decision({"action": "compact", "thread_id": "thread-1"}, profile)
+        self.assertEqual(compact["result"]["action"], "compact")
+        self.assertTrue(compact["health_check"]["recommended"])
+
+        fork = supervisor.decision(
+            {
+                "action": "fork",
+                "thread_id": "thread-1",
+                "model": "deepseek-v4-pro",
+                "effort": "max",
+                "permission_mode": "auto",
+            },
+            profile,
+        )
+        self.assertEqual(fork["result"]["model"], "deepseek-v4-pro")
+
+        interrupted = supervisor.decision({"action": "interrupt", "thread_id": "thread-1", "turn_id": "turn-1"}, profile)
+        self.assertEqual(interrupted["result"]["turn_id"], "turn-1")
+        continued = supervisor.decision({"action": "continue", "thread_id": "thread-1"}, profile)
+        self.assertEqual(continued["result"]["allowed"], True)
+        self.assertEqual(supervisor._runtime.continued, ["thread-1"])
+        self.assertTrue(any("Runtime supervisor decision" in note for note in dogfood.notes))
+
+    def test_runtime_service_blocks_start_turn_when_context_guard_requires_decision(self) -> None:
+        class FakeProjects:
+            def require_shell_state_root(self) -> Path:
+                return Path(tempfile.mkdtemp())
+
+        class FakeClient:
+            def request(self, method, params, timeout=None):  # noqa: ANN001
+                self.method = method
+                self.params = params
+                self.timeout = timeout
+                return {"thread": {"id": params.get("threadId")}}
+
+        runtime = RuntimeService(FakeProjects(), ModalService(FakeProjects().require_shell_state_root))
+        runtime._events = [
+            {
+                "type": "notification",
+                "method": "thread/tokenUsage/updated",
+                "timestamp": "2026-06-12T00:00:01+00:00",
+                "params": {
+                    "threadId": "thread-hot",
+                    "turnId": "turn-hot",
+                    "tokenUsage": {"total": {"totalTokens": 95}, "modelContextWindow": 100},
+                },
+            }
+        ]
+        client = FakeClient()
+        with self.assertRaisesRegex(RuntimeError, "Context is above 90%"):
+            runtime._raise_if_context_guard_blocks_turn(client, "thread-hot")
+        runtime.allow_context_guard_continue_once("thread-hot")
+        runtime._raise_if_context_guard_blocks_turn(client, "thread-hot")
+        with self.assertRaisesRegex(RuntimeError, "Context is above 90%"):
+            runtime._raise_if_context_guard_blocks_turn(client, "thread-hot")
+
+    def test_runtime_service_does_not_block_after_completed_compaction(self) -> None:
+        class FakeProjects:
+            def require_shell_state_root(self) -> Path:
+                return Path(tempfile.mkdtemp())
+
+        runtime = RuntimeService(FakeProjects(), ModalService(FakeProjects().require_shell_state_root))
+        runtime._events = [
+            {
+                "type": "notification",
+                "method": "thread/tokenUsage/updated",
+                "timestamp": "2026-06-12T00:00:01+00:00",
+                "params": {
+                    "threadId": "thread-compact",
+                    "turnId": "turn-before-compact",
+                    "tokenUsage": {"total": {"totalTokens": 95}, "modelContextWindow": 100},
+                },
+            },
+            {
+                "type": "notification",
+                "method": "item/completed",
+                "timestamp": "2026-06-12T00:00:02+00:00",
+                "params": {
+                    "threadId": "thread-compact",
+                    "turnId": "turn-compact",
+                    "item": {"type": "contextCompaction", "id": "compact-1"},
+                },
+            },
+        ]
+        runtime._raise_if_context_guard_blocks_turn(object(), "thread-compact")
+
+    def test_context_guard_marks_missing_thread_before_blocking_hot_stale_thread(self) -> None:
+        class FakeProjects:
+            def require_shell_state_root(self) -> Path:
+                return Path(tempfile.mkdtemp())
+
+        class FakeClient:
+            def request(self, method, params, timeout=None):  # noqa: ANN001
+                raise JsonRpcError("thread not found: thread-hot")
+
+        class FakeTasks:
+            def __init__(self) -> None:
+                self.missing: list[tuple[str, str | None]] = []
+
+            def mark_provider_thread_missing(self, thread_id: str, *, reason: str | None = None) -> None:
+                self.missing.append((thread_id, reason))
+
+        runtime = RuntimeService(FakeProjects(), ModalService(FakeProjects().require_shell_state_root))
+        runtime._tasks = FakeTasks()
+        runtime._events = [
+            {
+                "type": "notification",
+                "method": "thread/tokenUsage/updated",
+                "timestamp": "2026-06-15T10:00:00+00:00",
+                "params": {
+                    "threadId": "thread-hot",
+                    "turnId": "turn-old",
+                    "tokenUsage": {"modelContextWindow": 100, "total": {"totalTokens": 95}},
+                },
+            }
+        ]
+
+        runtime._raise_if_context_guard_blocks_turn(FakeClient(), "thread-hot")
+
+        self.assertEqual(runtime._tasks.missing, [("thread-hot", "context_guard_thread_missing")])
+        self.assertTrue(
+            any(
+                event.get("type") == "provider_thread_missing"
+                and event.get("reason") == "context_guard_thread_missing"
+                for event in runtime._events
+            )
+        )
+
+    def test_runtime_service_compact_returns_recoverable_thread_missing(self) -> None:
+        class FakeProjects:
+            def require_shell_state_root(self) -> Path:
+                return Path(tempfile.mkdtemp())
+
+        class FakeClient:
+            def request(self, method, params):  # noqa: ANN001
+                self.method = method
+                self.params = params
+                raise JsonRpcError("thread not found: thread-missing")
+
+        class FakeTasks:
+            def __init__(self) -> None:
+                self.missing: list[tuple[str, str | None]] = []
+
+            def mark_provider_thread_missing(self, thread_id: str, *, reason: str | None = None) -> None:
+                self.missing.append((thread_id, reason))
+
+        runtime = RuntimeService(FakeProjects(), ModalService(FakeProjects().require_shell_state_root))
+        runtime._tasks = FakeTasks()
+        runtime._prepare_runtime = lambda profile, require_secret=True: {"provider_id": profile.get("provider_id", "deepseek")}  # type: ignore[method-assign]
+        runtime._ensure_client = lambda runtime_status: FakeClient()  # type: ignore[method-assign]
+
+        result = runtime.compact_thread({"provider_id": "deepseek"}, "thread-missing")
+
+        self.assertEqual(result["status"], "thread_missing")
+        self.assertEqual(result["recommended_action"], "provider_handoff")
+        self.assertTrue(result["recoverable"])
+        self.assertEqual(runtime._tasks.missing, [("thread-missing", "compact_thread_not_found")])
+        self.assertTrue(any(event.get("type") == "thread_compact_blocked" for event in runtime._events))
+
+    def test_context_guard_does_not_block_missing_provider_thread(self) -> None:
+        class FakeProjects:
+            def require_shell_state_root(self) -> Path:
+                return Path(tempfile.mkdtemp())
+
+        runtime = RuntimeService(FakeProjects(), ModalService(FakeProjects().require_shell_state_root))
+        runtime._events = [
+            {
+                "type": "notification",
+                "method": "thread/tokenUsage/updated",
+                "timestamp": "2026-06-15T10:00:00+00:00",
+                "params": {
+                    "threadId": "thread-missing",
+                    "turnId": "turn-old",
+                    "tokenUsage": {
+                        "modelContextWindow": 100,
+                        "total": {"totalTokens": 95},
+                    },
+                },
+            },
+            {
+                "type": "provider_thread_missing",
+                "thread_id": "thread-missing",
+                "reason": "compact_thread_not_found",
+                "timestamp": "2026-06-15T10:01:00+00:00",
+            },
+        ]
+
+        state = runtime._context_guard_state("thread-missing")  # noqa: SLF001
+
+        self.assertEqual(state["level"], "missing")
+        runtime._raise_if_context_guard_blocks_turn(object(), "thread-missing")  # noqa: SLF001
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+
