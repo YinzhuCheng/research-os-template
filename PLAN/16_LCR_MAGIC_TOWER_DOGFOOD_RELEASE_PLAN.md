@@ -53,8 +53,21 @@ The operator should maintain LCR and supervise evidence. Game design, asset plan
 - Latest LCR asset-memory hardening: `asset_registry` rebuild now links agent-copied generated assets to game manifest refs by content hash. This fixed the `yunwu-1781550294-ee592d0b` yellow door after DS copied it to `assets/images/sprites/tile_door_new.png`; the registry now records `promoted_path=assets/images/sprites/tile_door_new.png` and `manifest_keys=tiles.door`.
 - Latest LCR context-guard hardening: before blocking a hot thread at 90% context, `start_turn` now probes whether the provider thread still exists. If the thread is stale after restart, LCR marks it missing and lets provider handoff/recovery continue instead of forcing a failed compact first.
 - Latest LCR image-return hardening: persisted Yunwu image responses now strip raw `b64_json` from returned data and keep only `b64_json_present`, local paths, and validation metadata, preventing UI/log b64 floods.
+- Latest Yunwu image MCP dogfood:
+  - DS used the real in-app Yunwu image tool from an app-server turn, not a manual side call.
+  - First portal redraw attempt fell back from `gpt-image-2-all` HTTP 503 to `gpt-image-2` and generated `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781556230-3935bd95.png`.
+  - Kimi visual micro-check rejected that candidate as `retry` because a baked gray oval ground shadow/platform would clash with grass, stone, and forest terrain.
+  - DS used Kimi's stricter prompt for a second real Yunwu image tool call and generated `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781556517-68192932.png`.
+  - Independent alpha check for the accepted candidate: PNG RGBA 1024x1024, transparent ratio about `0.579`, semi-transparent ratio about `0.034`.
+  - Kimi final visual micro-check returned `pass`, usable role `portal`, and recommended crop-to-content, bottom-center pivot, and registering as a 96x96 portal.
+  - Checker preview: `D:\workflow\magical-girl-tower-dogfood\captures\20260616-ds-yunwu-redraw-portal-no-shadow-checker.png`.
 - Known game quality gap: Kimi visual micro-check still marked the map as `retry`; the map remains too grid/block-like.
-- Known LCR risks: installed packages still need a fresh rebuild to carry the latest sidecar startup/tool-timeout/asset-registry fixes, provider-thread compact after switch previously failed, and asset registry usage must be proven by screenshots rather than claimed by model text.
+- Known LCR risks:
+  - Installed packages still need a fresh rebuild to carry the latest sidecar startup/tool-timeout/asset-registry/image-return fixes.
+  - Provider-thread compact after runtime restart can still fail with `compact_thread_not_found`; in the latest run this left `current_thread_id=null` and required an explicit new provider thread.
+  - `turn/start` may return a recovered/new provider thread id even when a caller supplied an older thread id; callers and UI must follow the returned `thread_id`.
+  - DeepSeek output showed occasional mojibake (`กช`, `กม`) for symbols and PowerShell/GBK printing failed on emoji output; LCR should normalize/escape runtime output as UTF-8.
+  - Asset registry usage must be proven by screenshots rather than claimed by model text.
 
 ## Standing Rules
 
@@ -136,13 +149,14 @@ The game can be considered publishable for this dogfood target only when these a
 
 ## Immediate Next Actions
 
-1. Ask DS for one bounded seamless/edge-blend step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
-2. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.
-3. Ask Kimi to judge the new screenshot against the previous `20260616-ds-grass-asset-map.png` and decide whether the map still reads as blocky.
-4. If the seamless/edge-blend step improves the screenshot, run Yunwu GPT-5.4 high playtest and send the critique back to DS for route/UI/value priorities.
-5. If visual quality is still poor, let DS plan a redraw of a dedicated seamless grass/background asset through Yunwu image tools rather than overfitting CSS around a bad texture.
-6. Ask DS/Kimi whether `yunwu-1781554341-b98d2203` should be accepted as a stair/portal candidate or redrawn with stricter no-glow/no-aura constraints.
-7. Keep treating ignored `asset_id`/manifest paths or unverified model claims as LCR context/evidence bugs and fix the app before continuing.
+1. Let DS do one bounded promote step for accepted portal asset `yunwu-1781556517-68192932`: crop to content, set bottom-center pivot metadata, register as a 96x96 portal/stair transition candidate, and update registry/manifest without breaking current game rules.
+2. Run `node --check js/*.js`, browser smoke, and screenshot after the portal promote step.
+3. Ask DS for one bounded seamless/edge-blend step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
+4. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.
+5. Ask Kimi to judge the new screenshot against the previous `20260616-ds-grass-asset-map.png` and decide whether the map still reads as blocky.
+6. If the seamless/edge-blend step improves the screenshot, run Yunwu GPT-5.4 high playtest and send the critique back to DS for route/UI/value priorities.
+7. If visual quality is still poor, let DS plan a redraw of a dedicated seamless grass/background asset through Yunwu image tools rather than overfitting CSS around a bad texture.
+8. Keep treating ignored `asset_id`/manifest paths, stale provider threads, or unverified model claims as LCR context/evidence bugs and fix the app before continuing.
 
 ## Commit/Push Gate
 
