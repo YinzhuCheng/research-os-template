@@ -241,6 +241,16 @@ class DogfoodRunService:
         if not milestone["label"]:
             raise ValueError("milestone label is required.")
         self._reject_secret_like(milestone)
+        if captures:
+            milestone_capture_paths = set(capture_paths)
+            current["captures"] = [
+                *self._milestone_run_captures(milestone),
+                *[
+                    item
+                    for item in list(current.get("captures") or [])
+                    if str(item.get("path") or "").strip() not in milestone_capture_paths
+                ],
+            ][:80]
         current["milestones"] = [*list(current.get("milestones") or []), milestone][-80:]
         current["updated_at"] = now_iso()
         write_json(self._path(), current)
@@ -284,6 +294,27 @@ class DogfoodRunService:
         else:
             capture = {"path": str(item or "").strip(), "label": "", "provider": ""}
         return {key: value for key, value in capture.items() if value}
+
+    def _milestone_run_captures(self, milestone: dict[str, Any]) -> list[dict[str, str]]:
+        run_captures: list[dict[str, str]] = []
+        created_at = str(milestone.get("created_at") or now_iso())
+        fallback_label = str(milestone.get("label") or "").strip()
+        fallback_provider = str(milestone.get("provider") or "").strip()
+        for item in list(milestone.get("captures") or []):
+            if not isinstance(item, dict):
+                continue
+            path = str(item.get("path") or "").strip()
+            if not path:
+                continue
+            capture = {
+                "path": path,
+                "label": str(item.get("label") or fallback_label).strip(),
+                "provider": str(item.get("provider") or fallback_provider).strip(),
+                "created_at": created_at,
+            }
+            self._reject_secret_like(capture)
+            run_captures.append(capture)
+        return run_captures
 
     def add_note(self, note: str) -> None:
         current = self._normalize(read_json(self._path(), {}))

@@ -1,6 +1,6 @@
 # LCR Magic Tower Dogfood Release Plan
 
-Last revised: 2026-06-16 05:35 +08:00
+Last revised: 2026-06-16 06:03 +08:00
 
 ## Objective
 
@@ -78,6 +78,25 @@ The operator should maintain LCR and supervise evidence. Game design, asset plan
   - Updated registry: `integration_status=promoted_as_hud_reward`, `manifest_keys=["hud.key_yellow"]`, `in_use=true`.
   - Validation: WSL `node --check js/*.js` passed; `sprite_manifest.json` parsed successfully; browser smoke at `http://127.0.0.1:8123/` passed with HTTP 200 and zero supplied console errors.
   - Browser screenshot: `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\after-ds-hud-key-promotion-2026-06-16T052723-597271+0800.png`.
+- Latest context/health-check hardening:
+  - Source now accepts `context_mode=project`, `project_context`, and `with_context` as default project-context aliases.
+  - Source now maps `context_mode=health`, `health_check`, `light`, and `lightweight` to `minimal_text`, so post-compact health checks do not inject the full Project/Asset Context Pack.
+  - `_task_thread_settings` now preserves an existing task/provider-thread `collaboration_mode` when a short health check omits that field, instead of silently resetting it to `default`.
+  - Real DeepSeek compact completed on thread `019ecd2b-e987-70f2-8c2f-419f35cb0c44`, and a post-compact turn replied exactly `LCR_COMPACT_OK`.
+  - Running sidecar still needs restart/repackage before these source fixes affect the installed/runtime app; do not restart without preserving runtime-loaded provider secrets.
+- Latest Kimi visual evidence:
+  - Kimi visual micro-check recovered from a stale missing provider thread into `019ecd40-d30c-7b43-955a-c11945ccca4a`.
+  - First check used an old title-screen screenshot and correctly returned `retry` because the overworld map was not visible.
+  - A real in-app browser screenshot was captured at `D:\workflow\magical-girl-tower-dogfood\captures\20260616-current-real-map-browser.png` for future Kimi/DS review.
+- Latest Yunwu image MCP transparent asset retry:
+  - Real `/api/runtime/mcp/tool-call` to `yunwu_image.yunwu_image_transparent_asset` succeeded twice through the MCP path.
+  - First retry generated `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781560517-2adfd05d.png`: PNG RGBA, `actual_n=1`, transparent ratio about `0.832`, visually too realistic for map/HUD icon use.
+  - Second retry used a stricter 2D/JRPG prompt and generated `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781560636-992a50eb.png`: PNG RGBA, `actual_n=1`, transparent ratio about `0.886`, semi-transparent ratio about `0.005`, visually much closer to a usable game key icon.
+  - Checker comparison: `D:\workflow\magical-girl-tower-dogfood\captures\yunwu-key-retry-comparison-checkerboard.png`.
+  - Evidence judgment: the transparent/edit route is working; remaining quality risk is prompt/style/specification, not the MCP transport or alpha validation.
+- Latest Dogfood evidence hardening:
+  - Source now promotes capture paths attached directly to a dogfood milestone into the run-level `captures` list, so `run_summary.latest_capture` follows the newest milestone evidence instead of staying pinned to an older browser smoke screenshot.
+  - Sidecar unit tests after the latest source fixes: `116` tests passed.
 - Known game quality gap: Kimi visual micro-check still marked the map as `retry`; the map remains too grid/block-like.
 - Known LCR risks:
   - Installed packages still need a fresh rebuild to carry the latest sidecar startup/tool-timeout/asset-registry/image-return fixes.
@@ -87,6 +106,7 @@ The operator should maintain LCR and supervise evidence. Game design, asset plan
   - Some DS file mutations were reflected in project files and context pack plan state, but the thread item view only exposed a final `agentMessage` rather than fine-grained command/tool/file-change events. Release UI should distinguish model claims from tool-event verified changes more explicitly.
   - DeepSeek output showed occasional mojibake (`กช`, `กม`) for symbols and PowerShell/GBK printing failed on emoji output; LCR should normalize/escape runtime output as UTF-8.
   - Asset registry usage must be proven by screenshots rather than claimed by model text.
+  - DS did not use verified web research tools during the latest design/route turn despite being asked to research; release metadata should mark that as a tool-use health gap until a true `lcr_web_*` tool event is observed.
 
 ## Standing Rules
 

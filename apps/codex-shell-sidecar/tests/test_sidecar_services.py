@@ -2165,12 +2165,73 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertEqual([item.get("type") for item in inputs].count("localImage"), 1)
             self.assertFalse(any(item.get("type") == "mention" and item.get("name") in {"asset_registry.json", "project_context_pack.json"} for item in inputs))
 
+    def test_runtime_health_check_context_skips_project_and_asset_packs_without_visual_note(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "projects.json")
+            projects.create_project("Dogfood", root / "dogfood.lcrproj", workspace_root=workspace, entry_mode="existing")
+            registry_root = workspace / ".lcr" / "assets"
+            registry_root.mkdir(parents=True)
+            (registry_root / "asset_registry.json").write_text(
+                json.dumps({"schema_version": "lcr-asset-registry-v1", "assets": [{"asset_id": "sprite-1", "kind": "heroine"}]}),
+                encoding="utf-8",
+            )
+            assets = AssetRegistryService(projects)
+            context = ProjectContextService(projects)
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), asset_registry=assets, project_context=context)
+
+            inputs = runtime._build_user_inputs(  # noqa: SLF001
+                "Post-compact health check. Reply exactly: ok",
+                [],
+                context_mode="health_check",
+            )
+
+            text = "\n".join(str(item.get("text") or "") for item in inputs if item.get("type") == "text")
+            self.assertIn("Post-compact health check", text)
+            self.assertNotIn("LCR minimal visual mode", text)
+            self.assertNotIn("LCR Asset Context Pack", text)
+            self.assertNotIn("LCR Project Context Pack", text)
+            self.assertFalse(any(item.get("type") == "mention" and item.get("name") in {"asset_registry.json", "project_context_pack.json"} for item in inputs))
+
     def test_runtime_accepts_multi_provider_handoff_context_alias(self) -> None:
         runtime = RuntimeService(None, ModalService(lambda: Path(tempfile.gettempdir())))
 
+        self.assertEqual(runtime._normalize_context_mode("project"), "default")  # noqa: SLF001
+        self.assertEqual(runtime._normalize_context_mode("project_context"), "default")  # noqa: SLF001
+        self.assertEqual(runtime._normalize_context_mode("with_context"), "default")  # noqa: SLF001
+        self.assertEqual(runtime._normalize_context_mode("health_check"), "minimal_text")  # noqa: SLF001
+        self.assertEqual(runtime._normalize_context_mode("lightweight"), "minimal_text")  # noqa: SLF001
         self.assertEqual(runtime._normalize_context_mode("multi_provider_handoff"), "default")  # noqa: SLF001
         self.assertEqual(runtime._normalize_context_mode("multi_provider"), "default")  # noqa: SLF001
         self.assertEqual(runtime._normalize_context_mode("handoff"), "default")  # noqa: SLF001
+
+    def test_runtime_task_thread_settings_preserve_collaboration_when_omitted(self) -> None:
+        runtime = RuntimeService(None, ModalService(lambda: Path(tempfile.gettempdir())))
+
+        implicit = runtime._task_thread_settings(  # noqa: SLF001
+            {"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+            None,
+            None,
+            "auto",
+        )
+        explicit = runtime._task_thread_settings(  # noqa: SLF001
+            {"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+            None,
+            None,
+            "auto",
+            collaboration_mode="default",
+        )
+
+        self.assertNotIn("collaboration_mode", implicit)
+        self.assertEqual(explicit["collaboration_mode"], "default")
+
+    def test_runtime_context_mode_error_lists_supported_modes(self) -> None:
+        runtime = RuntimeService(None, ModalService(lambda: Path(tempfile.gettempdir())))
+
+        with self.assertRaisesRegex(ValueError, "Supported context modes"):
+            runtime._normalize_context_mode("bogus")  # noqa: SLF001
 
     def test_asset_context_pack_injects_priority_slice_not_full_registry(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -4691,6 +4752,9 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertEqual(milestone["milestone"]["captures"][0]["label"], "gameplay")
             self.assertEqual(milestone["milestone"]["captures"][0]["provider"], "deepseek")
             self.assertEqual(milestone["milestone"]["validation_result"]["fatal_console_errors"], "0")
+            self.assertEqual(milestone["run_summary"]["latest_capture"]["path"], str(screenshot))
+            self.assertEqual(milestone["run_summary"]["latest_capture"]["label"], "gameplay")
+            self.assertEqual(milestone["run_summary"]["latest_capture"]["provider"], "deepseek")
             full_milestone = dogfood.add_milestone({"label": "debug full run", "include_run": True})
             self.assertIn("run", full_milestone)
             self.assertEqual(full_milestone["run"]["milestones"][-1]["label"], "debug full run")

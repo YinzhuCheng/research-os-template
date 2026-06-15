@@ -41,7 +41,7 @@ THREAD_READ_TIMEOUT_SECONDS = 20.0
 THREAD_LIST_TIMEOUT_SECONDS = 20.0
 TURN_START_TIMEOUT_SECONDS = 45.0
 VALID_COLLABORATION_MODES = {"default", "plan"}
-VALID_CONTEXT_MODES = {"default", "full", "minimal_visual", "no_context"}
+VALID_CONTEXT_MODES = {"default", "full", "minimal_text", "minimal_visual", "no_context"}
 
 
 class RuntimeService:
@@ -886,15 +886,17 @@ class RuntimeService:
         collaboration_mode: str | None = None,
         name: str | None = None,
     ) -> dict[str, Any]:
-        return {
+        settings = {
             "name": name,
             "profile_id": profile.get("profile_id"),
             "provider_id": profile.get("provider_id"),
             "model": model or profile.get("model"),
             "reasoning_effort": effort or profile.get("reasoning_effort"),
             "permission_mode": permission_mode,
-            "collaboration_mode": collaboration_mode or "default",
         }
+        if collaboration_mode is not None:
+            settings["collaboration_mode"] = collaboration_mode or "default"
+        return settings
 
     def _ensure_provider_thread_for_turn(
         self,
@@ -1663,6 +1665,15 @@ class RuntimeService:
         mode = str(context_mode or "default").strip().lower()
         aliases = {
             "": "default",
+            "auto": "default",
+            "project": "default",
+            "project_context": "default",
+            "with_context": "default",
+            "health": "minimal_text",
+            "health_check": "minimal_text",
+            "light": "minimal_text",
+            "lightweight": "minimal_text",
+            "minimal_text": "minimal_text",
             "handoff": "default",
             "multi_provider": "default",
             "multi_provider_handoff": "default",
@@ -1674,7 +1685,8 @@ class RuntimeService:
         }
         mode = aliases.get(mode, mode)
         if mode not in VALID_CONTEXT_MODES:
-            raise ValueError(f"Unsupported context mode: {context_mode}")
+            valid = ", ".join(sorted(VALID_CONTEXT_MODES | set(aliases)))
+            raise ValueError(f"Unsupported context mode: {context_mode}. Supported context modes: {valid}")
         return "default" if mode == "full" else mode
 
     def _project_context_inputs(self, *, thread_id: str | None = None) -> list[dict[str, Any]]:
