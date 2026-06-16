@@ -475,7 +475,24 @@ async function launchBrowser() {
     await page.screenshot({ path: process.argv[3], fullPage: true });
     console.log(JSON.stringify({ ok: true, status, console_errors: consoleErrors.slice(0, 20), screenshot_path: process.argv[3], browser_executable: launched.executable, action_results: actionResults }));
   } catch (error) {
-    console.log(JSON.stringify({ ok: false, status, console_errors: consoleErrors.slice(0, 20), error: String(error.message || error), action_results: actionResults }));
+    let screenshotPath = null;
+    let screenshotStatus = 'blocked_capture_failed';
+    try {
+      await page.screenshot({ path: process.argv[3], fullPage: true });
+      screenshotPath = process.argv[3];
+      screenshotStatus = 'captured_after_failure';
+    } catch (screenshotError) {
+      consoleErrors.push(`screenshot: ${String(screenshotError.message || screenshotError)}`.slice(0, 300));
+    }
+    console.log(JSON.stringify({
+      ok: Boolean(screenshotPath),
+      status,
+      console_errors: consoleErrors.slice(0, 20),
+      error: String(error.message || error),
+      screenshot_path: screenshotPath,
+      screenshot_status: screenshotStatus,
+      action_results: actionResults
+    }));
   } finally {
     await browser.close();
   }
@@ -521,11 +538,13 @@ async function launchBrowser() {
                 pass
         if result.get("ok") and target.is_file():
             record["screenshot_path"] = str(target)
-            record["screenshot_status"] = "captured"
+            record["screenshot_status"] = str(result.get("screenshot_status") or "captured")
             if result.get("action_results"):
                 record["action_results"] = result.get("action_results")
             if result.get("status") is not None:
                 record["http_status"] = int(result.get("status"))
+            if result.get("error"):
+                record["screenshot_error"] = str(result.get("error"))[:300]
             merged_errors = [*record.get("console_errors", []), *list(result.get("console_errors") or [])]
             record["console_errors"] = [str(item)[:300] for item in merged_errors[:20]]
             if record["console_errors"]:

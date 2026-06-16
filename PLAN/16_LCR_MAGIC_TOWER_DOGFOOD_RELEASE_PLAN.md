@@ -321,6 +321,28 @@ Latest fix from the 2026-06-16 13:10 browser-smoke recovery pass:
   - recorded `navigation_url=file:///D:/workflow/magical-girl-tower-dogfood/workspace/index.html`.
 - Remaining operational wrinkle: PowerShell `Start-Process -ArgumentList @(..., "D:\Google One\...")` still splits paths with spaces; the manual restart used a quoted argument string. A dedicated restart helper should be implemented later.
 
+Latest fix from the 2026-06-16 13:25 browser-smoke failure-evidence pass:
+
+- LCR browser smoke now attempts to capture a screenshot even when a Playwright action fails after the page has loaded. This matters for dogfood supervision because DS/Kimi need to see the failed state instead of receiving only a timeout string.
+- Failed action captures are recorded with `screenshot_status=captured_after_failure` and a short `screenshot_error`.
+- Live source-sidecar verification:
+  - intentionally clicking a missing `Enter` text now failed the smoke as expected but still saved `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\browser-smoke-failure-screenshot-regression-2026-06-16T131841-206767+0800.png`;
+  - the screenshot showed the game was on a story dialog with a `Next` button, proving the failure screenshot is actionable.
+- A corrected keyboard-driven smoke reached the map and passed:
+  - screenshot: `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\post-browser-smoke-fix-enter-key-map-reached-2026-06-16T132012-820069+0800.png`;
+  - no console errors were recorded.
+
+Latest Yunwu image MCP retry from 2026-06-16 13:30:
+
+- Three direct `/api/runtime/mcp/tool-call` calls to `yunwu_image_transparent_asset` succeeded through the LCR MCP/tool path, not through an out-of-band image generator.
+- New transparent candidates:
+  - `yunwu-1781587477-af8a12d8`, purpose `dogfood_retry_yunwu_transparent_yellow_key`, PNG/RGBA, transparent ratio about `0.906`, alpha passed; visually too much glow, should be redrawn as a smaller icon before promotion.
+  - `yunwu-1781587576-9dcab144`, purpose `dogfood_retry_yunwu_transparent_yellow_door`, PNG/RGBA, transparent ratio about `0.618`, alpha passed; visually usable as a yellow-door candidate.
+  - `yunwu-1781587652-490539d0`, purpose `dogfood_retry_yunwu_transparent_forest_sprite_monster`, PNG/RGBA, transparent ratio about `0.760`, alpha passed; visually usable as a forest-monster candidate.
+- Checker preview: `D:\workflow\magical-girl-tower-dogfood\captures\yunwu-mcp-retry-transparent-checker-20260616.png`.
+- Dogfood milestone recorded: `Yunwu image MCP transparent retry`.
+- Next DS/Kimi step: classify and promote only the door/monster after visual micro-check; redraw the key with stricter icon constraints.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.

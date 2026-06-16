@@ -5287,6 +5287,7 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
 
         self.assertIn("domcontentloaded", source)
         self.assertNotIn("networkidle", source)
+        self.assertIn("captured_after_failure", source)
 
     def test_runtime_supervisor_aggregates_plan_token_and_guard_without_secrets(self) -> None:
         class FakeProjects:
