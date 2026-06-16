@@ -948,6 +948,10 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertEqual(smoke_tool["inputSchema"]["properties"]["actions"]["maxItems"], 80)
             self.assertIn("file:///mnt/d", smoke_tool["description"])
             self.assertIn("do not start an ad-hoc HTTP server", smoke_tool["description"])
+            action_types = smoke_tool["inputSchema"]["properties"]["actions"]["items"]["properties"]["type"]["enum"]
+            self.assertIn("click_text_until_absent", action_types)
+            self.assertIn("wait_for_text_absent", action_types)
+            self.assertIn("max_clicks", smoke_tool["inputSchema"]["properties"]["actions"]["items"]["properties"])
 
     def test_runtime_thread_start_registers_browser_smoke_even_before_project_open(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -2747,13 +2751,18 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             actions = service._browser_actions(  # noqa: SLF001
                 [
                     {"type": "click_selector", "selector": "#btn-new-game", "timeout_ms": 1500},
+                    {"type": "click_text_until_absent", "text": "Next", "max_clicks": 12, "settle_ms": 100},
+                    {"type": "wait_for_text_absent", "text": "Next", "timeout_ms": 1500},
                     {"type": "expect_selector", "selector": "#grid-container"},
                     {"type": "expect_text", "text": "Floor"},
                 ]
             )
             self.assertEqual(actions[0]["selector"], "#btn-new-game")
-            self.assertEqual(actions[1]["type"], "expect_selector")
-            self.assertEqual(actions[2]["text"], "Floor")
+            self.assertEqual(actions[1]["type"], "click_text_until_absent")
+            self.assertEqual(actions[1]["max_clicks"], 12)
+            self.assertEqual(actions[2]["type"], "wait_for_text_absent")
+            self.assertEqual(actions[3]["type"], "expect_selector")
+            self.assertEqual(actions[4]["text"], "Floor")
             with self.assertRaises(ValueError):
                 service._browser_actions([{"type": "click_selector", "selector": "Bearer unit-test-token"}])  # noqa: SLF001
 

@@ -357,6 +357,20 @@ Latest LCR context-injection fix from 2026-06-16 14:05:
   - Browser smoke reached the map after the story sequence and captured `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\post-promote-map-after-full-story-smoke-2026-06-16T140014-647127+0800.png`, but exposed a resource timeout and the need for smarter story/map smoke actions.
 - Remaining LCR risks from the same pass: sidecar restarts still need automatic provider-key re-presentation, provider thread cleanup/normalization is still noisy, and browser smoke needs richer actions such as click-until-gone or wait-for-text-absent.
 
+Latest browser-smoke action fix from 2026-06-16 14:15:
+
+- Added `click_text_until_absent` and `wait_for_text_absent` to LCR browser smoke actions so DS/Kimi can pass story/tutorial/dialog screens without guessing a fixed number of clicks.
+- Dynamic `lcr_browser_smoke` tool schema now exposes these actions and recommends `click_text_until_absent` for story/tutorial screens.
+- Regression coverage:
+  - targeted browser-smoke dynamic-tool/action tests passed: 2 tests;
+  - full sidecar unittest suite passed: 130 tests.
+- Live magic-tower verification on the source sidecar:
+  - restarted source sidecar on port `8795` after confirming the old process did not know the new action;
+  - reopened `D:\workflow\magical-girl-tower-dogfood\magical-girl-tower.lcrproj`;
+  - `/api/dogfood/browser-smoke` with `click_text_until_absent("Next")` clicked through 8 story steps, found `#grid-container`, found `Floor`, and passed with no console errors;
+  - screenshot captured at `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\click-until-absent-story-to-map-regression-2026-06-16T141304-537290+0800.png`.
+- New operational finding: source sidecar restarts still do not automatically reopen the last `.lcrproj`; this should become a startup restore improvement later.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.

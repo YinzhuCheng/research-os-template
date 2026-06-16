@@ -232,11 +232,25 @@ class DogfoodRunService:
                 text = str(raw.get("text") or "").strip()[:120]
                 if text:
                     actions.append({"type": kind, "text": text, "timeout_ms": int(raw.get("timeout_ms") or 3000)})
+            elif kind == "click_text_until_absent":
+                text = str(raw.get("text") or "").strip()[:120]
+                if text:
+                    max_clicks = max(1, min(50, int(raw.get("max_clicks") or 20)))
+                    settle_ms = max(0, min(2000, int(raw.get("settle_ms") or 250)))
+                    actions.append(
+                        {
+                            "type": kind,
+                            "text": text,
+                            "timeout_ms": int(raw.get("timeout_ms") or 3000),
+                            "max_clicks": max_clicks,
+                            "settle_ms": settle_ms,
+                        }
+                    )
             elif kind in {"click_selector", "expect_selector"}:
                 selector = str(raw.get("selector") or "").strip()[:160]
                 if selector:
                     actions.append({"type": kind, "selector": selector, "timeout_ms": int(raw.get("timeout_ms") or 3000)})
-            elif kind == "expect_text":
+            elif kind in {"expect_text", "wait_for_text_absent"}:
                 text = str(raw.get("text") or "").strip()[:120]
                 if text:
                     actions.append({"type": kind, "text": text, "timeout_ms": int(raw.get("timeout_ms") or 3000)})
@@ -425,11 +439,34 @@ async function launchBrowser() {
   page.on('pageerror', error => consoleErrors.push(`pageerror: ${String(error.message || error)}`.slice(0, 300)));
   let status = null;
   const actionResults = [];
+  async function isVisible(locator, timeoutMs) {
+    try {
+      await locator.first().waitFor({ state: 'visible', timeout: timeoutMs || 500 });
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
   async function runAction(action) {
     const result = { type: action.type, ok: false };
     if (action.type === 'click_text') {
       await page.getByText(action.text, { exact: false }).first().click({ timeout: action.timeout_ms || 3000 });
       result.text = action.text;
+    } else if (action.type === 'click_text_until_absent') {
+      const locator = page.getByText(action.text, { exact: false });
+      const maxClicks = Math.min(Math.max(action.max_clicks || 20, 1), 50);
+      const settleMs = Math.min(Math.max(action.settle_ms || 250, 0), 2000);
+      let clicks = 0;
+      while (clicks < maxClicks && await isVisible(locator, action.timeout_ms || 3000)) {
+        await locator.first().click({ timeout: action.timeout_ms || 3000 });
+        clicks += 1;
+        await page.waitForTimeout(settleMs);
+      }
+      result.text = action.text;
+      result.clicks = clicks;
+      if (await isVisible(locator, 250)) {
+        throw new Error(`Text still visible after ${clicks} clicks: ${action.text}`);
+      }
     } else if (action.type === 'click_selector') {
       await page.locator(action.selector).first().click({ timeout: action.timeout_ms || 3000 });
       result.selector = action.selector;
@@ -438,6 +475,9 @@ async function launchBrowser() {
       result.selector = action.selector;
     } else if (action.type === 'expect_text') {
       await page.getByText(action.text, { exact: false }).first().waitFor({ state: 'visible', timeout: action.timeout_ms || 3000 });
+      result.text = action.text;
+    } else if (action.type === 'wait_for_text_absent') {
+      await page.getByText(action.text, { exact: false }).first().waitFor({ state: 'hidden', timeout: action.timeout_ms || 3000 });
       result.text = action.text;
     } else if (action.type === 'press') {
       await page.keyboard.press(action.key);

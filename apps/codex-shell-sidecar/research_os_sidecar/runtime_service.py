@@ -2453,6 +2453,7 @@ for host in candidates:
                         "performing simple UI actions, then record console errors and a screenshot in the LCR "
                         "dogfood ledger. WSL-style file URLs such as file:///mnt/d/... are supported and normalized "
                         "for the host browser; do not start an ad-hoc HTTP server just to capture a screenshot. "
+                        "For story/tutorial screens, prefer click_text_until_absent over guessing a fixed number of clicks. "
                         "Use this after UI/game changes instead of only claiming visual validation."
                     ),
                     "inputSchema": {
@@ -2471,12 +2472,23 @@ for host in candidates:
                                     "properties": {
                                         "type": {
                                             "type": "string",
-                                            "enum": ["click_text", "click_selector", "expect_selector", "expect_text", "press", "wait_ms"],
+                                            "enum": [
+                                                "click_text",
+                                                "click_text_until_absent",
+                                                "click_selector",
+                                                "expect_selector",
+                                                "expect_text",
+                                                "wait_for_text_absent",
+                                                "press",
+                                                "wait_ms",
+                                            ],
                                         },
                                         "text": {"type": "string"},
                                         "selector": {"type": "string"},
                                         "key": {"type": "string"},
                                         "ms": {"type": "integer", "minimum": 0, "maximum": 5000},
+                                        "max_clicks": {"type": "integer", "minimum": 1, "maximum": 50},
+                                        "settle_ms": {"type": "integer", "minimum": 0, "maximum": 2000},
                                         "timeout_ms": {"type": "integer", "minimum": 100, "maximum": 30000},
                                     },
                                     "required": ["type"],
