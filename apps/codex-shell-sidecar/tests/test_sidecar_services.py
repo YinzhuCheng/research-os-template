@@ -1189,6 +1189,117 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertEqual(items[1]["tool"], "lcr_web_search_batch")
             self.assertEqual(items[1]["status"], "completed")
             self.assertIn("tool_event_verified", items[1]["contentItems"][0]["text"])
+            self.assertTrue(items[1]["lcrVerifiedEvidence"]["verified"])
+            self.assertEqual(items[1]["lcrVerifiedEvidence"]["server"], "lcr_web")
+            self.assertIn("tool-event verified", items[1]["lcrVerifiedEvidence"]["label"])
+
+    def test_runtime_read_thread_decorates_existing_dynamic_tool_evidence(self) -> None:
+        class FakeClient:
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                if method == "thread/read":
+                    return {
+                        "thread": {
+                            "id": "thread-1",
+                            "turns": [
+                                {
+                                    "id": "turn-1",
+                                    "items": [
+                                        {"type": "userMessage", "id": "user-1", "content": []},
+                                        {
+                                            "type": "dynamicToolCall",
+                                            "id": "tool-1",
+                                            "tool": "lcr_browser_smoke",
+                                            "status": "completed",
+                                            "contentItems": [
+                                                {
+                                                    "type": "inputText",
+                                                    "text": "LCR dynamic tool result for lcr_browser_smoke:\n"
+                                                    + json.dumps(
+                                                        {
+                                                            "tool": "lcr_browser_smoke",
+                                                            "label": "map smoke",
+                                                            "status": "pass",
+                                                            "screenshot_path": "D:/workspace/.lcr/captures/map.png",
+                                                            "console_errors": [],
+                                                            "tool_event_verified": True,
+                                                        }
+                                                    ),
+                                                }
+                                            ],
+                                        },
+                                        {"type": "agentMessage", "id": "agent-1", "text": "done"},
+                                    ],
+                                }
+                            ],
+                        }
+                    }
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._ensure_client = lambda _status: FakeClient()  # type: ignore[method-assign]
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True}  # type: ignore[method-assign]
+
+            result = runtime.read_thread({"profile_id": "p"}, "thread-1")
+
+            item = result["thread"]["turns"][0]["items"][1]
+            evidence = item["lcrVerifiedEvidence"]
+            self.assertTrue(evidence["verified"])
+            self.assertEqual(evidence["tool"], "lcr_browser_smoke")
+            self.assertEqual(evidence["server"], "lcr_browser")
+            self.assertIn("D:/workspace/.lcr/captures/map.png", evidence["paths"])
+            self.assertTrue(any("browser smoke map smoke pass" in line for line in evidence["summary"]))
+
+    def test_runtime_read_thread_decorates_command_execution_evidence(self) -> None:
+        class FakeClient:
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                if method == "thread/read":
+                    return {
+                        "thread": {
+                            "id": "thread-1",
+                            "turns": [
+                                {
+                                    "id": "turn-1",
+                                    "items": [
+                                        {"type": "userMessage", "id": "user-1", "content": []},
+                                        {
+                                            "type": "commandExecution",
+                                            "id": "cmd-1",
+                                            "command": "node --check js/main.js",
+                                            "status": "completed",
+                                            "exitCode": 0,
+                                            "aggregatedOutput": "ok",
+                                        },
+                                    ],
+                                }
+                            ],
+                        }
+                    }
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._ensure_client = lambda _status: FakeClient()  # type: ignore[method-assign]
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True}  # type: ignore[method-assign]
+
+            result = runtime.read_thread({"profile_id": "p"}, "thread-1")
+
+            evidence = result["thread"]["turns"][0]["items"][1]["lcrVerifiedEvidence"]
+            self.assertTrue(evidence["verified"])
+            self.assertEqual(evidence["tool"], "shell_command")
+            self.assertEqual(evidence["server"], "codex_builtin")
+            self.assertIn("command-event verified", evidence["label"])
+            self.assertIn("exit code: 0", evidence["summary"])
 
     def test_runtime_yunwu_tool_usage_refreshes_asset_registry(self) -> None:
         class FakeAssetRegistry:

@@ -1,6 +1,6 @@
 # LCR Magic Tower Dogfood Release Plan
 
-Last revised: 2026-06-16 06:03 +08:00
+Last revised: 2026-06-16 15:40 +08:00
 
 ## Objective
 
@@ -440,6 +440,19 @@ Latest LCR guard/tool-progress and visual retry round from 2026-06-16 15:30:
   - main issue: the map still reads as a pasted circular transparent overlay over visible square grid cells;
   - executable next strategy: generate/use a seamless full grass/background image, break the circular tree border into irregular clusters, tint the outer background to match the play area, add small entity shadows, and use individual obstacle sprites instead of a continuous pasted perimeter.
 - Next DS step should not keep stacking transparent stickers. It should plan a better rendering route: seamless background or larger map art layer first, then place transparent sprites for characters, doors, stairs, monsters, trees, walls, and props on top.
+
+Latest LCR evidence-display hardening from 2026-06-16 15:40:
+
+- Fixed the next visible app gap before continuing the game loop: `thread/read` now decorates Codex `dynamicToolCall` and `commandExecution` items with compact `lcrVerifiedEvidence` metadata.
+- The new metadata gives the UI a stable way to show `tool-event verified` or `command-event verified` without making users parse long JSON or trust model claims.
+- Dynamic tool evidence includes tool name, server (`lcr_web`, `lcr_browser`, `yunwu_image`, etc.), status, verified flag, short summary lines, paths, and URLs when available.
+- Command evidence includes shell command, status, exit code, and short output summary.
+- Regression coverage now proves both cases:
+  - app-server already returns a `dynamicToolCall`;
+  - LCR overlays a missing `dynamicToolCall` from runtime events;
+  - Codex `commandExecution` receives the same UI-ready evidence shape.
+- Full sidecar unit tests after the fix: `134` passed.
+- Isolation check after the fix: official `C:\Users\cyz19\.codex\config.toml` timestamp remained `2026-06-15 09:42:47`; the magic-tower workspace still contains the pre-existing empty `.codex` audit artifact from `2026-06-16 12:16:09`, but this pass did not create or modify it.
 
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.

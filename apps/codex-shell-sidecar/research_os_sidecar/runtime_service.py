@@ -187,6 +187,7 @@ class RuntimeService:
             raise
         thread = self._decorate_thread(dict(result.get("thread") or {}))
         thread = self._overlay_dynamic_tool_events(thread)
+        thread = self._decorate_dynamic_tool_evidence(thread)
         self._cache_thread_entry(thread["id"], {"name": thread.get("name")})
         return {"thread": thread}
 
@@ -2774,6 +2775,158 @@ for host in candidates:
             items[insert_at:insert_at] = missing
             decorated_turns.append({**turn, "items": items})
         return {**thread, "turns": decorated_turns}
+
+    def _decorate_dynamic_tool_evidence(self, thread: dict[str, Any]) -> dict[str, Any]:
+        """Attach compact, UI-ready verification metadata to dynamic tool items."""
+        turns = list(thread.get("turns") or [])
+        if not turns:
+            return thread
+        decorated_turns: list[dict[str, Any]] = []
+        changed = False
+        for turn in turns:
+            if not isinstance(turn, dict):
+                decorated_turns.append(turn)
+                continue
+            items = list(turn.get("items") or [])
+            decorated_items: list[Any] = []
+            for item in items:
+                if not isinstance(item, dict):
+                    decorated_items.append(item)
+                    continue
+                evidence = self._item_verified_evidence(item)
+                if evidence:
+                    item = {**item, "lcrVerifiedEvidence": evidence}
+                    changed = True
+                decorated_items.append(item)
+            decorated_turns.append({**turn, "items": decorated_items} if changed else turn)
+        return {**thread, "turns": decorated_turns} if changed else thread
+
+    def _item_verified_evidence(self, item: dict[str, Any]) -> dict[str, Any] | None:
+        item_type = str(item.get("type") or "")
+        if item_type == "dynamicToolCall":
+            return self._dynamic_tool_verified_evidence(item)
+        if item_type == "commandExecution":
+            return self._command_execution_verified_evidence(item)
+        return None
+
+    def _dynamic_tool_verified_evidence(self, item: dict[str, Any]) -> dict[str, Any] | None:
+        tool = str(item.get("tool") or item.get("name") or "").strip()
+        if not tool:
+            return None
+        summary = self._dynamic_tool_summary_from_item(item)
+        verified = bool(summary.get("tool_event_verified")) if summary else False
+        content_text = self._dynamic_tool_content_text(item)
+        if not verified and "tool_event_verified" in content_text:
+            verified = True
+        evidence: dict[str, Any] = {
+            "tool": tool,
+            "server": self._dynamic_tool_server(tool),
+            "status": item.get("status") or ("completed" if verified else "unknown"),
+            "verified": verified,
+            "label": "tool-event verified" if verified else "tool-event unverified",
+            "summary": self._dynamic_tool_evidence_lines(tool, summary, content_text),
+        }
+        paths = self._dynamic_tool_evidence_values(summary, ("path", "screenshot_path", "manifest_path", "local_path"))
+        urls = self._dynamic_tool_evidence_values(summary, ("url", "navigation_url"))
+        if paths:
+            evidence["paths"] = paths[:6]
+        if urls:
+            evidence["urls"] = urls[:6]
+        return evidence
+
+    def _command_execution_verified_evidence(self, item: dict[str, Any]) -> dict[str, Any] | None:
+        command = str(item.get("command") or "").strip()
+        if not command:
+            return None
+        status = str(item.get("status") or "unknown")
+        exit_code = item.get("exitCode")
+        completed = status in {"completed", "failed", "cancelled"} or exit_code is not None
+        summary = [f"command: {command[:220]}"]
+        if exit_code is not None:
+            summary.append(f"exit code: {exit_code}")
+        output = str(item.get("aggregatedOutput") or item.get("output") or "").strip()
+        if output:
+            summary.append("output: " + " ".join(output.split())[:220])
+        return {
+            "tool": "shell_command",
+            "server": "codex_builtin",
+            "status": status,
+            "verified": completed,
+            "label": "command-event verified" if completed else "command-event pending",
+            "summary": summary[:6],
+        }
+
+    def _dynamic_tool_content_text(self, item: dict[str, Any]) -> str:
+        texts: list[str] = []
+        for content in item.get("contentItems") or []:
+            if isinstance(content, dict) and content.get("type") in {"inputText", "text"}:
+                texts.append(str(content.get("text") or ""))
+        return "\n".join(texts).strip()
+
+    def _dynamic_tool_summary_from_item(self, item: dict[str, Any]) -> dict[str, Any]:
+        content_text = self._dynamic_tool_content_text(item)
+        if not content_text:
+            return {}
+        match = re.search(r"\{.*\}\s*$", content_text, flags=re.DOTALL)
+        if not match:
+            return {}
+        try:
+            parsed = json.loads(match.group(0))
+        except Exception:  # noqa: BLE001
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+
+    def _dynamic_tool_evidence_lines(self, tool: str, summary: dict[str, Any], fallback_text: str) -> list[str]:
+        lines: list[str] = []
+        if tool == "lcr_browser_smoke":
+            status = summary.get("status")
+            label = summary.get("label")
+            if status or label:
+                lines.append(f"browser smoke {label or ''} {status or ''}".strip())
+            if summary.get("screenshot_path"):
+                lines.append(f"screenshot: {summary.get('screenshot_path')}")
+            errors = summary.get("console_errors")
+            if isinstance(errors, list):
+                lines.append(f"console errors: {len(errors)}")
+        elif tool.startswith("lcr_web_"):
+            if summary.get("record_id"):
+                lines.append(f"research record: {summary.get('record_id')}")
+            result = summary.get("result")
+            sources = result.get("sources") if isinstance(result, dict) else summary.get("sources")
+            if isinstance(sources, list):
+                lines.append(f"sources: {len(sources)}")
+                for source in sources[:2]:
+                    if isinstance(source, dict) and source.get("url"):
+                        lines.append(str(source.get("url")))
+        elif tool.startswith("yunwu_image_"):
+            if summary.get("actual_n") is not None or summary.get("requested_n") is not None:
+                lines.append(f"images: {summary.get('actual_n', '?')}/{summary.get('requested_n', '?')}")
+            for asset_id in self._dynamic_tool_evidence_values(summary, ("asset_id",)):
+                lines.append(f"asset: {asset_id}")
+            if summary.get("has_alpha") is not None:
+                lines.append(f"alpha: {summary.get('has_alpha')}")
+        if not lines and fallback_text:
+            compact = " ".join(fallback_text.split())
+            lines.append(compact[:240])
+        return lines[:6]
+
+    def _dynamic_tool_evidence_values(self, value: Any, keys: tuple[str, ...]) -> list[str]:
+        found: list[str] = []
+        if isinstance(value, dict):
+            for key in keys:
+                current = value.get(key)
+                if isinstance(current, str) and current:
+                    found.append(current)
+            for current in value.values():
+                found.extend(self._dynamic_tool_evidence_values(current, keys))
+        elif isinstance(value, list):
+            for item in value:
+                found.extend(self._dynamic_tool_evidence_values(item, keys))
+        deduped: list[str] = []
+        for item in found:
+            if item not in deduped:
+                deduped.append(item)
+        return deduped
 
     def _thread_cache_name(self, thread_id: str) -> str | None:
         if not thread_id:
