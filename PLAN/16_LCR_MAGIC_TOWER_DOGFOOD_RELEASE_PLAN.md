@@ -343,6 +343,20 @@ Latest Yunwu image MCP retry from 2026-06-16 13:30:
 - Dogfood milestone recorded: `Yunwu image MCP transparent retry`.
 - Next DS/Kimi step: classify and promote only the door/monster after visual micro-check; redraw the key with stricter icon constraints.
 
+Latest LCR context-injection fix from 2026-06-16 14:05:
+
+- Dogfood exposed that auto-injected `asset_registry.json`, `asset_context_pack.json`, and `project_context_pack.json` mentions were being interpreted by Codex app-server as `local-codex-router` MCP resource reads.
+- Because LCR does not yet expose a real `local-codex-router` resource server, DS hit `resources/read failed: unknown MCP server 'local-codex-router'` and could not continue from the asset context.
+- Fixed by making project and asset context injection text-only for now, with explicit guidance that JSON paths are orientation references and should not be read through MCP resources unless LCR exposes that server.
+- Regression coverage:
+  - targeted project/asset context injection tests passed: 4 tests;
+  - full sidecar unittest suite passed: 130 tests.
+- Post-fix dogfood verification:
+  - Kimi visual micro-check on the real Yunwu transparent preview, door, and forest monster succeeded, but took about 232 seconds; this is usable but should be recorded as high-latency multimodal behavior.
+  - DS completed a bounded follow-up turn, synchronized registry state, added a `forest_spirit` enemy definition, and ran `node --check` on 9 game JS files successfully.
+  - Browser smoke reached the map after the story sequence and captured `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\post-promote-map-after-full-story-smoke-2026-06-16T140014-647127+0800.png`, but exposed a resource timeout and the need for smarter story/map smoke actions.
+- Remaining LCR risks from the same pass: sidecar restarts still need automatic provider-key re-presentation, provider thread cleanup/normalization is still noisy, and browser smoke needs richer actions such as click-until-gone or wait-for-text-absent.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.

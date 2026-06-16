@@ -246,6 +246,7 @@ class AssetRegistryService:
             "If promoted counts, asset_type, manifest_keys, or in_use state conflict, use this newest pack and .lcr/assets/asset_registry.json.",
             f"Registry: {self._relative_path(self._registry_path())}",
             f"Detailed context: {self._relative_path(self._context_pack_path())}",
+            "Access note: the paths above are orientation references. Do not call MCP resources/read for them; use the injected summary unless an explicit file-reading tool is available.",
             f"Summary: {summary}",
             "Current rules:",
             *[f"- {rule}" for rule in rules],
@@ -316,10 +317,6 @@ class AssetRegistryService:
                 "text_elements": [],
             }
         ]
-        if self._registry_path().is_file():
-            inputs.append({"type": "mention", "name": "asset_registry.json", "path": str(self._registry_path())})
-        if self._context_pack_path().is_file():
-            inputs.append({"type": "mention", "name": "asset_context_pack.json", "path": str(self._context_pack_path())})
         return inputs
 
     def _merge_sliced_assets(

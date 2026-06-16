@@ -2432,7 +2432,8 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             mentions = [item for item in inputs if item.get("type") == "mention"]
             self.assertIn("Continue the tower game.", text)
             self.assertIn("LCR Asset Context Pack", text)
-            self.assertTrue(any(item.get("name") == "asset_registry.json" for item in mentions))
+            self.assertIn("Do not call MCP resources/read", text)
+            self.assertFalse(any(item.get("name") == "asset_registry.json" for item in mentions))
 
     def test_runtime_minimal_visual_context_skips_project_and_asset_packs(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -2713,7 +2714,8 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn("LCR Project Context Pack", text)
             self.assertIn("Current thread: thread-2", text)
             self.assertIn("Second", text)
-            self.assertTrue(any(item.get("name") == "project_context_pack.json" for item in mentions))
+            self.assertIn("Context pack JSON paths are orientation references only", text)
+            self.assertFalse(any(item.get("name") == "project_context_pack.json" for item in mentions))
 
     def test_dogfood_run_service_project_local_and_secret_guarded(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

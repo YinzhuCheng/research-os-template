@@ -38,11 +38,7 @@ class ProjectContextService:
         text = str(pack.get("text") or "").strip()
         if not text:
             return []
-        items = [{"type": "text", "text": text, "text_elements": []}]
-        path = self._path()
-        if path.is_file():
-            items.append({"type": "mention", "name": "project_context_pack.json", "path": str(path)})
-        return items
+        return [{"type": "text", "text": text, "text_elements": []}]
 
     def record_runtime_notification(self, method: str, params: Any) -> None:
         if not isinstance(params, dict):
@@ -257,6 +253,7 @@ class ProjectContextService:
             [
                 "Rules:",
                 "- Treat this pack as an orientation index, not as complete truth; inspect referenced project files before editing.",
+                "- Context pack JSON paths are orientation references only; do not call MCP resources/read for them unless LCR explicitly exposes a matching MCP server.",
                 "- Do not use generated/sliced assets in game code until they are promoted into the game manifest.",
                 "- If context seems stale after thread switching, ask for or trigger a project-context refresh before continuing.",
                 "- Ignore older auto-injected Project/Asset Context Pack blocks when this pack has a newer generated_at timestamp.",
