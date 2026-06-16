@@ -562,7 +562,7 @@ async function launchBrowser() {
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                timeout=25,
+                timeout=self._browser_smoke_subprocess_timeout(actions or []),
                 check=False,
             )
             raw = (completed.stdout or "").strip().splitlines()[-1] if completed.stdout.strip() else "{}"
@@ -600,6 +600,24 @@ async function launchBrowser() {
             record["status"] = "fail"
         if result.get("error"):
             record["screenshot_error"] = str(result.get("error"))[:300]
+
+    def _browser_smoke_subprocess_timeout(self, actions: list[dict[str, Any]]) -> float:
+        # Keep the outer watchdog slightly above the in-page action budget.
+        # Otherwise a legitimate 30s Playwright action can be killed by the
+        # Python subprocess timeout before Playwright records screenshot evidence.
+        seconds = 20.0
+        for action in actions:
+            kind = str(action.get("type") or "")
+            timeout_sec = max(float(action.get("timeout_ms") or 3000) / 1000.0, 0.1)
+            if kind == "wait_ms":
+                seconds += max(float(action.get("ms") or 0) / 1000.0, 0.0)
+            elif kind == "click_text_until_absent":
+                settle_sec = max(float(action.get("settle_ms") or 250) / 1000.0, 0.0)
+                max_clicks = max(int(action.get("max_clicks") or 20), 1)
+                seconds += timeout_sec + min(max_clicks * settle_sec, 20.0)
+            else:
+                seconds += timeout_sec
+        return min(max(seconds, 25.0), 240.0)
 
     def _desktop_root(self) -> Path | None:
         override = __import__("os").environ.get("LOCAL_CODEX_ROUTER_DESKTOP_ROOT")

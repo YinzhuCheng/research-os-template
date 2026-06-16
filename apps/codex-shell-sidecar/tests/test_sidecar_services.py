@@ -2763,6 +2763,10 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertEqual(actions[2]["type"], "wait_for_text_absent")
             self.assertEqual(actions[3]["type"], "expect_selector")
             self.assertEqual(actions[4]["text"], "Floor")
+            long_timeout = service._browser_smoke_subprocess_timeout(  # noqa: SLF001
+                [{"type": "click_text_until_absent", "text": "Next", "timeout_ms": 30000, "max_clicks": 30, "settle_ms": 250}]
+            )
+            self.assertGreaterEqual(long_timeout, 45)
             with self.assertRaises(ValueError):
                 service._browser_actions([{"type": "click_selector", "selector": "Bearer unit-test-token"}])  # noqa: SLF001
 
