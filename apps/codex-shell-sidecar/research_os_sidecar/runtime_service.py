@@ -188,6 +188,7 @@ class RuntimeService:
         thread = self._decorate_thread(dict(result.get("thread") or {}))
         thread = self._overlay_dynamic_tool_events(thread)
         thread = self._decorate_dynamic_tool_evidence(thread)
+        thread = self._decorate_turn_completion_quality(thread)
         self._cache_thread_entry(thread["id"], {"name": thread.get("name")})
         return {"thread": thread}
 
@@ -2927,6 +2928,59 @@ for host in candidates:
             if item not in deduped:
                 deduped.append(item)
         return deduped
+
+    def _decorate_turn_completion_quality(self, thread: dict[str, Any]) -> dict[str, Any]:
+        turns = list(thread.get("turns") or [])
+        if not turns:
+            return thread
+        decorated_turns: list[dict[str, Any]] = []
+        changed = False
+        for turn in turns:
+            if not isinstance(turn, dict):
+                decorated_turns.append(turn)
+                continue
+            quality = self._turn_completion_quality(turn)
+            if quality:
+                decorated_turns.append({**turn, "lcrCompletionQuality": quality})
+                changed = True
+            else:
+                decorated_turns.append(turn)
+        return {**thread, "turns": decorated_turns} if changed else thread
+
+    def _turn_completion_quality(self, turn: dict[str, Any]) -> dict[str, Any] | None:
+        if str(turn.get("status") or "") != "completed":
+            return None
+        items = [item for item in list(turn.get("items") or []) if isinstance(item, dict)]
+        tool_count = sum(1 for item in items if item.get("type") in {"dynamicToolCall", "commandExecution"})
+        if tool_count == 0:
+            return None
+        agent_texts = [str(item.get("text") or "").strip() for item in items if item.get("type") == "agentMessage"]
+        nonempty = [text for text in agent_texts if text]
+        max_chars = max((len(text) for text in nonempty), default=0)
+        final_text = nonempty[-1] if nonempty else ""
+        if max_chars >= 240:
+            return None
+        weak_markers = (
+            "let me",
+            "now i",
+            "now let",
+            "i will",
+            "i'll",
+            "produce the",
+            "start by",
+        )
+        looks_like_progress_note = any(marker in final_text.lower() for marker in weak_markers)
+        if not looks_like_progress_note and max_chars >= 120:
+            return None
+        return {
+            "status": "suspect",
+            "reason": "completed_with_short_or_progress_only_final_after_verified_activity",
+            "tool_item_count": tool_count,
+            "agent_message_count": len(nonempty),
+            "max_agent_chars": max_chars,
+            "final_preview": final_text[:240],
+            "recommended_action": "continue_or_retry_final_answer",
+        }
 
     def _thread_cache_name(self, thread_id: str) -> str | None:
         if not thread_id:

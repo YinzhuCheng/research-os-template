@@ -1301,6 +1301,95 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn("command-event verified", evidence["label"])
             self.assertIn("exit code: 0", evidence["summary"])
 
+    def test_runtime_read_thread_flags_completed_tool_turn_with_progress_only_final(self) -> None:
+        class FakeClient:
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                if method == "thread/read":
+                    return {
+                        "thread": {
+                            "id": "thread-1",
+                            "turns": [
+                                {
+                                    "id": "turn-1",
+                                    "status": "completed",
+                                    "items": [
+                                        {"type": "userMessage", "id": "user-1", "content": []},
+                                        {
+                                            "type": "dynamicToolCall",
+                                            "id": "tool-1",
+                                            "tool": "lcr_web_research_brief",
+                                            "status": "completed",
+                                            "contentItems": [{"type": "inputText", "text": '{"tool_event_verified": true}'}],
+                                        },
+                                        {"type": "agentMessage", "id": "agent-1", "text": "Now let me produce the complete decision-complete plan."},
+                                    ],
+                                }
+                            ],
+                        }
+                    }
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._ensure_client = lambda _status: FakeClient()  # type: ignore[method-assign]
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True}  # type: ignore[method-assign]
+
+            result = runtime.read_thread({"profile_id": "p"}, "thread-1")
+
+            quality = result["thread"]["turns"][0]["lcrCompletionQuality"]
+            self.assertEqual(quality["status"], "suspect")
+            self.assertEqual(quality["recommended_action"], "continue_or_retry_final_answer")
+            self.assertEqual(quality["tool_item_count"], 1)
+
+    def test_runtime_read_thread_does_not_flag_completed_tool_turn_with_substantive_final(self) -> None:
+        substantive = "Decision plan: " + ("use background art plus invisible collision grid. " * 8)
+
+        class FakeClient:
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                if method == "thread/read":
+                    return {
+                        "thread": {
+                            "id": "thread-1",
+                            "turns": [
+                                {
+                                    "id": "turn-1",
+                                    "status": "completed",
+                                    "items": [
+                                        {"type": "userMessage", "id": "user-1", "content": []},
+                                        {
+                                            "type": "dynamicToolCall",
+                                            "id": "tool-1",
+                                            "tool": "lcr_web_research_brief",
+                                            "status": "completed",
+                                            "contentItems": [{"type": "inputText", "text": '{"tool_event_verified": true}'}],
+                                        },
+                                        {"type": "agentMessage", "id": "agent-1", "text": substantive},
+                                    ],
+                                }
+                            ],
+                        }
+                    }
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._ensure_client = lambda _status: FakeClient()  # type: ignore[method-assign]
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True}  # type: ignore[method-assign]
+
+            result = runtime.read_thread({"profile_id": "p"}, "thread-1")
+
+            self.assertNotIn("lcrCompletionQuality", result["thread"]["turns"][0])
+
     def test_runtime_yunwu_tool_usage_refreshes_asset_registry(self) -> None:
         class FakeAssetRegistry:
             def __init__(self) -> None:

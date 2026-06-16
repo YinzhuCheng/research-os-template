@@ -1,6 +1,6 @@
 # LCR Magic Tower Dogfood Release Plan
 
-Last revised: 2026-06-16 15:40 +08:00
+Last revised: 2026-06-16 16:05 +08:00
 
 ## Objective
 
@@ -453,6 +453,20 @@ Latest LCR evidence-display hardening from 2026-06-16 15:40:
   - Codex `commandExecution` receives the same UI-ready evidence shape.
 - Full sidecar unit tests after the fix: `134` passed.
 - Isolation check after the fix: official `C:\Users\cyz19\.codex\config.toml` timestamp remained `2026-06-15 09:42:47`; the magic-tower workspace still contains the pre-existing empty `.codex` audit artifact from `2026-06-16 12:16:09`, but this pass did not create or modify it.
+
+Latest DS planning failure and completion-quality fix from 2026-06-16 16:05:
+
+- After the evidence-display fix, LCR started a new DeepSeek planning turn for the seamless/free-map route.
+- A lightweight checkpoint was created first: `2026-06-16T154410-220618-0800-before-DS-seamless-map-planning-after-verified-evi`.
+- DeepSeek successfully used LCR web tools:
+  - `lcr_web_research_brief` record `research-brief-20260616T154649631896-113e85`;
+  - `lcr_web_search_batch` record `search-batch-20260616T154707516285-0eaf66`.
+- DeepSeek also triggered a structured `request_user_input` modal about the technical route. The selected answer was the recommended hybrid route: keep the invisible grid/DOM/collision architecture, render a seamless per-floor background art layer, and place transparent sprites/props above it.
+- The turn still failed as a useful planning artifact: it completed after about `893937 ms`, but the final agent message only said it would produce the plan and did not include the plan.
+- Dogfood milestone recorded this as `retry` in `.lcr/dogfood_run.json`; do not treat the turn as a successful design round.
+- LCR now flags this pattern in `thread/read`: completed turns with verified tool/command activity but only short progress-note final messages get `lcrCompletionQuality.status=suspect` and `recommended_action=continue_or_retry_final_answer`.
+- Full sidecar unit tests after the fix: `136` passed.
+- The LCR web-search health result is mixed: the tools were callable and verified, but search result quality was weak for specialized game-dev queries. DS or the API manager should improve query templates and source prioritization before relying on the brief.
 
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
