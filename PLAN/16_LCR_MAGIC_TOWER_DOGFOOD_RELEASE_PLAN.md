@@ -293,6 +293,19 @@ Latest evidence from the 2026-06-16 noon transparent-asset and verification pass
   - `Start-Process -ArgumentList` must quote seed-root paths with spaces; otherwise source sidecar startup silently exits.
   - browser smoke can now support longer flows, but DS/Kimi must still use meaningful actions that reach the actual gameplay state, not just title/dialog screens.
 
+Latest evidence from the 2026-06-16 13:00 Yunwu MCP retry and DS tool-drift check:
+
+- A DeepSeek bounded visual-refinement turn successfully used the LCR dynamic `lcr_browser_smoke` tool twice, but then drifted into requesting ad-hoc WSL `python3 -m http.server` approvals after file-URL smoke did not satisfy it.
+- The manual supervisor declined the first server approval and interrupted the turn after DS requested a second server on another port. This prevented budget waste and records a tool-selection recovery gap rather than a game-design failure.
+- LCR observation: `thread/read` shows `dynamicToolCall` items as completed but does not expose the human-readable tool result enough for quick UI/debug review. Tool evidence should be easier to inspect as `tool-event verified`.
+- Yunwu image MCP was retried directly through `/api/runtime/mcp/tool-call` with `yunwu_image_transparent_asset`.
+- New asset:
+  - `yunwu-1781586042-ef792b2d`, purpose `retry_transparent_forest_overlay_small_cluster`, PNG/RGBA, `has_alpha=true`, transparent ratio about `0.837`, actual count `1/1`, transparency status `passed`.
+  - Local path: `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781586042-ef792b2d.png`.
+- Visual assessment: the asset is materially better than earlier RGB terrain sheets and works as a small Japanese-anime/JRPG forest-edge overlay candidate, but it still has a soft glow/haze and should be Kimi/DS-reviewed before promotion.
+- Dogfood milestone recorded: `Yunwu MCP transparent forest overlay retry after DS tool drift`.
+- New LCR bug/risk from the same run: DS's `file:///mnt/d/...` browser-smoke call failed in Playwright with `ERR_FILE_NOT_FOUND`, so future browser-smoke tool result text should explain the host-path normalization requirement and recommend local app URLs or LCR-normalized paths instead of ad-hoc HTTP servers.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.
