@@ -113,6 +113,62 @@ class ProjectService:
         self._remember_current_project(None)
         return {"closed": True}
 
+    def refresh_current_project(self) -> dict[str, Any] | None:
+        if not self.current_project:
+            return None
+        project_file = str(self.current_project.get("project_file") or "").strip()
+        if not project_file:
+            return self.current_project
+        path = Path(project_file).expanduser()
+        if not path.exists():
+            return self.current_project
+        payload = read_json(path, {})
+        if not isinstance(payload, dict) or not payload:
+            return self.current_project
+        payload.setdefault("recent_threads", [])
+        payload.setdefault("current_task_id", None)
+        payload.setdefault("recent_tasks", [])
+        payload["ui_preferences"] = self._normalize_ui_preferences(dict(payload.get("ui_preferences") or {}))
+        self.current_project = payload
+        return self.current_project
+
+    def reconcile_task_projection(self, task: dict[str, Any] | None) -> dict[str, Any] | None:
+        """Keep the project-level task/thread pointers aligned with live task state.
+
+        The UI and several sidecar routes still read project.current_thread_id as the
+        default thread focus. Make the projection explicit so a stale project snapshot
+        cannot drift away from the real active provider thread for the visible task.
+        """
+        project = self.refresh_current_project()
+        if not project or not task:
+            return project
+        task_id = str(task.get("task_id") or "").strip() or None
+        active_thread = str(task.get("active_provider_thread_id") or "").strip() or None
+        recent_tasks = [
+            item
+            for item in list(project.get("recent_tasks") or [])
+            if isinstance(item, str) and item != task_id
+        ]
+        if task_id:
+            recent_tasks.insert(0, task_id)
+        recent_threads = [
+            item
+            for item in list(project.get("recent_threads") or [])
+            if isinstance(item, str) and item != active_thread
+        ]
+        if active_thread:
+            recent_threads.insert(0, active_thread)
+        patch = {
+            "current_task_id": task_id,
+            "recent_tasks": recent_tasks[:50],
+            "current_thread_id": active_thread,
+            "recent_threads": recent_threads[:20],
+        }
+        needs_update = any(project.get(key) != value for key, value in patch.items())
+        if needs_update:
+            return self.update_project(patch)
+        return project
+
     def list_recent(self) -> dict[str, Any]:
         payload = read_json(self.store_path, {"projects": []})
         projects = []

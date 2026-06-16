@@ -6,6 +6,7 @@ import json
 import mimetypes
 import os
 import re
+import ssl
 import struct
 import tempfile
 import time
@@ -60,6 +61,8 @@ MAX_YUNWU_IMAGE_CONCURRENCY = 5
 MAX_GENERATION_REFERENCE_URLS = 5
 MAX_EDIT_IMAGES = 15
 TRANSPARENT_ALPHA_MIN_RATIO = 0.01
+YUNWU_IMAGE_RETRY_ATTEMPTS = 3
+YUNWU_IMAGE_RETRY_BASE_DELAY_SEC = 1.0
 _IMAGE_URL_PATTERN = re.compile(r"https?://[^\s)\"']+\.(?:png|jpe?g|webp)(?:\?[^\s)\"']*)?", re.IGNORECASE)
 
 
@@ -565,15 +568,49 @@ class YunwuImageService:
         return self._open_json(request, timeout_sec)
 
     def _open_json(self, request: urllib.request.Request, timeout_sec: int) -> dict[str, Any]:
-        try:
-            with urllib.request.urlopen(request, timeout=timeout_sec) as response:
-                raw = response.read()
-                return json.loads(raw.decode("utf-8"))
-        except urllib.error.HTTPError as exc:
-            raw = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"Yunwu image API returned HTTP {exc.code}: {self._safe_excerpt(raw)}") from exc
-        except urllib.error.URLError as exc:
-            raise RuntimeError(f"Yunwu image API connection failed: {exc.reason}") from exc
+        attempt = 0
+        while True:
+            attempt += 1
+            try:
+                with urllib.request.urlopen(request, timeout=timeout_sec) as response:
+                    raw = response.read()
+                    return json.loads(raw.decode("utf-8"))
+            except urllib.error.HTTPError as exc:
+                raw = exc.read().decode("utf-8", errors="replace")
+                if attempt < YUNWU_IMAGE_RETRY_ATTEMPTS and self._retryable_http_status(exc.code):
+                    time.sleep(self._retry_delay(attempt))
+                    continue
+                raise RuntimeError(f"Yunwu image API returned HTTP {exc.code}: {self._safe_excerpt(raw)}") from exc
+            except urllib.error.URLError as exc:
+                if attempt < YUNWU_IMAGE_RETRY_ATTEMPTS and self._retryable_url_error(exc):
+                    time.sleep(self._retry_delay(attempt))
+                    continue
+                raise RuntimeError(f"Yunwu image API connection failed: {exc.reason}") from exc
+
+    def _retryable_http_status(self, status_code: int) -> bool:
+        return int(status_code) in {408, 429, 500, 502, 503, 504}
+
+    def _retryable_url_error(self, exc: urllib.error.URLError) -> bool:
+        reason = exc.reason
+        if isinstance(reason, ssl.SSLError):
+            return True
+        text = str(reason or "").lower()
+        return any(
+            token in text
+            for token in (
+                "unexpected eof",
+                "eof occurred in violation of protocol",
+                "connection reset",
+                "timed out",
+                "timeout",
+                "temporary failure",
+                "tls",
+                "ssl",
+            )
+        )
+
+    def _retry_delay(self, attempt: int) -> float:
+        return YUNWU_IMAGE_RETRY_BASE_DELAY_SEC * (2 ** max(attempt - 1, 0))
 
     def _resolve_api_key(self, api_key: str | None) -> str:
         key = str(api_key or os.environ.get("YUNWU_API_KEY") or os.environ.get("YUNWU_IMAGE_API_KEY") or "").strip()

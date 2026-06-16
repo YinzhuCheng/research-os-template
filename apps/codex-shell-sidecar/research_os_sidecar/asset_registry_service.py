@@ -755,7 +755,13 @@ class AssetRegistryService:
             item["kind"] = kind
             item["asset_type"] = str(item.get("asset_type") or kind)
             item["manifest_keys"] = list(item.get("manifest_keys") or [])
+            item["manifest_key"] = str(item.get("manifest_key") or (item["manifest_keys"][0] if item["manifest_keys"] else ""))
             item["game_refs"] = list(item.get("game_refs") or [])
+            item["in_use"] = bool(
+                item.get("in_use")
+                or str(item.get("integration_status") or "").strip().lower() == "in_use"
+                or str(item.get("status") or "").strip().lower() == "in_use"
+            )
         registry.update(
             {
                 "schema_version": str(registry.get("schema_version") or REGISTRY_SCHEMA_VERSION),
@@ -778,9 +784,15 @@ class AssetRegistryService:
             "status": item.get("status"),
             "quality_status": item.get("quality_status"),
             "integration_status": item.get("integration_status"),
+            "in_use": bool(
+                item.get("in_use")
+                or str(item.get("integration_status") or "").strip().lower() == "in_use"
+                or str(item.get("status") or "").strip().lower() == "in_use"
+            ),
             "source_path": item.get("source_path"),
             "promoted_path": item.get("promoted_path"),
             "game_refs": item.get("game_refs") or [],
+            "manifest_key": str(item.get("manifest_key") or (list(item.get("manifest_keys") or [])[:1] or [""])[0]),
             "manifest_keys": item.get("manifest_keys") or [],
             "warnings": list(item.get("warnings") or [])[:5],
         }

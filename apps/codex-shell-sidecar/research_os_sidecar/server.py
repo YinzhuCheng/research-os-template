@@ -12,6 +12,7 @@ from typing import Any
 from .asset_registry_service import AssetRegistryService
 from .checkpoint_service import CheckpointService
 from .common import DEFAULT_PORT, public_error
+from .common import now_iso, read_json, write_json
 from .dogfood_run_service import DogfoodRunService
 from .image_prompt_strategy import build_rewrite_instruction, prompt_guides_payload
 from .isolation_audit_service import IsolationAuditService
@@ -186,7 +187,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"admin_session_token": self.context.admin_token})
                 return
             if path in {"/api/projects/current", "/api/project/current"}:
-                self.send_json({"project": self.context.projects.current_project})
+                task = self.context.tasks.current_task()
+                self.send_json({"project": self.context.projects.reconcile_task_projection(task)})
                 return
             if path == "/api/projects/recent":
                 self.send_json(self.context.projects.list_recent())
@@ -198,10 +200,11 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(self.context.tasks.snapshot())
                 return
             if path in {"/api/project/tasks/current", "/api/tasks/current"}:
+                task = self.context.tasks.current_task()
                 self.send_json(
                     {
-                        "task": self.context.tasks.current_task(),
-                        "project": self.context.projects.current_project,
+                        "task": task,
+                        "project": self.context.projects.reconcile_task_projection(task),
                     }
                 )
                 return
@@ -573,7 +576,20 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(self.context.dogfood.browser_smoke(payload))
                 return
             if path == "/api/dogfood/milestone":
-                self.send_json(self.context.dogfood.add_milestone(payload))
+                result = self.context.dogfood.add_milestone(payload)
+                milestone = dict(result.get("milestone") or {})
+                run_path_raw = str(result.get("path") or "").strip()
+                if run_path_raw:
+                    run_path = Path(run_path_raw)
+                    run_payload = self.context.dogfood._normalize(read_json(run_path, {}))
+                    self.context.dogfood._apply_milestone_summary(run_payload, milestone)
+                    run_payload["updated_at"] = str(milestone.get("created_at") or now_iso())
+                    write_json(run_path, run_payload)
+                    result["run_summary"] = self.context.dogfood._run_summary(run_payload)
+                    if bool(payload.get("include_run")):
+                        result["run"] = run_payload
+                result["route_summary_synced"] = True
+                self.send_json(result)
                 return
             if path == "/api/dogfood/assets/rebuild":
                 self.send_json(self.context.assets.rebuild())

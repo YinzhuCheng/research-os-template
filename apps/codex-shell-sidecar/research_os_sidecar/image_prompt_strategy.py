@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import re
 from typing import Any
 
 
@@ -198,8 +199,32 @@ def infer_asset_mode(*, category_id: str, prompt: str, purpose: str = "", transp
         )
     ):
         return "background_plate"
-    if any(token in text for token in ("walk_", "walk ", "idle_", "idle ", "frame", "animation", "sprite sheet", "walkcycle", "walk cycle")):
+    if any(token in text for token in ("walk_", "walk ", "idle_", "idle ", "animation", "sprite sheet", "walkcycle", "walk cycle", "frame set", "frame strip", "frame sheet")):
         return "animation_frame_set"
+    if re.search(r"\b(?:idle|walk|run|attack|cast|hurt|hit|death|move)\s*frame[s]?\b", text):
+        return "animation_frame_set"
+    if any(
+        token in text
+        for token in (
+            " door",
+            "door ",
+            "door_",
+            "stairs",
+            "stair ",
+            "stair_",
+            "staircase",
+            "key",
+            "monster",
+            "enemy",
+            "gem",
+            "crystal",
+            "portrait",
+            "battle portrait",
+            "pickup",
+            "prop sprite",
+        )
+    ):
+        return "single_transparent_asset"
     if any(token in text for token in ("tileset", "tile set", "tilemap", "tile map", "autotile", "auto tile", "terrain", "grass", "forest", "wall", "floor", "ground", "path transition")):
         return "terrain_tileset"
     if any(token in text for token in ("hud", "icon", "ui", "pickup icon", "reward icon")):

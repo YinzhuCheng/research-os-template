@@ -383,6 +383,7 @@ class DogfoodRunService:
         if not milestone["label"]:
             raise ValueError("milestone label is required.")
         self._reject_secret_like(milestone)
+        self._apply_milestone_summary(current, milestone)
         if captures:
             milestone_capture_paths = set(capture_paths)
             current["captures"] = [
@@ -395,10 +396,16 @@ class DogfoodRunService:
             ][:80]
         current["milestones"] = [*list(current.get("milestones") or []), milestone][-80:]
         current["updated_at"] = now_iso()
-        write_json(self._path(), current)
-        response: dict[str, Any] = {"path": str(self._path()), "milestone": milestone, "run_summary": self._run_summary(current)}
+        path = self._path()
+        write_json(path, current)
+        persisted = self._normalize(read_json(path, {}))
+        if self._run_summary_needs_sync(persisted, milestone):
+            self._apply_milestone_summary(persisted, milestone)
+            persisted["updated_at"] = current["updated_at"]
+            write_json(path, persisted)
+        response: dict[str, Any] = {"path": str(path), "milestone": milestone, "run_summary": self._run_summary(persisted)}
         if bool(payload.get("include_run")):
-            response["run"] = current
+            response["run"] = persisted
         return response
 
     def _run_summary(self, run: dict[str, Any]) -> dict[str, Any]:
@@ -457,6 +464,31 @@ class DogfoodRunService:
             self._reject_secret_like(capture)
             run_captures.append(capture)
         return run_captures
+
+    def _apply_milestone_summary(self, run: dict[str, Any], milestone: dict[str, Any]) -> None:
+        if str(milestone.get("goal") or "").strip():
+            run["goal"] = str(milestone.get("goal") or "").strip()[:1000]
+        if str(milestone.get("provider") or "").strip():
+            run["current_provider"] = str(milestone.get("provider") or "").strip()[:80]
+        next_summary = str(milestone.get("next_step") or milestone.get("next_action") or "").strip()
+        if next_summary:
+            run["next_step"] = next_summary[:800]
+        if str(milestone.get("failure_reason") or "").strip():
+            run["blocker"] = str(milestone.get("failure_reason") or "").strip()[:800]
+        elif str(milestone.get("status") or "").strip().lower() in {"pass", "passed", "verified", "complete", "completed"}:
+            run["blocker"] = ""
+
+    def _run_summary_needs_sync(self, run: dict[str, Any], milestone: dict[str, Any]) -> bool:
+        goal = str(milestone.get("goal") or "").strip()
+        provider = str(milestone.get("provider") or "").strip()
+        next_summary = str(milestone.get("next_step") or milestone.get("next_action") or "").strip()
+        if goal and str(run.get("goal") or "").strip() != goal:
+            return True
+        if provider and str(run.get("current_provider") or "").strip() != provider[:80]:
+            return True
+        if next_summary and str(run.get("next_step") or "").strip() != next_summary[:800]:
+            return True
+        return False
 
     def add_note(self, note: str) -> None:
         current = self._normalize(read_json(self._path(), {}))

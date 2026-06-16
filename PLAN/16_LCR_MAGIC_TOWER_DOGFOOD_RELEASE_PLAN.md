@@ -1,6 +1,6 @@
 # LCR Magic Tower Dogfood Release Plan
 
-Last revised: 2026-06-16 20:09 +08:00
+Last revised: 2026-06-16 20:46 +08:00
 
 ## Objective
 
@@ -33,6 +33,15 @@ The operator should maintain LCR and supervise evidence. Game design, asset plan
   - `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781554341-b98d2203.png` (`stair/portal candidate`, generated through real `/api/runtime/mcp/tool-call`, `RGBA`, `actual_n=1`, `transparent_pixel_ratio=0.7380`, no validation warnings).
 - Latest visual evidence: `D:\workflow\magical-girl-tower-dogfood\captures\20260616-yunwu-mcp-retry-contact-sheet.png`.
 - Latest Yunwu MCP checker preview: `D:\workflow\magical-girl-tower-dogfood\captures\20260616-yunwu-mcp-retry-transparent-stair-checker.png`.
+- Latest prompt/background retry evidence from the live source sidecar:
+  - transparent door candidate: `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781613388-4c26c59b.png` (`RGBA`, `actual_n=1`, transparency passed, visually stronger than the older door batch but still more concept-prop than strict map tile).
+  - transparent stair candidate through real MCP tool-call: `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781613489-e8fd42f7.png` (`RGBA`, `actual_n=1`, transparency passed, materially usable as a forest-ruin stair entrance prop).
+  - continuous forest background plate through real MCP tool-call: `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781613600-f8537f8d.png` (`RGB`, `requested_background=auto`, `actual_n=1`, visually much closer to the desired “background plate + transparent props” route).
+  - transparent key candidate through the HTTP image route: `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\assets\generated\yunwu-1781613742-8f6e65bb.png` (`RGBA`, `actual_n=1`, transparency passed, still glow-heavy for map pickup use but a valid proof that the HTTP write route works when called correctly).
+- Latest asset-registry compatibility hardening:
+  - `asset_registry.json` rebuild now emits compatibility aliases `manifest_key` and `in_use` alongside canonical `manifest_keys` and `integration_status`.
+  - Live magical-tower registry after rebuild: `135` assets total, `44` promoted or in-use, `20` approved-unpromoted, `71` needs review.
+  - This closed a real dogfood diagnosis gap where generated/promoted assets were already in use but higher-level context readers misread the registry and treated them as forgotten.
 - Latest game smoke after the retry:
   - Title screenshot: `D:\workflow\magical-girl-tower-dogfood\captures\20260616-yunwu-door-after-registry-fix.png`.
   - Map screenshot: `D:\workflow\magical-girl-tower-dogfood\captures\20260616-yunwu-door-map-after-registry-fix.png`.
@@ -518,6 +527,24 @@ Latest Yunwu image prompt/background protocol hardening from 2026-06-16 20:09:
   - full sidecar unit test suite passed again: `143` tests.
   - live source sidecar on `8795` served the patched MCP tool path and wrote the new manifest fields `prompt_category`, `prompt_strategy_metadata.asset_mode`, and the correct `requested_background`.
 
+Latest Yunwu retry and asset-context compatibility pass from 2026-06-16 20:46:
+
+- Real MCP and HTTP retries confirmed the transport and protocol are both healthy:
+  - `yunwu_image_transparent_asset` through `/api/runtime/mcp/tool-call` produced `yunwu-1781613489-e8fd42f7.png` with `RGBA`, `has_alpha=true`, and a transparency ratio about `0.709`.
+  - `yunwu_image_generate` through `/api/runtime/mcp/tool-call` produced `yunwu-1781613600-f8537f8d.png` as a non-transparent forest background plate (`RGB`, `requested_background=auto`, `transparency_status=not_requested`).
+  - the admin-token-protected HTTP image route also succeeded when called correctly and produced `yunwu-1781613742-8f6e65bb.png`, proving the earlier 400 was a caller issue rather than a Yunwu/LCR image-service failure.
+- Prompt-mode diagnosis from the same pass:
+  - the transparent stair retry still showed that a phrase such as `forest-ruin stair entrance` could be misclassified as `terrain_tileset` when it should be a `single_transparent_asset`.
+  - `image_prompt_strategy.infer_asset_mode()` now prioritizes door/stair/key/monster/gem/pickup-like nouns before terrain keywords so single props are not accidentally rewritten as tilesets.
+  - targeted prompt-guide regression coverage now proves that a `yellow rune-sealed door sprite for a forest ruin map` stays in `single_transparent_asset` mode.
+- Asset-memory diagnosis from the same pass:
+  - the live magical-tower registry already contained real `integration_status=in_use` and `manifest_keys=[...]` links, but some LCR context/dogfood logic still expected flat `manifest_key` and `in_use` fields.
+  - the registry compatibility aliases now make those older readers truthful again without replacing the canonical richer schema.
+- Updated routing rule from evidence:
+  - use `yunwu_image_generate` for seamless/background plates and other opaque scene layers;
+  - use `yunwu_image_transparent_asset` for cutout props and sprites;
+  - do not treat `has_alpha=true` as sufficient evidence of in-game usability; Kimi or later screenshot review must still gate promotion.
+
 - Dogfood inspection on the current magic-tower task showed that the same effective DeepSeek/Kimi route could accumulate many live provider-thread records after restarts and recoveries.
 - This weakens the product goal that provider switching should feel like one continuous task with internal model handoff rather than a stack of unrelated chats.
 - `TaskService` now normalizes task state on read and prunes duplicate live provider threads by canonical route:
@@ -530,17 +557,17 @@ Latest Yunwu image prompt/background protocol hardening from 2026-06-16 20:09:
   - full sidecar unittest suite passed: `142` tests.
 - Operational next step: restart the source sidecar so the live magic-tower task on port `8795` picks up the normalized task state before the next DS/Kimi/Yunwu loop.
 
-1. Restart the source sidecar on port `8795` so the live magic-tower task picks up provider-thread normalization and the current task state becomes compact/readable again.
-2. Re-present provider secrets through env/vault after the restart, reopen the magic-tower `.lcrproj`, and confirm WSL runtime plus MCP/tool readiness.
-2. Ask DS for one bounded deep-research + implementation step that directly addresses the “still too blocky / still too much pasted overlay” critique while preserving current gameplay rules.
-3. DS must explicitly reference `asset_id`, `manifest key`, or concrete promoted asset paths from the Asset Context Pack; vague mentions like “use grass assets” do not count as successful context use.
+1. Keep the current source sidecar on port `8795` as the authoritative runtime and preserve its loaded provider secrets while continuing this loop.
+2. Ask DS for one bounded deep-research + implementation step that directly addresses the "still too blocky / still too much pasted overlay" critique while preserving current gameplay rules.
+3. DS must explicitly reference `asset_id`, `manifest_key`/`manifest_keys`, or concrete promoted asset paths from the Asset Context Pack; vague mentions like “use grass assets” do not count as successful context use.
 4. DS must use real LCR web tools for current map/autotile/background research and produce tool-event verified evidence, not only claimed research.
-5. DS must preserve working rules, run `node --check js/*.js`, and run browser smoke with a saved screenshot after the bounded change.
-6. Ask Kimi to judge the new screenshot or contact sheet against the previous map screenshots and answer with either an executable visual plan or a strict `pass/retry/redraw` style verdict.
-7. If the screenshot meaningfully improves, run Yunwu GPT-5.4 high as a playtest critic and feed the critique back to DS for route/UI/value priorities.
-8. If the map is still blocky, have DS plan and then use Yunwu image tools for a dedicated seamless background / autotile-supporting redraw route instead of piling more overlays on a bad base.
-9. Continue treating ignored `asset_id`/manifest paths, stale provider threads, unsupported context-mode values, missing tool evidence, or silently dropped visual assets as LCR bugs and fix the app before continuing.
-10. Keep task continuity compact: if the same effective provider/model/effort route reappears after restart or alias variation, prefer the newest live provider thread and keep only one missing diagnostic for that route.
+5. DS should treat `yunwu-1781613600-f8537f8d.png` or a successor background plate as the preferred base-map route, with transparent props layered above it; do not continue stacking transparent overlays on the old square-grid base.
+6. DS must preserve working rules, run `node --check js/*.js`, and run browser smoke with a saved screenshot after the bounded change.
+7. Ask Kimi to judge the new screenshot or contact sheet against the previous map screenshots and answer with either an executable visual plan or a strict `pass/retry/redraw` style verdict.
+8. If the screenshot meaningfully improves, run Yunwu GPT-5.4 high as a playtest critic and feed the critique back to DS for route/UI/value priorities.
+9. If the map is still blocky, have DS plan and then use Yunwu image tools for a dedicated seamless background / autotile-supporting redraw route instead of piling more overlays on a bad base.
+10. Continue treating ignored `asset_id`/manifest paths, stale provider threads, unsupported context-mode values, missing tool evidence, misclassified prompt modes, or silently dropped visual assets as LCR bugs and fix the app before continuing.
+11. Keep task continuity compact: if the same effective provider/model/effort route reappears after restart or alias variation, prefer the newest live provider thread and keep only one missing diagnostic for that route.
 
 ## Commit/Push Gate
 

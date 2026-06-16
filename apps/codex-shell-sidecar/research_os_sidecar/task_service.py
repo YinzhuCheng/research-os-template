@@ -108,6 +108,8 @@ class TaskService:
                 state["updated_at"] = now_iso()
                 self._write_state(state)
                 self._sync_project_current_task(normalized_task)
+            elif self._project_sync_needed(normalized_task):
+                self._sync_project_current_task(normalized_task)
             return normalized_task
         return None
 
@@ -421,11 +423,25 @@ class TaskService:
         if pruned_threads != original_threads:
             normalized["provider_threads"] = pruned_threads
             changed = True
-        active_thread_id = str(normalized.get("active_provider_thread_id") or "")
-        if active_thread_id and not any(str(item.get("thread_id") or "") == active_thread_id for item in pruned_threads):
-            normalized["active_provider_thread_id"] = None
+        preferred_active_thread_id = self._preferred_active_thread_id(normalized, pruned_threads)
+        if str(normalized.get("active_provider_thread_id") or "") != preferred_active_thread_id:
+            normalized["active_provider_thread_id"] = preferred_active_thread_id or None
             changed = True
         return normalized, changed
+
+    def _preferred_active_thread_id(self, task: dict[str, Any], provider_threads: list[dict[str, Any]]) -> str:
+        active_thread_id = str(task.get("active_provider_thread_id") or "").strip()
+        live_threads = [dict(item) for item in provider_threads if not item.get("missing_at")]
+        live_ids = {str(item.get("thread_id") or "").strip() for item in live_threads}
+        if active_thread_id and active_thread_id in live_ids:
+            return active_thread_id
+        project_thread_id = str((self._projects.current_project or {}).get("current_thread_id") or "").strip()
+        if project_thread_id and project_thread_id in live_ids:
+            return project_thread_id
+        if live_threads:
+            live_threads.sort(key=lambda item: str(item.get("updated_at") or ""), reverse=True)
+            return str(live_threads[0].get("thread_id") or "").strip()
+        return ""
 
     def _thread_context_hint(self, thread_id: str) -> dict[str, Any]:
         """Return secret-free task continuity hints for a known Codex thread."""
@@ -471,20 +487,16 @@ class TaskService:
         self._sync_project_current_task(task)
 
     def _sync_project_current_task(self, task: dict[str, Any]) -> None:
-        active_thread = task.get("active_provider_thread_id")
+        self._projects.reconcile_task_projection(task)
+
+    def _project_sync_needed(self, task: dict[str, Any]) -> bool:
         project = self._project()
-        recent_tasks = [item for item in list(project.get("recent_tasks") or []) if isinstance(item, str) and item != task.get("task_id")]
-        recent_tasks.insert(0, str(task.get("task_id")))
-        patch = {
-            "current_task_id": task.get("task_id"),
-            "recent_tasks": recent_tasks[:50],
-            "current_thread_id": active_thread,
-        }
-        recent_threads = [item for item in list(project.get("recent_threads") or []) if isinstance(item, str) and item != active_thread]
-        if active_thread:
-            recent_threads.insert(0, str(active_thread))
-        patch["recent_threads"] = recent_threads[:20]
-        self._projects.update_project(patch)
+        task_id = str(task.get("task_id") or "")
+        active_thread = str(task.get("active_provider_thread_id") or "")
+        return (
+            str(project.get("current_task_id") or "") != task_id
+            or str(project.get("current_thread_id") or "") != active_thread
+        )
 
     def _replace_task(self, tasks: list[dict[str, Any]], task: dict[str, Any]) -> list[dict[str, Any]]:
         return [task, *[item for item in tasks if item.get("task_id") != task.get("task_id")]][:100]

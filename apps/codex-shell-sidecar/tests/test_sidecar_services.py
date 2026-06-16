@@ -7,6 +7,7 @@ import io
 import json
 import hashlib
 import os
+import ssl
 import struct
 import sys
 import tempfile
@@ -17,6 +18,7 @@ import zipfile
 import zlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -253,6 +255,51 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             else:
                 os.environ[DEFAULT_RUNTIME_WSL_DISTRO_ENV] = previous_distro
             project_service_module._DEFAULT_RUNTIME_PREFS_CACHE = None
+
+    def test_project_service_refresh_current_project_reloads_disk_state(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            project = projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            path = Path(str(project["project_file"]))
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            payload["current_thread_id"] = "thread-refreshed"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+
+            refreshed = projects.refresh_current_project()
+
+            self.assertEqual(refreshed["current_thread_id"], "thread-refreshed")
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-refreshed")
+
+    def test_project_service_reconcile_task_projection_repairs_project_thread_focus(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            project = projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            path = Path(str(project["project_file"]))
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            payload["current_task_id"] = "task-a"
+            payload["current_thread_id"] = None
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            projects.current_project["current_task_id"] = "task-a"
+            projects.current_project["current_thread_id"] = None
+
+            reconciled = projects.reconcile_task_projection(
+                {
+                    "task_id": "task-a",
+                    "active_provider_thread_id": "thread-live",
+                }
+            )
+
+            disk_payload = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(reconciled["current_thread_id"], "thread-live")
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-live")
+            self.assertEqual(disk_payload["current_thread_id"], "thread-live")
+            self.assertEqual(disk_payload["recent_threads"][0], "thread-live")
 
     def test_task_service_tracks_provider_handoff_without_secrets(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -670,6 +717,114 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertEqual(len(current["provider_threads"]), 2)
             state_text = (workspace / ".lcr" / "tasks.json").read_text(encoding="utf-8")
             self.assertNotIn("thread-deepseek-new", state_text)
+
+    def test_current_task_restores_active_provider_thread_from_latest_live_thread(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-older-live",
+                settings={
+                    "profile_id": "deepseek-default",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "high",
+                    "permission_mode": "auto",
+                },
+            )
+            tasks.bind_thread(
+                thread_id="thread-newer-live",
+                settings={
+                    "profile_id": "deepseek-default",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-flash",
+                    "reasoning_effort": "high",
+                    "permission_mode": "auto",
+                },
+                make_active=False,
+            )
+            state_path = workspace / ".lcr" / "tasks.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["tasks"][0]["active_provider_thread_id"] = None
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+            projects.update_project({"current_thread_id": None})
+
+            current = tasks.current_task()
+
+            self.assertEqual(current["active_provider_thread_id"], "thread-newer-live")
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-newer-live")
+
+    def test_current_task_prefers_project_current_thread_when_it_is_live(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-deepseek",
+                settings={
+                    "profile_id": "deepseek-default",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "high",
+                    "permission_mode": "auto",
+                },
+            )
+            tasks.bind_thread(
+                thread_id="thread-kimi",
+                settings={
+                    "profile_id": "kimi-default",
+                    "provider_id": "kimi",
+                    "model": "kimi-k2.6",
+                    "reasoning_effort": "xhigh",
+                    "permission_mode": "auto",
+                },
+                make_active=False,
+            )
+            state_path = workspace / ".lcr" / "tasks.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["tasks"][0]["active_provider_thread_id"] = "thread-missing"
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+            projects.update_project({"current_thread_id": "thread-kimi"})
+
+            current = tasks.current_task()
+
+            self.assertEqual(current["active_provider_thread_id"], "thread-kimi")
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-kimi")
+
+    def test_current_task_resyncs_project_current_thread_even_when_task_state_is_already_normalized(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-deepseek",
+                settings={
+                    "profile_id": "deepseek-default",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "high",
+                    "permission_mode": "auto",
+                },
+            )
+            projects.update_project({"current_thread_id": None})
+
+            current = tasks.current_task()
+
+            self.assertEqual(current["active_provider_thread_id"], "thread-deepseek")
+            self.assertEqual(projects.current_project["current_thread_id"], "thread-deepseek")
 
     def test_start_turn_timeout_returns_background_pending_response(self) -> None:
         class FakeClient:
@@ -2633,6 +2788,63 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
         self.assertNotIn("alpha=0", background_prompt["prompt"])
         self.assertNotIn("transparent background only", background_prompt["prompt"].lower())
 
+    def test_yunwu_image_retries_ssl_eof_before_success(self) -> None:
+        class FakeResponse:
+            def __init__(self, body: bytes) -> None:
+                self._body = body
+
+            def __enter__(self) -> FakeResponse:
+                return self
+
+            def __exit__(self, exc_type, exc, tb) -> None:  # noqa: ANN001
+                return None
+
+            def read(self) -> bytes:
+                return self._body
+
+        attempts = {"count": 0}
+        body = json.dumps(
+            {
+                "created": 1776909189,
+                "data": [{"revised_prompt": "", "url": "https://example.test/retry-success.png"}],
+            }
+        ).encode("utf-8")
+
+        def fake_urlopen(request, timeout=0):  # noqa: ANN001
+            attempts["count"] += 1
+            if attempts["count"] < 3:
+                raise urllib.error.URLError(ssl.SSLEOFError(8, "EOF occurred in violation of protocol"))
+            return FakeResponse(body)
+
+        service = YunwuImageService("https://example.test/v1")
+        with patch("urllib.request.urlopen", side_effect=fake_urlopen), patch(
+            "research_os_sidecar.yunwu_image_service.time.sleep",
+            return_value=None,
+        ) as sleep_mock:
+            result = service.test_connectivity(api_key="unit-token-value")
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["data"][0]["url"], "https://example.test/retry-success.png")
+        self.assertEqual(attempts["count"], 3)
+        self.assertEqual(sleep_mock.call_count, 2)
+        door_prompt = apply_prompt_guide(
+            category_id="game_asset_japanese_anime",
+            user_prompt="yellow rune-sealed door sprite for a forest ruin map",
+            purpose="yellow_door_retry_smoke",
+            transparent_background=True,
+        )
+        self.assertEqual(door_prompt["asset_mode"], "single_transparent_asset")
+        self.assertIn("single_transparent_asset", door_prompt["prompt"])
+        self.assertIn("transparent", door_prompt["prompt"].lower())
+        no_frame_prompt = apply_prompt_guide(
+            category_id="game_asset_japanese_anime",
+            user_prompt="single yellow key sprite, no frame, no extra props, transparent background",
+            purpose="yellow_key_retry_smoke",
+            transparent_background=True,
+        )
+        self.assertEqual(no_frame_prompt["asset_mode"], "single_transparent_asset")
+        self.assertNotIn("Asset mode: animation_frame_set.", no_frame_prompt["prompt"])
+
         with tempfile.TemporaryDirectory() as temp:
             image_path = Path(temp) / "input.png"
             mask_path = Path(temp) / "mask.png"
@@ -2749,6 +2961,8 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             )
             self.assertEqual(heroine["asset_type"], "heroine")
             self.assertEqual(heroine["integration_status"], "in_use")
+            self.assertTrue(heroine["in_use"])
+            self.assertEqual(heroine["manifest_key"], "sprites.heroine.walk_down")
             self.assertIn("sprites.heroine.walk_down", heroine["manifest_keys"])
             self.assertIn("sprites/heroine_walk_down_0.png", heroine["game_refs"])
             self.assertIn("manifest=sprites.heroine.walk_down", rebuilt_after_promote["context_pack"]["text"])
@@ -5719,6 +5933,9 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertEqual(milestone["milestone"]["captures"][0]["label"], "gameplay")
             self.assertEqual(milestone["milestone"]["captures"][0]["provider"], "deepseek")
             self.assertEqual(milestone["milestone"]["validation_result"]["fatal_console_errors"], "0")
+            self.assertEqual(milestone["run_summary"]["goal"], "Build tower game")
+            self.assertEqual(milestone["run_summary"]["current_provider"], "kimi")
+            self.assertEqual(milestone["run_summary"]["next_step"], "continue visual pass")
             self.assertEqual(milestone["run_summary"]["latest_capture"]["path"], str(screenshot))
             self.assertEqual(milestone["run_summary"]["latest_capture"]["label"], "gameplay")
             self.assertEqual(milestone["run_summary"]["latest_capture"]["provider"], "deepseek")
@@ -5735,8 +5952,70 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
                 }
             )
             self.assertEqual(audit["milestone"]["label"], "isolation audit")
+            failure = dogfood.add_milestone(
+                {
+                    "label": "failing smoke",
+                    "provider": "deepseek",
+                    "status": "retry",
+                    "failure_reason": "map still too blocky",
+                }
+            )
+            self.assertEqual(failure["run_summary"]["current_provider"], "deepseek")
+            self.assertEqual(failure["run_summary"]["blocker"], "map still too blocky")
+            recovered = dogfood.add_milestone(
+                {
+                    "label": "recovered smoke",
+                    "provider": "yunwu",
+                    "status": "verified",
+                }
+            )
+            self.assertEqual(recovered["run_summary"]["current_provider"], "yunwu")
+            self.assertEqual(recovered["run_summary"]["blocker"], "")
             with self.assertRaises(ValueError):
                 dogfood.add_milestone({"label": "bad", "validation": ["Bearer unit-test-token"]})
+
+    def test_dogfood_add_milestone_repairs_stale_summary_after_first_write(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            dogfood = DogfoodRunService(projects)
+
+            original_write_json = common_module.write_json
+            call_count = {"value": 0}
+
+            def flaky_write_json(path: Path, payload: object) -> None:
+                call_count["value"] += 1
+                mutated = json.loads(json.dumps(payload))
+                if call_count["value"] == 1 and path.name == "dogfood_run.json":
+                    mutated["goal"] = "STALE GOAL"
+                    mutated["current_provider"] = "stale"
+                    mutated["next_step"] = "stale next"
+                original_write_json(path, mutated)
+
+            with patch("research_os_sidecar.dogfood_run_service.write_json", flaky_write_json):
+                milestone = dogfood.add_milestone(
+                    {
+                        "label": "repair stale summary",
+                        "provider": "deepseek",
+                        "model": "deepseek-v4-pro",
+                        "goal": "Fresh goal",
+                        "plan_step": "repair",
+                        "status": "verified",
+                        "next_step": "Fresh next step",
+                    }
+                )
+
+            self.assertGreaterEqual(call_count["value"], 2)
+            self.assertEqual(milestone["run_summary"]["goal"], "Fresh goal")
+            self.assertEqual(milestone["run_summary"]["current_provider"], "deepseek")
+            self.assertEqual(milestone["run_summary"]["next_step"], "Fresh next step")
+            run_data = json.loads((workspace / ".lcr" / "dogfood_run.json").read_text(encoding="utf-8"))
+            self.assertEqual(run_data["goal"], "Fresh goal")
+            self.assertEqual(run_data["current_provider"], "deepseek")
+            self.assertEqual(run_data["next_step"], "Fresh next step")
 
     def test_dogfood_browser_smoke_accepts_wsl_style_file_url(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
