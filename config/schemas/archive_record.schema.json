@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-desktop.local/schemas/archive_record.schema.json",
+  "title": "Research OS Archive Record",
+  "type": "object",
+  "required": [
+    "archive_id",
+    "created_at",
+    "phase",
+    "macro_phase",
+    "git_commit",
+    "description",
+    "status"
+  ],
+  "properties": {
+    "archive_id": { "type": "string", "pattern": "^ARCH-[0-9A-Za-z_-]+$" },
+    "created_at": { "type": "string" },
+    "phase": { "type": "string" },
+    "macro_phase": { "enum": ["initialization", "research_loop", "final_product", "unknown"] },
+    "git_commit": { "type": "string", "minLength": 7 },
+    "git_branch": { "type": "string" },
+    "description": { "type": "string", "minLength": 1 },
+    "user_free_form": { "type": "string" },
+    "changed_paths": { "type": "array", "items": { "type": "string" } },
+    "public_index_path": { "type": "string" },
+    "private_paths_included": { "const": false },
+    "secrets_scan": { "enum": ["passed", "failed", "not_run"] },
+    "status": { "enum": ["preview", "created", "blocked", "failed"] }
+  },
+  "additionalProperties": true
+}

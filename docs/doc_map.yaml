@@ -1,0 +1,113 @@
+doc_map_id: DOCMAP-0001
+updated_at: "2026-06-07"
+language_mode: en-only
+entrypoints:
+  desktop_app:
+    title: "Research OS Desktop App"
+    path: "docs/desktop-app.md"
+    audience: "Researchers using .rosproj desktop projects and maintainers packaging the app"
+  architecture:
+    title: "Architecture"
+    path: "docs/architecture.md"
+    audience: "Maintainers and future agents"
+  security_risk:
+    title: "Security and Risk Register"
+    path: "docs/security-risk.md"
+    audience: "Maintainers auditing permissions, secrets, and runtime boundaries"
+  testing:
+    title: "Testing Guide"
+    path: "docs/testing.md"
+    audience: "Maintainers validating desktop, sidecar, and repository checks"
+  packaging:
+    title: "Packaging Guide"
+    path: "docs/packaging.md"
+    audience: "Maintainers building Windows bundles"
+  migration:
+    title: "Migration Notes"
+    path: "docs/migration.md"
+    audience: "Maintainers tracking removal of browser and HTML legacy"
+  domain_profiles:
+    title: "Domain Profiles"
+    path: "docs/domain-profiles.md"
+    audience: "Researchers and agents routing domain-specific work"
+  process_contract:
+    title: "Process Contract"
+    path: "docs/process-contract.md"
+    audience: "Researchers and agents following the canonical automation flow"
+environment:
+  guide: "docs/environment.md"
+  installer: "scripts/install_environment.ps1"
+  checker: "scripts/check_environment.ps1"
+core_controls:
+  work_order: "CONTROL/work_order.yaml"
+  phase_gate: "CONTROL/phase_gate.yaml"
+  project_config: "config/research_project.yaml"
+  research_flow: "config/research_flow.yaml"
+  repository_rules: "AGENTS.md"
+desktop_app:
+  guide: "docs/desktop-app.md"
+  tauri_app: "apps/research-os-desktop/"
+  sidecar: "apps/research-os-sidecar/"
+  project_extension: ".rosproj"
+  checker: "scripts/check_desktop_app.ps1"
+  runtime_boundary: "React UI -> Python sidecar -> optional official Codex app-server/SDK"
+state:
+  public_state: "PUBLIC/research_state.json"
+  public_state_schema: "config/schemas/research_state.schema.json"
+  intake_queue: "CONTROL/intake_queue/"
+  intake_schema: "config/schemas/intake_packet.schema.json"
+  intake_template: "templates/yaml/intake_packet.template.yaml"
+choice_prompt:
+  schema: "config/schemas/choice_prompt.schema.json"
+  template: "templates/yaml/choice_prompt.template.yaml"
+final_products:
+  plan_schema: "config/schemas/final_product_plan.schema.json"
+  plan_template: "templates/yaml/final_product_plan.template.yaml"
+  coordinator_skill: "skills/research-os-final-product/SKILL.md"
+  report_skill: "skills/research-os-report-authoring/SKILL.md"
+  software_skill: "skills/research-os-software-productization/SKILL.md"
+  paper_skill: "skills/research-os-paper-authoring/SKILL.md"
+archives:
+  archive_schema: "config/schemas/archive_record.schema.json"
+  archive_template: "templates/yaml/archive_record.template.yaml"
+  public_index: "PUBLIC/archive_index.json"
+  provenance_index: "PROVENANCE/archive_index.jsonl"
+  create_script: "scripts/create_archive_snapshot.ps1"
+  validator: "scripts/check_archives.ps1"
+audit:
+  run_manifest: "PROVENANCE/run_manifest.jsonl"
+  resource_ledger: "PROVENANCE/resource_ledger.jsonl"
+  live_evidence: "PROVENANCE/live_evidence_snapshot.yaml"
+  claim_evidence: "PUBLIC/claim_evidence_matrix.yaml"
+skills:
+  source: "skills/"
+  repo_scoped_mirror: ".agents/skills/"
+  install_script: "scripts/install_skills.ps1"
+domains:
+  domain_profiles: "domain_profiles/"
+  profile_schema: "config/schemas/domain_profile.schema.json"
+  overview: "docs/domain-profiles.md"
+research_kernel:
+  schema: "config/schemas/research_kernel.schema.json"
+  template: "templates/yaml/research_kernel.template.yaml"
+  cycle_template: "templates/research_kernel/research_cycle.template.yaml"
+  research_kernel_schema: "config/schemas/research_kernel.schema.json"
+  research_kernel_template: "templates/yaml/research_kernel.template.yaml"
+integrations:
+  registry: "docs/integrations/components.yaml"
+  adapter_template: "templates/yaml/integration_component.template.yaml"
+adapters:
+  guide: "adapters/README.md"
+  contract_schema: "config/schemas/adapter_contract.schema.json"
+  contract_template: "templates/adapters/adapter_contract.template.yaml"
+validation:
+  desktop_app: "scripts/check_desktop_app.ps1"
+  environment: "scripts/check_environment.ps1"
+  schema: "scripts/validate_schemas.ps1"
+  strict_schema_instances: "scripts/check_strict_schema_instances.ps1"
+  skill: "scripts/validate_skills.ps1"
+  harness: "scripts/check_harness.ps1"
+  dashboard: "scripts/check_dashboard.ps1"
+  docs_links: "scripts/check_docs_links.ps1"
+  archives: "scripts/check_archives.ps1"
+  privacy: "scripts/scan_privacy.ps1"

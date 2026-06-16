@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-desktop.local/schemas/integration_component.schema.json",
+  "title": "Research OS Integration Component",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "source_url",
+    "license",
+    "accessed_at",
+    "adapter_status",
+    "research_os_phases",
+    "credential_env_vars",
+    "inputs",
+    "outputs",
+    "artifact_mapping",
+    "risks"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$" },
+    "name": { "type": "string", "minLength": 1 },
+    "source_url": { "type": "string", "format": "uri" },
+    "paper_url": { "type": "string" },
+    "license": { "type": "string", "minLength": 1 },
+    "accessed_at": { "type": "string" },
+    "adapter_status": { "type": "string" },
+    "research_os_phases": { "type": "array", "items": { "type": "string" } },
+    "install_reference": { "type": "string" },
+    "credential_env_vars": { "type": "array", "items": { "type": "string" } },
+    "inputs": { "type": "array", "items": { "type": "string" } },
+    "outputs": { "type": "array", "items": { "type": "string" } },
+    "artifact_mapping": { "type": "object" },
+    "risks": {
+      "type": "object",
+      "required": ["sandbox", "cost", "privacy", "external_write", "license"]
+    }
+  }
+}

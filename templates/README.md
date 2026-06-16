@@ -1,10 +1,13 @@
-# templates 区
+# Artifact Templates
 
-此目录保存可复制模板：
+This directory stores reusable Research OS artifact scaffolds. They describe artifact structure; they are not evidence and they are not runtime-private material.
 
-- Markdown 模板。
-- YAML 对象模板。
-- 资源预算、可行性验证和实时证据刷新模板。
-- LaTeX 投稿模板；仅在研究者指定论文/投稿目标后启用。
-- BibTeX 模板。
-- review/rebuttal 模板。
+Main groups:
+
+- `markdown/`: research briefs, evidence notes, feasibility reports, paper sections, review/rebuttal, and public export summaries.
+- `yaml/`: structured packets, choice prompts, final-product plans, resource budgets, live-evidence refreshes, intake packets, and research-kernel objects.
+- `domain/`: field-specific artifacts for mathematics, applied mathematics, machine learning, computer science, and statistics.
+- `research_kernel/`: the shared `candidate -> evaluator_contract -> evaluation_result -> belief_state -> search_trace/negative_result -> next_action_policy -> human_judgment_gate` loop.
+- `latex/`: optional paper scaffold used only after a paper-oriented work order or explicit researcher decision.
+
+`PUBLIC/paper/` should be generated from `templates/latex/` when needed; the default repository should not carry stale generated paper output.

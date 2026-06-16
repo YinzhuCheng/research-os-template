@@ -1,30 +1,66 @@
-project_id: research-os-template
-title: "Untitled Codex Research Project"
-language_mode: zh-first
+project_id: research-os-desktop
+title: "Research OS Desktop Seed Project"
+template_version: research-os-v4.7
+process_contract: config/research_flow.yaml
+language_mode: en-only
 intervention_level: low
 privacy_policy: public_private_split
 research_profile:
-  domain: unspecified
-  research_type: unspecified
-  uses_llm: unspecified
-  uses_machine_learning: unspecified
-  validation_object: unspecified
+  domain: neural_network_theory
+  research_type: mathematical_and_computational_analysis
+  uses_llm: manuscript_preparation_and_review
+  uses_machine_learning: theoretical_subject_matter
+  validation_object: exact_polynomial_representation_for_quadratic_activation_networks
 dissemination:
-  target_type: undecided
-  paper_enabled: false
-  target_name: null
-  output_format: null
+  target_type: paper
+  target_types:
+    - paper
+  paper_enabled: true
+  target_name: "Neural Networks"
+  target_section: "Mathematical and Computational Analysis"
+  article_type: "Full Article"
+  output_format: latex_pdf
+  final_product_enabled: true
+  final_product_tracks:
+    - paper
+  product_expectations:
+    paper:
+      target_venue: "Neural Networks"
+      target_section: "Mathematical and Computational Analysis"
+      article_type: "Full Article"
+      venue_template_path: "neural network/目标期刊模板与示例论文/templates/elsarticle"
+      comparable_papers:
+        - "neural network/目标期刊模板与示例论文/reference_papers/01_Echo_state_networks_are_universal__Grigoryeva_Ortega_2018_arXiv.pdf"
+        - "neural network/目标期刊模板与示例论文/reference_papers/02_Embedding_and_approximation_theorems_for_echo_state_networks__Hart_Hook_Dawes_2020_arXiv.pdf"
+        - "neural network/目标期刊模板与示例论文/reference_papers/03_Fading_memory_echo_state_networks_are_universal__Gonon_Ortega_2021_arXiv.pdf"
+      default_language: English
+    report:
+      output_formats:
+        - html
+        - latex_pdf
+        - ppt
+      emphasize_process: true
+      include_initial_data: true
+    software:
+      default_quality_target: "stable, engineered, polished, user-friendly"
+      user_free_form_expectations: null
+      documentation_required: true
+      preserve_intermediate_artifacts: true
+choice_policy:
+  recommended_option_required: true
+  free_form_required: true
+  applies_to_all_user_choices: true
 resource_budget:
-  currency: CNY
-  total_limit: null
+  currency: USD
+  total_limit: 200
   categories:
     time: null
     compute: null
     cloud: null
     lab: null
     material: null
-    api: null
-    model: null
+    api: 200
+    model: 200
     human: null
     other: null
 resource_guard:
@@ -38,12 +74,60 @@ feasibility_probe:
 live_evidence:
   required_for_time_sensitive_claims: true
   last_refresh: null
-current_phase: initialization
+current_macro_phase: initialization
+current_phase: initialization_intake
+current_phase_note: "The existing neural-network manuscript package is being reclassified as initial source material so English-mode Research OS Desktop can generate a structured research plan before final-product production."
 phase_gate_required: true
 public_export_enabled: false
+desktop_app:
+  enabled: true
+  app_root: apps/research-os-desktop
+  sidecar_root: apps/research-os-sidecar
+  active_ui_language: English
+  project_file_extension: ".rosproj"
+  sandbox_model: "sibling project directory is the only default writable root"
+  codex_runtime: "official Codex app-server/SDK, system-installed or user-installed"
+  required_runtime_provider: "yunwu"
+  required_runtime_model: "gpt-5.5"
+  required_reasoning_effort: "xhigh"
+  runtime_config_scope: "app-owned isolated CODEX_HOME; never project-local provider auth"
+  secrets_policy: "profile metadata stores references only; no API keys, tokens, cookies, or authorization headers in project files"
 created_from:
-  source_type: template
+  source_type: app_first_reinitialization_dogfooding
   source_paths: []
+dogfooding_policy:
+  treat_existing_manuscript_as: initial_material
+  require_whole_folder_intake: true
+  require_generated_project_context: true
+  require_english_mode_for_current_workflow: true
+  require_online_source_verification: true
+  require_app_gap_logging: true
+  require_real_app_codex_runtime: true
+  treat_operator_assisted_baseline_as: entry_material
+  private_project_root: "PRIVATE/projects/neural-network-submission/"
+research_plan_contract:
+  required: true
+  language: English
+  sections:
+    - research_content_and_problem_statement
+    - research_motivation_and_venue_fit
+    - expected_results_and_contributions
+    - related_literature_and_differences
+    - theoretical_setup_definitions_assumptions
+    - proof_route_for_main_claims
+    - experiment_or_computational_design_if_applicable
+    - evidence_and_source_verification_plan
+    - risk_register
+    - acceptance_criteria_for_final_paper_track
 owners:
-  decision_maker: TBD
+  decision_maker: Cheng Yinzhu
   codex_operator: Codex
+submission_metadata:
+  author: "Cheng Yinzhu"
+  corresponding_author: "Cheng Yinzhu"
+  affiliations:
+    - "Renmin University of China"
+    - "Beijing Institute of Mathematical Sciences and Applications (BIMSA)"
+  funding: "This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors."
+  competing_interests: "The author declares no competing financial interests or personal relationships that could have appeared to influence the work reported in this paper."
+  ai_declaration_policy: "Verify current Neural Networks / Elsevier guide before finalizing; include an AI-assisted manuscript-preparation declaration if required."

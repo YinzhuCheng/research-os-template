@@ -1,0 +1,13 @@
+archive_id: ARCH-0001
+created_at: "2026-06-07T00:00:00+08:00"
+phase: loop_acceptance_gate
+macro_phase: research_loop
+git_commit: "0000000"
+git_branch: "codex/research-os-v3"
+description: "用户填写的存档说明。"
+user_free_form: "用户可用自然语言补充存档原因或恢复提示。"
+changed_paths: []
+public_index_path: PUBLIC/archive_index.json
+private_paths_included: false
+secrets_scan: passed
+status: preview

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-desktop.local/schemas/research_state.schema.json",
+  "title": "Research OS Desktop Research State",
+  "type": "object",
+  "required": ["schema_version", "macro_phase", "internal_phase", "status", "pending_user_confirmation"],
+  "properties": {
+    "schema_version": { "const": "research-state-v1" },
+    "macro_phase": { "enum": ["initialization", "research_loop", "final_product"] },
+    "internal_phase": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "minLength": 1 },
+    "updated_at": { "type": "string" },
+    "active_session_id": { "type": "string" },
+    "pending_user_confirmation": { "type": "boolean" },
+    "choice_prompts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["prompt_id", "question", "recommended_option", "options", "free_form_enabled", "free_form_label", "why_recommended"],
+        "additionalProperties": true
+      }
+    },
+    "intake_summary": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

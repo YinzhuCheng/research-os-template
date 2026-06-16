@@ -1,20 +1,36 @@
 # Research OS Harness Requirements
 
-本文件描述模板期望的 Codex 控制面。它不是当前会话的强制配置，复制模板初始化新项目后再由研究者决定是否启用。
+This file documents the Codex control surface expected by the template. It is not an active session policy by itself. Copy or adapt `.codex/config.toml.example` only inside a trusted project.
 
-## 最低要求
+## Minimum Expectations
 
-- 项目根目录保留 `AGENTS.md`。
-- 推荐权限为 `sandbox_mode = "workspace-write"` 与 `approval_policy = "on-request"`。
-- 外部写入、公开导出、真实资源调用、凭据使用、预算超限和投稿必须人工确认。
-- 使用 hook 时，先本地审查脚本，再复制 `.codex/config.toml.example` 为 `.codex/config.toml`。
+- Keep `AGENTS.md` in the repository root.
+- Prefer `sandbox_mode = "workspace-write"` and `approval_policy = "on-request"` for normal Research OS projects.
+- Require human confirmation for external writeback, public export, real resource use, credentials, budget overrun, and submission.
+- Use `config/research_flow.yaml` as the canonical process contract.
+- Use repo skills before generic execution; keep `.agents/skills/` synchronized from `skills/`.
 
-## Hook 覆盖
+## Hook Coverage
 
-- `PreToolUse`：拒绝明显危险命令、外部写回、凭据泄漏和未确认的真实资源调用。
-- `PostToolUse`：提醒记录 manifest、资源 ledger、隐私扫描和失败状态。
-- `Stop`：提醒检查 `git status`、缺口审计和下一步阶段闸门。
+Hooks are examples, not complete security boundaries.
 
-## MCP 与实时信息
+- `PreToolUse`: reject clearly dangerous commands, credential leakage, unconfirmed real resource calls, and external writeback.
+- `PostToolUse`: remind agents to record manifests, resource ledger entries, privacy scans, and failed/partial states.
+- `Stop`: run strict schema validation, HTML trailing-content checks, privacy scan, package-artifact policy checks, harness checks, and phase-gate consistency checks before final handoff.
 
-MCP 用于连接文献库、内部文档、浏览器、云账单或项目管理系统。任何 MCP 服务器都应在说明中写清楚权限、速率限制、成本和数据边界。
+## MCP And External Tools
+
+Any MCP server or connector must document:
+
+- permissions and data boundary,
+- rate limits and cost risks,
+- whether external writeback is possible,
+- whether private material may leave the workspace,
+- what artifacts are safe to store in `PUBLIC/` or `PROVENANCE/`.
+
+## Skill Discovery
+
+- `skills/` is the authoritative template skill source.
+- `.agents/skills/` is the repo-scoped Codex discovery mirror.
+- After editing `skills/`, run `scripts/sync_skill_mirror.ps1` and `scripts/check_skill_mirror.ps1`.
+- Before copying ideas from an external skill or plugin, record source, license, install path, risks, and adapter boundary in `docs/integrations/components.yaml`.

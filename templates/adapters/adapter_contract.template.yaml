@@ -1,0 +1,15 @@
+adapter_id: example-local-adapter
+capabilities:
+  - "Validate a synthetic local fixture."
+input_schema: {}
+output_schema: {}
+side_effects: []
+resource_cost: "0 CNY; local validation only"
+privacy_class: public
+human_confirmation_required: false
+replay_support: "Replayable through local fixture inputs."
+failure_modes:
+  - "fixture_missing"
+  - "schema_invalid"
+license_constraints: "Template placeholder; confirm upstream license before real integration."
+safety_review_required: false

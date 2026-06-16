@@ -1,0 +1,130 @@
+domain_id: computer-science
+display_name: "计算机科学"
+research_family: computing
+classification_sources:
+  - name: ACM Computing Classification System
+    url: "https://www.acm.org/publications/computing-classification-system/css"
+  - name: arXiv computer science taxonomy
+    url: "https://arxiv.org/category_taxonomy"
+  - name: ACM artifact review and badging
+    url: "https://www.acm.org/publications/policies/artifact-review-and-badging-current"
+activation:
+  default_enabled: false
+  researcher_decision_required: true
+  triggers:
+    - algorithm
+    - system
+    - software engineering
+    - security
+    - database
+    - programming language
+    - complexity
+    - HCI
+    - artifact evaluation
+paradigms:
+  - id: problem-specification
+    purpose: "Define problem, interface, constraints, workloads, threat model, and success criteria."
+  - id: correctness-complexity
+    purpose: "Separate invariants, proof obligations, asymptotic complexity, and empirical behavior."
+  - id: systems-artifact
+    purpose: "Capture architecture, environment, benchmark, logs, and reproducibility package."
+  - id: security-and-abuse
+    purpose: "Record adversary model, misuse risks, and defensive assumptions when relevant."
+  - id: artifact-evaluation
+    purpose: "Align with documented, consistent, complete, exercisable, and reusable artifact expectations."
+artifact_types:
+  - problem_spec
+  - algorithm_invariant_note
+  - complexity_argument
+  - system_design_record
+  - benchmark_protocol
+  - threat_model
+  - artifact_eval_pack
+kernel_bindings:
+  candidate:
+    artifacts:
+      - problem_spec
+      - algorithm_or_system_candidate
+      - system_design_record
+  evaluator_contract:
+    artifacts:
+      - algorithm_invariant_note
+      - complexity_argument
+      - benchmark_protocol
+      - threat_model
+      - artifact_eval_pack
+    required_fields:
+      - metric_or_check
+      - formula_or_procedure
+      - inputs
+      - units_or_scale
+      - acceptance_threshold
+      - resource_estimate
+      - failure_mode
+      - replay_note
+  evaluation_result:
+    artifacts:
+      - complexity_argument
+      - benchmark_result_note
+      - artifact_eval_pack
+  belief_state:
+    artifacts:
+      - problem_spec
+      - invariant_assumption_register
+  search_trace:
+    artifacts:
+      - design_iteration_trace
+      - benchmark_trace
+  negative_result:
+    artifacts:
+      - failed_invariant_note
+      - benchmark_regression_note
+      - threat_model_failure_note
+    policy: "Incorrect invariants, complexity counterexamples, failed benchmarks, and security failures become durable negative results."
+  next_action_policy:
+    artifacts:
+      - design_revision_decision
+  human_judgment_gate:
+    artifacts:
+      - artifact_release_review
+  computation_checklist_required: true
+quality_gates:
+  - interface_and_workload_locked
+  - correctness_obligations_recorded
+  - complexity_or_performance_claim_scoped
+  - benchmark_protocol_defined
+  - artifact_inventory_complete
+  - threat_model_reviewed_when_applicable
+status_lifecycle:
+  common:
+    - draft
+    - needs_human_review
+    - evidence_linked
+    - counterexample_or_failure_checked
+    - ready_for_public_export
+  domain_specific:
+    - spec_ready
+    - invariant_gap
+    - benchmark_ready
+    - artifact_exercisable
+    - security_review_required
+harness_boundaries:
+  allowed_write_roots:
+    - domain_profiles/
+    - templates/domain/computer-science/
+    - docs/
+    - PUBLIC/
+    - PROVENANCE/
+  forbidden_write_roots:
+    - PRIVATE/
+  paid_resources: false
+  code_execution: "only through research-os-execution-harness and explicit work_order"
+  external_write: forbidden_without_explicit_human_confirmation
+  public_claim_rule: "No CS artifact claim is public without spec, benchmark or proof route, and artifact inventory."
+source_basis:
+  - name: ACM CCS
+    url: "https://www.acm.org/publications/computing-classification-system/css"
+  - name: ACM artifact review and badging
+    url: "https://www.acm.org/publications/policies/artifact-review-and-badging-current"
+  - name: AlphaEvolve
+    url: "https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/"

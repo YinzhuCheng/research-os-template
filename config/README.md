@@ -1,13 +1,15 @@
-# config 区
+# Config
 
-此目录保存项目配置和 schema。
+This directory stores project configuration and JSON schemas.
 
-关键配置：
+Key files:
 
-- `research_project.yaml`
-- `schemas/`
-- `research_profile`：研究领域、研究类型、验证对象、是否涉及 LLM/ML。
-- `dissemination`：传播目标；论文、报告、投稿均为可选。
-- `resource_budget`：研究者定义的资源预算，不固定币种、金额、模型或实验范式。
-- `resource_guard`：硬上限、软预警、真实资源确认和异常增长检查。
-- `feasibility_probe`：最小可行性验证，预算与工具来自入口材料或对齐决策。
+- `research_project.yaml`: project profile, language mode, privacy posture, dissemination settings, resource guard, and feasibility-probe defaults.
+- `research_flow.yaml`: canonical Research OS process contract and skill handoff sequence.
+- `schemas/`: structured contracts for project config, skills, domain profiles, agent capabilities, research-kernel objects, integrations, desktop intake packets, and public research state.
+
+Configuration rules:
+
+- Do not fill in a model, dataset, baseline, budget, provider, venue, or paper goal unless it is present in researcher material or a confirmed decision.
+- Keep real secrets out of config files. Store only environment variable names or secret-store references.
+- If a new durable object enters the main route, add a schema, template, validator, and doc-map entry.

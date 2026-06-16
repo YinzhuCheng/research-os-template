@@ -19,11 +19,33 @@ function Require-Text([string]$Path, [string]$Pattern) {
 
 $schemaDir = Join-Path $Root "config\schemas"
 Require-File (Join-Path $Root "config\research_project.yaml")
+Require-File (Join-Path $Root "config\research_flow.yaml")
 Require-File (Join-Path $Root "CONTROL\work_order.yaml")
 Require-File (Join-Path $Root "PUBLIC\claim_evidence_matrix.yaml")
 Require-File (Join-Path $Root "PROVENANCE\run_manifest.jsonl")
 Require-File (Join-Path $Root "PROVENANCE\resource_ledger.jsonl")
 Require-File (Join-Path $Root "PROVENANCE\live_evidence_snapshot.yaml")
+Require-File (Join-Path $Root "docs\doc_map.yaml")
+Require-File (Join-Path $Root "docs\integrations\components.yaml")
+Require-File (Join-Path $Root "templates\yaml\integration_component.template.yaml")
+Require-File (Join-Path $Root "templates\adapters\adapter_contract.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\harness_run.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\domain_profile.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\agent_capability.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\research_kernel.template.yaml")
+Require-File (Join-Path $Root "templates\yaml\intake_packet.template.yaml")
+Require-File (Join-Path $Root "templates\research_kernel\research_cycle.template.yaml")
+Require-File (Join-Path $Root "PUBLIC\research_state.json")
+Require-File (Join-Path $Root "RUNS\experiments\EXP-0001\run.yaml")
+Require-File (Join-Path $Root "PUBLIC\evidence_board.json")
+Require-File (Join-Path $Root "PUBLIC\run_monitor.json")
+Require-File (Join-Path $Root "evals\README.md")
+Require-File (Join-Path $Root "domain_profiles\README.md")
+Require-File (Join-Path $Root "domain_profiles\fundamental-mathematics\profile.yaml")
+Require-File (Join-Path $Root "domain_profiles\applied-mathematics\profile.yaml")
+Require-File (Join-Path $Root "domain_profiles\machine-learning\profile.yaml")
+Require-File (Join-Path $Root "domain_profiles\computer-science\profile.yaml")
+Require-File (Join-Path $Root "domain_profiles\statistics\profile.yaml")
 
 Get-ChildItem -LiteralPath $schemaDir -Filter "*.json" | ForEach-Object {
   Get-Content -Raw -LiteralPath $_.FullName | ConvertFrom-Json | Out-Null
@@ -35,9 +57,26 @@ Require-Text (Join-Path $Root "config\research_project.yaml") "intervention_leve
 Require-Text (Join-Path $Root "config\research_project.yaml") "resource_budget:\s*"
 Require-Text (Join-Path $Root "config\research_project.yaml") "dissemination:\s*"
 Require-Text (Join-Path $Root "config\research_project.yaml") "feasibility_probe:\s*"
+Require-Text (Join-Path $Root "config\research_flow.yaml") "flow_id:\s+RESEARCH-FLOW-[0-9]{4}"
+Require-Text (Join-Path $Root "config\research_flow.yaml") "canonical_sequence:\s*"
+Require-Text (Join-Path $Root "config\research_flow.yaml") "material_intake"
+Require-Text (Join-Path $Root "config\research_flow.yaml") "research_kernel"
+Require-Text (Join-Path $Root "config\research_flow.yaml") "execution_harness"
 Require-Text (Join-Path $Root "CONTROL\work_order.yaml") "work_order_id:\s+WO-[0-9]{4}"
 Require-Text (Join-Path $Root "CONTROL\work_order.yaml") "resource_budget:\s*"
 Require-Text (Join-Path $Root "PUBLIC\claim_evidence_matrix.yaml") "CLAIM-[0-9]{3}"
+Require-Text (Join-Path $Root "docs\doc_map.yaml") "doc_map_id:\s+DOCMAP-[0-9]{4}"
+Require-Text (Join-Path $Root "docs\doc_map.yaml") "domain_profiles"
+Require-Text (Join-Path $Root "docs\doc_map.yaml") "research_kernel"
+Require-Text (Join-Path $Root "docs\doc_map.yaml") "desktop_app"
+Require-Text (Join-Path $Root "docs\doc_map.yaml") "process_contract"
+Require-Text (Join-Path $Root "docs\integrations\components.yaml") "registry_id:\s+INTEGRATIONS-[0-9]{4}"
+Require-Text (Join-Path $Root "config\schemas\intake_packet.schema.json") "uploaded_files"
+Require-Text (Join-Path $Root "config\schemas\intake_packet.schema.json") "desktop-intake-v1"
+Require-Text (Join-Path $Root "config\schemas\research_state.schema.json") "pending_user_confirmation"
+Require-Text (Join-Path $Root "config\schemas\research_state.schema.json") "research-state-v1"
+Require-Text (Join-Path $Root "config\schemas\experiment_run.schema.json") "experiment_id"
+Require-Text (Join-Path $Root "config\schemas\adapter_contract.schema.json") "human_confirmation_required"
 
 Get-Content -LiteralPath (Join-Path $Root "PROVENANCE\run_manifest.jsonl") | ForEach-Object {
   if ($_.Trim()) {
@@ -50,5 +89,8 @@ Get-Content -LiteralPath (Join-Path $Root "PROVENANCE\resource_ledger.jsonl") | 
     $_ | ConvertFrom-Json | Out-Null
   }
 }
+
+& "$PSScriptRoot\check_strict_schema_instances.ps1" -Root $Root
+& "$PSScriptRoot\check_public_summaries.ps1" -Root $Root
 
 Write-Output "Research OS schema smoke validation passed."

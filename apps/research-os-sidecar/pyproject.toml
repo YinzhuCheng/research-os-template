@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "research-os-sidecar"
+version = "0.1.0"
+description = "Local Research OS desktop sidecar for project governance and Codex app-server mediation."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+codex = ["openai-codex"]
+
+[project.scripts]
+research-os-sidecar = "research_os_sidecar.server:main"
+
+[tool.setuptools.packages.find]
+include = ["research_os_sidecar*"]

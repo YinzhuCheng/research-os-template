@@ -1,0 +1,59 @@
+artifact_type: statistical_inference_case
+domain_id: statistics
+status: draft
+research_kernel:
+  cycle_id: RK-0000
+  candidate_binding:
+    - estimand_card
+    - design_or_model_candidate
+  evaluator_contracts:
+    - evaluator_id: EVAL-0000
+      metric_or_check: "identification, power or precision, diagnostics, uncertainty, and sensitivity adequacy"
+      formula_or_procedure: "separate estimand from estimator; list identification assumptions; define sampling or power plan; run diagnostic checklist; report uncertainty and sensitivity limits"
+      inputs: [estimand_card, identification_memo, sampling_power_plan, diagnostic_report]
+      units_or_scale: "effect size, interval or posterior scale, diagnostic scale, or sensitivity dimension"
+      acceptance_threshold: "estimand, method, diagnostics, uncertainty statement, and sensitivity analysis complete"
+      resource_estimate: "statistical computation only through approved harness; no paid resources by default"
+      failure_mode: "unidentified_estimand, diagnostic_failure, insufficient_power, sensitivity_reversal"
+      replay_note: "preserve diagnostic trace, sensitivity trace, and negative inference notes"
+  evaluation_result_binding:
+    - diagnostic_report
+    - uncertainty_statement
+    - sensitivity_analysis
+  belief_state_binding:
+    - identification_memo
+    - assumption_and_uncertainty_register
+  search_trace_required: true
+  negative_result_policy: "failed diagnostics and unidentified estimands are retained before claims"
+  human_judgment_gate: "public statistical conclusion requires human review"
+estimand_card:
+  population: null
+  target_quantity: null
+  intervention_or_exposure: null
+  outcome: null
+  contrast: null
+identification_memo:
+  assumptions: []
+  confounding_risks: []
+  missingness_risks: []
+sampling_power_plan:
+  sampling_frame: null
+  sample_size_rationale: null
+  power_or_precision_target: null
+  multiplicity_plan: null
+diagnostic_report:
+  model_fit_checks: []
+  residual_checks: []
+  prior_or_convergence_checks: []
+uncertainty_statement:
+  effect_size: null
+  interval_or_posterior_summary: null
+  practical_significance: null
+sensitivity_analysis:
+  sensitivity_dimensions: []
+  robustness_results: []
+  limitations: []
+statistical_ethics_note:
+  privacy_notes: []
+  subgroup_risk_notes: []
+  disclosure_boundaries: []

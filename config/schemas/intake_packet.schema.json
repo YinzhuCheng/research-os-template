@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-desktop.local/schemas/intake_packet.schema.json",
+  "title": "Research OS Desktop Intake Packet",
+  "type": "object",
+  "required": ["schema_version", "session_id", "created_at", "free_text_present", "privacy_default", "status", "source"],
+  "properties": {
+    "schema_version": { "const": "desktop-intake-v1" },
+    "session_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string" },
+    "free_text_present": { "type": "boolean" },
+    "free_text_summary": { "type": "string" },
+    "source_links": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "uploaded_files": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "privacy_default": { "const": "private" },
+    "status": { "type": "string", "minLength": 1 },
+    "source": { "const": "desktop_app" }
+  },
+  "additionalProperties": true
+}

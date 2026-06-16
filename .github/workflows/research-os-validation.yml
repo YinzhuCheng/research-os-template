@@ -1,0 +1,41 @@
+name: Research OS Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate schemas
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_schemas.ps1
+      - name: Validate public summaries
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_public_summaries.ps1
+      - name: Validate HTML
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_html_docs.ps1
+      - name: Validate package policy
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_package_artifacts.ps1
+      - name: Validate eval fixtures
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_eval_fixtures.ps1
+      - name: Run standard-library tests
+        shell: pwsh
+        run: |
+          python tests/test_schema_instances.py
+          python tests/test_copilot_privacy.py
+          python tests/test_hooks.py
+          python tests/test_public_summaries.py
+      - name: Validate synthetic private intake
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check_private_intake_synthetic.ps1

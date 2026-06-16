@@ -1,26 +1,60 @@
-# Codex Research OS Template
+# Research OS Desktop
 
-这是一个研究方向无关的 Codex 科研项目模板，用于把对话、研究计划草稿或实验 demo 转成可执行、可追溯、可审计的研究仓库。它不默认 LLM、机器学习、数据集、baseline、论文或投稿目标；这些内容只能在入口材料中出现，或由研究者在对齐阶段确认。
+Research OS Desktop is a local researcher-copilot application. It is no longer a starter repository or a browser-copilot shell. The product route is:
 
-## 默认行为
+`Tauri + React UI -> Python sidecar -> optional official Codex SDK/app-server -> .rosproj project sandbox`
 
-- 内部计划、实验记录、分析和审计默认中文；入口可设 `language_mode: en-only`。
-- 论文是可选传播产物。只有明确设置论文、报告、投稿等 `dissemination` 目标后，才启用对应写作链路。
-- 预算由研究者定义为 `resource_budget`，可覆盖时间、算力、云资源、实验耗材、API、模型、人工、仪器机时等资源。
-- 默认低介入，但预算、真实资源调用、凭据使用、外部写入、公开导出和投稿必须人工确认。
-- `PUBLIC/` 可公开；`PRIVATE/` 默认不进 git；真实密钥、token、cookie、SSH 私钥和云账号密码不得落盘。
+The desktop app creates or opens `.rosproj` files. Each project gets a sibling directory that acts as the default sandbox. The sidecar owns project state, permissions, archive snapshots, profile metadata, and optional Codex runtime mediation.
 
-## 主要入口
+## Main Entry Points
 
-- 计划：[PLAN/00_MASTER_PLAN.md](PLAN/00_MASTER_PLAN.md)
-- Codex 仓库规则：[AGENTS.md](AGENTS.md)
-- Codex harness 示例：[.codex/requirements.md](.codex/requirements.md)
-- 公开区：[PUBLIC/README.md](PUBLIC/README.md)
-- 私有区：[PRIVATE/README.md](PRIVATE/README.md)
-- 控制区：[CONTROL/README.md](CONTROL/README.md)
-- 来源与审计：[PROVENANCE/README.md](PROVENANCE/README.md)
-- Skill 套件：[skills/README.md](skills/README.md)
+- Desktop app source: [apps/research-os-desktop](apps/research-os-desktop)
+- Python sidecar: [apps/research-os-sidecar](apps/research-os-sidecar)
+- Desktop app guide: [docs/desktop-app.md](docs/desktop-app.md)
+- Architecture: [docs/architecture.md](docs/architecture.md)
+- Security and risk: [docs/security-risk.md](docs/security-risk.md)
+- Environment: [docs/environment.md](docs/environment.md)
+- Testing: [docs/testing.md](docs/testing.md)
+- Packaging: [docs/packaging.md](docs/packaging.md)
+- Migration notes: [docs/migration.md](docs/migration.md)
 
-## 使用原则
+## Project Model
 
-先对齐研究者真实意图，再定义最小可行性验证；先登记资源预算和停止条件，再执行 work order；先刷新时效性证据，再依赖外部信息；公开导出前必须通过隐私扫描。
+- `.rosproj` stores non-sensitive metadata only.
+- The sibling project directory is the only default writable sandbox.
+- Raw intake material belongs under project-local `PRIVATE/`.
+- Sanitized UI state is stored in `PUBLIC/research_state.json`.
+- Intake packets are written to `CONTROL/intake_queue/`.
+- Choice responses are written to `CONTROL/choice_responses/`.
+- API keys, account tokens, cookies, passwords, and authorization headers must not be written to project files.
+
+## Desktop Development
+
+```powershell
+cd apps/research-os-desktop
+npm install
+npm run test
+npm run test:ui
+npm run build
+npm run tauri -- build
+```
+
+Sidecar tests:
+
+```powershell
+python -m unittest discover -s apps/research-os-sidecar/tests -v
+```
+
+Repository checks:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_desktop_app.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate_schemas.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_dashboard.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check_docs_links.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\scan_privacy.ps1
+```
+
+## Runtime Boundary
+
+React calls only the local Python sidecar. The sidecar owns filesystem writes, profile metadata, archive creation, permission classification, approval queues, and optional Codex SDK/app-server mediation. Codex runs inside the project sandbox and cannot bypass Research OS approval policy.

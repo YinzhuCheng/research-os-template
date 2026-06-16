@@ -1,39 +1,55 @@
 {
   "project": {
-    "title": "Codex Research OS Template",
-    "phase": "initialization",
+    "title": "Research OS Desktop",
+    "phase": "research-os-v4.2",
     "language_mode": "zh-first",
-    "intervention_level": "low",
     "privacy_policy": "public_private_split",
-    "research_type": "unspecified",
-    "dissemination": "undecided"
+    "research_type": "desktop-copilot-ready",
+    "primary_entrypoint": "Tauri + React + Python sidecar"
   },
   "status": [
-    {"label": "研究类型", "value": "待入口具体化"},
-    {"label": "Feasibility", "value": "待定义"},
-    {"label": "Resource Guard", "value": "已启用"},
-    {"label": "Live Evidence", "value": "已建档"},
-    {"label": "Harness", "value": "已补强"},
-    {"label": "论文", "value": "可选"},
-    {"label": "验证", "value": "待 v2 检查"}
+    {"label": "Desktop App", "value": "Tauri + React workbench"},
+    {"label": "Python Sidecar", "value": "project, state, approval, archive, runtime gateway"},
+    {"label": "Project Sandbox", "value": ".rosproj sibling directory"},
+    {"label": "Research State", "value": "PUBLIC/research_state.json"},
+    {"label": "Approvals", "value": "UI-mediated, timeout declines"},
+    {"label": "Final Products", "value": "paper + report + software"},
+    {"label": "Archives", "value": "git-backed snapshots"},
+    {"label": "Risk Register", "value": "security-risk.md"},
+    {"label": "Static HTML Legacy", "value": "removed"}
   ],
   "documents": [
-    {"path": "README.md", "label": "公开区说明"},
-    {"path": "research_brief.md", "label": "研究简报"},
-    {"path": "claim_evidence_matrix.yaml", "label": "Claim-Evidence"},
-    {"path": "../AGENTS.md", "label": "AGENTS 规则"},
-    {"path": "../PROVENANCE/resource_ledger.jsonl", "label": "资源 Ledger"},
-    {"path": "../PROVENANCE/live_evidence_snapshot.yaml", "label": "Live Evidence"},
-    {"path": "../PROVENANCE/public_audit_summary.md", "label": "公开审计摘要"},
-    {"path": "../CONTROL/phase_gate.yaml", "label": "阶段闸门"},
-    {"path": "../PLAN/05_IMPLEMENTATION_CHECKLIST.md", "label": "实施清单"},
-    {"path": "../PLAN/06_GAP_AUDIT.md", "label": "缺口审计"}
+    {"path": "../docs/desktop-app.md", "label": "Desktop App Guide"},
+    {"path": "../docs/architecture.md", "label": "Architecture"},
+    {"path": "../docs/security-risk.md", "label": "Security and Risk"},
+    {"path": "../docs/testing.md", "label": "Testing Guide"},
+    {"path": "../docs/packaging.md", "label": "Packaging Guide"},
+    {"path": "../docs/migration.md", "label": "Migration Notes"},
+    {"path": "../docs/domain-profiles.md", "label": "Domain Profiles"},
+    {"path": "../docs/process-contract.md", "label": "Process Contract"},
+    {"path": "../config/research_flow.yaml", "label": "Research Flow"},
+    {"path": "../docs/environment.md", "label": "Environment Guide"},
+    {"path": "../scripts/install_environment.ps1", "label": "Environment Installer"},
+    {"path": "../scripts/check_environment.ps1", "label": "Environment Check"},
+    {"path": "../docs/doc_map.yaml", "label": "Document Map"},
+    {"path": "../apps/research-os-desktop/package.json", "label": "Desktop Package"},
+    {"path": "../apps/research-os-sidecar/README.md", "label": "Sidecar README"},
+    {"path": "../scripts/check_desktop_app.ps1", "label": "Desktop Check"},
+    {"path": "../config/schemas/research_state.schema.json", "label": "Research State Schema"},
+    {"path": "../config/schemas/intake_packet.schema.json", "label": "Intake Packet Schema"},
+    {"path": "research_state.json", "label": "Sanitized Research State"},
+    {"path": "archive_index.json", "label": "Sanitized Archive Index"},
+    {"path": "evidence_board.json", "label": "Evidence Board"},
+    {"path": "run_monitor.json", "label": "Run Monitor"},
+    {"path": "../PROVENANCE/run_manifest.jsonl", "label": "Run Manifest"},
+    {"path": "../PROVENANCE/resource_ledger.jsonl", "label": "Resource Ledger"}
   ],
   "next_decisions": [
-    "确认目标研究的语言模式：zh-first 或 en-only。",
-    "确认研究类型、验证对象和最小可行性验证预算。",
-    "确认是否需要论文、报告、复现包或决策备忘。",
-    "确认真实资源调用是否允许以及预算上限。",
-    "如需公开分享，使用 export_public.ps1 生成脱敏包。"
+    "Create or open a .rosproj project from the desktop app.",
+    "Use the material intake panel to start initialization.",
+    "Answer recommended/default/free-form choice prompts in the app.",
+    "Use approval queue for commands, external writes, credentials, and risky operations.",
+    "Create a git-backed archive before risky transitions or long pauses.",
+    "Select final product tracks only after accepted research artifacts exist."
   ]
 }

@@ -1,18 +1,24 @@
-# PUBLIC 区
+# PUBLIC
 
-此目录只放可上传、可分享或已脱敏的研究材料。
+This directory contains material that is public, shareable, or explicitly sanitized.
 
-允许内容：
+Allowed content:
 
-- 研究 brief、公开计划、可行性验证摘要和决策备忘。
-- 已联网刷新并可引用的公开来源摘要。
-- 脱敏实验、访谈、推导、工程验证或其他研究结果。
-- 研究者明确指定论文/报告/投稿目标后生成的公开稿件、图表、附录和 checklist。
-- 静态仪表盘。
+- Public research briefs, plans, feasibility summaries, decision memos, and dashboards.
+- Public-source evidence summaries with links.
+- Sanitized experiment, interview, reasoning, engineering, or validation outputs.
+- Generated public paper/report/software documentation artifacts only after the researcher enables that final product track.
+- Sanitized archive indexes such as `archive_index.json`.
 
-禁止内容：
+Forbidden content:
 
-- API key、token、cookie、authorization header、SSH 私钥、云账号密码。
-- 未脱敏对话和私有数据。
-- 未授权数据集、第三方资产或敏感实验记录。
-- 原始模型/API 请求和响应；如需公开，只能放脱敏摘要。
+- API keys, tokens, cookies, authorization headers, SSH private keys, cloud passwords, or real credentials.
+- Raw private conversations, uploaded intake material, private data, or sensitive experimental logs.
+- Unauthorized datasets, third-party assets, restricted full text, or copyrighted material copied beyond fair use.
+- Raw model/API requests and responses unless they are sanitized summaries approved for public export.
+
+`PUBLIC/paper/` is no longer a tracked default scaffold. Use `templates/latex/` as the source template and generate public paper output only when `dissemination.paper_enabled: true` or a work order explicitly authorizes it.
+
+Final product outputs remain opt-in. Paper, research report, and software release artifacts must pass the same privacy scan and human export/release gate before becoming public.
+
+`PUBLIC/archive_index.json` is a sanitized index. The durable archive ledger is written to `PROVENANCE/archive_index.jsonl` after the first real archive is created; neither file may include `PRIVATE/` content, real credentials, authorization headers, cookies, tokens, or raw private intake material.

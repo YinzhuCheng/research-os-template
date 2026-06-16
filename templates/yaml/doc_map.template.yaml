@@ -1,0 +1,16 @@
+doc_map_id: DOCMAP-0000
+updated_at: "2026-06-07"
+language_mode: en-only
+entrypoints:
+  desktop_app:
+    title: "Research OS Desktop App"
+    path: "docs/desktop-app.md"
+core_controls:
+  work_order: "CONTROL/work_order.yaml"
+audit:
+  run_manifest: "PROVENANCE/run_manifest.jsonl"
+skills:
+  source: "skills/"
+validation:
+  schema: "scripts/validate_schemas.ps1"
+  dashboard: "scripts/check_dashboard.ps1"

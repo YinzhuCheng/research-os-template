@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-codex-router-sidecar"
+version = "0.1.0"
+description = "Local Codex Router sidecar for projects, profiles, official Codex config management, and Codex app-server mediation."
+requires-python = ">=3.10"
+dependencies = [
+  "cryptography>=42.0.0",
+]
+
+[project.scripts]
+local-codex-router-sidecar = "research_os_sidecar.server:main"
+
+[tool.setuptools.packages.find]
+include = ["research_os_sidecar*"]

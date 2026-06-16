@@ -1,8 +1,39 @@
-current_phase: initialization
+current_phase: research-os-v4.7-real-yunwu-codex-dogfood
 intervention_level: low
 stage_gate_required: true
 external_write_requires_confirmation: true
 public_export_requires_confirmation: true
 submission_requires_confirmation: true
 budget_overrun_requires_confirmation: true
-next_required_decision: "确认 Commit 3 的 schema 和模板是否满足研究对象追踪。"
+next_required_decision: "Repair the Research OS Desktop runtime so a fresh neural-network workflow is driven by app-controlled Codex app-server/SDK turns using a Yunwu gpt-5.5 xhigh provider profile, then rerun initialization, research loops, and paper production from imported baseline materials."
+confirmed_decisions:
+  - "Research OS Desktop is the only primary user interface."
+  - "The old browser bridge is retired."
+  - "Static HTML documentation and dashboard surfaces are retired."
+  - "Repository documentation is English-first."
+  - "The desktop app UI may remain Chinese-first."
+  - "Desktop state uses PUBLIC/research_state.json and CONTROL/intake_queue."
+  - "Every user-facing choice must include a recommended option, concrete options, and natural-language free-form input."
+  - "Final product selection supports paper, research report, software, or a multi-track combination."
+  - "Use Tauri + React + Python sidecar as the Research OS Desktop architecture."
+  - "Use .rosproj files and a sibling project directory as the project sandbox model."
+  - "Do not store API keys, tokens, cookies, passwords, or authorization headers in .rosproj or project git."
+  - "Do not touch PRIVATE/ or real uploaded materials during this pass."
+  - "Researcher QA screenshots are stored locally under ignored test artifact directories and are not committed."
+  - "Yunwu UI review may spend up to USD 3 using a signal-first policy."
+  - "Native Tauri file dialogs may be added if compatible with the current desktop stack."
+  - "For this work order, the target venue is Neural Networks as a Full Article in Mathematical and Computational Analysis."
+  - "Author and corresponding author are Cheng Yinzhu."
+  - "Affiliations are Renmin University of China and Beijing Institute of Mathematical Sciences and Applications (BIMSA)."
+  - "Funding and competing interests are none."
+  - "Existing neural-network manuscript, PDF, PPT, notes, templates, example papers, reviews, and proof-audit records are initialization inputs until the app advances through acceptance-gated research planning."
+  - "The app must consider whole folders, not only the obvious manuscript draft."
+  - "Reusable prompts and workflow rules must be encoded in app-generated project context, AGENTS.md, skills, work orders, or harness rules rather than relying on advanced user prompting."
+  - "Yunwu gpt-5.5 xhigh may be used up to USD 200 hard cap after availability and usage measurement are verified."
+  - "The current operator-assisted paper package is entry material for a fresh app run, not the accepted final output."
+  - "For this work order, app-driven Codex runtime must be proven with modelProvider=yunwu, model=gpt-5.5, and xhigh reasoning before large review spending."
+  - "Provider and auth configuration must live in an app-owned isolated CODEX_HOME or equivalent user-level runtime profile, not in project-local .codex/config.toml."
+  - "All source authenticity, venue rules, references, and AI declaration requirements must be checked online before finalizing the paper."
+  - "The local untracked neural network directory is source material, not a git deliverable."
+  - "For this workflow, use English-mode app surfaces first; Chinese UI restoration is deferred unless it blocks the English paper workflow."
+  - "A valid research plan must cover research content, motivation, expected contributions, related literature, theoretical setup, proof route, optional experiments, source verification, risks, and acceptance criteria."

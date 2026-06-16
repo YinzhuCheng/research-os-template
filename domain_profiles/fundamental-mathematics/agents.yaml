@@ -1,0 +1,123 @@
+domain_id: fundamental-mathematics
+agents:
+  - agent_id: math-definition-normalizer
+    role: "Clarify objects, notation, quantifiers, assumptions, and exclusion cases."
+    inputs:
+      - informal_problem_statement
+      - existing_definitions
+    outputs:
+      - normalized_definition_block
+      - assumption_ledger
+    allowed_paths:
+      - domain_profiles/fundamental-mathematics/
+      - templates/domain/fundamental-mathematics/
+      - PROVENANCE/
+    forbidden_paths:
+      - PRIVATE/
+    resource_policy:
+      paid_resources: false
+      code_execution: false
+    network_policy: "Use live evidence refresh only for taxonomy or literature context."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Definitions may be public only after sensitive source material is removed."
+  - agent_id: math-example-builder
+    role: "Construct small, canonical, degenerate, and boundary examples."
+    inputs:
+      - normalized_definition_block
+      - candidate_claim
+    outputs:
+      - example_bank
+      - boundary_case_table
+    allowed_paths:
+      - domain_profiles/fundamental-mathematics/
+      - templates/domain/fundamental-mathematics/
+      - PROVENANCE/
+    forbidden_paths:
+      - PRIVATE/
+    resource_policy:
+      paid_resources: false
+      code_execution: "only if work_order permits a local feasibility probe"
+    network_policy: "No network by default."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Examples can support public claims only with provenance."
+  - agent_id: math-conjecture-generator
+    role: "Generate conjectures from patterns, examples, failed attempts, and literature cues."
+    inputs:
+      - example_bank
+      - observation_notes
+    outputs:
+      - conjecture_card
+      - conjecture_dependency_notes
+    allowed_paths:
+      - domain_profiles/fundamental-mathematics/
+      - templates/domain/fundamental-mathematics/
+      - PROVENANCE/
+    forbidden_paths:
+      - PRIVATE/
+    resource_policy:
+      paid_resources: false
+      code_execution: false
+    network_policy: "Use live evidence refresh before claiming novelty."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Conjectures remain labeled as conjectures until proof or disproof."
+  - agent_id: math-counterexample-finder
+    role: "Attack conjectures with degenerate cases, small structures, limiting cases, and hidden assumptions."
+    inputs:
+      - conjecture_card
+      - example_bank
+    outputs:
+      - counterexample_log
+      - revised_claim
+    allowed_paths:
+      - domain_profiles/fundamental-mathematics/
+      - templates/domain/fundamental-mathematics/
+      - PROVENANCE/
+    forbidden_paths:
+      - PRIVATE/
+    resource_policy:
+      paid_resources: false
+      code_execution: "only through research-os-execution-harness when approved"
+    network_policy: "No network by default."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Counterexamples may be public after source sanitization."
+  - agent_id: math-proof-strategist
+    role: "Propose proof routes, lemma decomposition, invariants, and theorem dependencies."
+    inputs:
+      - revised_claim
+      - counterexample_log
+      - normalized_definition_block
+    outputs:
+      - proof_strategy
+      - lemma_dependency_graph
+    allowed_paths:
+      - domain_profiles/fundamental-mathematics/
+      - templates/domain/fundamental-mathematics/
+      - PROVENANCE/
+    forbidden_paths:
+      - PRIVATE/
+    resource_policy:
+      paid_resources: false
+      code_execution: false
+    network_policy: "Use live evidence refresh for cited theorem status."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Proof strategies are not theorem claims."
+  - agent_id: math-proof-referee
+    role: "Audit proof sketches for gaps, circularity, unjustified existence, and invalid reductions."
+    inputs:
+      - proof_strategy
+      - theorem_note
+    outputs:
+      - proof_gap_report
+      - human_review_questions
+    allowed_paths:
+      - domain_profiles/fundamental-mathematics/
+      - templates/domain/fundamental-mathematics/
+      - PROVENANCE/
+    forbidden_paths:
+      - PRIVATE/
+    resource_policy:
+      paid_resources: false
+      code_execution: false
+    network_policy: "Use live evidence refresh for external theorem references."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Public theorem notes require human_checked status."

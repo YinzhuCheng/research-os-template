@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-desktop.local/schemas/experiment_run.schema.json",
+  "title": "Research OS Experiment Run",
+  "type": "object",
+  "required": [
+    "experiment_id",
+    "work_order_id",
+    "status",
+    "hypothesis_or_task",
+    "environment",
+    "measurements",
+    "artifacts",
+    "replay",
+    "failure",
+    "privacy_level"
+  ],
+  "properties": {
+    "experiment_id": { "type": "string", "pattern": "^EXP-[0-9]{4}$" },
+    "work_order_id": { "type": "string", "pattern": "^WO-[0-9]{4}$" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "approved",
+        "queued",
+        "running",
+        "succeeded",
+        "failed",
+        "partial",
+        "blocked",
+        "cancelled",
+        "timed_out",
+        "needs_human_review"
+      ]
+    },
+    "hypothesis_or_task": { "type": "string" },
+    "environment": {
+      "type": "object",
+      "required": ["kind", "resource_policy"],
+      "properties": {
+        "kind": { "type": "string" },
+        "resource_policy": { "type": "string" }
+      }
+    },
+    "measurements": { "type": "array", "items": { "type": "string" } },
+    "artifacts": { "type": "array", "items": { "type": "string" } },
+    "replay": {
+      "type": "object",
+      "required": ["supported", "command", "inputs", "notes"],
+      "properties": {
+        "supported": { "type": "boolean" },
+        "command": { "type": ["string", "null"] },
+        "inputs": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "string" }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "required": ["class", "notes"],
+      "properties": {
+        "class": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "privacy_level": { "type": "string" }
+  }
+}

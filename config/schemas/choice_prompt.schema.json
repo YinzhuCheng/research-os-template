@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-desktop.local/schemas/choice_prompt.schema.json",
+  "title": "Research OS Choice Prompt",
+  "type": "object",
+  "required": [
+    "prompt_id",
+    "question",
+    "recommended_option",
+    "options",
+    "free_form_enabled",
+    "free_form_label",
+    "why_recommended"
+  ],
+  "properties": {
+    "prompt_id": { "type": "string", "pattern": "^CP-[0-9A-Za-z_-]+$" },
+    "stage": { "type": "string" },
+    "question": { "type": "string", "minLength": 1 },
+    "recommended_option": { "type": "string", "minLength": 1 },
+    "why_recommended": { "type": "string", "minLength": 1 },
+    "options": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "description"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "is_recommended": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "free_form_enabled": { "const": true },
+    "free_form_label": { "type": "string", "minLength": 1 },
+    "free_form_placeholder": { "type": "string" },
+    "requires_human_response": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

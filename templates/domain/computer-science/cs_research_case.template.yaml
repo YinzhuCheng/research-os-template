@@ -1,0 +1,63 @@
+artifact_type: cs_research_case
+domain_id: computer-science
+status: draft
+research_kernel:
+  cycle_id: RK-0000
+  candidate_binding:
+    - problem_spec
+    - system_design_record
+  evaluator_contracts:
+    - evaluator_id: EVAL-0000
+      metric_or_check: "correctness, complexity, benchmark, threat, or artifact evaluation"
+      formula_or_procedure: "state invariant or proof obligation; derive complexity assumptions; define benchmark workload and replay steps; inspect artifact inventory and threat boundaries"
+      inputs: [problem_spec, algorithm_invariant_note, complexity_argument, benchmark_protocol]
+      units_or_scale: "asymptotic class, benchmark metric, artifact badge criterion, or threat severity"
+      acceptance_threshold: "spec, correctness route, complexity or benchmark protocol, and artifact inventory recorded"
+      resource_estimate: "local static checks by default; code execution only through harness"
+      failure_mode: "incorrect_invariant, complexity_counterexample, benchmark_regression, artifact_not_exercisable"
+      replay_note: "preserve design iteration trace, benchmark trace, and artifact evaluation notes"
+  evaluation_result_binding:
+    - complexity_argument
+    - artifact_eval_pack
+  belief_state_binding:
+    - problem_spec
+    - invariant_assumption_register
+  search_trace_required: true
+  negative_result_policy: "failed invariants, benchmark regressions, and threat failures remain durable"
+  human_judgment_gate: "artifact release or security-sensitive claim requires human review"
+problem_spec:
+  problem: null
+  inputs: []
+  outputs: []
+  constraints: []
+  workloads: []
+algorithm_invariant_note:
+  invariants: []
+  edge_cases: []
+  proof_obligations: []
+complexity_argument:
+  time: null
+  space: null
+  assumptions: []
+system_design_record:
+  components: []
+  interfaces: []
+  dependencies: []
+  observability: []
+benchmark_protocol:
+  workloads: []
+  baselines: []
+  metrics: []
+  replay_steps: []
+threat_model:
+  assets: []
+  adversaries: []
+  trust_boundaries: []
+  mitigations: []
+artifact_eval_pack:
+  inventory: []
+  documented: false
+  consistent: false
+  complete: false
+  exercisable: false
+  reusable_notes: []

@@ -1,0 +1,592 @@
+﻿registry_id: INTEGRATIONS-0001
+updated_at: "2026-06-07"
+default_policy: "metadata_and_adapter_templates_only"
+components:
+  - id: agent-laboratory
+    name: "Agent Laboratory"
+    source_url: "https://github.com/SamuelSchmidgall/AgentLaboratory"
+    paper_url: "https://arxiv.org/abs/2501.04227"
+    license: "MIT"
+    accessed_at: "2026-06-06"
+    adapter_status: planned
+    research_os_phases:
+      - alignment
+      - evidence
+      - experimentation
+      - report
+    install_reference: "python -m venv venv_agent_lab; pip install -r requirements.txt"
+    credential_env_vars: []
+    inputs:
+      - "human-provided research idea"
+      - "task notes"
+      - "YAML experiment config"
+    outputs:
+      - "research report"
+      - "code repository"
+      - "state saves"
+    artifact_mapping:
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      public_summary: "PUBLIC/research_brief.md"
+      private_state: "PRIVATE/ when containing raw prompts or sensitive data"
+    risks:
+      sandbox: "May execute generated code; run only in approved sandbox."
+      cost: "LLM usage depends on selected backend and user configuration."
+      privacy: "Task notes may contain sensitive research details."
+      external_write: "AgentRxiv-style upload must remain disabled until explicitly approved."
+      license: "MIT is permissive; still preserve notices if code is reused."
+  - id: agentrxiv
+    name: "AgentRxiv"
+    source_url: "https://agentrxiv.github.io/"
+    paper_url: "https://arxiv.org/abs/2503.18102"
+    license: "project-specific"
+    accessed_at: "2026-06-06"
+    adapter_status: reference_only
+    research_os_phases:
+      - evidence
+      - collaboration
+      - public_export
+    install_reference: "Use as design reference for cumulative agent research sharing."
+    credential_env_vars: []
+    inputs:
+      - "agent-generated reports"
+      - "shared preprint metadata"
+    outputs:
+      - "retrievable research records"
+      - "cross-lab context"
+    artifact_mapping:
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      public_summary: "PUBLIC/public_audit_summary.md"
+    risks:
+      sandbox: "External sharing is out of scope by default."
+      cost: "Unknown until implementation selected."
+      privacy: "Do not upload private or unreviewed research artifacts."
+      external_write: "Requires explicit human approval."
+      license: "Confirm terms before implementing any upload adapter."
+  - id: ai-scientist-v2
+    name: "The AI Scientist-v2"
+    source_url: "https://github.com/SakanaAI/AI-Scientist-v2"
+    paper_url: "https://arxiv.org/abs/2504.08066"
+    license: "AI Scientist Source Code License"
+    accessed_at: "2026-06-06"
+    adapter_status: planned
+    research_os_phases:
+      - feasibility_probe
+      - experimentation
+      - analysis
+      - visual_communication
+      - paper_optional
+    install_reference: "Follow upstream conda and requirements instructions in a sandboxed Linux/GPU environment."
+    credential_env_vars:
+      - "OPENAI_API_KEY"
+      - "GEMINI_API_KEY"
+      - "S2_API_KEY"
+      - "AWS_ACCESS_KEY_ID"
+      - "AWS_SECRET_ACCESS_KEY"
+      - "AWS_REGION_NAME"
+    inputs:
+      - "topic description markdown"
+      - "generated idea JSON"
+      - "tree-search config"
+    outputs:
+      - "experiment logs"
+      - "tree visualization HTML"
+      - "paper draft PDF"
+    artifact_mapping:
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      ledger: "PROVENANCE/resource_ledger.jsonl"
+      public_summary: "PUBLIC/research_brief.md after privacy review"
+    risks:
+      sandbox: "Upstream warns it executes LLM-written code; Docker or equivalent sandbox required."
+      cost: "Runs can consume paid model APIs and GPU time."
+      privacy: "Generated manuscripts must disclose AI use according to upstream license terms."
+      external_write: "Disable submission and upload paths unless explicitly approved."
+      license: "Not a standard permissive license; review before reuse or redistribution."
+  - id: ai-co-scientist
+    name: "AI co-scientist"
+    source_url: "https://arxiv.org/abs/2502.18864"
+    paper_url: "https://arxiv.org/abs/2502.18864"
+    license: "paper-only"
+    accessed_at: "2026-06-06"
+    adapter_status: reference_only
+    research_os_phases:
+      - alignment
+      - evidence
+      - hypothesis_generation
+    install_reference: "Use generate, debate, evolve as a design pattern; no upstream code adapter is registered."
+    credential_env_vars: []
+    inputs:
+      - "scientist-provided objectives"
+      - "evidence context"
+      - "guidance and constraints"
+    outputs:
+      - "ranked hypotheses"
+      - "research proposals"
+      - "experimental protocols"
+    artifact_mapping:
+      claim_evidence: "PUBLIC/claim_evidence_matrix.yaml"
+      decision_record: "templates/markdown/decision_record.template.md"
+    risks:
+      sandbox: "No direct execution adapter."
+      cost: "Depends on chosen local implementation."
+      privacy: "Biomedical or sensitive claims need domain review before publication."
+      external_write: "None by default."
+      license: "Use paper as reference; do not imply upstream system availability."
+  - id: deep-researcher-agent
+    name: "Deep Researcher Agent"
+    source_url: "https://github.com/Xiangyue-Zhang/auto-deep-researcher-24x7"
+    paper_url: "https://arxiv.org/abs/2604.05854"
+    license: "Apache-2.0"
+    accessed_at: "2026-06-06"
+    adapter_status: planned
+    research_os_phases:
+      - experimentation
+      - resource_guard
+      - replay_eval
+    install_reference: "Follow upstream install.py and config.yaml flow in a sandboxed project workspace."
+    credential_env_vars:
+      - "OPENAI_API_KEY"
+      - "ANTHROPIC_API_KEY"
+      - "DEEPSEEK_API_KEY"
+      - "DASHSCOPE_API_KEY"
+      - "MOONSHOT_API_KEY"
+      - "ZHIPUAI_API_KEY"
+    inputs:
+      - "experiment config"
+      - "workspace code"
+      - "metric key"
+    outputs:
+      - "experiment ledger"
+      - "state files"
+      - "dead-end and insight journals"
+      - "terminal states"
+    artifact_mapping:
+      ledger: "PROVENANCE/resource_ledger.jsonl"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      private_journals: "PRIVATE/ if raw prompts or private results are present"
+    risks:
+      sandbox: "Long-running code execution requires cycle, time, and workspace bounds."
+      cost: "Low-cost monitoring pattern is useful, but model calls still require budget control."
+      privacy: "Experiment journals may contain sensitive unpublished ideas."
+      external_write: "Cluster or remote execution requires explicit confirmation."
+      license: "Apache-2.0 is permissive; preserve notices if code is reused."
+  - id: claw-ai-lab
+    name: "Claw AI Lab"
+    source_url: "https://github.com/Claw-AI-Lab/Claw-AI-Lab"
+    paper_url: "https://arxiv.org/abs/2605.22662"
+    license: "MIT"
+    accessed_at: "2026-06-06"
+    adapter_status: planned
+    research_os_phases:
+      - dashboard
+      - experimentation
+      - artifact_inspection
+      - rollback_resume
+    install_reference: "Follow upstream backend/frontend install in an isolated environment."
+    credential_env_vars:
+      - "LLM_PROVIDER_KEY"
+    inputs:
+      - "single prompt project specification"
+      - "local codebase"
+      - "datasets and checkpoints"
+    outputs:
+      - "paper"
+      - "code"
+      - "figures"
+      - "experiment logs"
+      - "event stream"
+    artifact_mapping:
+      dashboard: "Research OS Desktop UI design reference"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      artifacts: "PUBLIC/ only after privacy scan"
+    risks:
+      sandbox: "Can write runnable code back to disk; allowed paths must be enforced."
+      cost: "Multi-agent parallel work can increase model and compute usage."
+      privacy: "Dashboard artifact inspector must not expose PRIVATE material."
+      external_write: "Disable community/beta sharing by default."
+      license: "MIT is permissive; preserve notices if code is reused."
+  - id: ag2
+    name: "AG2"
+    source_url: "https://github.com/ag2ai/ag2"
+    paper_url: "https://github.com/ag2ai/ag2"
+    license: "Apache-2.0"
+    accessed_at: "2026-06-06"
+    adapter_status: optional
+    research_os_phases:
+      - orchestration
+      - human_in_loop
+      - multi_agent_discussion
+    install_reference: "pip install ag2[openai]"
+    credential_env_vars:
+      - "OPENAI_API_KEY"
+    inputs:
+      - "agent configuration"
+      - "tool definitions"
+      - "human proxy workflow"
+    outputs:
+      - "multi-agent transcript"
+      - "tool-use trace"
+    artifact_mapping:
+      transcript: "PROVENANCE/ or PRIVATE/ depending on sensitivity"
+      public_summary: "PUBLIC/research_brief.md after sanitization"
+    risks:
+      sandbox: "Code execution mode must be constrained."
+      cost: "Multi-agent conversation can multiply model calls."
+      privacy: "Transcripts may include private user instructions."
+      external_write: "Tool permissions require explicit configuration."
+      license: "Apache-2.0 is permissive; preserve notices if code is reused."
+  - id: openai-skills-catalog
+    name: "OpenAI skills catalog"
+    source_url: "https://github.com/openai/skills"
+    paper_url: "https://developers.openai.com/codex/skills"
+    license: "per-skill"
+    accessed_at: "2026-06-06"
+    adapter_status: active_reference
+    research_os_phases:
+      - skill_authoring
+      - repo_scoped_skill_discovery
+      - plugin_packaging
+    install_reference: "$skill-installer install https://github.com/openai/skills/tree/main/skills/.experimental/create-plan"
+    credential_env_vars: []
+    inputs:
+      - "SKILL.md"
+      - "scripts"
+      - "references"
+      - "assets"
+    outputs:
+      - "reusable Codex workflow"
+      - "repo-scoped skill mirror"
+    artifact_mapping:
+      source_skills: "skills/"
+      repo_mirror: ".agents/skills/"
+    risks:
+      sandbox: "Skill scripts should be reviewed before execution."
+      cost: "Skill use may trigger downstream model or tool calls."
+      privacy: "Skills must not instruct agents to leak PRIVATE content."
+      external_write: "Plugin or skill install is a local/user action unless explicitly approved."
+      license: "Each skill may have its own license; check before copying."
+  - id: alphageometry
+    name: "AlphaGeometry"
+    source_url: "https://github.com/google-deepmind/alphageometry"
+    paper_url: "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/"
+    license: "Apache-2.0 code; CC BY 4.0 checkpoints and vocabulary"
+    accessed_at: "2026-06-06"
+    adapter_status: reference_only
+    research_os_phases:
+      - domain_math_discovery
+      - counterexample_search
+      - proof_strategy
+    install_reference: "Use upstream repository as a reference for neuro-symbolic geometry workflows; no default local adapter."
+    credential_env_vars: []
+    inputs:
+      - "geometry problem statement"
+      - "diagram or construction context"
+      - "candidate auxiliary constructions"
+    outputs:
+      - "proof search trace"
+      - "construct suggestion pattern"
+      - "geometry theorem note"
+    artifact_mapping:
+      domain_profile: "domain_profiles/fundamental-mathematics/profile.yaml"
+      math_case: "templates/domain/fundamental-mathematics/math_discovery_case.template.yaml"
+      public_summary: "PUBLIC/research_brief.md after human review"
+    risks:
+      sandbox: "Reference-only until a deterministic adapter and geometry environment are reviewed."
+      cost: "No cost for metadata; any model or compute run requires resource guard."
+      privacy: "Unpublished proof attempts may be private research material."
+      external_write: "No external writeback by default."
+      license: "Preserve upstream notices and distinguish code license from checkpoint/vocabulary license."
+  - id: funsearch
+    name: "FunSearch"
+    source_url: "https://github.com/google-deepmind/funsearch"
+    paper_url: "https://deepmind.google/blog/funsearch-making-new-discoveries-in-mathematical-sciences-using-large-language-models/"
+    license: "Apache-2.0"
+    accessed_at: "2026-06-06"
+    adapter_status: planned
+    research_os_phases:
+      - domain_math_discovery
+      - domain_computer_science
+      - feasibility_probe
+      - replay_eval
+    install_reference: "Use upstream repository only inside an approved sandbox; evaluator design must be registered before execution."
+    credential_env_vars: []
+    inputs:
+      - "program search problem"
+      - "evaluator specification"
+      - "seed implementation"
+    outputs:
+      - "candidate programs"
+      - "evaluator scores"
+      - "discovery log"
+    artifact_mapping:
+      cs_case: "templates/domain/computer-science/cs_research_case.template.yaml"
+      math_case: "templates/domain/fundamental-mathematics/math_discovery_case.template.yaml"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+      ledger: "PROVENANCE/resource_ledger.jsonl"
+    risks:
+      sandbox: "Generated code and evaluators must run only through research-os-execution-harness."
+      cost: "Evolutionary LLM loops can multiply model calls; default budget is zero."
+      privacy: "Problem seeds may encode unpublished research ideas."
+      external_write: "No external publishing or leaderboard update by default."
+      license: "Apache-2.0 is permissive; preserve notices if code is reused."
+  - id: alphaevolve
+    name: "AlphaEvolve"
+    source_url: "https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/"
+    paper_url: "https://arxiv.org/abs/2506.13131"
+    license: "paper and service reference; no upstream open-source code registered"
+    accessed_at: "2026-06-06"
+    adapter_status: reference_only
+    research_os_phases:
+      - domain_computer_science
+      - domain_math_discovery
+      - experiment_manager
+      - replay_eval
+    install_reference: "Use as design reference for evolutionary codebase optimization; register an open-source implementation separately before use."
+    credential_env_vars:
+      - "GEMINI_API_KEY"
+    inputs:
+      - "algorithmic objective"
+      - "evaluator suite"
+      - "candidate codebase"
+    outputs:
+      - "evolved program variants"
+      - "multi-objective scores"
+      - "algorithm discovery report"
+    artifact_mapping:
+      cs_case: "templates/domain/computer-science/cs_research_case.template.yaml"
+      ml_case: "templates/domain/machine-learning/ml_research_case.template.yaml"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Codebase mutation and evaluator execution require strict sandbox and rollback."
+      cost: "Model and compute cost can be high; no execution without explicit budget."
+      privacy: "Candidate codebases may contain proprietary or unpublished material."
+      external_write: "No cloud service, leaderboard, repository push, or external deployment without explicit approval."
+      license: "No vendoring; treat as paper/service reference unless a reviewed open-source implementation is separately registered."
+  - id: quarto
+    name: "Quarto"
+    source_url: "https://github.com/quarto-dev/quarto"
+    paper_url: "https://quarto.org/license"
+    license: "MIT for Quarto 1.4+; note bundled components have their own licenses"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_report
+      - final_product_paper
+      - visual_communication
+    install_reference: "Use upstream installation only after a report/publishing work order selects Quarto."
+    credential_env_vars: []
+    inputs:
+      - "markdown or qmd report source"
+      - "figures"
+      - "bibliography"
+    outputs:
+      - "HTML report"
+      - "PDF report"
+      - "slides"
+    artifact_mapping:
+      final_product_plan: "templates/yaml/final_product_plan.template.yaml"
+      report_output: "PUBLIC/report/ only after privacy review"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Publishing build should run only through the execution harness."
+      cost: "No direct cost; compute time is local unless external publishing is selected."
+      privacy: "Report source may contain private unpublished material."
+      external_write: "Quarto Pub, GitHub Pages, or hosted publish requires explicit approval."
+      license: "Record Quarto and bundled component licenses before redistribution."
+  - id: typst
+    name: "Typst"
+    source_url: "https://github.com/typst/typst"
+    paper_url: "https://typst.app/open-source/"
+    license: "Apache-2.0 compiler"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_report
+      - final_product_paper
+      - visual_communication
+    install_reference: "Use the local compiler only when a selected product track chooses Typst output."
+    credential_env_vars: []
+    inputs:
+      - "Typst source"
+      - "figures"
+      - "bibliography"
+    outputs:
+      - "PDF document"
+      - "typeset report"
+    artifact_mapping:
+      report_output: "PUBLIC/report/ after privacy scan"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Local compilation is low risk but still uses selected source files."
+      cost: "Local compute only."
+      privacy: "Do not compile or export private content into PUBLIC/."
+      external_write: "Typst web collaboration or upload is out of scope without approval."
+      license: "Preserve notices for compiler or templates if bundled."
+  - id: marp-cli
+    name: "Marp CLI"
+    source_url: "https://github.com/marp-team/marp-cli"
+    paper_url: "https://github.com/marp-team/marp"
+    license: "MIT"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_report
+      - presentation_export
+      - visual_communication
+    install_reference: "Use only when the report track selects PPT/slides output."
+    credential_env_vars: []
+    inputs:
+      - "Markdown slides"
+      - "local images"
+    outputs:
+      - "HTML slides"
+      - "PDF slides"
+      - "PPTX slides"
+    artifact_mapping:
+      slides_output: "PUBLIC/report/slides/ after privacy scan"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Local file access must stay in allowed paths."
+      cost: "Local compute only."
+      privacy: "Slides may summarize unpublished results."
+      external_write: "No hosted slide publish without approval."
+      license: "MIT; preserve notices if redistributing templates or themes."
+  - id: mkdocs-material
+    name: "Material for MkDocs"
+    source_url: "https://github.com/squidfunk/mkdocs-material"
+    paper_url: "https://squidfunk.github.io/mkdocs-material/"
+    license: "MIT"
+    accessed_at: "2026-06-07"
+    adapter_status: reference_only
+    research_os_phases:
+      - final_product_report
+      - software_documentation
+      - public_export
+    install_reference: "Use as a documentation-site design reference; no default dependency."
+    credential_env_vars: []
+    inputs:
+      - "Markdown docs"
+      - "navigation config"
+    outputs:
+      - "static documentation site"
+    artifact_mapping:
+      docs_output: "PUBLIC/docs/ only after privacy review"
+      asset_sources: "docs/ASSET_SOURCES.md"
+    risks:
+      sandbox: "Site builds must avoid remote assets and private source leakage."
+      cost: "Local compute only."
+      privacy: "Documentation can accidentally expose internal research notes."
+      external_write: "GitHub Pages or hosting deploy requires explicit approval."
+      license: "MIT; preserve notices if theme assets are copied."
+  - id: lucide-icons
+    name: "Lucide Icons"
+    source_url: "https://github.com/lucide-icons/lucide"
+    paper_url: "https://github.com/lucide-icons/lucide/blob/main/LICENSE"
+    license: "ISC with Feather-derived MIT notices"
+    accessed_at: "2026-06-07"
+    adapter_status: active_reference
+    research_os_phases:
+      - dashboard
+      - desktop_ui
+      - software_documentation
+    install_reference: "Use only inline SVG subsets copied with attribution; no CDN."
+    credential_env_vars: []
+    inputs:
+      - "icon names"
+      - "inline SVG subset"
+    outputs:
+      - "offline UI icons"
+    artifact_mapping:
+      asset_sources: "docs/ASSET_SOURCES.md"
+      dashboard: "Research OS Desktop UI"
+      desktop_state: "PUBLIC/research_state.json"
+    risks:
+      sandbox: "No execution risk for inline SVG."
+      cost: "None."
+      privacy: "No private data expected."
+      external_write: "None."
+      license: "Record icon provenance and license notices."
+  - id: hatch
+    name: "Hatch"
+    source_url: "https://github.com/pypa/hatch"
+    paper_url: "https://hatch.pypa.io/"
+    license: "MIT"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_software
+      - packaging
+      - testing
+    install_reference: "Use only when a Python software product track selects Hatch packaging."
+    credential_env_vars: []
+    inputs:
+      - "pyproject.toml"
+      - "Python package source"
+    outputs:
+      - "wheel"
+      - "sdist"
+      - "test environment"
+    artifact_mapping:
+      software_output: "PUBLIC/software/ after privacy scan"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Build hooks and environment scripts must be reviewed."
+      cost: "Local compute unless publishing is selected."
+      privacy: "Package metadata may expose private project names."
+      external_write: "PyPI or registry publish requires explicit approval."
+      license: "MIT; dependency licenses still need review."
+  - id: pyinstaller
+    name: "PyInstaller"
+    source_url: "https://github.com/pyinstaller/pyinstaller"
+    paper_url: "https://pyinstaller.org/en/stable/license.html"
+    license: "GPL-2.0 with bootloader exception; selected files Apache-2.0"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_software
+      - packaging
+    install_reference: "Use only when a Python software product track explicitly selects executable packaging."
+    credential_env_vars: []
+    inputs:
+      - "Python entrypoint"
+      - "package dependencies"
+    outputs:
+      - "standalone executable bundle"
+    artifact_mapping:
+      software_output: "PUBLIC/software/ after privacy scan"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Executable bundling can include unintended files; inspect build manifest."
+      cost: "Local compute only."
+      privacy: "Bundles may accidentally include private config or data files."
+      external_write: "Release upload requires explicit approval."
+      license: "Generated bundles can use project license subject to dependency licenses; review before distribution."
+  - id: fastapi
+    name: "FastAPI"
+    source_url: "https://github.com/fastapi/fastapi"
+    paper_url: "https://fastapi.tiangolo.com/"
+    license: "MIT"
+    accessed_at: "2026-06-07"
+    adapter_status: optional
+    research_os_phases:
+      - final_product_software
+      - api_service
+      - software_documentation
+    install_reference: "Use only when a software product track selects a Python API service."
+    credential_env_vars: []
+    inputs:
+      - "API contract"
+      - "Python service code"
+      - "tests"
+    outputs:
+      - "local API service"
+      - "OpenAPI schema"
+      - "service documentation"
+    artifact_mapping:
+      software_docs: "PUBLIC/software/ after privacy scan"
+      manifest: "PROVENANCE/run_manifest.jsonl"
+    risks:
+      sandbox: "Local services must bind to localhost by default."
+      cost: "Local compute unless deployed."
+      privacy: "API examples may expose unpublished data."
+      external_write: "Deployment requires explicit approval."
+      license: "MIT; dependency and deployment stack licenses still need review."

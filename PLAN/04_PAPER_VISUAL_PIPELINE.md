@@ -1,48 +1,24 @@
-# 论文、视觉与表达流程
+# Paper And Visual Pipeline
 
-## 启用条件
+## Activation
 
-论文、LaTeX、投稿包和 rebuttal 是可选传播产物。只有 `dissemination.paper_enabled: true`，或研究者明确要求论文、报告、投稿时，才启用本流程。否则默认输出研究简报、验证报告、审计包、复现包或决策备忘。
+Paper, LaTeX, submission packages, visual polish, and rebuttal workflows are optional final-product routes. They run only when the researcher selects a paper track or explicitly requests paper/submission work.
 
-## 论文启用时 LaTeX 优先
+## LaTeX Source
 
-当传播目标是正式论文时，以 LaTeX 为投稿源。模板支持会议/期刊样式、BibTeX、附录、图表、匿名化检查和投稿 checklist。
+Formal paper output uses LaTeX as the source format. Venue templates, BibTeX, appendices, figure/table pipelines, anonymization checks, and submission checklists are added only after the target is known.
 
-## 矢量图优先
+## Visual Quality
 
-- 机制图、流程图：TikZ、SVG、Graphviz 或 Mermaid 导出矢量。
-- 数据图：Matplotlib/PGFPlots 输出 `.pdf` 或 `.svg`。
-- 最终论文禁止只使用低清 PNG 数据图。
+- Mechanism diagrams and workflows should use vector formats when practical.
+- Data figures should use PDF or SVG outputs for final papers when possible.
+- Captions should explain the conclusion, not just describe the figure.
+- Visual changes should be compiled and checked before release.
 
-## 图表多样性
+## Generated Images
 
-论文启用后至少规划：
+Generated images may support graphical abstracts or conceptual illustrations. They must not fabricate experimental data. Submission use requires human confirmation.
 
-- 主结果图。
-- 消融图。
-- 成本-性能图。
-- 失败案例图。
-- 方法结构图。
-- 实验流程图。
-- 定性案例表或附录扩展图。
+## Polish And Fact-Checking
 
-## 美术规范
-
-- 色盲友好配色。
-- 统一字体层级。
-- `booktabs` 表格。
-- `siunitx` 数字对齐。
-- caption 必须解释图表结论，不只描述图表内容。
-- 每次视觉修改后编译 PDF 并渲染页面检查。
-
-## AIGC 图像
-
-AIGC 只用于图形摘要、概念插图或非数据性视觉辅助。不得生成实验数据图。进入投稿前必须人工确认。
-
-## 润色与事实校验
-
-论文润色包括逻辑润色、结构优化、专业化、事实性校验、去模板腔。事实校验必须区分 supported、partially supported、unsupported、unverifiable、outdated。
-
-## 附录
-
-附录默认覆盖复现细节、额外消融、失败案例、prompt/模型调用摘要、数据集细节、成本表、伦理与局限。
+Paper polish covers logic, structure, professional tone, factual accuracy, and removal of generic boilerplate. Fact-checking labels claims as supported, partially supported, unsupported, unverifiable, or outdated.

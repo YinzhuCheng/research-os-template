@@ -1,0 +1,20 @@
+domain_id: example-domain
+agents:
+  - agent_id: example-agent
+    role: "Describe the role in one sentence."
+    inputs:
+      - input_artifact
+    outputs:
+      - output_artifact
+    allowed_paths:
+      - domain_profiles/example-domain/
+      - templates/domain/example-domain/
+      - PROVENANCE/
+    forbidden_paths:
+      - PRIVATE/
+    resource_policy:
+      paid_resources: false
+      code_execution: false
+    network_policy: "No network by default."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Public output requires sanitization and evidence links."

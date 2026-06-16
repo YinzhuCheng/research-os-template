@@ -6,7 +6,8 @@ param(
   [string[]]$Inputs = @(),
   [string[]]$Outputs = @(),
   [string]$PrivacyLevel = "public",
-  [string]$ManifestPath = "PROVENANCE\run_manifest.jsonl"
+  [string]$ManifestPath = "PROVENANCE\run_manifest.jsonl",
+  [switch]$AllowCustomManifestPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -19,6 +20,24 @@ function Hash-Map([string[]]$Items) {
     }
   }
   return $map
+}
+
+function Resolve-RepoPath([string]$Path) {
+  if ([System.IO.Path]::IsPathRooted($Path)) {
+    return [System.IO.Path]::GetFullPath($Path)
+  }
+  return [System.IO.Path]::GetFullPath((Join-Path (Get-Location).Path $Path))
+}
+
+$defaultManifest = Resolve-RepoPath "PROVENANCE\run_manifest.jsonl"
+$resolvedManifest = Resolve-RepoPath $ManifestPath
+if (!$AllowCustomManifestPath -and $resolvedManifest -ne $defaultManifest) {
+  throw "Refusing to write manifest outside PROVENANCE\run_manifest.jsonl without -AllowCustomManifestPath: $ManifestPath"
+}
+
+$manifestParent = Split-Path -Parent $resolvedManifest
+if (!(Test-Path -LiteralPath $manifestParent)) {
+  New-Item -ItemType Directory -Force -Path $manifestParent | Out-Null
 }
 
 $entry = [ordered]@{
@@ -37,5 +56,5 @@ $entry = [ordered]@{
 }
 
 $json = $entry | ConvertTo-Json -Compress -Depth 6
-Add-Content -LiteralPath $ManifestPath -Value $json -Encoding UTF8
+Add-Content -LiteralPath $resolvedManifest -Value $json -Encoding UTF8
 Write-Output "Appended manifest entry $RunId"

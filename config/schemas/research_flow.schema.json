@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-desktop.local/schemas/research_flow.schema.json",
+  "title": "Research OS Process Contract",
+  "type": "object",
+  "required": [
+    "flow_id",
+    "version",
+    "language_mode",
+    "user_macro_phases",
+    "canonical_sequence",
+    "spec_priority",
+    "global_rules",
+    "choice_prompt_contract",
+    "stages"
+  ],
+  "properties": {
+    "flow_id": { "type": "string", "pattern": "^RESEARCH-FLOW-[0-9]{4}$" },
+    "version": { "type": "string" },
+    "language_mode": { "type": "string", "enum": ["zh-first", "en-only"] },
+    "canonical_sequence": {
+      "type": "array",
+      "minItems": 8,
+      "items": { "type": "string" }
+    },
+    "user_macro_phases": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "$ref": "#/$defs/macro_phase" }
+    },
+    "spec_priority": {
+      "type": "array",
+      "minItems": 5,
+      "items": { "type": "string" }
+    },
+    "global_rules": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 8,
+      "items": { "$ref": "#/$defs/stage" }
+    },
+    "choice_prompt_contract": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "macro_phase": {
+      "type": "object",
+      "required": ["id", "label_zh", "label_en", "internal_stages", "user_goal"],
+      "properties": {
+        "id": { "type": "string" },
+        "label_zh": { "type": "string" },
+        "label_en": { "type": "string" },
+        "internal_stages": { "type": "array", "items": { "type": "string" } },
+        "user_goal": { "type": "string" }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "required": [
+        "id",
+        "macro_phase",
+        "purpose",
+        "inputs",
+        "outputs",
+        "required_skill",
+        "optional_skills",
+        "human_gate",
+        "prohibited",
+        "validation"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "macro_phase": { "type": "string" },
+        "exposed_to_user": { "type": "boolean" },
+        "replaces": { "type": "array", "items": { "type": "string" } },
+        "purpose": { "type": "string" },
+        "inputs": { "type": "array", "items": { "type": "string" } },
+        "outputs": { "type": "array", "items": { "type": "string" } },
+        "required_skill": { "type": "string", "pattern": "^research-os-[a-z0-9-]+$" },
+        "optional_skills": { "type": "array", "items": { "type": "string" } },
+        "human_gate": { "type": "string" },
+        "prohibited": { "type": "array", "items": { "type": "string" } },
+        "validation": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

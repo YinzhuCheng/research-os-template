@@ -1,0 +1,62 @@
+domain_id: computer-science
+agents:
+  - agent_id: cs-problem-specifier
+    role: "Define problem, interfaces, constraints, inputs, outputs, workloads, and success criteria."
+    inputs: [research_question, artifact_context]
+    outputs: [problem_spec, workload_definition]
+    allowed_paths: [domain_profiles/computer-science/, templates/domain/computer-science/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence for taxonomy, standards, or benchmark status."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Specs may be public after private context removal."
+  - agent_id: cs-algorithm-analyst
+    role: "Analyze invariants, correctness obligations, edge cases, and complexity."
+    inputs: [problem_spec, proposed_algorithm]
+    outputs: [algorithm_invariant_note, complexity_argument]
+    allowed_paths: [domain_profiles/computer-science/, templates/domain/computer-science/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence for known algorithms or bounds."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Correctness claims require explicit assumptions."
+  - agent_id: cs-system-architect
+    role: "Record architecture, components, dependency boundaries, environment, and observability."
+    inputs: [problem_spec, system_notes]
+    outputs: [system_design_record, artifact_inventory]
+    allowed_paths: [domain_profiles/computer-science/, templates/domain/computer-science/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "No network by default."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Architecture docs must not expose secrets or private infrastructure."
+  - agent_id: cs-benchmark-designer
+    role: "Design workloads, metrics, baselines, replay protocol, and result logging."
+    inputs: [problem_spec, artifact_inventory]
+    outputs: [benchmark_protocol, replay_plan]
+    allowed_paths: [domain_profiles/computer-science/, templates/domain/computer-science/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: "only through execution harness when approved" }
+    network_policy: "No network during benchmark unless work_order permits."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Benchmarks require environment and run manifest links."
+  - agent_id: cs-threat-modeler
+    role: "Identify adversaries, assets, trust boundaries, abuse cases, and mitigation assumptions."
+    inputs: [problem_spec, system_design_record]
+    outputs: [threat_model, security_review_questions]
+    allowed_paths: [domain_profiles/computer-science/, templates/domain/computer-science/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence for vulnerability or policy status."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Do not publish exploit-enabling detail without human review."
+  - agent_id: cs-artifact-evaluator
+    role: "Check artifact inventory, documentation, consistency, completeness, exercisability, and reuse."
+    inputs: [artifact_inventory, benchmark_protocol, results_summary]
+    outputs: [artifact_eval_pack, residual_risk_report]
+    allowed_paths: [domain_profiles/computer-science/, templates/domain/computer-science/, PROVENANCE/, PUBLIC/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: "only through execution harness when approved" }
+    network_policy: "No network by default."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Public artifact packs require privacy scan and license check."

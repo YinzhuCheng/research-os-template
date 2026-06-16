@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Research OS",
+  "version": "0.1.0",
+  "identifier": "local.research-os.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:5173",
+    "beforeBuildCommand": "node ./node_modules/typescript/bin/tsc && node ./node_modules/vite/bin/vite.js build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Research OS",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 980,
+        "minHeight": 680
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src http://127.0.0.1:8789; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "../../research-os-sidecar": "research-os-sidecar",
+      "../../../AGENTS.md": "research-os-core/AGENTS.md",
+      "../../../README.md": "research-os-core/README.md",
+      "../../../.gitattributes": "research-os-core/.gitattributes",
+      "../../../CONTROL": "research-os-core/CONTROL",
+      "../../../config": "research-os-core/config",
+      "../../../docs": "research-os-core/docs",
+      "../../../PUBLIC": "research-os-core/PUBLIC",
+      "../../../scripts": "research-os-core/scripts",
+      "../../../skills": "research-os-core/skills",
+      "../../../templates": "research-os-core/templates",
+      "../../../domain_profiles": "research-os-core/domain_profiles",
+      "../../../adapters": "research-os-core/adapters"
+    }
+  }
+}

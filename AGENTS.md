@@ -1,39 +1,98 @@
-# Codex Research OS 模板规则
+# Codex Research OS Desktop Rules
 
-## 研究中立性
+These rules apply to this repository. They are written for Codex and later agents working on Research OS Desktop.
 
-- 不默认任何研究方向。不要把项目默认成 LLM、机器学习、软件工程、数据集实验、论文或投稿任务。
-- 入口材料不足时，生成对齐问题和待决策项，不擅自补默认模型、provider、baseline、dataset、样本量或预算。
-- `feasibility_probe` 表示最小可行性验证，预算和工具必须来自研究者输入或确认后的决策记录。
+## Priority Order
 
-## 语言与产物
+When instructions conflict, use this order:
 
-- 默认 `zh-first`：计划、实验记录、分析、内部审计和 dashboard 使用中文。
-- 只有 `dissemination.paper_enabled: true` 或研究者明确指定论文/投稿目标时，才进入论文写作、LaTeX、视觉和 review/rebuttal 流程。
-- 未指定论文目标时，默认产物是研究简报、实验/验证报告、审计包、复现包或决策备忘。
+1. Latest user instruction in the current thread.
+2. `CONTROL/work_order.yaml` and `CONTROL/phase_gate.yaml`.
+3. This `AGENTS.md`.
+4. `config/research_flow.yaml` process contract.
+5. `config/research_project.yaml` and schemas.
+6. Current docs and dashboard data.
+7. Historical `PLAN/` and `PROVENANCE/` records.
 
-## 控制与审计
+## Use Repo Skills First
 
-- 执行前先读取 `CONTROL/work_order.yaml`、`CONTROL/phase_gate.yaml` 和 `config/research_project.yaml`。
-- 只在 work order 的 `allowed_paths` 内写入；禁止路径必须视为硬边界。
-- 每次实质运行后写入 `PROVENANCE/run_manifest.jsonl`，资源消耗写入 `PROVENANCE/resource_ledger.jsonl`。
-- 预算、真实资源调用、凭据使用、外部写入、公开导出和投稿必须人工确认。
-- 不自动清理 build、cache、log、raw output、validation report 或中间实验产物。
+- Before a research task, identify the relevant repo skill under `skills/` or `.agents/skills/`.
+- Read the selected `SKILL.md` before using it.
+- Use `research-os-orchestrator` as the default entry skill for routing.
+- Use `research-os-research-kernel` before domain-specific research work.
+- Use domain skills only after the kernel has a candidate and evaluator contract.
+- Use `research-os-execution-harness` before mutating research artifacts or running experiments.
+- If no skill applies, continue with general Codex behavior and record the gap if the task should become a durable Research OS route.
 
-## 隐私与凭据
+## Canonical Flow
 
-- `PUBLIC/` 只放可公开或已脱敏内容。
-- `PRIVATE/` 默认不进入 git，原始对话、敏感数据和私有审计留在这里。
-- 真实 API key、云账号密码、SSH 私钥、cookie、authorization header 不得写入仓库任何文件。
-- 需要资源凭据时，只记录环境变量名、secret store 路径、IAM 角色名或短期凭据获取方式；真实值由运行环境提供。
+The canonical flow is defined in `config/research_flow.yaml`.
 
-## 实时证据
+User-facing macro phases:
 
-- 对时效性信息必须联网刷新并记录来源：文献状态、工具/API、价格、会议规则、数据许可、法律/伦理要求和外部资源可用性。
-- 如果不能联网，必须把相关 claim 标成 `unverified` 或 `freshness_risk: high`。
+`initialization -> semi_automated_research_loop -> final_product`
+
+Internal controlled stages:
+
+`initialization_intake -> loop_acceptance_gate -> loop_plan_alignment -> loop_user_decision -> loop_execute_analyze -> final_product_selection -> final_product_production -> export_release_gate`
+
+The main product surface is the Research OS Desktop app. The first workflow is desktop material intake in a `.rosproj` project. Do not ask the retired fixed five-question intake. After material profiling, ask exactly three targeted questions, each with a recommended answer, options, and an Other/free-form path.
+
+During the loop phase, do not advance past `loop_acceptance_gate` unless the researcher accepts the previous artifact. If the researcher rejects it or gives revision instructions, keep the loop in revision mode and update the current artifact before planning the next step.
+
+Every user-facing choice prompt, including final product selection and archive descriptions, must provide a recommended option, concrete defaults, and a natural-language free-form path.
+
+## App-First Dogfooding Rules
+
+- When an existing manuscript, PDF, PPT, notes directory, venue template, or example-paper bundle is supplied to Research OS Desktop, treat it as initialization material unless the researcher explicitly accepts it as a final-product artifact through the app.
+- Desktop initialization must reason over the whole supplied folder. Do not silently choose only the most obvious draft file when templates, venue instructions, example papers, screenshots, proof audits, reviews, notebooks, data, or notes are present.
+- Project creation should generate durable project context for Codex. Routine instructions such as "use repo skills first", "verify sources online", "avoid hallucinated citations", "preserve provenance", "record app/workflow gaps", and "respect stage gates" belong in generated project context, work orders, phase gates, skills, or harness rules instead of relying on the user to write expert prompts.
+- A paper draft becomes a final paper artifact only after the initialization and research-loop gates have produced an accepted research plan, source-verification record, proof/evidence audit, and final-product selection.
+- App/workflow shortcomings discovered while dogfooding must be recorded and, when broadly useful, fixed in the app before bypassing the app manually.
+- For the active neural-network submission workflow, use English-mode app surfaces first. Do not spend this work order restoring Chinese UI copy unless a narrow issue blocks the English paper workflow.
+- A good app-generated research plan for a theoretical paper must cover research content, motivation, expected contributions, related literature and differences, theoretical setup, proof route, optional experiments or computational checks, source verification, risks, and acceptance criteria.
+
+## Research Neutrality
+
+- Do not assume an LLM, machine learning task, software project, dataset, baseline, paper, venue, or budget by default.
+- If input material is insufficient, create alignment questions and pending decisions instead of inventing tools, providers, baselines, datasets, sample sizes, or budgets.
+- `feasibility_probe` means the smallest useful validation path. Its budget and tools must come from researcher material or confirmed decisions.
+
+## Language And Outputs
+
+- Repository documentation is English-first.
+- The desktop app UI may default to Chinese.
+- The active neural-network submission dogfooding workflow should run in English-mode app UI and English generated project context.
+- Final product flows run only after `final_product_selection` or an explicit researcher request.
+- Paper writing, LaTeX, visual paper polish, review/rebuttal, and submission flows run only when `dissemination.paper_enabled: true`, the paper track is selected, or the researcher explicitly asks for a paper/submission.
+- Report output may include more process, initial data, negative results, and reproducibility detail than a paper. Supported report targets are HTML, LaTeX/PDF, and PPT when enabled.
+- Software output defaults to stable, engineered, polished, user-friendly productization with documentation and preserved intermediate research artifacts unless the researcher adjusts the target in natural language.
+- Without a final product target, default outputs are research briefs, validation reports, audit packs, reproducibility packs, or decision memos.
+
+## Control And Audit
+
+- Before mutating work, read `CONTROL/work_order.yaml`, `CONTROL/phase_gate.yaml`, and `config/research_project.yaml`.
+- Write only inside `allowed_paths`; treat `forbidden_paths` as hard boundaries.
+- After substantive work, append `PROVENANCE/run_manifest.jsonl`.
+- Record resource use in `PROVENANCE/resource_ledger.jsonl`.
+- Human confirmation is required for real resource use, credentials, budget overrun, external writeback, public export, and submission.
+- Do not clean build files, caches, logs, raw outputs, validation reports, or intermediate experiment artifacts unless the user explicitly asks for cleanup and names the target paths.
+
+## Privacy And Credentials
+
+- `PUBLIC/` contains public or sanitized material only.
+- `PRIVATE/` is ignored by git and is the default location for raw intake material, private conversations, sensitive data, and private audit material.
+- Never write real API keys, platform tokens, cookies, auth headers, SSH private keys, cloud passwords, or real credentials to the repository.
+- If credentials are needed, record only environment variable names, secret-store paths, IAM role names, or short-lived credential retrieval procedures.
+
+## Evidence And Freshness
+
+- Refresh time-sensitive information online and record sources when decisions depend on literature status, tools/APIs, prices, venue rules, dataset licenses, legal/ethics requirements, or external resource availability.
+- If freshness cannot be verified, mark the claim as `unverified` or `freshness_risk: high`.
 
 ## Git
 
-- 本目录是独立 git 仓库。只提交模板自身，不推送远程。
-- 不回滚用户或其他进程产生的无关改动。
-- 提交前运行相关验证脚本，并在最终说明中报告未能运行的检查。
+- This is an independent git repository for Research OS Desktop.
+- Do not revert unrelated user or external changes.
+- Run relevant validation scripts before committing.
+- Report checks that could not be run.

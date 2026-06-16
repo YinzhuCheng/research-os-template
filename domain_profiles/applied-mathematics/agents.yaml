@@ -1,0 +1,66 @@
+domain_id: applied-mathematics
+agents:
+  - agent_id: applied-problem-translator
+    role: "Translate application context into variables, equations, objectives, constraints, and outputs."
+    inputs:
+      - application_question
+      - available_measurements
+    outputs:
+      - variable_dictionary
+      - model_candidate
+    allowed_paths: [domain_profiles/applied-mathematics/, templates/domain/applied-mathematics/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Evidence refresh only for domain constants or literature status."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Remove private application context before PUBLIC export."
+  - agent_id: applied-assumption-auditor
+    role: "Record assumptions, violated regimes, missing data, and unmodeled mechanisms."
+    inputs: [model_candidate, application_context]
+    outputs: [model_assumption_ledger, assumption_gap_list]
+    allowed_paths: [domain_profiles/applied-mathematics/, templates/domain/applied-mathematics/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "No network by default."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Assumption ledgers may be public after sanitization."
+  - agent_id: applied-scale-analyst
+    role: "Perform scale checks, nondimensionalization, limiting regimes, and dominant balance analysis."
+    inputs: [variable_dictionary, model_candidate]
+    outputs: [nondimensionalization_note, regime_map]
+    allowed_paths: [domain_profiles/applied-mathematics/, templates/domain/applied-mathematics/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Evidence refresh only for physical constants or benchmark values."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Regime claims require units and scale provenance."
+  - agent_id: applied-stability-error-checker
+    role: "Check well-posedness, stability, approximation error, discretization error, and convergence risks."
+    inputs: [model_candidate, regime_map]
+    outputs: [stability_check, approximation_error_note]
+    allowed_paths: [domain_profiles/applied-mathematics/, templates/domain/applied-mathematics/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence refresh for cited numerical methods."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Error claims must state assumptions."
+  - agent_id: applied-numerical-validator
+    role: "Design minimal simulations, sanity checks, baselines, and sensitivity probes."
+    inputs: [model_candidate, stability_check]
+    outputs: [numerical_validation_plan, sensitivity_report]
+    allowed_paths: [domain_profiles/applied-mathematics/, templates/domain/applied-mathematics/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: "only through execution harness when approved" }
+    network_policy: "No network by default."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Numerical results require manifest and resource ledger."
+  - agent_id: applied-interpretation-reviewer
+    role: "Map results back to the application and flag unsupported causal or operational claims."
+    inputs: [sensitivity_report, application_question]
+    outputs: [interpretation_limits, decision_memo]
+    allowed_paths: [domain_profiles/applied-mathematics/, templates/domain/applied-mathematics/, PROVENANCE/, PUBLIC/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use evidence refresh for application-domain facts."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Public decision memos must separate math result from application recommendation."

@@ -1,43 +1,82 @@
-work_order_id: WO-0001
-phase: schema
-goal: "实现研究对象 schema、模板和样例对象。"
+work_order_id: WO-0018
+phase: research-os-v4.7-real-yunwu-codex-dogfood
+goal: "Use Research OS Desktop as the primary interface and real Codex app-server/SDK runtime backed by Yunwu gpt-5.5 xhigh to re-run the neural-network submission workflow from fresh app initialization through acceptance-gated research loops and paper production."
 inputs:
-  - "PLAN/00_MASTER_PLAN.md"
-  - "PLAN/01_ARCHITECTURE.md"
-allowed_paths:
-  - "config/"
-  - "templates/"
-  - "PUBLIC/"
-  - "CONTROL/"
-  - "PROVENANCE/"
-  - "PLAN/"
-forbidden_paths:
-  - "PRIVATE/"
-outputs:
+  - "AGENTS.md"
+  - "CONTROL/work_order.yaml"
+  - "CONTROL/phase_gate.yaml"
   - "config/research_project.yaml"
-  - "config/schemas/"
+  - "docs/"
+  - "PLAN/"
+  - "PUBLIC/"
+  - "scripts/"
+  - "apps/"
+  - "neural network/ (local untracked source material; full-folder intake required; do not commit raw inputs)"
+  - "PRIVATE/projects/neural-network-submission/ (prior private draft package; treat as source material, not a completed final product)"
+  - "PRIVATE/projects/neural-network-submission/neural-network-v46-reinit-20260608-094813/ (operator-assisted baseline package; treat as source material, not a completed final product)"
+  - "local screenshots under ignored test-results directories"
+allowed_paths:
+  - ".agents/"
+  - "adapters/"
+  - "AGENTS.md"
+  - "apps/"
+  - "config/"
+  - "CONTROL/"
+  - "docs/"
+  - "evals/"
+  - "PLAN/"
+  - "PROVENANCE/"
+  - "PUBLIC/"
+  - "README.md"
+  - "skills/"
+  - "scripts/"
   - "templates/"
-  - "PUBLIC/claim_evidence_matrix.yaml"
+  - "tests/"
+  - "tools/"
+  - "PRIVATE/projects/neural-network-submission/"
+forbidden_paths:
+  - "PRIVATE/secrets/"
+  - "PRIVATE/external_repos/"
+outputs:
+  - "README.md"
+  - "AGENTS.md"
+  - "docs/"
+  - "PLAN/"
+  - "PUBLIC/"
+  - "scripts/"
+  - "apps/"
+  - "config/"
+  - "tests/"
+  - "PRIVATE/projects/neural-network-submission/"
   - "PROVENANCE/run_manifest.jsonl"
+  - "PROVENANCE/resource_ledger.jsonl"
 resource_budget:
-  currency: CNY
-  max_total_cost: 0
+  currency: USD
+  max_total_cost: 200
   categories:
-    time: 30 minutes
-    compute: none
-    cloud: none
-    lab: none
-    material: none
-    api: none
-    model: none
-    human: none
-    other: none
-  max_runtime_minutes: 30
+    time: "local implementation session"
+    compute: "local validation and packaging"
+    api: "Yunwu gpt-5.5 xhigh paper review/rebuttal rounds and source-aware critique, hard cap USD 200"
+  max_runtime_minutes: null
 stop_conditions:
-  - "需要读取 PRIVATE 原始材料。"
-  - "schema 与计划中的接口冲突。"
+  - "Need to commit real PRIVATE intake material."
+  - "Need to store real API keys, account tokens, cookies, authorization headers, or provider secrets."
+  - "Need external writeback other than git push to the current branch or read-only online source verification."
+  - "Yunwu usage cannot be measured or estimated safely before paid review calls."
+  - "gpt-5.5 or xhigh reasoning is unavailable and no user-approved fallback exists."
 acceptance_criteria:
-  - "所有核心对象都有稳定模板。"
-  - "claim-evidence 样例能追踪到计划文档。"
+  - "Research OS Desktop treats the previous manuscript/PDF/PPT/notes/templates/examples as initialization material, not as an already accepted final product."
+  - "Research OS Desktop can ingest and reason over the full neural-network folder, including templates, example papers, venue rules, prior proof audits, screenshots, and notes."
+  - "Generated project context and app instructions automatically tell Codex to use repo skills, verify sources online, avoid hallucinated citations, preserve provenance, and record workflow gaps."
+  - "Research OS Desktop can drive a real paper workflow for the neural-network materials through app-controlled Codex turns without relying on manual manuscript bypasses."
+  - "The app runtime uses an isolated Research OS owned CODEX_HOME and a Yunwu provider profile rather than project-local provider config."
+  - "A real app-driven Codex thread and turn are proven to run with modelProvider=yunwu, model=gpt-5.5, and xhigh reasoning before large review spending."
+  - "The active app workflow for this paper can run in readable English mode without Chinese mojibake blocking progress."
+  - "The generated research plan includes research content, motivation, expected contributions, related literature, theoretical setup, proof route, optional experiments, source verification, risks, and acceptance criteria."
+  - "The local neural-network materials are imported into a project sandbox without committing raw input files."
+  - "Official venue rules and citation metadata are refreshed online with recorded sources."
+  - "The final paper package produced by app-driven Codex turns compiles and includes manuscript, appendix or supplement if needed, references, highlights, cover letter, checklist, source verification, proof audit, and required declarations."
+  - "Yunwu review/rebuttal calls use gpt-5.5 xhigh through Research OS Desktop runtime if available, are redacted, measured, and stay within the hard USD 200 ceiling."
+  - "App interaction records, app/workflow gap records, screenshots, run manifests, resource ledger entries, and archive records are preserved."
 requires_confirmation: false
-privacy_level: public
+privacy_level: mixed

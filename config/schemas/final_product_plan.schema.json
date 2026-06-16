@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os-desktop.local/schemas/final_product_plan.schema.json",
+  "title": "Research OS Final Product Plan",
+  "type": "object",
+  "required": [
+    "product_plan_id",
+    "created_at",
+    "phase",
+    "selected_tracks",
+    "choice_prompts",
+    "tracks",
+    "status"
+  ],
+  "properties": {
+    "product_plan_id": { "type": "string", "pattern": "^FP-[0-9A-Za-z_-]+$" },
+    "created_at": { "type": "string" },
+    "phase": { "type": "string" },
+    "selected_tracks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["paper", "report", "software"] }
+    },
+    "choice_prompts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/choice_prompt_ref" }
+    },
+    "tracks": { "type": "object" },
+    "evidence_requirements": { "type": "array", "items": { "type": "string" } },
+    "intermediate_artifact_policy": { "type": "string" },
+    "human_gates": { "type": "array", "items": { "type": "string" } },
+    "status": { "enum": ["draft", "awaiting_user_selection", "approved", "in_progress", "complete", "blocked"] }
+  },
+  "$defs": {
+    "choice_prompt_ref": {
+      "type": "object",
+      "required": ["prompt_id", "purpose"],
+      "properties": {
+        "prompt_id": { "type": "string" },
+        "purpose": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

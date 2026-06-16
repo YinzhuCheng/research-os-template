@@ -1,0 +1,62 @@
+domain_id: statistics
+agents:
+  - agent_id: stats-estimand-framer
+    role: "Define population, target quantity, intervention/exposure, outcome, contrast, and time horizon."
+    inputs: [research_question, data_context]
+    outputs: [estimand_card, analysis_scope]
+    allowed_paths: [domain_profiles/statistics/, templates/domain/statistics/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence for reporting or ethical guidance."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Estimand cards may be public after data context is sanitized."
+  - agent_id: stats-identification-auditor
+    role: "Audit causal or statistical identification assumptions, confounding, missingness, and measurement."
+    inputs: [estimand_card, study_design_notes]
+    outputs: [identification_memo, assumption_gap_list]
+    allowed_paths: [domain_profiles/statistics/, templates/domain/statistics/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "No network by default."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Identification claims require explicit assumptions."
+  - agent_id: stats-design-planner
+    role: "Plan sampling, power, missing data handling, multiplicity, and preregistration-style decisions."
+    inputs: [estimand_card, identification_memo]
+    outputs: [sampling_power_plan, analysis_plan]
+    allowed_paths: [domain_profiles/statistics/, templates/domain/statistics/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use evidence refresh for reporting guidelines if needed."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Plans may be public if no private data is exposed."
+  - agent_id: stats-diagnostic-reviewer
+    role: "Define residual checks, calibration, priors, convergence, model fit, and robustness diagnostics."
+    inputs: [analysis_plan, model_results]
+    outputs: [diagnostic_report, robustness_questions]
+    allowed_paths: [domain_profiles/statistics/, templates/domain/statistics/, PROVENANCE/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: "only through execution harness when approved" }
+    network_policy: "No network by default."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Diagnostics require reproducible inputs or manifest links."
+  - agent_id: stats-uncertainty-communicator
+    role: "Write effect sizes, intervals, posterior summaries, practical significance, and limitations."
+    inputs: [model_results, diagnostic_report]
+    outputs: [uncertainty_statement, interpretation_limits]
+    allowed_paths: [domain_profiles/statistics/, templates/domain/statistics/, PROVENANCE/, PUBLIC/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence for reporting standards."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Avoid binary p-value overclaiming; separate evidence from decision."
+  - agent_id: stats-sensitivity-ethics-auditor
+    role: "Check sensitivity analyses, privacy, subgroup risk, ethical practice, and disclosure boundaries."
+    inputs: [uncertainty_statement, data_card]
+    outputs: [sensitivity_analysis, statistical_ethics_note]
+    allowed_paths: [domain_profiles/statistics/, templates/domain/statistics/, PROVENANCE/, PUBLIC/]
+    forbidden_paths: [PRIVATE/]
+    resource_policy: { paid_resources: false, code_execution: false }
+    network_policy: "Use live evidence for current ethics or reporting requirements."
+    external_write_policy: forbidden_without_explicit_confirmation
+    public_output_policy: "Public statistical summaries require privacy scan."
