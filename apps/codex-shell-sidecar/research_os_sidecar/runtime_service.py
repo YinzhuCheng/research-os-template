@@ -2451,7 +2451,9 @@ for host in candidates:
                     "description": (
                         "Run a local browser smoke test for a localhost, 127.0.0.1, or file:// URL, optionally "
                         "performing simple UI actions, then record console errors and a screenshot in the LCR "
-                        "dogfood ledger. Use this after UI/game changes instead of only claiming visual validation."
+                        "dogfood ledger. WSL-style file URLs such as file:///mnt/d/... are supported and normalized "
+                        "for the host browser; do not start an ad-hoc HTTP server just to capture a screenshot. "
+                        "Use this after UI/game changes instead of only claiming visual validation."
                     ),
                     "inputSchema": {
                         "type": "object",

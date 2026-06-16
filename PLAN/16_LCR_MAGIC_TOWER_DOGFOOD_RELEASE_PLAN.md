@@ -306,6 +306,21 @@ Latest evidence from the 2026-06-16 13:00 Yunwu MCP retry and DS tool-drift chec
 - Dogfood milestone recorded: `Yunwu MCP transparent forest overlay retry after DS tool drift`.
 - New LCR bug/risk from the same run: DS's `file:///mnt/d/...` browser-smoke call failed in Playwright with `ERR_FILE_NOT_FOUND`, so future browser-smoke tool result text should explain the host-path normalization requirement and recommend local app URLs or LCR-normalized paths instead of ad-hoc HTTP servers.
 
+Latest fix from the 2026-06-16 13:10 browser-smoke recovery pass:
+
+- Fixed the root cause of the DS server drift: `DogfoodRunService.browser_smoke` now converts WSL-style file URLs such as `file:///mnt/d/...` into host-browser URLs such as `file:///D:/...` before calling Playwright, not only for preflight.
+- Browser-smoke records now include `navigation_url` when the browser-visible URL differs from the user/model supplied URL. This gives DS/Kimi a concrete clue that LCR normalized the path and they should not start a temporary HTTP server.
+- The `lcr_browser_smoke` dynamic tool description now explicitly says WSL-style file URLs are supported and instructs agents not to start ad-hoc HTTP servers just to capture screenshots.
+- Regression coverage:
+  - targeted browser-smoke URL tests passed: 2 tests;
+  - full sidecar unittest suite passed: 130 tests.
+- Live source-sidecar verification on port 8795:
+  - project `Magical Girl Tower Dogfood` reopened successfully;
+  - `/api/dogfood/browser-smoke` with `url=file:///mnt/d/workflow/magical-girl-tower-dogfood/workspace/index.html` passed;
+  - screenshot captured at `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\wsl-file-url-normalization-live-regression-2026-06-16T131106-922485+0800.png`;
+  - recorded `navigation_url=file:///D:/workflow/magical-girl-tower-dogfood/workspace/index.html`.
+- Remaining operational wrinkle: PowerShell `Start-Process -ArgumentList @(..., "D:\Google One\...")` still splits paths with spaces; the manual restart used a quoted argument string. A dedicated restart helper should be implemented later.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.

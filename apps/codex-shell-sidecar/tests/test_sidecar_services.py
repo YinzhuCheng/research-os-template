@@ -946,6 +946,8 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn("lcr_browser_smoke", names)
             smoke_tool = [tool for tool in params["dynamicTools"] if tool["name"] == "lcr_browser_smoke"][0]
             self.assertEqual(smoke_tool["inputSchema"]["properties"]["actions"]["maxItems"], 80)
+            self.assertIn("file:///mnt/d", smoke_tool["description"])
+            self.assertIn("do not start an ad-hoc HTTP server", smoke_tool["description"])
 
     def test_runtime_thread_start_registers_browser_smoke_even_before_project_open(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -5207,6 +5209,48 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
 
             self.assertEqual(smoke["browser_smoke"]["http_status"], 200)
             self.assertEqual(smoke["browser_smoke"]["status"], "pass")
+
+    def test_dogfood_browser_smoke_normalizes_wsl_file_url_for_playwright(self) -> None:
+        class CaptureDogfoodRunService(DogfoodRunService):
+            def _capture_with_playwright(self, url: str, label: str, record: dict[str, object], *, actions: list[dict[str, object]] | None = None) -> None:
+                del label, actions
+                captured_urls.append(url)
+                screenshot.write_bytes(b"png")
+                record["screenshot_path"] = str(screenshot)
+                record["screenshot_status"] = "captured"
+                record["http_status"] = 200
+                record["console_errors"] = []
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            html = workspace / "index.html"
+            html.write_text("<!doctype html><title>ok</title>", encoding="utf-8")
+            screenshot = root / "capture.png"
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            dogfood = CaptureDogfoodRunService(projects)
+            raw = str(html.resolve()).replace("\\", "/")
+            if len(raw) >= 2 and raw[1] == ":":
+                wsl_path = f"/mnt/{raw[0].lower()}/{raw[3:]}"
+            else:
+                wsl_path = raw
+            captured_urls: list[str] = []
+
+            smoke = dogfood.browser_smoke(
+                {
+                    "url": "file://" + wsl_path,
+                    "label": "wsl file capture smoke",
+                }
+            )
+
+            self.assertEqual(smoke["browser_smoke"]["status"], "pass")
+            self.assertEqual(smoke["browser_smoke"]["screenshot_status"], "captured")
+            self.assertEqual(len(captured_urls), 1)
+            self.assertTrue(captured_urls[0].startswith("file:///"))
+            self.assertNotIn("/mnt/", captured_urls[0])
+            self.assertEqual(smoke["browser_smoke"]["navigation_url"], captured_urls[0])
 
     def test_dogfood_browser_smoke_successful_capture_overrides_stale_preflight_failure(self) -> None:
         class CaptureDogfoodRunService(DogfoodRunService):

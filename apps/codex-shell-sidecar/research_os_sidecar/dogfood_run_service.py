@@ -149,7 +149,10 @@ class DogfoodRunService:
             record["error"] = str(exc)[:300]
 
         if not record["screenshot_path"]:
-            self._capture_with_playwright(url, label, record, actions=actions)
+            capture_url = self._browser_navigation_url(url)
+            if capture_url != url:
+                record["navigation_url"] = capture_url
+            self._capture_with_playwright(capture_url, label, record, actions=actions)
         self._finalize_browser_smoke_status(record)
         self._reject_secret_like(record)
         current["browser_smokes"] = [*list(current.get("browser_smokes") or []), record][-40:]
@@ -191,6 +194,15 @@ class DogfoodRunService:
         if lower.startswith("/mnt/") and len(raw_path) > 7 and raw_path[5].isalpha() and raw_path[6] == "/":
             raw_path = f"{raw_path[5].upper()}:/{raw_path[7:]}"
         return Path(raw_path).resolve()
+
+    def _browser_navigation_url(self, url: str) -> str:
+        """Return a URL that the host-side Playwright browser can actually open."""
+        if not url.startswith("file:///"):
+            return url
+        try:
+            return self._path_from_file_url(url).as_uri()
+        except Exception:
+            return url
 
     def _finalize_browser_smoke_status(self, record: dict[str, Any]) -> None:
         action_results = list(record.get("action_results") or [])
