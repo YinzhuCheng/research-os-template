@@ -258,6 +258,41 @@ Latest evidence from the 2026-06-16 Yunwu MCP retry after the network interrupti
 - Dogfood milestone was recorded as `Yunwu MCP transparent assets verified after active-thread fix`.
 - Operational footgun confirmed: `Stop-Process` did not terminate one old 8795 listener, while `taskkill /F /PID` did. Windows restart scripts should identify the `Listen` owner process robustly and verify the restarted process really serves the patched source.
 
+Latest evidence from the 2026-06-16 noon transparent-asset and verification pass:
+
+- Yunwu image MCP is materially healthier for transparent game assets: three `yunwu_image_transparent_asset` calls produced PNG/RGBA assets with alpha metadata recorded:
+  - `yunwu-1781582083-5faeecc3`, heroine walk-down candidate, transparent ratio about `0.658`.
+  - `yunwu-1781582151-00d0b82a`, forest cluster overlay, transparent ratio about `0.684`.
+  - `yunwu-1781582208-605a21d0`, crystal stair/portal candidate, transparent ratio about `0.571`.
+- Contact-sheet evidence was saved at `D:\workflow\magical-girl-tower-dogfood\captures\yunwu_mcp_retry_three_assets_checker_20260616.png`.
+- Kimi visual micro-check succeeded on a real generated asset sheet. Kimi judged:
+  - heroine: pass as `walk_down_f1`;
+  - forest: pass as overlay decoration, not base/autotile;
+  - crystal stair: pass as a special portal, not ordinary stairs.
+- DeepSeek implemented the next bounded game step:
+  - copied `heroine_walk_down_f1.png` and `forest_cluster_overlay.png` into `assets/images/sprites/`;
+  - updated `js/sprites.js` and `js/ui.js`;
+  - reported 9 `node --check` validations passed.
+- Browser smoke after DS's step produced a verified map screenshot at `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\post-ds-walk-forest-map-verified-2026-06-16T122218-836618+0800.png`.
+- Visual assessment: the map is less purely square/blocky, but the forest overlay currently reads as a large sticker; next DS/Kimi loop should refine overlay scale/placement and complete heroine multi-frame animation before expanding assets.
+- LCR direct MCP tool-call bug fixed: direct image/web/browser MCP calls now use internal app-server tool threads without adding provider threads or handoff events to the user-visible task.
+- LCR browser smoke bug fixed:
+  - WSL-style `file:///mnt/d/...` URLs normalize to Windows host paths before preflight.
+  - successful Playwright screenshots can override stale file preflight failures.
+  - `domcontentloaded` replaces `networkidle` to avoid hanging on local games.
+  - action lists now allow up to 80 actions and record `action_warning` if truncated.
+- LCR workspace isolation bug found and patched:
+  - magic tower workspace root contains an empty `.codex` directory, first observed in runtime logs before this checkpoint and timestamped around the app-server/dogfood turns.
+  - The likely cause is launching Codex app-server from the workspace root (`cd workspace && codex app-server`), even though `CODEX_HOME` is isolated.
+  - Runtime launch now starts app-server from `workspace/.lcr/runtime-cwd` while keeping thread `cwd` and writable roots pointed at the real workspace, so process-local Codex startup files should no longer be created at workspace root.
+  - Existing empty `.codex` was not deleted automatically; preserve it as audit evidence until the user explicitly approves cleanup.
+- Live regression smoke preserved 30 actions with no truncation warning, no console errors, and a screenshot at `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\long-action-limit-regression-smoke-2026-06-16T123217-671054+0800.png`.
+- Sidecar unit tests passed: 129 tests.
+- Remaining LCR/product risks:
+  - historical task state still contains earlier direct-MCP provider-thread pollution; the fix prevents future pollution but does not automatically rewrite old audit history.
+  - `Start-Process -ArgumentList` must quote seed-root paths with spaces; otherwise source sidecar startup silently exits.
+  - browser smoke can now support longer flows, but DS/Kimi must still use meaningful actions that reach the actual gameplay state, not just title/dialog screens.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.

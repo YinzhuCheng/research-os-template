@@ -17,6 +17,7 @@ from typing import Any
 
 from .app_server_client import AppServerClient, JsonRpcError
 from .common import LEGACY_WORKSPACE_STATE_DIRNAME, WORKSPACE_STATE_DIRNAME, append_jsonl, new_id, now_iso, read_json, write_json
+from .dogfood_run_service import MAX_BROWSER_SMOKE_ACTIONS
 from .lcr_web_mcp_server import _tools as lcr_web_dynamic_tools
 from .lcr_web_service import LcrWebService
 from .mcp_config_service import McpConfigService
@@ -687,23 +688,12 @@ class RuntimeService:
                     prior_task_thread_settings = dict(item)
                     break
         source_thread_id = thread_id.strip() or str((self._projects.current_project or {}).get("current_thread_id") or "")
-        try:
-            effective_thread_id, handoff_event = self._ensure_provider_thread_for_mcp_call(
-                client,
-                source_thread_id=source_thread_id,
-                profile=profile,
-            )
-        except Exception as exc:
-            if not self._is_thread_not_found_error(exc):
-                raise
-            if source_thread_id:
-                self._mark_provider_thread_missing(source_thread_id, reason="mcp_source_thread_missing")
-            effective_thread_id, handoff_event = self._ensure_provider_thread_for_mcp_call(
-                client,
-                source_thread_id="",
-                profile=profile,
-                force_fresh=True,
-            )
+        effective_thread_id = self._resolve_thread_for_direct_mcp_call(
+            client,
+            source_thread_id=source_thread_id,
+            profile=profile,
+        )
+        handoff_event: dict[str, Any] | None = None
         try:
             result = client.request(
                 "mcpServer/tool/call",
@@ -713,19 +703,25 @@ class RuntimeService:
         except JsonRpcError as exc:
             if not self._is_thread_not_found_error(exc):
                 raise
-            self._mark_provider_thread_missing(effective_thread_id, reason="mcp_tool_call_thread_missing")
-            recovered_thread_id, retry_handoff = self._ensure_provider_thread_for_mcp_call(
+            self._record_event(
+                {
+                    "type": "mcp_tool_thread_missing",
+                    "thread_id": effective_thread_id,
+                    "source_thread_id": source_thread_id,
+                    "server": server,
+                    "tool": tool,
+                }
+            )
+            recovered_thread_id = self._resolve_thread_for_direct_mcp_call(
                 client,
                 source_thread_id="",
                 profile=profile,
-                force_fresh=True,
             )
             result = client.request(
                 "mcpServer/tool/call",
                 {"threadId": recovered_thread_id, "server": server, "tool": tool, "arguments": arguments or {}},
                 timeout=tool_timeout,
             )
-            handoff_event = retry_handoff or handoff_event
             effective_thread_id = recovered_thread_id
         usage_delta = self._record_yunwu_image_usage_from_tool_result(server=server, tool=tool, result=result)
         self._record_event(
@@ -771,6 +767,42 @@ class RuntimeService:
                 self._record_event({"type": "mcp_tool_task_thread_restore_failed", "thread_id": task_thread_id, "error": str(exc)[:300]})
         if restored:
             self._record_event({"type": "mcp_tool_active_thread_restored", **restored})
+
+    def _resolve_thread_for_direct_mcp_call(
+        self,
+        client: AppServerClient,
+        *,
+        source_thread_id: str,
+        profile: dict[str, Any],
+    ) -> str:
+        """Find or create an internal app-server thread for direct tool calls.
+
+        Direct MCP calls are UI/supervisor actions, not provider switches. They
+        may need a thread id because the app-server API requires one, but that
+        thread must not become part of the user-visible task/provider-thread
+        graph. Otherwise image generation, web research, or browser smoke can
+        make a task look like it switched models or lost its active thread.
+        """
+        clean_source = source_thread_id.strip()
+        if clean_source:
+            try:
+                client.request("thread/read", {"threadId": clean_source})
+                return clean_source
+            except Exception as exc:  # noqa: BLE001
+                if not self._is_thread_not_found_error(exc):
+                    raise
+                self._record_event({"type": "mcp_tool_source_thread_unavailable", "thread_id": clean_source})
+        result = client.request(
+            "thread/start",
+            self._thread_start_params(profile=profile, model=None, permission_mode="auto"),
+            timeout=THREAD_START_TIMEOUT_SECONDS,
+        )
+        thread = dict(result.get("thread") or {})
+        target_thread_id = str(thread.get("id") or "")
+        if not target_thread_id:
+            raise RuntimeError("thread/start did not return a thread id for MCP tool call.")
+        self._record_event({"type": "mcp_tool_internal_thread_started", "thread_id": target_thread_id})
+        return target_thread_id
 
     def _mcp_tool_timeout_seconds(self, server: str) -> float:
         try:
@@ -1357,6 +1389,16 @@ class RuntimeService:
 
     def _raise_if_context_guard_blocks_turn(self, client: AppServerClient, thread_id: str) -> None:
         state = self._context_guard_state(thread_id)
+        if state.get("level") == "compacting":
+            self._record_event(
+                {
+                    "type": "context_guard_compaction_in_progress",
+                    "thread_id": thread_id,
+                    "turn_id": state.get("turn_id"),
+                    "started_at": state.get("started_at"),
+                }
+            )
+            raise RuntimeError("Context compaction is still running for this thread. Wait for compaction to finish before starting the next turn.")
         if state.get("level") != "pause":
             return
         if not self._thread_exists(client, thread_id):
@@ -1407,6 +1449,16 @@ class RuntimeService:
                 "context_percent": token.get("context_percent"),
                 "turn_id": token.get("turn_id"),
             }
+        running_compaction = self._latest_running_compaction(thread_id)
+        if running_compaction:
+            compaction_turn_id = str(running_compaction.get("turn_id") or "")
+            if compaction_turn_id and compaction_turn_id == str(token.get("turn_id") or ""):
+                return {
+                    "level": "compacting",
+                    "context_percent": token.get("context_percent"),
+                    "turn_id": compaction_turn_id,
+                    "started_at": running_compaction.get("started_at"),
+                }
         percent = float(token.get("context_percent") or 0)
         return {
             "level": "pause" if percent >= 90 else "ok",
@@ -1452,6 +1504,32 @@ class RuntimeService:
             item = params.get("item") or {}
             if event.get("method") == "thread/compacted" or item.get("type") == "contextCompaction":
                 return str(event.get("timestamp") or "")
+        return None
+
+    def _latest_running_compaction(self, thread_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            self._hydrate_events_from_disk_locked()
+            events = list(self._events)
+        for event in reversed(events):
+            if event.get("type") != "notification":
+                continue
+            params = event.get("params") or {}
+            if thread_id and str(params.get("threadId") or "") != thread_id:
+                continue
+            method = str(event.get("method") or "")
+            if method == "thread/compacted":
+                return None
+            item = params.get("item") or {}
+            if item.get("type") != "contextCompaction":
+                continue
+            if method == "item/completed":
+                return None
+            if method == "item/started":
+                return {
+                    "turn_id": str(params.get("turnId") or ""),
+                    "item_id": str(item.get("id") or ""),
+                    "started_at": event.get("timestamp"),
+                }
         return None
 
     def _latest_provider_thread_missing_timestamp(self, thread_id: str) -> str | None:
@@ -1603,6 +1681,8 @@ class RuntimeService:
             return {"success": False, "contentItems": [{"type": "inputText", "text": f"LCR dynamic tool failed: {message}"}]}
 
     def _call_lcr_dynamic_tool(self, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        if tool == "lcr_browser_smoke":
+            return self._call_lcr_browser_smoke_dynamic_tool(arguments)
         if tool.startswith("lcr_web_"):
             return self._call_lcr_web_dynamic_tool(tool, arguments)
         return self._call_yunwu_dynamic_tool(tool, arguments)
@@ -1610,14 +1690,42 @@ class RuntimeService:
     def _summarize_lcr_dynamic_tool_result(self, tool: str, result: dict[str, Any]) -> dict[str, Any]:
         if tool.startswith("yunwu_image_"):
             return summarize_yunwu_image_result(result)
+        if tool == "lcr_browser_smoke":
+            record = dict(result.get("browser_smoke") or {})
+            return {
+                "tool": "lcr_browser_smoke",
+                "path": result.get("path"),
+                "status": record.get("status"),
+                "http_status": record.get("http_status"),
+                "url": record.get("url"),
+                "label": record.get("label"),
+                "screenshot_path": record.get("screenshot_path"),
+                "screenshot_status": record.get("screenshot_status"),
+                "console_errors": list(record.get("console_errors") or [])[:10],
+                "error": record.get("error"),
+                "tool_event_verified": True,
+            }
         return result
 
     def _dynamic_tool_server(self, tool: str) -> str:
+        if tool == "lcr_browser_smoke":
+            return "lcr_browser"
         if tool.startswith("lcr_web_"):
             return "lcr_web"
         if tool.startswith("yunwu_image_"):
             return "yunwu_image"
         return "lcr"
+
+    def _call_lcr_browser_smoke_dynamic_tool(self, arguments: dict[str, Any]) -> dict[str, Any]:
+        if self._dogfood_run is None:
+            raise ValueError("Dogfood browser smoke service is not available.")
+        payload = {
+            "url": str(arguments.get("url") or "").strip(),
+            "label": str(arguments.get("label") or "agent browser smoke").strip(),
+            "actions": list(arguments.get("actions") or []),
+            "auto_milestone": bool(arguments.get("auto_milestone", True)),
+        }
+        return self._dogfood_run.browser_smoke(payload)
 
     def _call_lcr_web_dynamic_tool(self, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
         if tool == "lcr_web_search_batch":
@@ -1872,14 +1980,14 @@ class RuntimeService:
                 "launch_command": None,
                 "ws_url": None,
                 "env_updates": {},
-                "cwd": self._projects.require_workspace_root(),
+                "cwd": self._app_server_launch_cwd(),
             }
 
         wsl_executable = shutil.which("wsl.exe") or shutil.which("wsl")
         if not wsl_executable:
             raise RuntimeError("WSL execution host is selected, but wsl.exe was not detected on Windows.")
         workspace_root = self._projects.require_workspace_root()
-        workspace_root_wsl = self._windows_path_to_wsl(workspace_root)
+        launcher_cwd_wsl = self._windows_path_to_wsl(self._app_server_launch_cwd())
         codex_home_wsl = os.environ.get("CODEX_SHELL_WSL_CODEX_HOME") or LCR_WSL_CODEX_HOME
         codex_binary = os.environ.get("CODEX_SHELL_WSL_CODEX_BIN") or LCR_WSL_BIN
         requested_distro = self._wsl_distro()
@@ -1916,7 +2024,7 @@ class RuntimeService:
         ws_port = self._reserve_loopback_port()
         ws_url = f"ws://127.0.0.1:{ws_port}"
         command = (
-            f"cd {shlex.quote(workspace_root_wsl)} && "
+            f"cd {shlex.quote(launcher_cwd_wsl)} && "
             f"exec env -i HOME={shlex.quote(home_wsl_abs)} USER=\"${{USER:-}}\" LOGNAME=\"${{LOGNAME:-}}\" "
             f"SHELL=/bin/bash PATH={shlex.quote(clean_path)} {env_passthrough}{codex_command} "
             f"app-server --listen {shlex.quote(ws_url)} --disable plugins --disable plugin_sharing --disable remote_plugin"
@@ -1928,6 +2036,12 @@ class RuntimeService:
             "env_updates": env_updates,
             "cwd": None,
         }
+
+    def _app_server_launch_cwd(self) -> Path:
+        """Keep Codex app-server process-local files out of the workspace root."""
+        path = self._projects.require_workspace_root() / WORKSPACE_STATE_DIRNAME / "runtime-cwd"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
 
     def _terminate_stale_lcr_wsl_app_servers(self, wsl_executable: str, distro_args: list[str]) -> None:
         script = r'''
@@ -2330,6 +2444,50 @@ for host in candidates:
 
     def _lcr_dynamic_tools(self) -> list[dict[str, Any]]:
         dynamic_tools: list[dict[str, Any]] = []
+        if self._dogfood_run is not None:
+            dynamic_tools.append(
+                {
+                    "name": "lcr_browser_smoke",
+                    "description": (
+                        "Run a local browser smoke test for a localhost, 127.0.0.1, or file:// URL, optionally "
+                        "performing simple UI actions, then record console errors and a screenshot in the LCR "
+                        "dogfood ledger. Use this after UI/game changes instead of only claiming visual validation."
+                    ),
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "Local URL to smoke test. Must start with http://127.0.0.1:, http://localhost:, or file://.",
+                            },
+                            "label": {"type": "string", "description": "Short evidence label."},
+                            "actions": {
+                                "type": "array",
+                                "maxItems": MAX_BROWSER_SMOKE_ACTIONS,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string",
+                                            "enum": ["click_text", "click_selector", "expect_selector", "expect_text", "press", "wait_ms"],
+                                        },
+                                        "text": {"type": "string"},
+                                        "selector": {"type": "string"},
+                                        "key": {"type": "string"},
+                                        "ms": {"type": "integer", "minimum": 0, "maximum": 5000},
+                                        "timeout_ms": {"type": "integer", "minimum": 100, "maximum": 30000},
+                                    },
+                                    "required": ["type"],
+                                    "additionalProperties": False,
+                                },
+                            },
+                            "auto_milestone": {"type": "boolean", "default": True},
+                        },
+                        "required": ["url"],
+                        "additionalProperties": False,
+                    },
+                }
+            )
         if self._mcp_server_enabled("lcr_web"):
             dynamic_tools.extend(
                 {

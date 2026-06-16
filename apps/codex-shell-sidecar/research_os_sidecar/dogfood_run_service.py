@@ -18,6 +18,7 @@ DOGFOOD_SECRET_VALUE_RE = re.compile(
     r"BEGIN\s+(RSA|OPENSSH|EC|DSA)\s+PRIVATE\s+KEY)"
 )
 DOGFOOD_SECRET_FIELD_PARTS = ("api_key", "apikey", "authorization", "cookie", "password", "secret", "token")
+MAX_BROWSER_SMOKE_ACTIONS = 80
 
 
 DEFAULT_DOGFOOD_RUN: dict[str, Any] = {
@@ -113,7 +114,8 @@ class DogfoodRunService:
         if not url.startswith(("http://127.0.0.1:", "http://localhost:", "file:///")):
             raise ValueError("Browser smoke URL must be local: 127.0.0.1, localhost, or file://.")
         label = str(payload.get("label") or "browser smoke").strip()
-        actions = self._browser_actions(payload.get("actions"))
+        raw_actions = list(payload.get("actions") or [])
+        actions = self._browser_actions(raw_actions)
         record = {
             "label": label,
             "url": url,
@@ -126,16 +128,17 @@ class DogfoodRunService:
         }
         if actions:
             record["actions"] = actions
+        if len(raw_actions) > len(actions):
+            record["action_warning"] = f"truncated_to_{len(actions)}_actions"
         if record["screenshot_path"]:
             path = Path(record["screenshot_path"])
             if not path.is_file():
                 raise FileNotFoundError(f"Screenshot path does not exist: {path}")
         try:
             if url.startswith("file:///"):
-                parsed = urlparse(url)
-                file_path = Path(unquote(parsed.path)).resolve()
+                file_path = self._path_from_file_url(url)
                 record["http_status"] = 200 if file_path.is_file() else 404
-                record["status"] = "pass" if file_path.exists() and not record["console_errors"] else "fail"
+                record["status"] = "pass" if file_path.is_file() and not record["console_errors"] else "fail"
             else:
                 request = urllib.request.Request(url, headers={"User-Agent": "LocalCodexRouter/browser-smoke"})
                 with urllib.request.urlopen(request, timeout=8) as response:  # noqa: S310 - local URL only, guarded above.
@@ -147,6 +150,7 @@ class DogfoodRunService:
 
         if not record["screenshot_path"]:
             self._capture_with_playwright(url, label, record, actions=actions)
+        self._finalize_browser_smoke_status(record)
         self._reject_secret_like(record)
         current["browser_smokes"] = [*list(current.get("browser_smokes") or []), record][-40:]
         if record["screenshot_path"]:
@@ -175,9 +179,40 @@ class DogfoodRunService:
             response["run"] = current
         return response
 
+    def _path_from_file_url(self, url: str) -> Path:
+        parsed = urlparse(url)
+        raw_path = unquote(parsed.path)
+        # Windows Playwright commonly reports file:///D:/... while WSL-oriented
+        # agents may emit file:///mnt/d/... . Normalize both to host paths for
+        # preflight checks so successful screenshots are not recorded as 404.
+        if len(raw_path) >= 4 and raw_path[0] == "/" and raw_path[2] == ":" and raw_path[1].isalpha():
+            raw_path = raw_path[1:]
+        lower = raw_path.lower()
+        if lower.startswith("/mnt/") and len(raw_path) > 7 and raw_path[5].isalpha() and raw_path[6] == "/":
+            raw_path = f"{raw_path[5].upper()}:/{raw_path[7:]}"
+        return Path(raw_path).resolve()
+
+    def _finalize_browser_smoke_status(self, record: dict[str, Any]) -> None:
+        action_results = list(record.get("action_results") or [])
+        action_failed = any(isinstance(item, dict) and item.get("ok") is False for item in action_results)
+        try:
+            http_status = int(record.get("http_status")) if record.get("http_status") is not None else None
+        except Exception:
+            http_status = None
+        screenshot_status = str(record.get("screenshot_status") or "")
+        has_blocked_screenshot = screenshot_status.startswith("blocked")
+        if record.get("console_errors") or action_failed or (http_status is not None and http_status >= 400) or has_blocked_screenshot:
+            record["status"] = "fail"
+            return
+        if http_status is not None and http_status < 400:
+            record["status"] = "pass"
+            record.pop("error", None)
+        elif screenshot_status in {"captured", "provided"} and record.get("status") == "unknown":
+            record["status"] = "pass"
+
     def _browser_actions(self, raw_actions: Any) -> list[dict[str, Any]]:
         actions: list[dict[str, Any]] = []
-        for raw in list(raw_actions or [])[:20]:
+        for raw in list(raw_actions or [])[:MAX_BROWSER_SMOKE_ACTIONS]:
             if not isinstance(raw, dict):
                 continue
             kind = str(raw.get("type") or "").strip()
@@ -405,8 +440,9 @@ async function launchBrowser() {
     return result;
   }
   try {
-    const response = await page.goto(process.argv[2], { waitUntil: 'networkidle', timeout: 15000 });
+    const response = await page.goto(process.argv[2], { waitUntil: 'domcontentloaded', timeout: 15000 });
     status = response ? response.status() : null;
+    await page.waitForTimeout(500);
     const actions = JSON.parse(process.argv[4] || '[]');
     for (const action of actions) {
       try {

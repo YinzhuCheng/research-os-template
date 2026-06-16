@@ -2,6 +2,7 @@
 
 import base64
 import binascii
+import inspect
 import io
 import json
 import hashlib
@@ -922,6 +923,45 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn("lcr_web_fetch", names)
             self.assertNotIn("yunwu_image_generate", names)
 
+    def test_runtime_thread_start_registers_browser_smoke_dynamic_tool_for_projects(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(
+                projects,
+                ModalService(projects.require_shell_state_root),
+                dogfood_run=DogfoodRunService(projects),
+            )
+
+            params = runtime._thread_start_params(  # noqa: SLF001
+                profile={"profile_id": "deepseek", "provider_id": "deepseek", "model": "deepseek-v4-pro"},
+                model="deepseek-v4-pro",
+                permission_mode="auto",
+            )
+
+            names = {tool["name"] for tool in params["dynamicTools"]}
+            self.assertIn("lcr_browser_smoke", names)
+            smoke_tool = [tool for tool in params["dynamicTools"] if tool["name"] == "lcr_browser_smoke"][0]
+            self.assertEqual(smoke_tool["inputSchema"]["properties"]["actions"]["maxItems"], 80)
+
+    def test_runtime_thread_start_registers_browser_smoke_even_before_project_open(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            projects = ProjectService(root / "recent.json")
+            runtime = RuntimeService(
+                projects,
+                ModalService(projects.require_shell_state_root),
+                dogfood_run=DogfoodRunService(projects),
+            )
+
+            tools = runtime._lcr_dynamic_tools()  # noqa: SLF001
+
+            names = {tool["name"] for tool in tools}
+            self.assertIn("lcr_browser_smoke", names)
+
     def test_runtime_dynamic_yunwu_tool_call_returns_app_server_content_items(self) -> None:
         class FakeYunwuImage:
             def transparent_asset(self, **kwargs: object) -> dict[str, object]:
@@ -1023,6 +1063,52 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn("dynamic_tool_called", event_payload)
             self.assertIn('"server": "lcr_web"', event_payload)
             self.assertIn("https://example.com/autotile", event_payload)
+
+    def test_runtime_dynamic_browser_smoke_tool_call_returns_evidence(self) -> None:
+        class FakeDogfood:
+            def browser_smoke(self, payload: dict[str, object]) -> dict[str, object]:
+                return {
+                    "path": "D:/workspace/.lcr/dogfood_run.json",
+                    "browser_smoke": {
+                        "label": payload.get("label"),
+                        "url": payload.get("url"),
+                        "status": "pass",
+                        "http_status": 200,
+                        "screenshot_path": "D:/workspace/.lcr/captures/smoke.png",
+                        "screenshot_status": "captured",
+                        "console_errors": [],
+                    },
+                }
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(
+                projects,
+                ModalService(projects.require_shell_state_root),
+                dogfood_run=FakeDogfood(),
+            )
+
+            result = runtime._on_server_request(  # noqa: SLF001
+                "item/tool/call",
+                {
+                    "threadId": "thread-1",
+                    "turnId": "turn-1",
+                    "tool": "lcr_browser_smoke",
+                    "arguments": {"url": "http://127.0.0.1:8123/", "label": "map smoke"},
+                },
+            )
+
+            self.assertTrue(result["success"])
+            text = result["contentItems"][0]["text"]
+            self.assertIn("lcr_browser_smoke", text)
+            self.assertIn("D:/workspace/.lcr/captures/smoke.png", text)
+            event_payload = json.dumps(runtime.list_events()["events"][-1], ensure_ascii=False)
+            self.assertIn('"server": "lcr_browser"', event_payload)
+            self.assertIn("tool_event_verified", event_payload)
 
     def test_runtime_read_thread_overlays_dynamic_tool_items_from_events(self) -> None:
         class FakeClient:
@@ -1192,14 +1278,15 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             )
 
             self.assertEqual(response["thread_id"], "thread-yunwu")
+            self.assertIsNone(response["handoff_event"])
             self.assertEqual(response["usage_delta"], {"yunwu_images": 1})
             self.assertEqual(projects.current_project["current_thread_id"], "thread-deepseek")
             current = tasks.current_task()
             self.assertEqual(current["active_provider_thread_id"], "thread-deepseek")
-            yunwu_thread = [item for item in current["provider_threads"] if item["thread_id"] == "thread-yunwu"][0]
-            self.assertEqual(yunwu_thread["provider_id"], "yunwu")
+            self.assertFalse([item for item in current["provider_threads"] if item["thread_id"] == "thread-yunwu"])
             deepseek_thread = [item for item in current["provider_threads"] if item["thread_id"] == "thread-deepseek"][0]
-            self.assertEqual(deepseek_thread["missing_reason"], "provider_handoff_source_missing")
+            self.assertNotIn("missing_reason", deepseek_thread)
+            self.assertFalse(current["handoff_events"])
             self.assertEqual(dogfood.snapshot()["run"]["usage"]["yunwu_images"], 1)
             self.assertEqual(fake_client.tool_thread_id, "thread-yunwu")
             self.assertTrue(any(call[0] == "mcpServer/tool/call" and call[1]["threadId"] == "thread-yunwu" for call in fake_client.calls))
@@ -1296,11 +1383,14 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
 
             self.assertEqual(fake_client.tool_thread_ids, ["thread-stale", "thread-yunwu-recovered"])
             self.assertEqual(response["thread_id"], "thread-yunwu-recovered")
+            self.assertIsNone(response["handoff_event"])
             self.assertEqual(response["usage_delta"], {"yunwu_images": 2})
             current = tasks.current_task()
+            self.assertEqual(len(current["provider_threads"]), 1)
             stale = [item for item in current["provider_threads"] if item["thread_id"] == "thread-stale"][0]
-            self.assertEqual(stale["missing_reason"], "mcp_tool_call_thread_missing")
+            self.assertNotIn("missing_reason", stale)
             self.assertEqual(current["active_provider_thread_id"], "thread-stale")
+            self.assertFalse(current["handoff_events"])
             self.assertEqual(dogfood.snapshot()["run"]["usage"]["yunwu_images"], 2)
 
     def test_runtime_direct_mcp_tool_call_without_task_service_recovers_missing_source_thread(self) -> None:
@@ -2663,6 +2753,40 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 service._browser_actions([{"type": "click_selector", "selector": "Bearer unit-test-token"}])  # noqa: SLF001
 
+    def test_dogfood_browser_smoke_action_limit_is_explicit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            (workspace / "index.html").write_text("<!doctype html><title>ok</title>", encoding="utf-8")
+            screenshot = root / "capture.png"
+            screenshot.write_bytes(b"png")
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            dogfood = DogfoodRunService(projects)
+
+            smoke_30 = dogfood.browser_smoke(
+                {
+                    "url": (workspace / "index.html").resolve().as_uri(),
+                    "label": "long but complete smoke",
+                    "screenshot_path": str(screenshot),
+                    "actions": [{"type": "wait_ms", "ms": 1} for _ in range(30)],
+                }
+            )
+            self.assertEqual(len(smoke_30["browser_smoke"]["actions"]), 30)
+            self.assertNotIn("action_warning", smoke_30["browser_smoke"])
+
+            smoke_85 = dogfood.browser_smoke(
+                {
+                    "url": (workspace / "index.html").resolve().as_uri(),
+                    "label": "truncated smoke",
+                    "screenshot_path": str(screenshot),
+                    "actions": [{"type": "wait_ms", "ms": 1} for _ in range(85)],
+                }
+            )
+            self.assertEqual(len(smoke_85["browser_smoke"]["actions"]), 80)
+            self.assertEqual(smoke_85["browser_smoke"]["action_warning"], "truncated_to_80_actions")
+
     def test_checkpoint_service_git_save_load_without_git_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -3379,6 +3503,8 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
                 target = runtime._resolve_launch_target({"codex_home": str(codex_home)})  # type: ignore[attr-defined]
                 joined_launch = " ".join(target["launch_command"])
                 self.assertIn("exec env -i", joined_launch)
+                self.assertIn("/.lcr/runtime-cwd", joined_launch)
+                self.assertTrue((workspace / ".lcr" / "runtime-cwd").is_dir())
                 self.assertIn("PATH=/home/demo/.local/share/local-codex-router/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", joined_launch)
                 self.assertIn('CODEX_ROUTER_API_KEY="${CODEX_ROUTER_API_KEY:-}"', joined_launch)
                 self.assertIn('YUNWU_API_KEY="${YUNWU_API_KEY:-}"', joined_launch)
@@ -5053,6 +5179,71 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 dogfood.add_milestone({"label": "bad", "validation": ["Bearer unit-test-token"]})
 
+    def test_dogfood_browser_smoke_accepts_wsl_style_file_url(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            html = workspace / "index.html"
+            html.write_text("<!doctype html><title>ok</title>", encoding="utf-8")
+            screenshot = root / "capture.png"
+            screenshot.write_bytes(b"png")
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            dogfood = DogfoodRunService(projects)
+            raw = str(html.resolve()).replace("\\", "/")
+            if len(raw) >= 2 and raw[1] == ":":
+                wsl_path = f"/mnt/{raw[0].lower()}/{raw[3:]}"
+            else:
+                wsl_path = raw
+
+            smoke = dogfood.browser_smoke(
+                {
+                    "url": "file://" + wsl_path,
+                    "label": "wsl file smoke",
+                    "screenshot_path": str(screenshot),
+                }
+            )
+
+            self.assertEqual(smoke["browser_smoke"]["http_status"], 200)
+            self.assertEqual(smoke["browser_smoke"]["status"], "pass")
+
+    def test_dogfood_browser_smoke_successful_capture_overrides_stale_preflight_failure(self) -> None:
+        class CaptureDogfoodRunService(DogfoodRunService):
+            def _capture_with_playwright(self, url: str, label: str, record: dict[str, object], *, actions: list[dict[str, object]] | None = None) -> None:
+                del url, label, actions
+                screenshot.write_bytes(b"png")
+                record["screenshot_path"] = str(screenshot)
+                record["screenshot_status"] = "captured"
+                record["http_status"] = 200
+                record["console_errors"] = []
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            screenshot = root / "capture.png"
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            dogfood = CaptureDogfoodRunService(projects)
+
+            smoke = dogfood.browser_smoke(
+                {
+                    "url": "file:///mnt/z/not-really-there/index.html",
+                    "label": "capture recovers status",
+                }
+            )
+
+            self.assertEqual(smoke["browser_smoke"]["screenshot_status"], "captured")
+            self.assertEqual(smoke["browser_smoke"]["http_status"], 200)
+            self.assertEqual(smoke["browser_smoke"]["status"], "pass")
+
+    def test_dogfood_browser_smoke_uses_domcontentloaded_not_networkidle(self) -> None:
+        source = inspect.getsource(DogfoodRunService._capture_with_playwright)
+
+        self.assertIn("domcontentloaded", source)
+        self.assertNotIn("networkidle", source)
+
     def test_runtime_supervisor_aggregates_plan_token_and_guard_without_secrets(self) -> None:
         class FakeProjects:
             current_project = {
@@ -5588,6 +5779,42 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             },
         ]
         runtime._raise_if_context_guard_blocks_turn(object(), "thread-compact")
+
+    def test_runtime_service_reports_running_compaction_before_hot_context_pause(self) -> None:
+        class FakeProjects:
+            def require_shell_state_root(self) -> Path:
+                return Path(tempfile.mkdtemp())
+
+        runtime = RuntimeService(FakeProjects(), ModalService(FakeProjects().require_shell_state_root))
+        runtime._events = [
+            {
+                "type": "notification",
+                "method": "item/started",
+                "timestamp": "2026-06-12T00:00:01+00:00",
+                "params": {
+                    "threadId": "thread-compact",
+                    "turnId": "turn-compact",
+                    "item": {"type": "contextCompaction", "id": "compact-1"},
+                },
+            },
+            {
+                "type": "notification",
+                "method": "thread/tokenUsage/updated",
+                "timestamp": "2026-06-12T00:00:02+00:00",
+                "params": {
+                    "threadId": "thread-compact",
+                    "turnId": "turn-compact",
+                    "tokenUsage": {"total": {"totalTokens": 95}, "modelContextWindow": 100},
+                },
+            },
+        ]
+
+        state = runtime._context_guard_state("thread-compact")  # noqa: SLF001
+
+        self.assertEqual(state["level"], "compacting")
+        with self.assertRaisesRegex(RuntimeError, "compaction is still running"):
+            runtime._raise_if_context_guard_blocks_turn(object(), "thread-compact")
+        self.assertEqual(runtime.list_events()["events"][-1]["type"], "context_guard_compaction_in_progress")
 
     def test_context_guard_marks_missing_thread_before_blocking_hot_stale_thread(self) -> None:
         class FakeProjects:

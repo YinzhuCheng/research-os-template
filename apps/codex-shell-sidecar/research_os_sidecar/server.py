@@ -159,6 +159,14 @@ class Handler(BaseHTTPRequestHandler):
             if path in {"/api/project/tasks", "/api/tasks"}:
                 self.send_json(self.context.tasks.snapshot())
                 return
+            if path in {"/api/project/tasks/current", "/api/tasks/current"}:
+                self.send_json(
+                    {
+                        "task": self.context.tasks.current_task(),
+                        "project": self.context.projects.current_project,
+                    }
+                )
+                return
             if path == "/api/profiles":
                 self.send_json(self.context.profiles.list_profiles())
                 return
