@@ -385,6 +385,19 @@ Latest browser-smoke timeout-budget fix from 2026-06-16 14:30:
   - `/api/dogfood/browser-smoke` with `click_text_until_absent("Next", timeout_ms=30000)` passed in about 38 seconds, clicked through 8 story steps, found `#grid-container`, found `Floor`, and captured `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\dynamic-timeout-story-to-map-after-ds-visual-step-2026-06-16T142624-685628+0800.png`.
 - Visual assessment of DS's step: the game remains playable and the smoke passed with no console errors, but the map still reads as a grid with a large forest sticker. Next loop should ask Kimi for a visual plan and then DS should either replace the background strategy or redraw a dedicated seamless field/background asset.
 
+Latest Kimi visual critique from 2026-06-16 14:35:
+
+- Kimi visual micro-check completed in about 78 seconds on the latest DS map screenshot.
+- Verdict: `retry`.
+- Kimi's core critique: the central circular foliage patch looks like a flat decal pasted on top of an obvious square tile grid, not a unified grass field.
+- Kimi's executable plan for DS:
+  - break the uniform square grass grid with irregular, interlocking ground patches;
+  - remove the hard-edged circular foliage decal and scatter individual clumps/bushes/flowers organically;
+  - add subtle dirt patches, local shading, and color variation for depth;
+  - align wall and character perspective scale;
+  - add soft transitions where grass meets stone walls.
+- Kimi recommends both new image generation and code/layout changes. Next DS step should generate or select reusable transparent grass/bush/wall assets before another visual code pass.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.
