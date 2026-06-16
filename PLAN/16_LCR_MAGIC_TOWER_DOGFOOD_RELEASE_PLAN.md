@@ -398,6 +398,28 @@ Latest Kimi visual critique from 2026-06-16 14:35:
   - add soft transitions where grass meets stone walls.
 - Kimi recommends both new image generation and code/layout changes. Next DS step should generate or select reusable transparent grass/bush/wall assets before another visual code pass.
 
+Latest Yunwu transparent MCP retry from 2026-06-16 14:50:
+
+- DS retried the LCR/Yunwu `yunwu_image_transparent_asset` dynamic tool from inside the magic-tower task, limited to 4 images and no game-code edits.
+- All 4 image tool calls completed through the LCR tool path with `requested_n=1`, `actual_n=1`, PNG/RGBA output, `has_alpha=true`, and `transparency_status=passed`.
+- Generated assets:
+  - `yunwu-1781591838-6b49808b`, purpose `irregular_grass_patch`, transparent ratio about `0.699`, visually usable as an irregular grass overlay.
+  - `yunwu-1781591902-dee9f76c`, purpose `bush_flower_clump`, transparent ratio about `0.731`, visually usable as a bush/flower decoration.
+  - `yunwu-1781591955-77ddba36`, purpose `dirt_grass_transition_patch`, transparent ratio about `0.598`, visually usable as a dirt/grass transition decal.
+  - `yunwu-1781592018-40500807`, purpose `stone_wall_grass_edge`, transparent ratio about `0.805`, alpha-correct but visually mismatched.
+- Contact sheet saved at `D:\workflow\magical-girl-tower-dogfood\captures\yunwu-transparent-mcp-retry-contact-sheet-20260616.png`.
+- Kimi visual micro-check completed in about 117 seconds on the contact sheet:
+  - verdict: `retry`;
+  - usable now: `grass`, `bush_flowers`, `dirt_grass`;
+  - needs redraw: `wall_grass`;
+  - reason: `wall_grass` uses a pronounced side-view/isometric block perspective while the other three assets are soft top-down/aerial, so it will clash when composited.
+- LCR dogfood findings:
+  - the transparent edit route is materially better than earlier RGB/non-alpha terrain generations;
+  - image generation still needs clearer per-call progress in the UI because 4 sequential image calls took about 329 seconds and can look stalled;
+  - Kimi visual turns work with real attached images, but remain high-latency;
+  - `/api/turn/start` callers must consistently include the admin session token, otherwise the API returns `Missing or invalid admin session token`.
+- Next DS step: promote/use the first three assets only as map overlay candidates, and redraw `wall_grass` with direct top-down aerial perspective before attempting wall/grass transitions.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.
