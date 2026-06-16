@@ -230,11 +230,20 @@ class RuntimeSupervisorService:
                     "should_pause": False,
                     "message": "Context is above 90%, but the turn is waiting on an approval. Resolve the approval before compacting, forking, or interrupting.",
                 }
+            if active:
+                return {
+                    "level": "pause",
+                    "recommended_action": "compact",
+                    "should_pause": False,
+                    "requires_decision": True,
+                    "deferred_until_turn_boundary": True,
+                    "message": "Context is above 90%. Let the active tool/command finish, then compact, fork, continue once, or interrupt before starting another long turn.",
+                }
             return {
                 "level": "pause",
                 "recommended_action": "compact",
-                "should_pause": active,
-                "requires_decision": active,
+                "should_pause": False,
+                "requires_decision": False,
                 "message": "Context is above 90%. Choose compact, fork, continue once, or interrupt before the next long action.",
             }
         if percent >= 80:

@@ -420,6 +420,27 @@ Latest Yunwu transparent MCP retry from 2026-06-16 14:50:
   - `/api/turn/start` callers must consistently include the admin session token, otherwise the API returns `Missing or invalid admin session token`.
 - Next DS step: promote/use the first three assets only as map overlay candidates, and redraw `wall_grass` with direct top-down aerial perspective before attempting wall/grass transitions.
 
+Latest LCR guard/tool-progress and visual retry round from 2026-06-16 15:30:
+
+- Fixed a real dogfood regression in `RuntimeSupervisorService`: the 90% context guard must not automatically interrupt an active turn in the middle of file edits. It now warns/marks the active turn and lets the next turn boundary enforce compact/fork/continue decisions, avoiding half-written game changes.
+- Updated Yunwu image MCP tool descriptions so DS/Kimi know each image call can take 45-90 seconds and should report per-asset progress (`actual_n`, local path, alpha status) instead of claiming a whole batch is complete.
+- Added local stylesheet sanity checks to dogfood browser smoke for `file://` pages. The first implementation had a self-inflicted Unicode marker bug, so the final detector uses ASCII Unicode escapes and unit tests cover broken braces and mojibake markers.
+- Source sidecar restart findings:
+  - restarting source sidecar still loses current project/runtime state until the `.lcrproj` is reopened;
+  - manually restarted source sidecar also needs provider keys re-presented through process environment or vault, otherwise compact/turn calls fail with `runtime_secret_missing`;
+  - old provider threads can become `thread_missing` after app-server restart, and LCR recovered through `multi_provider_handoff` into a new DeepSeek/Kimi provider thread under the same user-visible task.
+- DS completed the bounded organic overlay integration after recovery:
+  - copied/used `overlay_grass_wisp.png`, `overlay_bush_clump.png`, and `overlay_dirt_edge.png`;
+  - updated `js/sprites.js`, `js/ui.js`, and `css/style.css`;
+  - ran `node --check js/*.js`;
+  - ran LCR browser smoke with `click_text_until_absent("Next")`;
+  - screenshot captured at `D:\workflow\magical-girl-tower-dogfood\workspace\.lcr\captures\organic-ground-overlay-smoke-2026-06-16T151302-363534+0800.png`.
+- Kimi visual micro-check completed in about 107 seconds on the latest screenshot plus the reference image:
+  - verdict: `retry`;
+  - main issue: the map still reads as a pasted circular transparent overlay over visible square grid cells;
+  - executable next strategy: generate/use a seamless full grass/background image, break the circular tree border into irregular clusters, tint the outer background to match the play area, add small entity shadows, and use individual obstacle sprites instead of a continuous pasted perimeter.
+- Next DS step should not keep stacking transparent stickers. It should plan a better rendering route: seamless background or larger map art layer first, then place transparent sprites for characters, doors, stairs, monsters, trees, walls, and props on top.
+
 1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
 2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
 3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.

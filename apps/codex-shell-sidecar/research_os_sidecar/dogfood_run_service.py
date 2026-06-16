@@ -139,6 +139,14 @@ class DogfoodRunService:
                 file_path = self._path_from_file_url(url)
                 record["http_status"] = 200 if file_path.is_file() else 404
                 record["status"] = "pass" if file_path.is_file() and not record["console_errors"] else "fail"
+                if file_path.is_file():
+                    stylesheet_warnings = self._local_stylesheet_sanity(file_path)
+                    if stylesheet_warnings:
+                        record["stylesheet_warnings"] = stylesheet_warnings[:20]
+                        record["console_errors"] = [
+                            *record["console_errors"],
+                            *[f"stylesheet: {item}"[:300] for item in stylesheet_warnings[:20]],
+                        ][:20]
             else:
                 request = urllib.request.Request(url, headers={"User-Agent": "LocalCodexRouter/browser-smoke"})
                 with urllib.request.urlopen(request, timeout=8) as response:  # noqa: S310 - local URL only, guarded above.
@@ -203,6 +211,79 @@ class DogfoodRunService:
             return self._path_from_file_url(url).as_uri()
         except Exception:
             return url
+
+    def _local_stylesheet_sanity(self, html_path: Path) -> list[str]:
+        try:
+            html = html_path.read_text(encoding="utf-8", errors="replace")
+        except Exception as exc:  # noqa: BLE001
+            return [f"could not read html for stylesheet sanity: {str(exc)[:120]}"]
+        warnings: list[str] = []
+        for href in re.findall(r"<link\b[^>]*\bhref=[\"']([^\"']+)[\"'][^>]*>", html, flags=re.IGNORECASE):
+            href_text = str(href or "").strip()
+            if not href_text or href_text.startswith(("http://", "https://", "data:", "#")):
+                continue
+            clean_href = href_text.split("?", 1)[0].split("#", 1)[0]
+            if not clean_href.lower().endswith(".css"):
+                continue
+            css_path = (html_path.parent / unquote(clean_href)).resolve()
+            if not css_path.is_file():
+                warnings.append(f"missing stylesheet {clean_href}")
+                continue
+            try:
+                css = css_path.read_text(encoding="utf-8", errors="replace")
+            except Exception as exc:  # noqa: BLE001
+                warnings.append(f"could not read stylesheet {clean_href}: {str(exc)[:120]}")
+                continue
+            if "\ufffd" in css or "\u9225" in css or "\u951f" in css:
+                warnings.append(f"possible mojibake in stylesheet {clean_href}")
+            balance = self._css_brace_balance(css)
+            if balance.get("extra_closes"):
+                warnings.append(f"extra closing brace in stylesheet {clean_href}")
+            if balance.get("unclosed_opens"):
+                warnings.append(f"unclosed brace in stylesheet {clean_href}")
+        return warnings
+
+    def _css_brace_balance(self, css: str) -> dict[str, int]:
+        opens = 0
+        extra_closes = 0
+        quote = ""
+        in_comment = False
+        escape = False
+        i = 0
+        while i < len(css):
+            ch = css[i]
+            nxt = css[i + 1] if i + 1 < len(css) else ""
+            if in_comment:
+                if ch == "*" and nxt == "/":
+                    in_comment = False
+                    i += 2
+                    continue
+                i += 1
+                continue
+            if quote:
+                if escape:
+                    escape = False
+                elif ch == "\\":
+                    escape = True
+                elif ch == quote:
+                    quote = ""
+                i += 1
+                continue
+            if ch == "/" and nxt == "*":
+                in_comment = True
+                i += 2
+                continue
+            if ch in {"'", '"'}:
+                quote = ch
+            elif ch == "{":
+                opens += 1
+            elif ch == "}":
+                if opens:
+                    opens -= 1
+                else:
+                    extra_closes += 1
+            i += 1
+        return {"unclosed_opens": opens, "extra_closes": extra_closes}
 
     def _finalize_browser_smoke_status(self, record: dict[str, Any]) -> None:
         action_results = list(record.get("action_results") or [])

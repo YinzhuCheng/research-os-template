@@ -76,7 +76,7 @@ def _tools() -> list[dict[str, Any]]:
     return [
         {
             "name": "yunwu_image_generate",
-            "description": "Generate images through Yunwu's OpenAI-compatible Images API. Rewrite prompts with the LCR image prompt guides before calling this tool. For game assets, prefer format=png, quality=high, background=transparent, and n=1 with up to 5 concurrent calls instead of relying on unstable n>1 batches. API keys are read from YUNWU_API_KEY in the MCP server environment.",
+            "description": "Generate images through Yunwu's OpenAI-compatible Images API. Rewrite prompts with the LCR image prompt guides before calling this tool. For game assets, prefer format=png, quality=high, background=transparent, and n=1 with up to 5 concurrent calls instead of relying on unstable n>1 batches. A single image call can take 45-90 seconds; report each completed asset id/path/alpha check as it returns instead of claiming the whole batch is finished. API keys are read from YUNWU_API_KEY in the MCP server environment.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -130,7 +130,7 @@ def _tools() -> list[dict[str, Any]]:
         },
         {
             "name": "yunwu_image_transparent_asset",
-            "description": "Create a transparent Japanese-anime game asset through Yunwu's /images/edits route. LCR automatically supplies a blank transparent seed PNG, repeats the alpha=0 transparency definition in the prompt, and validates alpha/size/format after saving. Use this before plain generation for sprites, props, doors, stairs, keys, gems, monsters, and HUD icons.",
+            "description": "Create a transparent Japanese-anime game asset through Yunwu's /images/edits route. LCR automatically supplies a blank transparent seed PNG, repeats the alpha=0 transparency definition in the prompt, and validates alpha/size/format after saving. Use this before plain generation for sprites, props, doors, stairs, keys, gems, monsters, and HUD icons. A single transparent-asset call often takes 45-90 seconds; treat every tool result as per-asset progress and report actual_n, local_path, has_alpha, and transparency_status before starting the next visual decision.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -146,7 +146,7 @@ def _tools() -> list[dict[str, Any]]:
                         "minimum": 1,
                         "maximum": 10,
                         "default": 1,
-                        "description": "Prefer repeated n=1 calls; n>1 can be unstable and will be recorded as requested_n/actual_n.",
+                        "description": "Prefer repeated n=1 calls; n>1 can be unstable and will be recorded as requested_n/actual_n. If several assets are needed, issue separate n=1 calls and summarize each result as it completes.",
                     },
                     "quality": {"type": "string", "enum": ["low", "medium", "high", "auto"], "default": "high"},
                     "moderation": {"type": "string", "enum": ["low", "auto"], "default": "auto"},

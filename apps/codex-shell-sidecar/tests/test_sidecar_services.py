@@ -5304,6 +5304,57 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
         self.assertNotIn("networkidle", source)
         self.assertIn("captured_after_failure", source)
 
+    def test_dogfood_browser_smoke_flags_broken_local_stylesheet(self) -> None:
+        class CaptureDogfoodRunService(DogfoodRunService):
+            def _capture_with_playwright(self, url: str, label: str, record: dict[str, object], *, actions: list[dict[str, object]] | None = None) -> None:
+                del url, label, actions
+                screenshot.write_bytes(b"png")
+                record["screenshot_path"] = str(screenshot)
+                record["screenshot_status"] = "captured"
+                record["http_status"] = 200
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            (workspace / "index.html").write_text('<!doctype html><link rel="stylesheet" href="style.css"><title>ok</title>', encoding="utf-8")
+            (workspace / "style.css").write_text(".grid { color: red;\n", encoding="utf-8")
+            screenshot = root / "capture.png"
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            dogfood = CaptureDogfoodRunService(projects)
+
+            smoke = dogfood.browser_smoke({"url": (workspace / "index.html").resolve().as_uri(), "label": "broken css"})
+
+            self.assertEqual(smoke["browser_smoke"]["status"], "fail")
+            self.assertTrue(smoke["browser_smoke"]["stylesheet_warnings"])
+            self.assertIn("unclosed brace", smoke["browser_smoke"]["stylesheet_warnings"][0])
+
+    def test_dogfood_browser_smoke_flags_stylesheet_mojibake(self) -> None:
+        class CaptureDogfoodRunService(DogfoodRunService):
+            def _capture_with_playwright(self, url: str, label: str, record: dict[str, object], *, actions: list[dict[str, object]] | None = None) -> None:
+                del url, label, actions
+                screenshot.write_bytes(b"png")
+                record["screenshot_path"] = str(screenshot)
+                record["screenshot_status"] = "captured"
+                record["http_status"] = 200
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            (workspace / "index.html").write_text('<!doctype html><link rel="stylesheet" href="style.css"><title>ok</title>', encoding="utf-8")
+            (workspace / "style.css").write_text("/* mojibake marker: \u9225 */\n.grid { color: red; }\n", encoding="utf-8")
+            screenshot = root / "capture.png"
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            dogfood = CaptureDogfoodRunService(projects)
+
+            smoke = dogfood.browser_smoke({"url": (workspace / "index.html").resolve().as_uri(), "label": "mojibake css"})
+
+            self.assertEqual(smoke["browser_smoke"]["status"], "fail")
+            self.assertIn("possible mojibake", smoke["browser_smoke"]["stylesheet_warnings"][0])
+
     def test_runtime_supervisor_aggregates_plan_token_and_guard_without_secrets(self) -> None:
         class FakeProjects:
             current_project = {
@@ -5384,10 +5435,11 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
         status = supervisor.status(thread_id="thread-1", profile={"provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"})
         self.assertEqual(status["plan"]["steps"][0]["step"], "Run smoke")
         self.assertEqual(status["guard"]["level"], "pause")
-        self.assertTrue(status["guard"]["should_pause"])
+        self.assertFalse(status["guard"]["should_pause"])
         self.assertTrue(status["guard"]["requires_decision"])
-        self.assertEqual(runtime.interrupted, [({"provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"}, "thread-1", "turn-1")])
-        self.assertEqual(status["guard"]["auto_pause"]["status"], "interrupted")
+        self.assertTrue(status["guard"]["deferred_until_turn_boundary"])
+        self.assertEqual(runtime.interrupted, [])
+        self.assertNotIn("auto_pause", status["guard"])
         self.assertEqual(runtime.supervisor_events[0]["event"], "context_guard")
         self.assertEqual(runtime.supervisor_events[0]["level"], "pause")
 
