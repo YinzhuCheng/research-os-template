@@ -1,6 +1,6 @@
 # LCR Magic Tower Dogfood Release Plan
 
-Last revised: 2026-06-16 16:05 +08:00
+Last revised: 2026-06-16 20:09 +08:00
 
 ## Objective
 
@@ -187,6 +187,13 @@ The game can be considered publishable for this dogfood target only when these a
 11. Revise this plan if the evidence changes.
 
 ## Immediate Next Actions
+
+Latest evidence from the 2026-06-16 prompt/background protocol repair:
+
+- `yunwu_image_generate` must no longer be treated as “transparent by default”. The latest successful background plate (`yunwu-1781611452-52109ed5.png`) proves the game should use a non-transparent continuous backdrop route for the map base.
+- `yunwu_image_transparent_asset` remains the right route for true cutout sprites and props; the transparent forest-canopy retry stayed alpha-clean and materially usable.
+- The previous grass-plate retry (`yunwu-1781610678-d2c38ac6.png`) is now a useful negative control: it succeeded transport-wise but visually failed because the old protocol forced scene art through a transparent contract.
+- The next DS step should explicitly use the newest background-plate asset plus transparent props as the rendering baseline, not continue stacking transparent overlays on the older blocky map.
 
 Latest evidence from the 2026-06-16 Yunwu MCP retry:
 
@@ -468,14 +475,72 @@ Latest DS planning failure and completion-quality fix from 2026-06-16 16:05:
 - Full sidecar unit tests after the fix: `136` passed.
 - The LCR web-search health result is mixed: the tools were callable and verified, but search result quality was weak for specialized game-dev queries. DS or the API manager should improve query templates and source prioritization before relying on the brief.
 
-1. Rebuild/restart the installed LCR package so the running app carries the MCP preset, asset promotion crop/resize, image-return, context-guard, and timeout fixes.
-2. Ask DS for one bounded seamless/free-map step that directly addresses Kimi's screenshot critique: visible grid seams, repetitive dark blotches, and the solid green band below the map.
-3. DS must preserve the current working game rules and run `node --check js/*.js`; if it edits CSS only, it must still run browser smoke and save a screenshot.
-4. Ask Kimi to judge the new screenshot against the previous `20260616-ds-grass-asset-map.png` and decide whether the map still reads as blocky. Kimi may propose an executable visual plan, not only pass/fail.
-5. If the visual step improves the screenshot, run Yunwu GPT-5.4 high playtest and send the critique back to DS for route/UI/value priorities.
-6. If visual quality is still poor, let DS plan a redraw of a dedicated seamless grass/background asset through Yunwu image tools rather than overfitting CSS around a bad texture.
-7. Fix the LCR event/evidence display gap so command/tool/file-change evidence is visible as `tool-event verified`, not only inferred from model text.
-8. Keep treating ignored `asset_id`/manifest paths, stale provider threads, unsupported context-mode values, or unverified model claims as LCR context/evidence bugs and fix the app before continuing.
+Latest live Yunwu retry recovery and startup-restore fix from 2026-06-16 18:36:
+
+- Re-ran the real Yunwu transparent-asset retry through the source sidecar and confirmed the quality result is mixed but improved:
+  - `yunwu-1781603540-512dd67e.png` yellow magical door: alpha-clean and isolated, but still too concept-art/portal-like for a strict top-down tile prop.
+  - `yunwu-1781603573-7cffb5a4.png` stone stair entrance: alpha-clean and materially closer to a usable top-down map prop.
+  - `yunwu-1781605126-6d5dc979.png` small grass tuft overlay: alpha-clean and usable as a small organic ground-decoration candidate.
+- Fixed a live LCR evidence bug in `RuntimeService.read_thread`:
+  - when `thread/read` returned stale `dynamicToolCall` items, LCR previously only inserted missing event items and did not refresh existing items from newer `item/completed` notifications;
+  - this caused successful Yunwu image tool calls to remain stuck as `tool-event unverified` in the UI even though `.lcr/runtime_events.jsonl` contained the full completed result;
+  - LCR now overlays the latest completed dynamic-tool event over an existing stale thread item before decorating evidence.
+- Fixed a cold-start restore gap in `ProjectService`:
+  - if `current_project.json` is missing, LCR now falls back to the most recent project from `projects.json`;
+  - if `current_project.json` exists but is explicitly empty after `close_project()`, LCR still respects that and does not silently reopen a project.
+- Live cold-start validation after a real source-sidecar restart on port `8795`:
+  - `Magical Girl Tower Dogfood` reopened automatically;
+  - `execution_host=wsl` and `wsl_distro=Ubuntu-24.04` were restored;
+  - successful Yunwu image tool items on the recovered thread now read back as `tool-event verified`.
+- Sidecar unit tests after this pass: `141` passed.
+- Remaining runtime nuance:
+  - cold-start restore intentionally does not persist provider secrets, so `secret_loaded=false` after restart until keys are re-presented through env or vault;
+  - this is acceptable for isolation, but the UI should make the “runtime restored, secret needs re-presenting” state readable.
+
+Latest provider-thread normalization fix from 2026-06-16 19:10:
+
+Latest Yunwu image prompt/background protocol hardening from 2026-06-16 20:09:
+
+- Fixed a real LCR protocol bug rather than only retrying image draws:
+  - `game_asset_japanese_anime` now distinguishes `background_plate` from transparent cutout asset modes.
+  - `yunwu_image_generate` no longer defaults to `background=transparent` in the MCP/runtime path.
+  - prompt enhancement for background plates now asks for a continuous readable backdrop instead of repeating the alpha=0 transparent cutout contract.
+- Real MCP verification after the fix:
+  - transparent forest-canopy prop `yunwu-1781610570-32a5f267.png`: PNG RGBA, `has_alpha=true`, transparent ratio about `0.450`, usable as a large forest overlay/cluster candidate.
+  - pre-fix grass plate `yunwu-1781610678-d2c38ac6.png`: PNG RGB, visually fake-transparent / checkerboard-adjacent, useful as a negative control proving the old protocol was wrong for scene plates.
+  - final post-default-fix grass plate `yunwu-1781611452-52109ed5.png`: PNG RGB, `requested_background=auto`, `transparency_status=not_requested`, visually much closer to the intended route of “continuous grassy background plate + transparent props on top”.
+- New routing rule from evidence:
+  - use `yunwu_image_transparent_asset` for doors, stairs, keys, gems, monsters, HUD icons, heroine cutouts, and other true alpha sprites.
+  - use `yunwu_image_generate` with `background=auto` or `opaque` for full-scene background plates or larger overworld/room backdrops.
+  - do not use `has_alpha=true` as a quality proxy for background plates.
+- Validation after the protocol fix:
+  - targeted Yunwu prompt-guide/unit tests passed.
+  - full sidecar unit test suite passed again: `143` tests.
+  - live source sidecar on `8795` served the patched MCP tool path and wrote the new manifest fields `prompt_category`, `prompt_strategy_metadata.asset_mode`, and the correct `requested_background`.
+
+- Dogfood inspection on the current magic-tower task showed that the same effective DeepSeek/Kimi route could accumulate many live provider-thread records after restarts and recoveries.
+- This weakens the product goal that provider switching should feel like one continuous task with internal model handoff rather than a stack of unrelated chats.
+- `TaskService` now normalizes task state on read and prunes duplicate live provider threads by canonical route:
+  - canonical route key = provider id + canonical model id + canonical effort + permission mode + collaboration mode + role;
+  - keep the newest live thread per route;
+  - keep at most one recent missing-thread diagnostic per route.
+- The normalization is alias-tolerant for model ids such as `deepseek-v4-pro` vs `deepseek/deepseek-v4-pro`.
+- Regression coverage after the fix:
+  - targeted pruning tests passed;
+  - full sidecar unittest suite passed: `142` tests.
+- Operational next step: restart the source sidecar so the live magic-tower task on port `8795` picks up the normalized task state before the next DS/Kimi/Yunwu loop.
+
+1. Restart the source sidecar on port `8795` so the live magic-tower task picks up provider-thread normalization and the current task state becomes compact/readable again.
+2. Re-present provider secrets through env/vault after the restart, reopen the magic-tower `.lcrproj`, and confirm WSL runtime plus MCP/tool readiness.
+2. Ask DS for one bounded deep-research + implementation step that directly addresses the “still too blocky / still too much pasted overlay” critique while preserving current gameplay rules.
+3. DS must explicitly reference `asset_id`, `manifest key`, or concrete promoted asset paths from the Asset Context Pack; vague mentions like “use grass assets” do not count as successful context use.
+4. DS must use real LCR web tools for current map/autotile/background research and produce tool-event verified evidence, not only claimed research.
+5. DS must preserve working rules, run `node --check js/*.js`, and run browser smoke with a saved screenshot after the bounded change.
+6. Ask Kimi to judge the new screenshot or contact sheet against the previous map screenshots and answer with either an executable visual plan or a strict `pass/retry/redraw` style verdict.
+7. If the screenshot meaningfully improves, run Yunwu GPT-5.4 high as a playtest critic and feed the critique back to DS for route/UI/value priorities.
+8. If the map is still blocky, have DS plan and then use Yunwu image tools for a dedicated seamless background / autotile-supporting redraw route instead of piling more overlays on a bad base.
+9. Continue treating ignored `asset_id`/manifest paths, stale provider threads, unsupported context-mode values, missing tool evidence, or silently dropped visual assets as LCR bugs and fix the app before continuing.
+10. Keep task continuity compact: if the same effective provider/model/effort route reappears after restart or alias variation, prefer the newest live provider thread and keep only one missing diagnostic for that route.
 
 ## Commit/Push Gate
 

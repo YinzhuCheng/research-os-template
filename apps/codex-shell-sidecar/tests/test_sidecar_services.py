@@ -30,7 +30,7 @@ from research_os_sidecar.asset_registry_service import AssetRegistryService
 from research_os_sidecar.modal_service import ModalService
 from research_os_sidecar.checkpoint_service import CheckpointService
 from research_os_sidecar.dogfood_run_service import DogfoodRunService
-from research_os_sidecar.image_prompt_strategy import build_rewrite_instruction, prompt_guides_payload
+from research_os_sidecar.image_prompt_strategy import apply_prompt_guide, build_rewrite_instruction, prompt_guides_payload
 from research_os_sidecar.isolation_audit_service import IsolationAuditService
 from research_os_sidecar.llm_api_manager_service import LlmApiManagerService
 from research_os_sidecar.lcr_web_service import LcrWebService
@@ -614,8 +614,62 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
                 for item in task["provider_threads"]
                 if item.get("missing_at") and item.get("provider_id") == "deepseek" and item.get("model") == "deepseek-v4-pro"
             ]
-            self.assertLessEqual(len(missing), 2)
+            self.assertLessEqual(len(missing), 1)
             self.assertIn("Magic tower visual renderer dogfood", (workspace / ".lcr" / "tasks.json").read_text(encoding="utf-8"))
+
+    def test_current_task_prunes_duplicate_live_provider_threads_by_canonical_route(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            tasks = TaskService(projects)
+            tasks.create_task(
+                "Same task",
+                thread_id="thread-deepseek-new",
+                settings={
+                    "profile_id": "deepseek-default",
+                    "provider_id": "deepseek",
+                    "model": "deepseek-v4-pro",
+                    "reasoning_effort": "high",
+                    "permission_mode": "auto",
+                },
+            )
+            tasks.bind_thread(
+                thread_id="thread-deepseek-old",
+                settings={
+                    "profile_id": "deepseek-legacy-profile",
+                    "provider_id": "deepseek",
+                    "model": "deepseek/deepseek-v4-pro",
+                    "reasoning_effort": "high",
+                    "permission_mode": "auto",
+                },
+                make_active=False,
+            )
+            tasks.bind_thread(
+                thread_id="thread-kimi",
+                settings={
+                    "profile_id": "kimi-default",
+                    "provider_id": "kimi",
+                    "model": "kimi-k2.6",
+                    "reasoning_effort": "xhigh",
+                    "permission_mode": "auto",
+                },
+                make_active=False,
+            )
+
+            current = tasks.current_task()
+
+            deepseek_live = [
+                item
+                for item in current["provider_threads"]
+                if not item.get("missing_at") and item.get("provider_id") == "deepseek"
+            ]
+            self.assertEqual([item["thread_id"] for item in deepseek_live], ["thread-deepseek-old"])
+            self.assertEqual(len(current["provider_threads"]), 2)
+            state_text = (workspace / ".lcr" / "tasks.json").read_text(encoding="utf-8")
+            self.assertNotIn("thread-deepseek-new", state_text)
 
     def test_start_turn_timeout_returns_background_pending_response(self) -> None:
         class FakeClient:
@@ -2403,6 +2457,8 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
                 image_format="png",
                 background="transparent",
                 image_urls=["https://example.test/a.png", "https://example.test/b.jpg"],
+                prompt_category="game_asset_japanese_anime",
+                purpose="unit_door_sprite",
             )
             self.assertEqual(payload["model"], "gpt-image-2")
             self.assertEqual(payload["size"], "2048x2048")
@@ -2411,6 +2467,10 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertEqual(payload["format"], "png")
             self.assertEqual(payload["background"], "transparent")
             self.assertEqual(payload["image"], ["https://example.test/a.png", "https://example.test/b.jpg"])
+            self.assertEqual(payload["prompt_category"], "game_asset_japanese_anime")
+            self.assertEqual(payload["prompt_guide_display_name"], "Japanese anime game asset")
+            self.assertTrue(payload["prompt_enhancement_applied"])
+            self.assertIn("Asset mode:", payload["prompt"])
             custom = service.generation_payload(prompt="custom", size="1280x768")
             self.assertEqual(custom["size"], "1280x768")
             with self.assertRaises(ValueError):
@@ -2429,7 +2489,7 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             tools = {tool["name"]: tool for tool in yunwu_image_mcp_tools()}
             generate_props = tools["yunwu_image_generate"]["inputSchema"]["properties"]
             self.assertEqual(generate_props["quality"]["default"], "high")
-            self.assertEqual(generate_props["background"]["default"], "transparent")
+            self.assertEqual(generate_props["background"]["default"], "auto")
             self.assertIn("output_format", generate_props)
             self.assertIn("yunwu_image_transparent_asset", tools)
 
@@ -2449,11 +2509,13 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
                     api_key="unit-token-value",
                     workspace_root=workspace,
                     purpose="unit_test_asset",
+                    prompt_category="game_asset_japanese_anime",
                 )
                 manifest_path = workspace / ".lcr" / "assets" / "generated" / "asset_manifest.json"
                 self.assertTrue(manifest_path.exists())
                 manifest_text = manifest_path.read_text(encoding="utf-8")
                 self.assertIn("unit_test_asset", manifest_text)
+                self.assertIn("game_asset_japanese_anime", manifest_text)
                 self.assertNotIn("unit-token-value", manifest_text)
                 self.assertTrue(persisted["persisted_assets"][0]["local_path"])
                 self.assertEqual(persisted["requested_n"], 1)
@@ -2465,18 +2527,23 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
                 self.assertTrue(persisted["persisted_assets"][0]["has_alpha"])
                 self.assertEqual(persisted["persisted_assets"][0]["actual_format"], "png")
                 self.assertEqual(persisted["persisted_assets"][0]["actual_width"], 1)
+                self.assertEqual(persisted["persisted_assets"][0]["prompt_category"], "game_asset_japanese_anime")
+                self.assertTrue(persisted["persisted_assets"][0]["prompt_strategy_metadata"]["prompt_enhancement_applied"])
 
                 transparent = service.transparent_asset(
                     prompt="single yellow magic tower key icon",
                     api_key="unit-token-value",
                     workspace_root=workspace,
                     purpose="unit_transparent_asset",
+                    prompt_category="game_asset_japanese_anime",
                 )
                 self.assertTrue(transparent["persisted_assets"][0]["has_alpha"])
                 self.assertNotIn("b64_json", transparent["data"][0])
                 self.assertTrue(transparent["data"][0]["b64_json_present"])
                 self.assertEqual(transparent["persisted_assets"][0]["requested_background"], "transparent")
                 self.assertIn("alpha=0", transparent["persisted_assets"][0]["prompt"])
+                self.assertEqual(transparent["persisted_assets"][0]["prompt_category"], "game_asset_japanese_anime")
+                self.assertNotEqual(transparent["persisted_assets"][0]["prompt_strategy_metadata"]["asset_mode"], "reference_edit")
                 self.assertIn('name="background"', str(YunwuHandler.request_payload.get("multipart") or ""))
                 self.assertIn("transparent", str(YunwuHandler.request_payload.get("multipart") or ""))
         finally:
@@ -2556,6 +2623,15 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
         self.assertIn("asset_mode", instruction["instruction"])
         self.assertIn("terrain_tileset", instruction["instruction"])
         self.assertLessEqual(len(instruction["defaults"]["size"]), 16)
+        background_prompt = apply_prompt_guide(
+            category_id="game_asset_japanese_anime",
+            user_prompt="top-down JRPG overworld grass background plate for a magical forest region",
+            purpose="grass_background_plate",
+            transparent_background=False,
+        )
+        self.assertEqual(background_prompt["asset_mode"], "background_plate")
+        self.assertNotIn("alpha=0", background_prompt["prompt"])
+        self.assertNotIn("transparent background only", background_prompt["prompt"].lower())
 
         with tempfile.TemporaryDirectory() as temp:
             image_path = Path(temp) / "input.png"
@@ -2572,11 +2648,16 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
                 quality="high",
                 background="transparent",
                 moderation="low",
+                prompt_category="image_edit_recreation",
+                purpose="unit_edit_icon",
             )
             self.assertEqual(fields["model"], "flux-kontext-pro")
             self.assertEqual(fields["n"], "3")
             self.assertEqual(fields["background"], "transparent")
             self.assertEqual(fields["moderation"], "low")
+            self.assertEqual(fields["prompt_category"], "image_edit_recreation")
+            self.assertEqual(fields["asset_mode"], "reference_edit")
+            self.assertEqual(fields["prompt_enhancement_applied"], "true")
             self.assertEqual([name for name, _ in files], ["image", "mask"])
 
     def test_asset_registry_rebuild_context_and_promote_are_secret_free(self) -> None:
@@ -6169,6 +6250,82 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
         status = supervisor.status(thread_id="thread-missing", profile={"provider_id": "deepseek"})
         self.assertEqual(status["thread_status"]["type"], "missing")
         self.assertEqual(status["guard"]["level"], "ok")
+
+    def test_runtime_supervisor_uses_effective_provider_route_thread_for_guard(self) -> None:
+        class FakeProjects:
+            current_project = {"name": "Demo", "current_thread_id": "thread-selected", "ui_preferences": {}}
+
+            def require_workspace_root(self) -> Path:
+                return Path(tempfile.gettempdir())
+
+        class FakeTaskService:
+            def current_task(self) -> dict[str, object]:
+                return {
+                    "provider_threads": [
+                        {
+                            "thread_id": "thread-selected",
+                            "provider_id": "deepseek",
+                            "model": "deepseek-v4-pro",
+                            "reasoning_effort": "high",
+                            "missing_at": "2026-06-16T19:00:00+08:00",
+                        },
+                        {
+                            "thread_id": "thread-effective",
+                            "provider_id": "deepseek",
+                            "model": "deepseek/deepseek-v4-pro",
+                            "reasoning_effort": "xhigh",
+                        },
+                    ]
+                }
+
+            def needs_provider_handoff(self, *, thread_id: str | None, profile_id: str | None, model: str | None, effort: str | None) -> bool:
+                return True
+
+            def find_provider_thread(self, *, profile_id: str | None, provider_id: str | None = None, model: str | None, effort: str | None):
+                return {"thread_id": "thread-effective"}
+
+        class FakeRuntime:
+            _tasks = FakeTaskService()
+
+            def list_events(self, after: int = 0, limit: int | None = None) -> dict[str, object]:
+                return {
+                    "cursor": 2,
+                    "events": [
+                        {
+                            "type": "notification",
+                            "method": "thread/tokenUsage/updated",
+                            "timestamp": "2026-06-12T00:00:01+00:00",
+                            "params": {
+                                "threadId": "thread-effective",
+                                "turnId": "turn-effective",
+                                "tokenUsage": {"total": {"totalTokens": 95}, "modelContextWindow": 100},
+                            },
+                        }
+                    ],
+                }
+
+            def record_supervisor_event(self, event):  # noqa: ANN001
+                self.event = event
+
+        class FakeModals:
+            def list_pending(self) -> dict[str, object]:
+                return {"modals": []}
+
+        class FakeDogfood:
+            def snapshot(self) -> dict[str, object]:
+                return {"run": {"enabled": False, "browser_smokes": [], "milestones": [], "usage": {}, "budgets": {}}}
+
+            def add_note(self, note: str) -> None:
+                self.note = note
+
+        supervisor = RuntimeSupervisorService(FakeProjects(), FakeRuntime(), FakeModals(), FakeDogfood())
+        status = supervisor.status(
+            thread_id="thread-selected",
+            profile={"provider_id": "deepseek", "model": "deepseek-v4-pro", "reasoning_effort": "max"},
+        )
+        self.assertEqual(status["requested_thread_id"], "thread-selected")
+        self.assertEqual(status["effective_thread_id"], "thread-effective")
+        self.assertEqual(status["guard"]["level"], "pause")
 
     def test_runtime_supervisor_marks_compaction_running_as_stale_after_later_activity(self) -> None:
         class FakeProjects:

@@ -76,7 +76,7 @@ def _tools() -> list[dict[str, Any]]:
     return [
         {
             "name": "yunwu_image_generate",
-            "description": "Generate images through Yunwu's OpenAI-compatible Images API. Rewrite prompts with the LCR image prompt guides before calling this tool. For game assets, prefer format=png, quality=high, background=transparent, and n=1 with up to 5 concurrent calls instead of relying on unstable n>1 batches. A single image call can take 45-90 seconds; report each completed asset id/path/alpha check as it returns instead of claiming the whole batch is finished. API keys are read from YUNWU_API_KEY in the MCP server environment.",
+            "description": "Generate images through Yunwu's OpenAI-compatible Images API. Rewrite prompts with the LCR image prompt guides before calling this tool. For transparent props or sprites, explicitly pass background=transparent. For background plates or scene backdrops, keep background=auto or opaque. Prefer format=png, quality=high, and n=1 with up to 5 concurrent calls instead of relying on unstable n>1 batches. A single image call can take 45-90 seconds; report each completed asset id/path/alpha check as it returns instead of claiming the whole batch is finished. API keys are read from YUNWU_API_KEY in the MCP server environment.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -104,8 +104,8 @@ def _tools() -> list[dict[str, Any]]:
                     "background": {
                         "type": "string",
                         "enum": ["opaque", "transparent", "auto"],
-                        "default": "transparent",
-                        "description": "Structured transparency request. For transparent game assets this must be transparent; do not rely on prompt wording alone.",
+                        "default": "auto",
+                        "description": "Structured background request. Use transparent only for cutout assets; use auto or opaque for background plates and scene backdrops.",
                     },
                     "prompt_category": {
                         "type": "string",
@@ -220,7 +220,8 @@ def _call_tool(service: YunwuImageService, params: dict[str, Any]) -> dict[str, 
             response_format=str(args.get("response_format") or "url"),
             quality=str(args.get("quality") or "high"),
             image_format=str(args.get("format") or args.get("output_format") or "png"),
-            background=str(args.get("background") or "transparent") or None,
+            background=str(args.get("background") or "auto") or None,
+            prompt_category=str(args.get("prompt_category") or ""),
             workspace_root=_workspace_root(),
             purpose=str(args.get("purpose") or "agent_generated_asset"),
         )
@@ -233,6 +234,7 @@ def _call_tool(service: YunwuImageService, params: dict[str, Any]) -> dict[str, 
             n=int(args.get("n") or 1),
             quality=str(args.get("quality") or "high"),
             moderation=str(args.get("moderation") or "auto"),
+            prompt_category=str(args.get("prompt_category") or "game_asset_japanese_anime"),
             workspace_root=_workspace_root(),
             purpose=str(args.get("purpose") or "agent_transparent_asset"),
         )
@@ -248,6 +250,7 @@ def _call_tool(service: YunwuImageService, params: dict[str, Any]) -> dict[str, 
             quality=str(args.get("quality") or "high"),
             background=str(args.get("background") or "transparent"),
             moderation=str(args.get("moderation") or "auto"),
+            prompt_category=str(args.get("prompt_category") or ""),
             workspace_root=_workspace_root(),
             purpose=str(args.get("purpose") or "agent_edited_asset"),
         )

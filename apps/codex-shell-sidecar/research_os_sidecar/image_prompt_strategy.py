@@ -182,6 +182,132 @@ IMAGE_PROMPT_GUIDES: dict[str, ImagePromptGuide] = {
 }
 
 
+def infer_asset_mode(*, category_id: str, prompt: str, purpose: str = "", transparent_background: bool = False, reference_image_mode: bool = False) -> str:
+    text = f"{purpose} {prompt}".lower()
+    if reference_image_mode:
+        return "reference_edit"
+    if any(
+        token in text
+        for token in (
+            "background plate",
+            "map backdrop",
+            "overworld background",
+            "playable field",
+            "scene backdrop",
+            "continuous background",
+        )
+    ):
+        return "background_plate"
+    if any(token in text for token in ("walk_", "walk ", "idle_", "idle ", "frame", "animation", "sprite sheet", "walkcycle", "walk cycle")):
+        return "animation_frame_set"
+    if any(token in text for token in ("tileset", "tile set", "tilemap", "tile map", "autotile", "auto tile", "terrain", "grass", "forest", "wall", "floor", "ground", "path transition")):
+        return "terrain_tileset"
+    if any(token in text for token in ("hud", "icon", "ui", "pickup icon", "reward icon")):
+        return "ui_icon"
+    if transparent_background:
+        return "single_transparent_asset"
+    if category_id in {"landscape_scene", "illustration_concept"}:
+        return "scene_concept"
+    return "single_transparent_asset"
+
+
+def _asset_mode_contract(asset_mode: str, *, transparent_background: bool) -> tuple[str, str]:
+    if asset_mode == "background_plate":
+        composition = (
+            "continuous background plate or backdrop for gameplay; opaque image by default; no checkerboard preview; "
+            "no cutout framing; keep readable open play space for props and encounters"
+        )
+        validation = "validation: backdrop must stay readable in gameplay, avoid fake transparency motifs, and preserve clean layering for later prop placement."
+        return composition, validation
+    if asset_mode == "terrain_tileset":
+        composition = (
+            "same-category terrain/autotile sheet or modular terrain cluster; regular edge logic; no mixed characters or props; "
+            "allow opaque or transparent packaging as appropriate; large gutters when using a sheet"
+        )
+        validation = "validation: terrain edges must stitch cleanly in 3x3/5x5 previews and must not rely on baked checkerboard or mock transparency."
+        return composition, validation
+    if asset_mode == "animation_frame_set":
+        composition = (
+            "animation frame set with equal frame scale, clear pose changes, readable silhouette, and either separate transparent frames or a regular frame sheet with large gutters"
+        )
+        validation = "validation: poses must be visibly distinct, frame boundaries separable, and sprite scale consistent across directions."
+        return composition, validation
+    if asset_mode == "ui_icon":
+        composition = "single UI icon or same-category icon sheet with simple silhouette, pixel-readable detail, and transparent or clean flat background as requested"
+        validation = "validation: icon must remain readable at small size and stay free of stray background fragments."
+        return composition, validation
+    if asset_mode == "reference_edit":
+        composition = "reference-preserving edit for one asset or one coherent frame set; maintain character identity, outline weight, palette, and camera angle"
+        validation = "validation: preserve the approved reference identity while only changing the requested pose, state, or role."
+        return composition, validation
+    composition = "single centered transparent game asset with clean silhouette, large gutters, and no cast shadow outside the asset"
+    validation = "validation: alpha must be present, object must not touch borders, and the sprite should remain readable at 64-128px scale."
+    return composition, validation
+
+
+def apply_prompt_guide(
+    *,
+    category_id: str,
+    user_prompt: str,
+    purpose: str = "",
+    transparent_background: bool = False,
+    reference_image_mode: bool = False,
+    max_length: int = 1000,
+) -> dict[str, Any]:
+    base_prompt = str(user_prompt or "").strip()
+    guide = get_prompt_guide(category_id)
+    asset_mode = infer_asset_mode(
+        category_id=guide.category_id,
+        prompt=base_prompt,
+        purpose=purpose,
+        transparent_background=transparent_background,
+        reference_image_mode=reference_image_mode,
+    )
+    mode_composition, mode_validation = _asset_mode_contract(asset_mode, transparent_background=transparent_background)
+    focus = "; ".join(guide.required_focus[:4])
+    negatives = "; ".join(guide.negative_guidance[:4])
+    tips = "; ".join(guide.rewrite_tips[:3])
+    technical_parts = [
+        f"Style lock: {guide.display_name}.",
+        f"Asset mode: {asset_mode}.",
+        f"Focus: {focus}.",
+        f"Composition: {mode_composition}.",
+        f"Avoid: {negatives}.",
+        mode_validation,
+        f"Rewrite tips: {tips}.",
+    ]
+    if transparent_background:
+        technical_parts.append(
+            "Transparency contract: transparent background only; every pixel outside the asset silhouette must be alpha=0, not white, black, grey, checkerboard, scenery, floor, frame, or shadow."
+        )
+    if reference_image_mode:
+        technical_parts.append("Reference consistency contract: preserve identity, palette, outline weight, sprite scale, and camera angle from the approved reference.")
+    suffix = " ".join(part for part in technical_parts if part)
+    final_prompt = _fit_prompt_with_suffix(base_prompt, suffix, max_length=max_length)
+    return {
+        "prompt": final_prompt,
+        "category_id": guide.category_id,
+        "guide_display_name": guide.display_name,
+        "asset_mode": asset_mode,
+        "enhancement_applied": final_prompt != base_prompt,
+    }
+
+
+def _fit_prompt_with_suffix(base_prompt: str, suffix: str, *, max_length: int) -> str:
+    base = str(base_prompt or "").strip()
+    extra = str(suffix or "").strip()
+    if not extra:
+        return base[:max_length]
+    combined = f"{base} {extra}".strip()
+    if len(combined) <= max_length:
+        return combined
+    required_tail = extra[: min(len(extra), max_length // 2)]
+    head_limit = max_length - len(required_tail) - 1
+    if head_limit <= 0:
+        return required_tail[:max_length]
+    return f"{base[:head_limit].rstrip()} {required_tail}".strip()[:max_length]
+
+
 def prompt_guides_payload() -> dict[str, Any]:
     return {
         "schema_version": 3,

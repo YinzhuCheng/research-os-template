@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from .common import WORKSPACE_STATE_DIRNAME, now_iso, read_json, write_json
+from .image_prompt_strategy import apply_prompt_guide, prompt_guides_payload
 
 
 GENERATION_SIZES = {
@@ -75,6 +76,8 @@ class YunwuImageService:
         n: int = 1,
         quality: str = "high",
         moderation: str = "auto",
+        prompt_category: str = "game_asset_japanese_anime",
+        reference_image_mode: bool = False,
         api_key: str | None = None,
         timeout_sec: int = 300,
         workspace_root: str | Path | None = None,
@@ -97,6 +100,8 @@ class YunwuImageService:
             quality=quality,
             background="transparent",
             moderation=moderation,
+            prompt_category=prompt_category,
+            reference_image_mode=reference_image_mode,
             api_key=api_key,
             timeout_sec=timeout_sec,
             workspace_root=workspace_root,
@@ -115,6 +120,7 @@ class YunwuImageService:
         quality: str = "auto",
         image_format: str = "png",
         background: str | None = None,
+        prompt_category: str = "",
         api_key: str | None = None,
         timeout_sec: int = 300,
         workspace_root: str | Path | None = None,
@@ -131,6 +137,8 @@ class YunwuImageService:
             quality=quality,
             image_format=image_format,
             background=background,
+            prompt_category=prompt_category,
+            purpose=purpose or "generation",
         )
         requested_n = self._bounded_n(n)
         result = self._normalize_generation_result(self._json_post("/images/generations", payload, key, timeout_sec=timeout_sec))
@@ -146,6 +154,12 @@ class YunwuImageService:
             requested_n=requested_n,
             purpose=purpose or "generation",
             source="yunwu_images_generations",
+            prompt_category=str(payload.get("prompt_category") or prompt_category or ""),
+            prompt_strategy_metadata={
+                "prompt_guide_display_name": payload.get("prompt_guide_display_name"),
+                "asset_mode": payload.get("asset_mode"),
+                "prompt_enhancement_applied": bool(payload.get("prompt_enhancement_applied")),
+            },
         )
 
     def edit(
@@ -160,6 +174,8 @@ class YunwuImageService:
         background: str = "auto",
         moderation: str = "auto",
         mask_path: str | None = None,
+        prompt_category: str = "",
+        reference_image_mode: bool | None = None,
         api_key: str | None = None,
         timeout_sec: int = 300,
         workspace_root: str | Path | None = None,
@@ -176,6 +192,9 @@ class YunwuImageService:
             background=background,
             moderation=moderation,
             mask_path=mask_path,
+            prompt_category=prompt_category,
+            reference_image_mode=reference_image_mode,
+            purpose=purpose or "edit",
         )
         result = self._multipart_post("/images/edits", fields, files, key, timeout_sec=timeout_sec)
         result = self._normalize_generation_result(result)
@@ -192,6 +211,12 @@ class YunwuImageService:
             requested_n=requested_n,
             purpose=purpose or "edit",
             source="yunwu_images_edits",
+            prompt_category=str(fields.get("prompt_category") or prompt_category or ""),
+            prompt_strategy_metadata={
+                "prompt_guide_display_name": fields.get("prompt_guide_display_name"),
+                "asset_mode": fields.get("asset_mode"),
+                "prompt_enhancement_applied": str(fields.get("prompt_enhancement_applied") or "").lower() == "true",
+            },
         )
 
     def protocol(self) -> dict[str, Any]:
@@ -200,6 +225,7 @@ class YunwuImageService:
             "provider": "yunwu",
             "base_url": self.base_url,
             "max_concurrency": MAX_YUNWU_IMAGE_CONCURRENCY,
+            "prompt_guides": prompt_guides_payload(),
             "generation": {
                 "endpoint": "/images/generations",
                 "method": "POST",
@@ -226,6 +252,12 @@ class YunwuImageService:
                         "values": sorted(BACKGROUND_VALUES),
                         "note": "Use background=transparent as a structured request parameter for transparent game assets; do not rely on prompt wording alone.",
                     },
+                    "prompt_category": {
+                        "required": False,
+                        "type": "string",
+                        "default": "japanese_anime_style",
+                        "note": "LCR applies a local prompt-guide enhancement before the request and records the category in the asset manifest.",
+                    },
                 },
             },
             "edit": {
@@ -243,6 +275,12 @@ class YunwuImageService:
                     "size": {"required": False, "type": "string", "values": sorted(EDIT_SIZES), "custom_rule": "WIDTHxHEIGHT, both dimensions multiple of 16, max edge <= 3840, aspect <= 3:1, pixels 655360..8294400"},
                     "background": {"required": False, "type": "string", "values": sorted(BACKGROUND_VALUES), "recommended_for_transparency": "transparent"},
                     "moderation": {"required": False, "type": "string", "values": sorted(MODERATION_VALUES)},
+                    "prompt_category": {
+                        "required": False,
+                        "type": "string",
+                        "default": "image_edit_recreation",
+                        "note": "LCR applies a local prompt-guide enhancement before the request and records the category in the asset manifest.",
+                    },
                 },
             },
             "transparent_asset_edit_route": {
@@ -340,6 +378,8 @@ class YunwuImageService:
         quality: str = "auto",
         image_format: str = "png",
         background: str | None = None,
+        prompt_category: str = "",
+        purpose: str = "",
     ) -> dict[str, Any]:
         prompt = str(prompt or "").strip()
         if not prompt:
@@ -360,6 +400,14 @@ class YunwuImageService:
                 raise ValueError("background must be opaque, transparent, or auto.")
             if normalized_background == "transparent" and image_format == "jpeg":
                 raise ValueError("transparent background requires png or webp format.")
+        prompt_strategy = apply_prompt_guide(
+            category_id=prompt_category or "japanese_anime_style",
+            user_prompt=prompt,
+            purpose=purpose,
+            transparent_background=normalized_background == "transparent",
+            reference_image_mode=bool(image_urls),
+        )
+        prompt = str(prompt_strategy["prompt"] or "")
         prompt = self._apply_transparent_prompt_contract(prompt, background=normalized_background)
         if len(prompt) > 1000:
             raise ValueError("Yunwu gpt-image-2 prompt must be 1000 characters or fewer.")
@@ -371,6 +419,10 @@ class YunwuImageService:
             "response_format": response_format,
             "quality": quality,
             "format": image_format,
+            "prompt_category": str(prompt_strategy["category_id"] or ""),
+            "prompt_guide_display_name": str(prompt_strategy["guide_display_name"] or ""),
+            "asset_mode": str(prompt_strategy["asset_mode"] or ""),
+            "prompt_enhancement_applied": bool(prompt_strategy["enhancement_applied"]),
         }
         if normalized_background:
             payload["background"] = normalized_background
@@ -395,6 +447,9 @@ class YunwuImageService:
         background: str = "auto",
         moderation: str = "auto",
         mask_path: str | None = None,
+        prompt_category: str = "",
+        reference_image_mode: bool | None = None,
+        purpose: str = "",
     ) -> tuple[dict[str, str], list[tuple[str, Path]]]:
         prompt = str(prompt or "").strip()
         if not prompt:
@@ -412,6 +467,14 @@ class YunwuImageService:
             pass
         if moderation not in MODERATION_VALUES:
             raise ValueError("moderation must be low or auto.")
+        prompt_strategy = apply_prompt_guide(
+            category_id=prompt_category or "image_edit_recreation",
+            user_prompt=prompt,
+            purpose=purpose,
+            transparent_background=background == "transparent",
+            reference_image_mode=bool(image_paths) if reference_image_mode is None else bool(reference_image_mode),
+        )
+        prompt = str(prompt_strategy["prompt"] or "")
         prompt = self._apply_transparent_prompt_contract(prompt, background=background)
         if len(prompt) > 1000:
             raise ValueError("Yunwu gpt-image-2 edit prompt must be 1000 characters or fewer.")
@@ -441,6 +504,10 @@ class YunwuImageService:
             "size": size,
             "background": background,
             "moderation": moderation,
+            "prompt_category": str(prompt_strategy["category_id"] or ""),
+            "prompt_guide_display_name": str(prompt_strategy["guide_display_name"] or ""),
+            "asset_mode": str(prompt_strategy["asset_mode"] or ""),
+            "prompt_enhancement_applied": "true" if prompt_strategy["enhancement_applied"] else "false",
         }
         return fields, files
 
@@ -670,6 +737,8 @@ class YunwuImageService:
         requested_n: int,
         purpose: str,
         source: str,
+        prompt_category: str,
+        prompt_strategy_metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         data_for_count = result.get("data") if isinstance(result.get("data"), list) else []
         count_metadata = {
@@ -719,6 +788,8 @@ class YunwuImageService:
                 "count_mismatch": len(data_for_count) != requested_n,
                 "result_index": index,
                 "prompt": prompt,
+                "prompt_category": prompt_category,
+                "prompt_strategy_metadata": dict(prompt_strategy_metadata or {}),
                 "purpose": purpose,
                 "source_url": self._sanitize_source_url(str(item.get("url") or "")),
                 "local_path": local_path,

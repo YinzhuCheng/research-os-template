@@ -101,7 +101,14 @@ class TaskService:
         task_id = str(project.get("current_task_id") or state.get("current_task_id") or "")
         task = self._find_task(list(state.get("tasks") or []), task_id)
         if task:
-            return task
+            normalized_task, changed = self._normalize_task(task)
+            if changed:
+                state["tasks"] = self._replace_task(list(state.get("tasks") or []), normalized_task)
+                state["current_task_id"] = normalized_task["task_id"]
+                state["updated_at"] = now_iso()
+                self._write_state(state)
+                self._sync_project_current_task(normalized_task)
+            return normalized_task
         return None
 
     def bind_thread(
@@ -379,24 +386,46 @@ class TaskService:
         return task
 
     def _prune_provider_threads(self, provider_threads: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Keep task continuity records useful without accumulating stale missing threads."""
-        active_missing_by_route: dict[tuple[str, str, str, str], int] = {}
+        """Keep task continuity records compact by route, not by raw thread count.
+
+        The user-visible task should feel like one continuous chat even if app-server
+        restarts or provider handoffs produce replacement internal threads. Keep the
+        newest live thread per route and at most one recent missing diagnostic per
+        route so context packs do not accumulate dozens of effectively equivalent
+        provider-thread records.
+        """
+        seen_live_routes: set[tuple[str, str, str, str, str, str]] = set()
+        seen_missing_routes: set[tuple[str, str, str, str, str, str]] = set()
         pruned: list[dict[str, Any]] = []
         for item in provider_threads:
             entry = dict(item)
+            route_key = _provider_thread_route_key(entry)
             if entry.get("missing_at"):
-                route_key = (
-                    str(entry.get("profile_id") or ""),
-                    str(entry.get("provider_id") or "").strip().lower(),
-                    _canonical_model_key(entry.get("model")),
-                    _canonical_effort_key(entry.get("reasoning_effort")),
-                )
-                count = active_missing_by_route.get(route_key, 0)
-                if count >= 2:
+                if route_key in seen_missing_routes:
                     continue
-                active_missing_by_route[route_key] = count + 1
+                seen_missing_routes.add(route_key)
+            else:
+                if route_key in seen_live_routes:
+                    continue
+                seen_live_routes.add(route_key)
+                entry.pop("missing_at", None)
+                entry.pop("missing_reason", None)
             pruned.append(entry)
         return pruned[:40]
+
+    def _normalize_task(self, task: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+        normalized = dict(task)
+        changed = False
+        original_threads = list(normalized.get("provider_threads") or [])
+        pruned_threads = self._prune_provider_threads(original_threads)
+        if pruned_threads != original_threads:
+            normalized["provider_threads"] = pruned_threads
+            changed = True
+        active_thread_id = str(normalized.get("active_provider_thread_id") or "")
+        if active_thread_id and not any(str(item.get("thread_id") or "") == active_thread_id for item in pruned_threads):
+            normalized["active_provider_thread_id"] = None
+            changed = True
+        return normalized, changed
 
     def _thread_context_hint(self, thread_id: str) -> dict[str, Any]:
         """Return secret-free task continuity hints for a known Codex thread."""
@@ -506,3 +535,21 @@ def _canonical_effort_key(effort: Any) -> str:
     if text == "max":
         return "xhigh"
     return text
+
+
+def _provider_thread_route_key(item: dict[str, Any]) -> tuple[str, str, str, str, str, str]:
+    provider = str(item.get("provider_id") or "").strip().lower()
+    model = _canonical_model_key(item.get("model"))
+    if not provider and "/" in model:
+        provider = model.split("/", 1)[0]
+    permission_mode = str(item.get("permission_mode") or "").strip().lower()
+    collaboration_mode = str(item.get("collaboration_mode") or "").strip().lower()
+    role = str(item.get("role") or "provider").strip().lower()
+    return (
+        provider,
+        model,
+        _canonical_effort_key(item.get("reasoning_effort")),
+        permission_mode,
+        collaboration_mode,
+        role,
+    )

@@ -22,7 +22,8 @@ class RuntimeSupervisorService:
 
     def status(self, thread_id: str | None = None, profile: dict[str, Any] | None = None) -> dict[str, Any]:
         current_project = self._projects.current_project or {}
-        selected_thread_id = str(thread_id or current_project.get("current_thread_id") or "")
+        requested_thread_id = str(thread_id or current_project.get("current_thread_id") or "")
+        selected_thread_id = self._effective_thread_id_for_status(requested_thread_id, profile)
         events = self._runtime.list_events(after=0).get("events", [])
         plan = self._latest_plan(events, selected_thread_id)
         token = self._latest_token_usage(events, selected_thread_id)
@@ -58,6 +59,8 @@ class RuntimeSupervisorService:
         return redact_sensitive(
             {
                 "thread_id": selected_thread_id,
+                "requested_thread_id": requested_thread_id,
+                "effective_thread_id": selected_thread_id,
                 "updated_at": now_iso(),
                 "plan": plan,
                 "token": token,
@@ -83,6 +86,45 @@ class RuntimeSupervisorService:
                 },
             }
         )
+
+    def _effective_thread_id_for_status(self, requested_thread_id: str, profile: dict[str, Any] | None) -> str:
+        clean_requested = str(requested_thread_id or "")
+        tasks = getattr(self._runtime, "_tasks", None)
+        if tasks is None or not profile:
+            return clean_requested
+        current = None
+        try:
+            current_task = tasks.current_task() or {}
+            for item in list(current_task.get("provider_threads") or []):
+                if str(item.get("thread_id") or "") == clean_requested:
+                    current = dict(item)
+                    break
+        except Exception:
+            current = None
+        desired_profile = str((profile or {}).get("profile_id") or "")
+        desired_provider = str((profile or {}).get("provider_id") or "")
+        desired_model = str((profile or {}).get("model") or "")
+        desired_effort = str((profile or {}).get("reasoning_effort") or "")
+        try:
+            if clean_requested and current and not current.get("missing_at") and not tasks.needs_provider_handoff(
+                thread_id=clean_requested,
+                profile_id=desired_profile,
+                model=desired_model,
+                effort=desired_effort,
+            ):
+                return clean_requested
+            reusable = tasks.find_provider_thread(
+                profile_id=desired_profile,
+                provider_id=desired_provider,
+                model=desired_model,
+                effort=desired_effort,
+            )
+            reusable_thread_id = str((reusable or {}).get("thread_id") or "")
+            if reusable_thread_id:
+                return reusable_thread_id
+        except Exception:
+            return clean_requested
+        return clean_requested
 
     def decision(self, payload: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
         action = str(payload.get("action") or "").strip().lower()

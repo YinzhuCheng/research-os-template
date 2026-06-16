@@ -1806,7 +1806,8 @@ class RuntimeService:
                 response_format=str(arguments.get("response_format") or "url"),
                 quality=str(arguments.get("quality") or "high"),
                 image_format=str(arguments.get("format") or arguments.get("output_format") or "png"),
-                background=str(arguments.get("background") or "transparent") or None,
+                background=str(arguments.get("background") or "auto") or None,
+                prompt_category=str(arguments.get("prompt_category") or ""),
                 workspace_root=workspace_root,
                 purpose=str(arguments.get("purpose") or "agent_generated_asset"),
             )
@@ -1818,6 +1819,7 @@ class RuntimeService:
                 n=int(arguments.get("n") or 1),
                 quality=str(arguments.get("quality") or "high"),
                 moderation=str(arguments.get("moderation") or "auto"),
+                prompt_category=str(arguments.get("prompt_category") or "game_asset_japanese_anime"),
                 workspace_root=workspace_root,
                 purpose=str(arguments.get("purpose") or "agent_transparent_asset"),
             )
@@ -1832,6 +1834,7 @@ class RuntimeService:
                 quality=str(arguments.get("quality") or "high"),
                 background=str(arguments.get("background") or "transparent"),
                 moderation=str(arguments.get("moderation") or "auto"),
+                prompt_category=str(arguments.get("prompt_category") or ""),
                 workspace_root=workspace_root,
                 purpose=str(arguments.get("purpose") or "agent_edited_asset"),
             )
