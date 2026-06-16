@@ -28,9 +28,11 @@ _DEFAULT_RUNTIME_PREFS_CACHE: dict[str, str] | None = None
 
 
 class ProjectService:
-    def __init__(self, store_path: Path | None = None) -> None:
+    def __init__(self, store_path: Path | None = None, session_path: Path | None = None) -> None:
         self.store_path = store_path or (app_data_dir() / "projects.json")
+        self.session_path = session_path or self.store_path.with_name("current_project.json")
         self.current_project: dict[str, Any] | None = None
+        self._restore_current_project()
 
     def create_project(
         self,
@@ -74,6 +76,7 @@ class ProjectService:
         write_json(project_path, payload)
         self._remember_project(payload)
         self.current_project = payload
+        self._remember_current_project(payload)
         return payload
 
     def open_project(self, project_file: str | Path) -> dict[str, Any]:
@@ -102,10 +105,12 @@ class ProjectService:
             write_json(project_path, payload)
         self._remember_project(payload)
         self.current_project = payload
+        self._remember_current_project(payload)
         return payload
 
     def close_project(self) -> dict[str, Any]:
         self.current_project = None
+        self._remember_current_project(None)
         return {"closed": True}
 
     def list_recent(self) -> dict[str, Any]:
@@ -191,6 +196,36 @@ class ProjectService:
         )
         payload["projects"] = projects[:20]
         write_json(self.store_path, payload)
+
+    def _remember_current_project(self, project: dict[str, Any] | None) -> None:
+        payload = {
+            "project_file": str((project or {}).get("project_file") or ""),
+            "updated_at": now_iso(),
+        }
+        write_json(self.session_path, payload)
+
+    def _restore_current_project(self) -> None:
+        session_exists = self.session_path.exists()
+        payload = read_json(self.session_path, {})
+        project_file = str(payload.get("project_file") or "").strip()
+        candidates: list[str] = []
+        if project_file:
+            candidates.append(project_file)
+        elif not session_exists:
+            recent = self.list_recent().get("projects") or []
+            for item in recent:
+                candidate = str((item or {}).get("project_file") or "").strip()
+                if candidate:
+                    candidates.append(candidate)
+        for candidate in candidates:
+            try:
+                self.open_project(candidate)
+                return
+            except Exception:
+                continue
+        self.current_project = None
+        if project_file:
+            self._remember_current_project(None)
 
     def _validate_duplicate_workspace(self, workspace_root: Path, project_file: Path, allow_existing: bool = False) -> None:
         recent = self.list_recent().get("projects") or []

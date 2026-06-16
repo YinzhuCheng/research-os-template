@@ -330,6 +330,7 @@ def _summarize_image_result(result: dict[str, Any]) -> dict[str, Any]:
         "actual_n": result.get("actual_n"),
         "count_mismatch": result.get("count_mismatch"),
         "max_concurrency": result.get("max_concurrency"),
+        "tool_event_verified": True,
         "data": data,
     }
 

@@ -98,6 +98,54 @@ class RuntimeService:
         self._close_client("manual_restart")
         return self.environment()
 
+    def restore_startup_runtime(self, profile: dict[str, Any] | None, *, thread_id: str | None = None) -> dict[str, Any]:
+        if not profile:
+            return {"restored": False, "reason": "no_profile"}
+        runtime_status = self._prepare_runtime(profile, require_secret=False)
+        result: dict[str, Any] = {
+            "restored": True,
+            "runtime": runtime_status,
+            "client_started": False,
+            "thread_id": str(thread_id or "").strip() or None,
+            "thread_exists": None,
+        }
+        try:
+            client = self._ensure_client(runtime_status)
+            result["client_started"] = client.is_running()
+        except Exception as exc:  # noqa: BLE001
+            result["client_error"] = str(exc)[:300]
+            self._record_event(
+                {
+                    "type": "startup_runtime_restored",
+                    "profile_id": profile.get("profile_id"),
+                    "provider_id": profile.get("provider_id"),
+                    "secret_loaded": runtime_status.get("secret_loaded"),
+                    "client_started": False,
+                    "thread_id": result.get("thread_id"),
+                    "thread_exists": None,
+                    "error": result["client_error"],
+                }
+            )
+            return result
+        clean_thread_id = str(thread_id or "").strip()
+        if clean_thread_id:
+            exists = self._thread_exists(client, clean_thread_id)
+            result["thread_exists"] = exists
+            if not exists:
+                self._mark_provider_thread_missing(clean_thread_id, reason="startup_thread_missing")
+        self._record_event(
+            {
+                "type": "startup_runtime_restored",
+                "profile_id": profile.get("profile_id"),
+                "provider_id": profile.get("provider_id"),
+                "secret_loaded": runtime_status.get("secret_loaded"),
+                "client_started": result.get("client_started"),
+                "thread_id": result.get("thread_id"),
+                "thread_exists": result.get("thread_exists"),
+            }
+        )
+        return result
+
     def load_secret(
         self,
         profile: dict[str, Any],
@@ -2757,6 +2805,7 @@ for host in candidates:
         for (turn_id, _item_id), entry in latest_by_item.items():
             tool_items.setdefault(turn_id, []).append(entry)
         decorated_turns: list[dict[str, Any]] = []
+        changed_thread = False
         for turn in turns:
             if not isinstance(turn, dict):
                 decorated_turns.append(turn)
@@ -2767,15 +2816,45 @@ for host in candidates:
                 decorated_turns.append(turn)
                 continue
             items = [dict(item) if isinstance(item, dict) else item for item in list(turn.get("items") or [])]
-            existing_ids = {str(item.get("id") or "") for item in items if isinstance(item, dict)}
+            latest_by_id = {
+                str(item.get("id") or ""): item
+                for item in extras
+                if isinstance(item, dict) and str(item.get("id") or "")
+            }
+            merged_items: list[Any] = []
+            turn_changed = False
+            existing_ids: set[str] = set()
+            for item in items:
+                if not isinstance(item, dict):
+                    merged_items.append(item)
+                    continue
+                item_id = str(item.get("id") or "")
+                if item_id:
+                    existing_ids.add(item_id)
+                latest_item = latest_by_id.get(item_id)
+                if latest_item:
+                    merged_item = {**item, **latest_item}
+                    if merged_item != item:
+                        turn_changed = True
+                    merged_items.append(merged_item)
+                else:
+                    merged_items.append(item)
             missing = [item for item in extras if str(item.get("id") or "") not in existing_ids]
             if not missing:
-                decorated_turns.append(turn)
+                if turn_changed:
+                    decorated_turns.append({**turn, "items": merged_items})
+                    changed_thread = True
+                else:
+                    decorated_turns.append(turn)
                 continue
-            insert_at = next((idx for idx, item in enumerate(items) if isinstance(item, dict) and item.get("type") == "agentMessage"), len(items))
-            items[insert_at:insert_at] = missing
-            decorated_turns.append({**turn, "items": items})
-        return {**thread, "turns": decorated_turns}
+            insert_at = next(
+                (idx for idx, item in enumerate(merged_items) if isinstance(item, dict) and item.get("type") == "agentMessage"),
+                len(merged_items),
+            )
+            merged_items[insert_at:insert_at] = missing
+            decorated_turns.append({**turn, "items": merged_items})
+            changed_thread = True
+        return {**thread, "turns": decorated_turns} if changed_thread else thread
 
     def _decorate_dynamic_tool_evidence(self, thread: dict[str, Any]) -> dict[str, Any]:
         """Attach compact, UI-ready verification metadata to dynamic tool items."""
@@ -2819,6 +2898,9 @@ for host in candidates:
         content_text = self._dynamic_tool_content_text(item)
         if not verified and "tool_event_verified" in content_text:
             verified = True
+        if not verified and str(item.get("status") or "").lower() == "completed" and summary:
+            if self._dynamic_tool_evidence_values(summary, ("local_path", "asset_id", "record_id", "url", "path", "screenshot_path")):
+                verified = True
         evidence: dict[str, Any] = {
             "tool": tool,
             "server": self._dynamic_tool_server(tool),

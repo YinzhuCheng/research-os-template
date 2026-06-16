@@ -1255,6 +1255,160 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertIn("D:/workspace/.lcr/captures/map.png", evidence["paths"])
             self.assertTrue(any("browser smoke map smoke pass" in line for line in evidence["summary"]))
 
+    def test_runtime_read_thread_marks_completed_yunwu_image_item_verified_from_paths(self) -> None:
+        class FakeClient:
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                if method == "thread/read":
+                    return {
+                        "thread": {
+                            "id": "thread-1",
+                            "turns": [
+                                {
+                                    "id": "turn-1",
+                                    "items": [
+                                        {"type": "userMessage", "id": "user-1", "content": []},
+                                        {
+                                            "type": "dynamicToolCall",
+                                            "id": "tool-1",
+                                            "tool": "yunwu_image_transparent_asset",
+                                            "status": "completed",
+                                            "contentItems": [
+                                                {
+                                                    "type": "inputText",
+                                                    "text": "LCR dynamic tool result for yunwu_image_transparent_asset:\n"
+                                                    + json.dumps(
+                                                        {
+                                                            "requested_n": 1,
+                                                            "actual_n": 1,
+                                                            "data": [
+                                                                {
+                                                                    "asset_id": "yunwu-asset-1",
+                                                                    "local_path": "D:/workspace/.lcr/assets/generated/yunwu-asset-1.png",
+                                                                    "actual_format": "png",
+                                                                    "actual_mode": "RGBA",
+                                                                    "has_alpha": True,
+                                                                    "transparency_status": "passed",
+                                                                }
+                                                            ],
+                                                        }
+                                                    ),
+                                                }
+                                            ],
+                                        },
+                                    ],
+                                }
+                            ],
+                        }
+                    }
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._ensure_client = lambda _status: FakeClient()  # type: ignore[method-assign]
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True}  # type: ignore[method-assign]
+
+            result = runtime.read_thread({"profile_id": "p"}, "thread-1")
+
+            evidence = result["thread"]["turns"][0]["items"][1]["lcrVerifiedEvidence"]
+            self.assertTrue(evidence["verified"])
+            self.assertEqual(evidence["tool"], "yunwu_image_transparent_asset")
+            self.assertEqual(evidence["server"], "yunwu_image")
+            self.assertIn("D:/workspace/.lcr/assets/generated/yunwu-asset-1.png", evidence["paths"])
+            self.assertIn("tool-event verified", evidence["label"])
+
+    def test_runtime_read_thread_overlays_completed_dynamic_tool_event_over_stale_thread_item(self) -> None:
+        class FakeClient:
+            def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
+                if method == "thread/read":
+                    return {
+                        "thread": {
+                            "id": "thread-1",
+                            "turns": [
+                                {
+                                    "id": "turn-1",
+                                    "status": "completed",
+                                    "items": [
+                                        {"type": "userMessage", "id": "user-1", "content": []},
+                                        {
+                                            "type": "dynamicToolCall",
+                                            "id": "tool-1",
+                                            "tool": "yunwu_image_transparent_asset",
+                                            "status": "inProgress",
+                                            "contentItems": "",
+                                            "success": None,
+                                        },
+                                    ],
+                                }
+                            ],
+                        }
+                    }
+                raise AssertionError(f"unexpected request: {method}")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            projects = ProjectService(root / "recent.json")
+            projects.create_project("Demo", root / "demo.lcrproj", workspace_root=workspace, entry_mode="existing")
+            runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root))
+            runtime._ensure_client = lambda _status: FakeClient()  # type: ignore[method-assign]
+            runtime._prepare_runtime = lambda _profile, require_secret=False: {"configured": True}  # type: ignore[method-assign]
+            runtime._record_event(
+                {
+                    "type": "notification",
+                    "method": "item/completed",
+                    "index": 10,
+                    "params": {
+                        "threadId": "thread-1",
+                        "turnId": "turn-1",
+                        "item": {
+                            "type": "dynamicToolCall",
+                            "id": "tool-1",
+                            "tool": "yunwu_image_transparent_asset",
+                            "status": "completed",
+                            "contentItems": [
+                                {
+                                    "type": "inputText",
+                                    "text": "LCR dynamic tool result for yunwu_image_transparent_asset:\n"
+                                    + json.dumps(
+                                        {
+                                            "requested_n": 1,
+                                            "actual_n": 1,
+                                            "data": [
+                                                {
+                                                    "asset_id": "yunwu-asset-1",
+                                                    "local_path": "D:/workspace/.lcr/assets/generated/yunwu-asset-1.png",
+                                                    "actual_format": "png",
+                                                    "actual_mode": "RGBA",
+                                                    "has_alpha": True,
+                                                    "transparency_status": "passed",
+                                                }
+                                            ],
+                                        }
+                                    ),
+                                }
+                            ],
+                            "success": True,
+                            "durationMs": 1234,
+                        },
+                    },
+                }
+            )
+
+            result = runtime.read_thread({"profile_id": "p"}, "thread-1")
+
+            item = result["thread"]["turns"][0]["items"][1]
+            evidence = item["lcrVerifiedEvidence"]
+            self.assertEqual(item["status"], "completed")
+            self.assertTrue(item["success"])
+            self.assertTrue(evidence["verified"])
+            self.assertIn("D:/workspace/.lcr/assets/generated/yunwu-asset-1.png", evidence["paths"])
+
     def test_runtime_read_thread_decorates_command_execution_evidence(self) -> None:
         class FakeClient:
             def request(self, method: str, params: dict[str, object] | None = None, timeout: float | None = None) -> dict[str, object]:
@@ -1787,6 +1941,42 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             project = service.open_project(legacy_project)
             self.assertTrue(project["project_file"].endswith(".lcrproj"))
             self.assertTrue((workspace / ".lcr" / "attachments").exists())
+
+    def test_project_service_restores_current_project_from_session(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            project_file = root / "demo.lcrproj"
+
+            first = ProjectService(root / "projects.json")
+            created = first.create_project("Demo", project_file, workspace_root=workspace, entry_mode="existing")
+            self.assertEqual(first.current_project["project_file"], str(project_file))
+
+            restored = ProjectService(root / "projects.json")
+            self.assertIsNotNone(restored.current_project)
+            self.assertEqual(restored.current_project["project_file"], created["project_file"])
+
+            restored.close_project()
+            cleared = ProjectService(root / "projects.json")
+            self.assertIsNone(cleared.current_project)
+
+    def test_project_service_restores_most_recent_project_when_session_file_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            project_file = root / "demo.lcrproj"
+
+            first = ProjectService(root / "projects.json")
+            created = first.create_project("Demo", project_file, workspace_root=workspace, entry_mode="existing")
+            session_path = root / "current_project.json"
+            if session_path.exists():
+                session_path.unlink()
+
+            restored = ProjectService(root / "projects.json")
+            self.assertIsNotNone(restored.current_project)
+            self.assertEqual(restored.current_project["project_file"], created["project_file"])
 
     def test_runtime_config_writes_profile_without_persisting_secret(self) -> None:
         original = os.environ.pop("TEST_PROVIDER_KEY", None)
@@ -3401,6 +3591,77 @@ class LocalCodexRouterServiceTests(unittest.TestCase):
             self.assertEqual(listed["events"][1]["params"]["item"]["type"], "contextCompaction")
             self.assertEqual(listed["events"][2]["event"], "session_started")
             self.assertNotIn("unit_secret_test_value", json.dumps(listed))
+
+    def test_runtime_service_restore_startup_runtime_marks_missing_thread(self) -> None:
+        class FakeClient:
+            def is_running(self) -> bool:
+                return True
+
+            def request(self, method, params, timeout=None):  # noqa: ANN001
+                if method == "thread/read":
+                    raise JsonRpcError("thread not found: thread-stale")
+                raise AssertionError(f"Unexpected method: {method}")
+
+        original = os.environ.pop("TEST_STARTUP_RUNTIME_KEY", None)
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                workspace = root / "workspace"
+                workspace.mkdir()
+                projects = ProjectService(root / "projects.json")
+                projects.create_project("Dogfood", root / "dogfood.lcrproj", workspace_root=workspace, entry_mode="existing")
+                projects.switch_thread("thread-stale")
+                tasks = TaskService(projects)
+                tasks.create_task(
+                    "Recovered task",
+                    thread_id="thread-stale",
+                    settings={
+                        "profile_id": "deepseek-default",
+                        "provider_id": "deepseek",
+                        "model": "deepseek-v4-pro",
+                        "reasoning_effort": "high",
+                        "permission_mode": "auto",
+                    },
+                )
+                runtime = RuntimeService(projects, ModalService(projects.require_shell_state_root), task_service=tasks)
+                runtime._ensure_client = lambda runtime_status: FakeClient()  # type: ignore[method-assign]  # noqa: ARG005
+
+                result = runtime.restore_startup_runtime(
+                    {
+                        "profile_id": "deepseek-default",
+                        "label": "DeepSeek",
+                        "provider_id": "deepseek",
+                        "base_url": "https://api.deepseek.com",
+                        "model": "deepseek-v4-pro",
+                        "reasoning_effort": "high",
+                        "wire_api": "chat",
+                        "env_key": "TEST_STARTUP_RUNTIME_KEY",
+                        "auth_mode": "env_ref",
+                        "proxy_mode": "direct",
+                        "proxy_url": "",
+                    },
+                    thread_id="thread-stale",
+                )
+
+                self.assertTrue(result["restored"])
+                self.assertTrue(result["client_started"])
+                self.assertFalse(result["thread_exists"])
+                current_task = tasks.current_task()
+                provider_entry = current_task["provider_threads"][0]
+                self.assertEqual(provider_entry["missing_reason"], "startup_thread_missing")
+                self.assertTrue(
+                    any(
+                        event.get("type") == "startup_runtime_restored"
+                        and event.get("thread_id") == "thread-stale"
+                        and event.get("thread_exists") is False
+                        for event in runtime._events
+                    )
+                )
+        finally:
+            if original is None:
+                os.environ.pop("TEST_STARTUP_RUNTIME_KEY", None)
+            else:
+                os.environ["TEST_STARTUP_RUNTIME_KEY"] = original
 
     def test_runtime_service_permission_mapping_and_attachment_staging(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

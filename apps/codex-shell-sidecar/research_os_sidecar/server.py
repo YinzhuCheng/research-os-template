@@ -92,6 +92,44 @@ class AppContext:
         self.supervisor = RuntimeSupervisorService(self.projects, self.runtime, self.modals, self.dogfood)
         self.wsl_dependencies = WslDependencyService()
         self.admin_token = __import__("secrets").token_urlsafe(24)
+        self._restore_startup_state()
+
+    def _restore_startup_state(self) -> None:
+        project = self.projects.current_project or {}
+        if not project:
+            return
+        thread_id = str(project.get("current_thread_id") or "").strip()
+        try:
+            self.tasks.ensure_default_task(
+                thread_id=thread_id or None,
+                title=str(project.get("name") or "") or None,
+            )
+        except Exception as exc:  # noqa: BLE001
+            self.runtime.record_supervisor_event({"event": "startup_task_restore_failed", "error": str(exc)[:300]})
+        profile_id = self._startup_profile_id()
+        if not profile_id:
+            return
+        try:
+            profile = self.profiles.resolve_runtime_profile(profile_id)
+        except Exception as exc:  # noqa: BLE001
+            self.runtime.record_supervisor_event(
+                {
+                    "event": "startup_profile_restore_failed",
+                    "profile_id": profile_id,
+                    "error": str(exc)[:300],
+                }
+            )
+            return
+        self.runtime.restore_startup_runtime(profile, thread_id=thread_id or None)
+
+    def _startup_profile_id(self) -> str | None:
+        active_provider_thread = self.tasks.active_provider_thread() or {}
+        profile_id = str(active_provider_thread.get("profile_id") or "").strip()
+        if profile_id:
+            return profile_id
+        project = self.projects.current_project or {}
+        default_profile = str(project.get("default_profile_id") or "").strip()
+        return default_profile or None
 
 
 class Handler(BaseHTTPRequestHandler):
